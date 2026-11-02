@@ -13,7 +13,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [ ] **FOUND-02**: All player input goes through named Input Map actions (KB+M bound now, gamepad slots reserved)
 - [ ] **FOUND-03**: Collision layers, groups and folder conventions are fixed and documented
 - [ ] **FOUND-04**: Repo hygiene: raw KayKit/VFX packs and reference images are kept out of the main tree (gitignored or LFS), only used assets are imported into `assets/`
-- [ ] **FOUND-05**: Meshy placeholder hero is rigged onto KayKit `Rig_Medium` (rigid segments) and plays KayKit Idle/Run/Jump/Dodge clips in Godot
+- [ ] **FOUND-05**: Prototype uses KayKit Prototype Bits for all greybox geometry and the KayKit Mannequin_Medium (Rig_Medium) as prototype character with KayKit animation clips; no particles/juice VFX in the prototype group
 - [ ] **FOUND-06**: Style contract exists: palette atlas, poly budgets per asset class, turquoise = interactable only, second accent colour for decoration, Blender→GLB export checklist
 
 ### Movement
@@ -85,18 +85,20 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [ ] **FEEL-01**: Feedback hooks: gameplay events are broadcast so juice can be layered on without touching gameplay code
 - [ ] **FEEL-02**: Every movement action has visual/kinetic feedback (landing, jump, double jump, dash, sprint)
 - [ ] **FEEL-03**: Every hand action and mechanism activation has visual feedback (beam, impact, pull, push, activation)
-- [ ] **FEEL-04**: Camera feedback (trauma-based shake, FOV kick) and hit-stop on impacts, toggleable
-- [ ] **FEEL-05**: Juice can be switched on/off globally to compare and evaluate feel
+- [ ] **FEEL-04**: Camera feedback (trauma-based shake, FOV kick) and hit-stop on impacts
+- [ ] **FEEL-05**: Juice is tuned to one fixed, strong level (no presets or toggles)
 - [ ] **FEEL-06**: Input-to-response latency is measured; target ≤ 66 ms, hard limit 100 ms
-- [ ] **FEEL-07**: Reduce-motion option (less shake, FOV kicks and flashes)
-- [ ] **FEEL-08**: Juice catalogue lives as data (cues with tiers and caps, empty SFX slots so audio plugs in last without code changes)
-- [ ] **FEEL-09**: A/B juice study (off / medium / high / extreme) with a short questionnaire to evaluate feel
+- [ ] **FEEL-08**: Juice catalogue lives as data (cues per action with empty SFX slots so audio plugs in last without code changes)
 - [ ] **FEEL-10**: Pull/momentum metrics table (range, speed cap, carry-over, release boost) documented and tuned
-- [ ] **FEEL-11**: Informational feedback (reticle states, damage, cooldown-ready) stays visible with juice switched off
+
+### Polish
+
+- [ ] **POLISH-01**: Polish pass: all mechanics (movement, camera, modules, shooting, enemies, mechanisms, boss) are re-tuned and rounded off together so the whole game feels great
+- [ ] **POLISH-02**: Edge cases and rough spots found while playing the full slice are fixed (stuck spots, unclear moments, timing)
 
 ### Art & Look
 
-- [ ] **ART-01**: Final hero from Meshy is integrated (rigid segments on Rig_Medium, KayKit animations, ~6–9k tris)
+- [ ] **ART-01**: Final Meshy hero replaces the Mannequin: rigged onto KayKit Rig_Medium as rigid segments (~6–9k tris), all existing KayKit clip mappings keep working
 - [ ] **ART-02**: Steampunk prop/environment kit in the palette atlas, within poly budgets, consistent with KayKit style
 - [ ] **ART-03**: Lighting and atmosphere: warm directional light, turquoise emissive glow, fog, steam particles
 - [ ] **ART-04**: Hand-module poses are composed from kit clips (pull: Ranged_Magic_Raise upper body over Jump_Idle/Dodge_Forward; push: Ranged_Magic_Shoot/Throw; beam: Ranged_1H_Aiming/Ranged_Magic_Shoot) via AnimationTree upper-body layer, no new clips
@@ -105,7 +107,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 
 - [ ] **UX-01**: Title screen to start the game
 - [ ] **UX-02**: Pause menu with resume, restart from checkpoint and quit (mouse released while paused)
-- [ ] **UX-03**: Settings menu: mouse sensitivity, invert-Y, volume, juice/screenshake toggle
+- [ ] **UX-03**: Settings menu: mouse sensitivity, invert-Y, volume
 - [ ] **UX-04**: End screen after the boss is defeated
 
 ### Audio (last)
@@ -117,6 +119,12 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 
 - [ ] **CTRL-01**: Gamepad bindings for all actions
 - [ ] **CTRL-02**: Stick look and aim assist tuned for controller
+
+### Release
+
+- [ ] **REL-01**: Game exports as a standalone Windows build (.exe) that runs without the Godot editor
+- [ ] **REL-02**: Performance is profiled on a weaker machine (e.g. uni laptop) and the slice runs smoothly there (target 60 fps)
+- [ ] **REL-03**: Debug tools/overlays are stripped or disabled in the release build
 
 ## v2 Requirements
 
@@ -142,20 +150,95 @@ Deferred. Tracked but not in the current roadmap.
 | Full combat system (weapons, many enemy types, combat arenas) | Only beam shooting + 1–2 simple enemy types; boss is a puzzle boss using modules and mechanisms |
 | Skill trees, save slots | Not needed for a slice |
 | Localization | Uni prototype |
+| Playtest study / questionnaires / consent forms | User decision: just the game, juice tuned to one fixed strong level |
 | Custom animation authoring | Movement and poses come only from the KayKit kit (cuts, blends, procedural tweaks) |
+| Juice presets, levels or toggles (debug or settings) | No juice levels/toggles (user decision) |
+| Reduce-motion option (was FEEL-07) | No juice levels/toggles (user decision) |
+| Readable-with-juice-off guarantee (was FEEL-11) | No juice levels/toggles (user decision) |
 
 ## Traceability
 
-Which phases cover which requirements. Filled during roadmap creation.
+Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B (Produktion) = Phases 9-15.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| FOUND-01 | Phase 1 | Pending |
+| FOUND-02 | Phase 1 | Pending |
+| FOUND-03 | Phase 1 | Pending |
+| FOUND-04 | Phase 1 | Pending |
+| FOUND-05 | Phase 1 | Pending |
+| FOUND-06 | Phase 9 | Pending |
+| MOVE-01 | Phase 2 | Pending |
+| MOVE-02 | Phase 2 | Pending |
+| MOVE-03 | Phase 2 | Pending |
+| MOVE-04 | Phase 2 | Pending |
+| MOVE-05 | Phase 2 | Pending |
+| MOVE-06 | Phase 2 | Pending |
+| MOVE-07 | Phase 2 | Pending |
+| MOVE-08 | Phase 2 | Pending |
+| MOVE-09 | Phase 3 | Pending |
+| MOVE-10 | Phase 2 | Pending |
+| MOVE-11 | Phase 3 | Pending |
+| CAM-01 | Phase 2 | Pending |
+| CAM-02 | Phase 3 | Pending |
+| CAM-03 | Phase 2 | Pending |
+| CAM-04 | Phase 4 | Pending |
+| CAM-05 | Phase 4 | Pending |
+| HAND-01 | Phase 4 | Pending |
+| HAND-02 | Phase 4 | Pending |
+| HAND-03 | Phase 4 | Pending |
+| HAND-04 | Phase 5 | Pending |
+| HAND-05 | Phase 5 | Pending |
+| HAND-06 | Phase 5 | Pending |
+| MECH-01 | Phase 4 | Pending |
+| MECH-02 | Phase 4 | Pending |
+| MECH-03 | Phase 4 | Pending |
+| SHOOT-01 | Phase 6 | Pending |
+| SHOOT-02 | Phase 6 | Pending |
+| SHOOT-03 | Phase 6 | Pending |
+| SHOOT-04 | Phase 12 | Pending |
+| PROG-01 | Phase 6 | Pending |
+| PROG-02 | Phase 7 | Pending |
+| PROG-03 | Phase 6 | Pending |
+| PROG-04 | Phase 6 | Pending |
+| LEVEL-01 | Phase 7 | Pending |
+| LEVEL-02 | Phase 7 | Pending |
+| LEVEL-03 | Phase 10 | Pending |
+| BOSS-01 | Phase 8 | Pending |
+| BOSS-02 | Phase 8 | Pending |
+| BOSS-03 | Phase 8 | Pending |
+| BOSS-04 | Phase 8 | Pending |
+| FEEL-01 | Phase 1 | Pending |
+| FEEL-02 | Phase 11 | Pending |
+| FEEL-03 | Phase 12 | Pending |
+| FEEL-04 | Phase 11 | Pending |
+| FEEL-05 | Phase 11 | Pending |
+| FEEL-06 | Phase 2 | Pending |
+| FEEL-08 | Phase 11 | Pending |
+| FEEL-10 | Phase 5 | Pending |
+| POLISH-01 | Phase 12 | Pending |
+| POLISH-02 | Phase 12 | Pending |
+| ART-01 | Phase 9 | Pending |
+| ART-02 | Phase 10 | Pending |
+| ART-03 | Phase 10 | Pending |
+| ART-04 | Phase 5 | Pending |
+| UX-01 | Phase 7 | Pending |
+| UX-02 | Phase 7 | Pending |
+| UX-03 | Phase 7 | Pending |
+| UX-04 | Phase 8 | Pending |
+| AUDIO-01 | Phase 14 | Pending |
+| AUDIO-02 | Phase 14 | Pending |
+| CTRL-01 | Phase 13 | Pending |
+| CTRL-02 | Phase 13 | Pending |
+| REL-01 | Phase 15 | Pending |
+| REL-02 | Phase 15 | Pending |
+| REL-03 | Phase 15 | Pending |
 
 **Coverage:**
-- v1 requirements: 69 total
-- Mapped to phases: 0
-- Unmapped: 69 ⚠️
+- v1 requirements: 71 total
+- Mapped to phases: 71
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-11-02*
-*Last updated: 2026-11-02 after initial definition*
+*Last updated: 2026-11-02 after roadmap revision (two groups: Prototyp / Produktion; juice presets and toggles removed; Polish and Release requirements added)*

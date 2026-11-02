@@ -71,6 +71,9 @@ Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprint, Sprung und Dash müssen 
 | Türkis = interaktiv, zweite Akzentfarbe für Deko | Lesbarkeit von Interagierbarem; Farbe (Vorschlag Bernstein) im Stil-Vertrag Phase 1 | — Pending |
 | 3–5 Lebenspunkte | Klare Fehlerkonsequenz im Bosskampf | — Pending |
 | Vertical-MVP-Roadmap | Jede Phase liefert etwas Spielbares | — Pending |
+| Zwei Gruppen: A Prototyp (Prototype Bits + KayKit-Mannequin, ohne Partikel/Juice) bis alle Mechaniken stimmen, dann B Produktion (Held, Assets/Welt, Juice + Politur, Controller, Audio, Release) | Mechaniken zuerst sauber, dann Look und Gefühl | — Pending |
+| Keine Juice-Stufen oder -Schalter | Eine feste, kräftige Juice-Stufe; Fokus auf Polish am Ende | — Pending |
+| Git: Arbeit auf `dev`, nach jeder erfolgreichen Phase Merge nach `main` + Push | `main` enthält nur fertige Phasen | — Pending |
 
 ## Evolution
 
@@ -90,4 +93,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-02 after initialization*
+*Last updated: 2026-11-02 after roadmap approval*
