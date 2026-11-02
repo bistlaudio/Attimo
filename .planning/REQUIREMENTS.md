@@ -87,6 +87,12 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [ ] **FEEL-03**: Every hand action and mechanism activation has visual feedback (beam, impact, pull, push, activation)
 - [ ] **FEEL-04**: Camera feedback (trauma-based shake, FOV kick) and hit-stop on impacts, toggleable
 - [ ] **FEEL-05**: Juice can be switched on/off globally to compare and evaluate feel
+- [ ] **FEEL-06**: Input-to-response latency is measured; target ≤ 66 ms, hard limit 100 ms
+- [ ] **FEEL-07**: Reduce-motion option (less shake, FOV kicks and flashes)
+- [ ] **FEEL-08**: Juice catalogue lives as data (cues with tiers and caps, empty SFX slots so audio plugs in last without code changes)
+- [ ] **FEEL-09**: A/B juice study (off / medium / high / extreme) with a short questionnaire to evaluate feel
+- [ ] **FEEL-10**: Pull/momentum metrics table (range, speed cap, carry-over, release boost) documented and tuned
+- [ ] **FEEL-11**: Informational feedback (reticle states, damage, cooldown-ready) stays visible with juice switched off
 
 ### Art & Look
 
@@ -146,9 +152,9 @@ Which phases cover which requirements. Filled during roadmap creation.
 |-------------|-------|--------|
 
 **Coverage:**
-- v1 requirements: 63 total
+- v1 requirements: 69 total
 - Mapped to phases: 0
-- Unmapped: 63 ⚠️
+- Unmapped: 69 ⚠️
 
 ---
 *Requirements defined: 2026-11-02*
