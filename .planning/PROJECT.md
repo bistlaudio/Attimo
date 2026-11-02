@@ -38,7 +38,8 @@ Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprint, Sprung und Dash müssen 
 
 - Uni-Prototyp, Arbeitstitel offen.
 - Art-Referenz: https://kaylousberg.com/game-assets/dungeon-remastered. Der Stil soll so sauber sein, aber an den eigenen Steampunk-Look angepasst (cremig-beige Akzente, gedämpftes Metall statt grellem Bronze, warmes Licht, Dampf, Stoff und Leder, kleine türkise Energiekerne als Leuchtakzent). Verfallene Maschinen, Rohre, Zahnräder, Natur erobert die Ruinen zurück.
-- Der Nutzer erwähnte Assets "schon im Repo". Beim Start war das Repo leer (nur `.git`, keine Commits). Pfad der Assets ist zu klären.
+- Look-Referenzen im Repo: `Character_Look.png` (Chibi-Proportionen, großer Kopf, graue Haare, Steampunk-Brille, Leder- und Stoffkleidung, Prothesen-Arm rechts mit grün-türkis leuchtenden Kernen, Low-Poly mit facettierten Kanten) und `World Look.png` (schwebende Steampunk-Inseln über Wolken, Ziegel und Holz, Rohre, Zahnräder als Plattformen, Dampf, grün-türkise Kristalle und Leuchtrohre, warmes Licht).
+- **Asset-Pipeline:** Der Hauptcharakter wird in **Meshy** (AI-3D-Generator) erzeugt. Ein erster Charakter wurde bereits mit einer bestimmten Polygonanzahl generiert ("CharMeshy", Ort noch zu klären). Zu prüfen ist, ob diese Polygonanzahl passt oder andere Meshy-Einstellungen nötig sind. Weitere Assets werden über das **Blender-MCP** erzeugt oder bearbeitet. Welche Assets gebraucht werden, wird gemeinsam festgelegt. Es braucht klare Regeln für Poly-Budgets (Charakter, Props, Umgebung), Rigging/Animation und den Export nach Godot.
 - Modul-Ideen, die besprochen wurden und noch offen sind: Rücklauf-Uhrwerk (Zeit zurückspulen), Stasis-Hemmung (bewegte Teile einfrieren), Dampfstoß-Kolben (Boost/Druckwelle), Magnet-Greifhaken.
 
 ## Constraints
