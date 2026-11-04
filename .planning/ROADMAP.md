@@ -29,7 +29,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 ### Group A: Prototyp (Phases 1-8)
 
-- [ ] **Phase 1: Foundation & Prototype Character** - Pinned Godot project, conventions, repo hygiene, Mannequin_Medium animating in a Prototype Bits test scene, and the gameplay fact bus
+- [x] **Phase 1: Foundation & Prototype Character** - Pinned Godot project, conventions, repo hygiene, Mannequin_Medium animating in a Prototype Bits test scene, and the gameplay fact bus (completed 2026-11-04)
 - [ ] **Phase 2: Movement Core & Follow Camera** - Run, sprint, variable jump, double jump, ground and air dash, platforms, and a jitter-free mouse-look camera, signed off without juice
 - [ ] **Phase 3: Animated Mannequin & Aim Mode** - The Mannequin animates with every movement state from kit clips, plus aim mode with crosshair
 - [ ] **Phase 4: Fernauslöser & Mechanism Kit** - Hand module framework, turquoise highlight with aim assist, Module 1 remote-trigger beam, and greybox switches, valves, gears, conveyors, doors and logic
@@ -58,10 +58,19 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Requirements**: FOUND-01, FOUND-02, FOUND-03, FOUND-04, FOUND-05, FEEL-01
 **Success Criteria** (what must be TRUE):
   1. The project opens in pinned Godot 4.7.x and runs a test scene with typed GDScript, Jolt, Forward+ and physics interpolation enabled. Collision layers, groups and folder conventions are documented.
-  2. Raw KayKit/VFX packs and reference images are out of the tracked tree. Only the used Prototype Bits pieces, the Mannequin_Medium and the Rig_Medium animation library live under `assets/`.
+  2. Raw KayKit/VFX packs stay tracked in the repo root `KayKit/` as a shared reference library (outside the Godot project folder, so Godot never imports them). Only the used Prototype Bits pieces, the Mannequin_Medium and the Rig_Medium animation library live under `assets/`.
   3. The test scene is built from Prototype Bits pieces. Pressing Input Map actions makes the Mannequin_Medium play the KayKit Idle, Run, Jump and Dodge clips. Gamepad slots are reserved but not bound.
   4. Gameplay facts (for example jumped, landed, dash_started) are broadcast on an event bus and appear in a debug event log. Gameplay code calls no feedback directly, and the scene contains no particles or juice effects.
-**Plans**: TBD
+**Plans:** 7/7 plans complete
+
+Plans:
+- [x] 01-01-PLAN.md — Walking skeleton: pinned 4.7.2 engine, tracer Space -> Jump -> `jumped` on EventBus, headless smoke harness, README (wave 1)
+- [x] 01-02-PLAN.md — Mannequin presentation: copied KayKit GLBs, merged clip library, AnimationTree, Mannequin under VisualRoot (wave 2)
+- [x] 01-04-PLAN.md — Conventions: full Input Map (KB+M, gamepad reserved), layer names, PhysicsLayers, docs/CONVENTIONS.md (wave 2)
+- [x] 01-05-PLAN.md — Prototype Bits pieces (Floor, Wall, Cube_Small, Pillar) with box-collision wrappers (wave 2)
+- [x] 01-03-PLAN.md — Demo verbs played in place on timers (D-09: no movement physics): Run, Fall/`landed`, Dash/`dash_started` on the Mannequin (wave 3)
+- [x] 01-06-PLAN.md — F3 event log overlay and the FEEL-01 feedback guard (wave 3)
+- [x] 01-07-PLAN.md — Prototype Bits test scene as main scene, asset-hygiene guard, end-of-phase play-through (wave 4)
 **Notes**: Re-verify Godot 4.7.x and addon compatibility. The Mannequin sits under a VisualRoot node with its pivot at the feet. The procedural flip and lean (Phase 3), the final hero (Phase 9) and squash/stretch (Phase 11) all reuse this node. The fact bus is the only feedback hook built in Group A (FEEL-01). It is laid now so that the juice and audio phases need no edits to gameplay code. The cue catalogue itself (FEEL-08) waits for Phase 11. No Meshy work happens here.
 
 ### Phase 2: Movement Core & Follow Camera
@@ -276,7 +285,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 (en
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Prototype Character | 0/TBD | Not started | - |
+| 1. Foundation & Prototype Character | 7/7 | Complete    | 2026-11-04 |
 | 2. Movement Core & Follow Camera | 0/TBD | Not started | - |
 | 3. Animated Mannequin & Aim Mode | 0/TBD | Not started | - |
 | 4. Fernauslöser & Mechanism Kit | 0/TBD | Not started | - |
