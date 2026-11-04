@@ -61,7 +61,16 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Raw KayKit/VFX packs stay tracked in the repo root `KayKit/` as a shared reference library (outside the Godot project folder, so Godot never imports them). Only the used Prototype Bits pieces, the Mannequin_Medium and the Rig_Medium animation library live under `assets/`.
   3. The test scene is built from Prototype Bits pieces. Pressing Input Map actions makes the Mannequin_Medium play the KayKit Idle, Run, Jump and Dodge clips. Gamepad slots are reserved but not bound.
   4. Gameplay facts (for example jumped, landed, dash_started) are broadcast on an event bus and appear in a debug event log. Gameplay code calls no feedback directly, and the scene contains no particles or juice effects.
-**Plans**: TBD
+**Plans:** 7 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Walking skeleton: pinned 4.7.2 engine, tracer Space -> Jump -> `jumped` on EventBus, headless smoke harness, README (wave 1)
+- [ ] 01-02-PLAN.md — Mannequin presentation: copied KayKit GLBs, merged clip library, AnimationTree, Mannequin under VisualRoot (wave 2)
+- [ ] 01-04-PLAN.md — Conventions: full Input Map (KB+M, gamepad reserved), layer names, PhysicsLayers, docs/CONVENTIONS.md (wave 2)
+- [ ] 01-05-PLAN.md — Prototype Bits pieces (Floor, Wall, Cube_Small, Pillar) with box-collision wrappers (wave 2)
+- [ ] 01-03-PLAN.md — Demo verbs: Run, Fall/`landed`, Dash/`dash_started` on the Mannequin (wave 3)
+- [ ] 01-06-PLAN.md — F3 event log overlay and the FEEL-01 feedback guard (wave 3)
+- [ ] 01-07-PLAN.md — Prototype Bits test scene as main scene, asset-hygiene guard, end-of-phase play-through (wave 4)
 **Notes**: Re-verify Godot 4.7.x and addon compatibility. The Mannequin sits under a VisualRoot node with its pivot at the feet. The procedural flip and lean (Phase 3), the final hero (Phase 9) and squash/stretch (Phase 11) all reuse this node. The fact bus is the only feedback hook built in Group A (FEEL-01). It is laid now so that the juice and audio phases need no edits to gameplay code. The cue catalogue itself (FEEL-08) waits for Phase 11. No Meshy work happens here.
 
 ### Phase 2: Movement Core & Follow Camera
@@ -276,7 +285,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 (en
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Prototype Character | 0/TBD | Not started | - |
+| 1. Foundation & Prototype Character | 0/7 | Planned | - |
 | 2. Movement Core & Follow Camera | 0/TBD | Not started | - |
 | 3. Animated Mannequin & Aim Mode | 0/TBD | Not started | - |
 | 4. Fernauslöser & Mechanism Kit | 0/TBD | Not started | - |
