@@ -6,7 +6,8 @@
 #   bash attimo/tests/run.sh --tool res://tools/x.gd   run an editor-time tool script headless
 #
 # GODOT overrides the engine path. Default: $HOME/Applications/Godot_4.7.2/Godot.app/Contents/MacOS/Godot
-# Exit codes: 0 = passed, 1 = failed, 3 = wrong or missing engine binary.
+# Exit codes: 0 = passed, 1 = failed, 3 = wrong or missing engine binary, 4 = repository check failed
+# (raw KayKit packs or copied originals untracked, or Git LFS configured).
 set -euo pipefail
 
 EXPECTED_VERSION="4.7.2.stable.official.ed1daf0bf"
@@ -27,6 +28,42 @@ if [ "$ACTUAL_VERSION" != "$EXPECTED_VERSION" ]; then
 	echo "Wrong Godot version. Expected: $EXPECTED_VERSION  Actual: '${ACTUAL_VERSION}'  Binary: $GODOT" >&2
 	echo "RUN.SH: FAILED (engine version mismatch)"
 	exit 3
+fi
+
+# 1b. Repository checks (read-only git queries; D-02, D-03, D-04). Skipped for --tool runs.
+# The raw KayKit packs stay tracked at the repo root as a reference library, the originals of copied files
+# stay in place (copy, never move), and the repo does not use Git LFS.
+if [ "${1:-}" != "--tool" ]; then
+	KAYKIT_TRACKED="$(git -C "$REPO_ROOT" ls-files KayKit | wc -l | tr -d ' ')"
+	if [ "$KAYKIT_TRACKED" -lt 1 ]; then
+		echo "RUN.SH: FAILED (repo check: no tracked files under KayKit/, D-02)"
+		exit 4
+	fi
+	CHARACTER_ROOT="KayKit/KayKit_Character_Animations_1.1"
+	PROTOTYPE_GLTF="KayKit/KayKit_Prototype_Bits_1.1_FREE/KayKit_Prototype_Bits_1.1_FREE/Assets/gltf"
+	ORIGINALS=(
+		"$CHARACTER_ROOT/Mannequin Character/characters/Mannequin_Medium.glb"
+		"$CHARACTER_ROOT/Animations/gltf/Rig_Medium/Rig_Medium_General.glb"
+		"$CHARACTER_ROOT/Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb"
+		"$CHARACTER_ROOT/Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb"
+		"$PROTOTYPE_GLTF/Primitive_Floor.gltf"
+		"$PROTOTYPE_GLTF/Primitive_Wall.gltf"
+		"$PROTOTYPE_GLTF/Primitive_Cube_Small.gltf"
+		"$PROTOTYPE_GLTF/Primitive_Pillar.gltf"
+		"$PROTOTYPE_GLTF/prototypebits_texture.png"
+	)
+	for original in "${ORIGINALS[@]}"; do
+		if ! git -C "$REPO_ROOT" ls-files --error-unmatch -- "$original" >/dev/null 2>&1; then
+			echo "RUN.SH: FAILED (repo check: original is not tracked: $original, D-04)"
+			exit 4
+		fi
+	done
+	for attributes in "$PROJECT_DIR/.gitattributes" "$REPO_ROOT/.gitattributes"; do
+		if [ -f "$attributes" ] && grep -Eq 'filter=lfs' "$attributes"; then
+			echo "RUN.SH: FAILED (repo check: Git LFS filter declared in $attributes, D-03)"
+			exit 4
+		fi
+	done
 fi
 
 IMPORT_LOG="$(mktemp -t attimo_import.XXXXXX)"
@@ -76,5 +113,4 @@ if [ "$RUN_RC" -ne 0 ]; then
 	exit "$RUN_RC"
 fi
 
-: "$REPO_ROOT"
 echo "RUN.SH: PASSED"
