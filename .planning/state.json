@@ -1,0 +1,88 @@
+{
+  "contract": "1.0.0",
+  "flavor": "core",
+  "milestone": "v0.11.0.4",
+  "phases": [
+    {
+      "number": "1",
+      "name": "Foundation & Prototype Character",
+      "status": "complete"
+    },
+    {
+      "number": "2",
+      "name": "Movement Core & Follow Camera",
+      "status": "pending"
+    },
+    {
+      "number": "3",
+      "name": "Animated Mannequin & Aim Mode",
+      "status": "pending"
+    },
+    {
+      "number": "4",
+      "name": "Fernauslöser & Mechanism Kit",
+      "status": "pending"
+    },
+    {
+      "number": "5",
+      "name": "Pull/Push & Module Unlocks",
+      "status": "pending"
+    },
+    {
+      "number": "6",
+      "name": "Shooting, Enemies & Recovery",
+      "status": "pending"
+    },
+    {
+      "number": "7",
+      "name": "Level Blockout & Game Flow",
+      "status": "pending"
+    },
+    {
+      "number": "8",
+      "name": "Boss & Ending",
+      "status": "pending"
+    },
+    {
+      "number": "9",
+      "name": "Style Contract & Final Hero",
+      "status": "pending"
+    },
+    {
+      "number": "10",
+      "name": "Steampunk World Building",
+      "status": "pending"
+    },
+    {
+      "number": "11",
+      "name": "Movement & Camera Juice",
+      "status": "pending"
+    },
+    {
+      "number": "12",
+      "name": "Hand & Combat Juice + Polish",
+      "status": "pending"
+    },
+    {
+      "number": "13",
+      "name": "Controller Support",
+      "status": "pending"
+    },
+    {
+      "number": "14",
+      "name": "Audio",
+      "status": "pending"
+    },
+    {
+      "number": "15",
+      "name": "Windows Release & Performance",
+      "status": "pending"
+    }
+  ],
+  "next": {
+    "command": "/gsd-progress --next",
+    "label": "Advance to the next step (plan phase 2)",
+    "reason": "Phase 2 of 15 — needs a plan"
+  },
+  "updated_at": "2026-11-04T15:22:19.182Z"
+}
