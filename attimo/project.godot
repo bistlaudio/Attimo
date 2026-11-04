@@ -113,6 +113,15 @@ use_hand={
 ]
 }
 
+[layer_names]
+
+3d_physics/layer_1="World"
+3d_physics/layer_2="Player"
+3d_physics/layer_3="Interactable"
+3d_physics/layer_4="Enemy"
+3d_physics/layer_5="Projectile/Beam"
+3d_physics/layer_6="Hazard"
+
 [physics]
 
 3d/physics_engine="Jolt Physics"
