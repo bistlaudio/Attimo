@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/characters/mannequin/Mannequin_Medium.glb" id="1_glb"]
+[ext_resource type="AnimationLibrary" path="res://assets/animations/rig_medium/rig_medium_library.res" id="2_lib"]
+[ext_resource type="AnimationNodeStateMachine" path="res://scenes/player/mannequin_state_machine.tres" id="3_sm"]
+
+[node name="Mannequin" instance=ExtResource("1_glb")]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." index="1"]
+libraries = {
+&"": ExtResource("2_lib")
+}
+
+[node name="AnimationTree" type="AnimationTree" parent="." index="2"]
+tree_root = ExtResource("3_sm")
+anim_player = NodePath("../AnimationPlayer")
+active = true
+parameters/Locomotion/blend_position = 0.0
