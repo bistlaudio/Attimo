@@ -23,7 +23,7 @@ Out of scope: full animation state mapping and aim mode (Phase 3), interactable 
 ### Jump chain (ground) and long jump
 - **D-04:** Jump height is variable in every jump: tap = short, hold = high (velocity cut on release). Chain stages only set the maximum height. Fall gravity is heavier than rise (multiplier 1.5-2x), with terminal velocity clamp.
 - **D-05:** Ground chain is original, not Mario's 1-2-3: Jump 1 -> land -> Jump 2 (higher, within a landing window) -> Dash -> Jump = **maximum long jump** (high and fast, forward). Fewer chain stages give a weaker long jump (a dash-jump without a chain is still a long jump, just smaller). Landing window, stage heights and long-jump arc are tunable values.
-- **D-06:** A jump pressed during or right after a ground dash becomes a long jump: high, fast arc with the dash speed carried (not a flat copy of the normal jump). Jump cancels the dash. This replaces the earlier "normal jump with dash speed" idea.
+- **D-06:** A jump pressed during or right after a plain ground dash (no chain) is already a **small long jump**: a flatter, farther arc with the dash speed carried (not a flat copy of the normal jump). Each chain stage before the dash (D-05) makes it bigger, up to the maximum long jump. Jump cancels the dash. This replaces the earlier "normal jump with dash speed" idea.
 - **D-07:** The chain resets when the landing window is missed or the player stands still. Landing resets double jump and air dash.
 
 ### Air options
