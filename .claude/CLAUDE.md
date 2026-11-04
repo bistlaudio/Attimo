@@ -301,7 +301,7 @@ Do not make direct repo edits outside a GSD workflow unless the user explicitly 
 
 - All phase work happens on the `dev` branch. Never commit phase work directly to `main`.
 - After a phase completes successfully (verification passed): merge `dev` into `main`, push `main` and `dev` to `origin`, then switch back to `dev`.
-- Raw asset packs (`KayKit/`) and reference images in the repo root stay untracked until Phase 1 sets up `.gitignore`/LFS and imports only the assets actually used.
+- Raw asset packs (`KayKit/`) are tracked in the repo root as a shared reference library, outside the Godot project folder (`attimo/`) so Godot never imports them. Only the assets actually used are copied into `attimo/assets/`.
 
 ## Communication
 

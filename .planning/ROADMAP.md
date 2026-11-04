@@ -58,7 +58,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Requirements**: FOUND-01, FOUND-02, FOUND-03, FOUND-04, FOUND-05, FEEL-01
 **Success Criteria** (what must be TRUE):
   1. The project opens in pinned Godot 4.7.x and runs a test scene with typed GDScript, Jolt, Forward+ and physics interpolation enabled. Collision layers, groups and folder conventions are documented.
-  2. Raw KayKit/VFX packs and reference images are out of the tracked tree. Only the used Prototype Bits pieces, the Mannequin_Medium and the Rig_Medium animation library live under `assets/`.
+  2. Raw KayKit/VFX packs stay tracked in the repo root `KayKit/` as a shared reference library (outside the Godot project folder, so Godot never imports them). Only the used Prototype Bits pieces, the Mannequin_Medium and the Rig_Medium animation library live under `assets/`.
   3. The test scene is built from Prototype Bits pieces. Pressing Input Map actions makes the Mannequin_Medium play the KayKit Idle, Run, Jump and Dodge clips. Gamepad slots are reserved but not bound.
   4. Gameplay facts (for example jumped, landed, dash_started) are broadcast on an event bus and appear in a debug event log. Gameplay code calls no feedback directly, and the scene contains no particles or juice effects.
 **Plans**: TBD

@@ -12,7 +12,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [ ] **FOUND-01**: Project runs in Godot 4.7.x (pinned) with typed GDScript, Jolt physics, Forward+ and physics interpolation enabled
 - [ ] **FOUND-02**: All player input goes through named Input Map actions (KB+M bound now, gamepad slots reserved)
 - [ ] **FOUND-03**: Collision layers, groups and folder conventions are fixed and documented
-- [ ] **FOUND-04**: Repo hygiene: raw KayKit/VFX packs and reference images are kept out of the main tree (gitignored or LFS), only used assets are imported into `assets/`
+- [ ] **FOUND-04**: Repo hygiene: raw KayKit/VFX packs stay tracked in the repo root `KayKit/` as a shared reference library, outside the Godot project folder so they are never imported; only used assets are copied into the project's `assets/`
 - [ ] **FOUND-05**: Prototype uses KayKit Prototype Bits for all greybox geometry and the KayKit Mannequin_Medium (Rig_Medium) as prototype character with KayKit animation clips; no particles/juice VFX in the prototype group
 - [ ] **FOUND-06**: Style contract exists: palette atlas, poly budgets per asset class, turquoise = interactable only, second accent colour for decoration, Blender→GLB export checklist
 
