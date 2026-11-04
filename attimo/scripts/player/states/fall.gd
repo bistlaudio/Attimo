@@ -13,6 +13,8 @@ func enter(_previous: StringName) -> void:
 
 
 func physics_update(delta: float) -> StringName:
+	if Input.is_action_just_pressed(&"dash"):
+		return &"Dash"
 	var direction: Vector3 = actor.input_direction()
 	actor.face(direction, delta)
 	_timer += delta

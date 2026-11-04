@@ -3,6 +3,8 @@ extends State
 
 
 func physics_update(_delta: float) -> StringName:
+	if Input.is_action_just_pressed(&"dash"):
+		return &"Dash"
 	if Input.is_action_just_pressed(&"jump"):
 		return &"Jump"
 	if actor.input_direction() != Vector3.ZERO:

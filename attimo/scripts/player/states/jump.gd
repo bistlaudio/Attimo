@@ -13,6 +13,8 @@ func enter(_previous: StringName) -> void:
 
 
 func physics_update(delta: float) -> StringName:
+	if Input.is_action_just_pressed(&"dash"):
+		return &"Dash"
 	actor.face(actor.input_direction(), delta)
 	_timer += delta
 	if _timer >= JUMP_TIME:

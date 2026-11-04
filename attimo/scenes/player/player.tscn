@@ -8,6 +8,7 @@
 [ext_resource type="Script" path="res://scripts/player/mannequin_animator.gd" id="6_anim"]
 [ext_resource type="Script" path="res://scripts/player/states/run.gd" id="7_run"]
 [ext_resource type="Script" path="res://scripts/player/states/fall.gd" id="8_fall"]
+[ext_resource type="Script" path="res://scripts/player/states/dash.gd" id="9_dash"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.5
@@ -41,6 +42,9 @@ script = ExtResource("7_run")
 
 [node name="Fall" type="Node" parent="StateMachine"]
 script = ExtResource("8_fall")
+
+[node name="Dash" type="Node" parent="StateMachine"]
+script = ExtResource("9_dash")
 
 [node name="MannequinAnimator" type="Node" parent="." node_paths=PackedStringArray("state_machine", "animation_tree")]
 script = ExtResource("6_anim")
