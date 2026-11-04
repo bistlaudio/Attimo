@@ -1,6 +1,5 @@
 extends State
-## Jump: timer-driven, no physics (D-09). Emits the jumped fact on enter, returns to Idle after JUMP_TIME.
-## Plan 01-03 hands the end of this state to a Fall state.
+## Jump: timer-driven, no physics (D-09). Emits the jumped fact on enter, hands over to Fall after JUMP_TIME.
 
 ## Equals the Jump_Start clip length in seconds.
 const JUMP_TIME: float = 0.6
@@ -14,7 +13,8 @@ func enter(_previous: StringName) -> void:
 
 
 func physics_update(delta: float) -> StringName:
+	actor.face(actor.input_direction(), delta)
 	_timer += delta
 	if _timer >= JUMP_TIME:
-		return &"Idle"
+		return &"Fall"
 	return &""

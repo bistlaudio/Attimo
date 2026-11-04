@@ -1,5 +1,5 @@
 extends RefCounted
-## Tracer: Input action jump -> FSM Idle -> Jump -> Idle, EventBus.jumped emitted exactly once, body never moves (D-09).
+## Tracer: Input action jump -> FSM Idle -> Jump -> Fall -> Idle, EventBus.jumped emitted exactly once, body never moves (D-09).
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
@@ -29,8 +29,9 @@ func run(tree: SceneTree, check: Callable) -> void:
 	check.call(saw_idle_to_jump, "movement_state_changed Idle -> Jump recorded")
 	check.call(player.state_machine.current.name == &"Jump", "current state is Jump")
 
-	await Fixtures.wait_physics(tree, 45)
-	check.call(player.state_machine.current.name == &"Idle", "back in Idle after the jump timer")
+	# Jump (0.6 s) hands over to Fall (0.3 s), which then returns to Idle: 0.9 s is about 54 physics frames.
+	await Fixtures.wait_physics(tree, 70)
+	check.call(player.state_machine.current.name == &"Idle", "back in Idle after the jump and fall timers")
 	check.call(jumped_positions.size() == 1, "jumped fact still exactly one")
 
 	check.call(player.global_position == spawn and player.velocity == Vector3.ZERO, "D-09: position unchanged and velocity zero")
