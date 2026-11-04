@@ -9,11 +9,11 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 
 ### Foundation & Pipeline
 
-- [ ] **FOUND-01**: Project runs in Godot 4.7.x (pinned) with typed GDScript, Jolt physics, Forward+ and physics interpolation enabled
-- [ ] **FOUND-02**: All player input goes through named Input Map actions (KB+M bound now, gamepad slots reserved)
-- [ ] **FOUND-03**: Collision layers, groups and folder conventions are fixed and documented
-- [ ] **FOUND-04**: Repo hygiene: raw KayKit/VFX packs stay tracked in the repo root `KayKit/` as a shared reference library, outside the Godot project folder so they are never imported; only used assets are copied into the project's `assets/`
-- [ ] **FOUND-05**: Prototype uses KayKit Prototype Bits for all greybox geometry and the KayKit Mannequin_Medium (Rig_Medium) as prototype character with KayKit animation clips; no particles/juice VFX in the prototype group
+- [x] **FOUND-01**: Project runs in Godot 4.7.x (pinned) with typed GDScript, Jolt physics, Forward+ and physics interpolation enabled
+- [x] **FOUND-02**: All player input goes through named Input Map actions (KB+M bound now, gamepad slots reserved)
+- [x] **FOUND-03**: Collision layers, groups and folder conventions are fixed and documented
+- [x] **FOUND-04**: Repo hygiene: raw KayKit/VFX packs stay tracked in the repo root `KayKit/` as a shared reference library, outside the Godot project folder so they are never imported; only used assets are copied into the project's `assets/`
+- [x] **FOUND-05**: Prototype uses KayKit Prototype Bits for all greybox geometry and the KayKit Mannequin_Medium (Rig_Medium) as prototype character with KayKit animation clips; no particles/juice VFX in the prototype group
 - [ ] **FOUND-06**: Style contract exists: palette atlas, poly budgets per asset class, turquoise = interactable only, second accent colour for decoration, Blender→GLB export checklist
 
 ### Movement
@@ -82,7 +82,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 
 ### Feel & Juice
 
-- [ ] **FEEL-01**: Feedback hooks: gameplay events are broadcast so juice can be layered on without touching gameplay code
+- [x] **FEEL-01**: Feedback hooks: gameplay events are broadcast so juice can be layered on without touching gameplay code
 - [ ] **FEEL-02**: Every movement action has visual/kinetic feedback (landing, jump, double jump, dash, sprint)
 - [ ] **FEEL-03**: Every hand action and mechanism activation has visual feedback (beam, impact, pull, push, activation)
 - [ ] **FEEL-04**: Camera feedback (trauma-based shake, FOV kick) and hit-stop on impacts
@@ -162,11 +162,11 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | Phase 1 | Pending |
-| FOUND-02 | Phase 1 | Pending |
-| FOUND-03 | Phase 1 | Pending |
-| FOUND-04 | Phase 1 | Pending |
-| FOUND-05 | Phase 1 | Pending |
+| FOUND-01 | Phase 1 | Complete |
+| FOUND-02 | Phase 1 | Complete |
+| FOUND-03 | Phase 1 | Complete |
+| FOUND-04 | Phase 1 | Complete |
+| FOUND-05 | Phase 1 | Complete |
 | FOUND-06 | Phase 9 | Pending |
 | MOVE-01 | Phase 2 | Pending |
 | MOVE-02 | Phase 2 | Pending |
@@ -208,7 +208,7 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | BOSS-02 | Phase 8 | Pending |
 | BOSS-03 | Phase 8 | Pending |
 | BOSS-04 | Phase 8 | Pending |
-| FEEL-01 | Phase 1 | Pending |
+| FEEL-01 | Phase 1 | Complete |
 | FEEL-02 | Phase 11 | Pending |
 | FEEL-03 | Phase 12 | Pending |
 | FEEL-04 | Phase 11 | Pending |

@@ -29,7 +29,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 ### Group A: Prototyp (Phases 1-8)
 
-- [ ] **Phase 1: Foundation & Prototype Character** - Pinned Godot project, conventions, repo hygiene, Mannequin_Medium animating in a Prototype Bits test scene, and the gameplay fact bus
+- [x] **Phase 1: Foundation & Prototype Character** - Pinned Godot project, conventions, repo hygiene, Mannequin_Medium animating in a Prototype Bits test scene, and the gameplay fact bus (completed 2026-11-04)
 - [ ] **Phase 2: Movement Core & Follow Camera** - Run, sprint, variable jump, double jump, ground and air dash, platforms, and a jitter-free mouse-look camera, signed off without juice
 - [ ] **Phase 3: Animated Mannequin & Aim Mode** - The Mannequin animates with every movement state from kit clips, plus aim mode with crosshair
 - [ ] **Phase 4: Fernauslöser & Mechanism Kit** - Hand module framework, turquoise highlight with aim assist, Module 1 remote-trigger beam, and greybox switches, valves, gears, conveyors, doors and logic
@@ -61,7 +61,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Raw KayKit/VFX packs stay tracked in the repo root `KayKit/` as a shared reference library (outside the Godot project folder, so Godot never imports them). Only the used Prototype Bits pieces, the Mannequin_Medium and the Rig_Medium animation library live under `assets/`.
   3. The test scene is built from Prototype Bits pieces. Pressing Input Map actions makes the Mannequin_Medium play the KayKit Idle, Run, Jump and Dodge clips. Gamepad slots are reserved but not bound.
   4. Gameplay facts (for example jumped, landed, dash_started) are broadcast on an event bus and appear in a debug event log. Gameplay code calls no feedback directly, and the scene contains no particles or juice effects.
-**Plans:** 7/7 plans executed
+**Plans:** 7/7 plans complete
 
 Plans:
 - [x] 01-01-PLAN.md — Walking skeleton: pinned 4.7.2 engine, tracer Space -> Jump -> `jumped` on EventBus, headless smoke harness, README (wave 1)
@@ -285,7 +285,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 (en
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Prototype Character | 7/7 | In Progress | - |
+| 1. Foundation & Prototype Character | 7/7 | Complete    | 2026-11-04 |
 | 2. Movement Core & Follow Camera | 0/TBD | Not started | - |
 | 3. Animated Mannequin & Aim Mode | 0/TBD | Not started | - |
 | 4. Fernauslöser & Mechanism Kit | 0/TBD | Not started | - |
