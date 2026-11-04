@@ -10,6 +10,8 @@ const RAY_HEIGHT: float = 10.0
 const WRAPPERS: Dictionary = {
 	"res://scenes/proto/primitive_floor.tscn": 1.0,
 	"res://scenes/proto/primitive_wall.tscn": 4.0,
+	"res://scenes/proto/primitive_cube_small.tscn": 2.0,
+	"res://scenes/proto/primitive_pillar.tscn": 4.0,
 }
 
 
