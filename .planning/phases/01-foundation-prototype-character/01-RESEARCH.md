@@ -470,6 +470,8 @@ Everything that moves interpolated nodes must happen in `_physics_process`; afte
 
 All blocks below compiled and ran in the spike under `untyped_declaration=2` on 4.7.2.
 
+> **Planning note (2026-11-04, D-09 Option A, user decision):** Phase 1 has NO movement physics. Use the State/StateMachine, MannequinAnimator, animation-library builder and smoke-test patterns as written. Do NOT use the velocity, gravity, `move_and_slide()`, `is_on_floor()` landing or `RUN_SPEED`/`GRAVITY`/`JUMP_VELOCITY` parts of the PlayerController and `fall.gd` examples. In Phase 1, states are timer/clip-driven, the Player never moves, and facts fire on state timing. Phase 2 adds the physics.
+
 ### State / StateMachine
 ```gdscript
 # scripts/core/state.gd
@@ -711,22 +713,27 @@ func _run() -> void:
 | A8 | A fresh-checkout import + smoke run completes in well under a minute | Validation | Slower feedback loop; not a correctness risk |
 | A9 | Committing the generated `rig_medium_library.res` (binary, 81 KB) is preferable to a 364 KB text `.tres` | Pattern 9 | Both work (verified); binary churn on regeneration vs. greppable text. User's text-first preference could flip this |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Where do checkpoint triggers and moving platforms live in the layer scheme?**
    - What we know: D-14 lists six layers; ARCHITECTURE.md had Platforms and Triggers rows that D-14 dropped.
    - What's unclear: whether the user wants a seventh "Trigger" layer claimed later.
    - Recommendation: platforms = World (1), kill zones = Hazard (6), checkpoints = layer 7 "Trigger", added in Phase 6; list layers 7-32 as reserved now.
+   - RESOLVED: Adopted as recommended. Platforms go on World (1) and kill zones on Hazard (6). Layer 7 "Trigger" for checkpoints is documented in `docs/CONVENTIONS.md` only and claimed in Phase 6. Layers 7-32 stay unnamed and reserved in `project.godot` (plan 01-04 Task 2, flagged assumption A3).
 
 2. **Which Rig_Medium GLBs go into `assets/`?**
    - What we know: Phase 1 only needs 3 of 8 (General, MovementBasic, MovementAdvanced); the library `.res` is self-contained.
    - Recommendation: copy those 3 now (2.2 MB); Phase 3/5 copy CombatRanged/Tools etc. when they extend `WANTED`.
+   - RESOLVED: Adopted as recommended. Plan 01-02 Task 1 copies only `Rig_Medium_General.glb`, `Rig_Medium_MovementBasic.glb` and `Rig_Medium_MovementAdvanced.glb`, plus `Mannequin_Medium.glb`. Plan 01-07's fixed asset whitelist enforces this.
 
 3. **Are `tests/` and `tools/` under `attimo/` acceptable given D-05's four folders?** Recommend yes (A6).
+   - RESOLVED: Adopted as flagged assumption A6 (plans 01-01, 01-02, 01-04). `attimo/tests/` and `attimo/tools/` sit next to D-05's four folders and are documented in `docs/CONVENTIONS.md`. If the developer vetoes this at review, both move under `scripts/`.
 
 4. **Should Phase 1 add a `README.md` pin note and `CREDITS.md` (CC0 assets, optional attribution)?** CLAUDE.md asks to pin the version in README; no README exists in the repo root yet. Recommend a short root `README.md` (engine pin, how to run tests) as part of plan A.
+   - RESOLVED: A root `README.md` holds the engine pin (version string, SHA-512, install path, `GODOT` env var), the test commands, the repo layout and a Credits section for the CC0 KayKit packs. There is no separate `CREDITS.md` (plan 01-01 Task 2, flagged assumption A10).
 
 5. **Static camera vs. tiny follow camera for the demo.** Camera is Phase 2; recommend a fixed `Camera3D` and world-axis input (W = -Z). If the user wants to see the character run far, size the floor accordingly (e.g. 5 x 5 tiles = 20 m) so the Player cannot walk off the edge (the spike's single 4 m tile made the player fall off in seconds).
+   - RESOLVED: A fixed `Camera3D` at (0, 9, 16) with world-axis input (W = -Z) is used only for facing (flagged assumption A14). The user chose D-09 Option A: there is no movement physics in Phase 1. The Mannequin stays in place, input actions only trigger clips, facts and VisualRoot facing, and the player cannot walk off anything. The 5 x 5 floor and the walls in plan 01-07 are a static Prototype Bits backdrop with box collision.
 
 ## Environment Availability
 

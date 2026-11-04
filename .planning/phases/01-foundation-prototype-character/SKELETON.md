@@ -5,7 +5,7 @@
 
 ## Capability Proven End-to-End
 
-Pressing an Input Map action makes the KayKit Mannequin_Medium play the matching KayKit Rig_Medium clip in a Prototype Bits test scene. The gameplay fact (jumped, landed, dash_started, movement_state_changed) is broadcast on the EventBus and shown in the debug event log, and a headless smoke suite on pinned Godot 4.7.2 proves all of it.
+Pressing an Input Map action makes the KayKit Mannequin_Medium play the matching KayKit Rig_Medium clip in place in a Prototype Bits test scene. The gameplay fact (jumped, landed, dash_started, movement_state_changed) is broadcast on the EventBus and shown in the debug event log, and a headless smoke suite on pinned Godot 4.7.2 proves all of it. Per D-09 Option A (user decision 2026-11-04), Phase 1 has no movement physics: the Player never moves, and states are timer-driven.
 
 ## Architectural Decisions
 
@@ -13,11 +13,11 @@ Pressing an Input Map action makes the KayKit Mannequin_Medium play the matching
 |---|---|---|
 | Engine | Godot 4.7.2-stable, standard build (not .NET), version string `4.7.2.stable.official.ed1daf0bf`. The macOS zip is verified against the official SHA-512 and installed at `$HOME/Applications/Godot_4.7.2/Godot.app`. Scripts find it through the `GODOT` env var. | CLAUDE.md pin. A wrong binary rewrites `project.godot`/`.import` files, so `attimo/tests/run.sh` refuses any other version. |
 | Language | Typed GDScript. `debug/gdscript/warnings/untyped_declaration=2` turns untyped declarations into parse errors. | Typing is enforced by the engine, not by convention. This also covers `tools/` and `tests/`. |
-| Physics | Jolt. Physics interpolation is on. There is one `move_and_slide()` per tick, in `PlayerController`. | CLAUDE.md. States only change `velocity`. |
+| Physics | Jolt. Physics interpolation is on. Phase 1 has NO movement physics (D-09 Option A): no velocity, gravity, floor checks or `move_and_slide()`. From Phase 2 the rule is one `move_and_slide()` per tick, in `PlayerController`, with states only changing `velocity`. | CLAUDE.md plus the user decision. The static Prototype Bits pieces already carry box collision on World, ready for Phase 2. |
 | Renderer | Forward+ (D3D12 on Windows). | Already set. Glow, fog and SDFGI stay off in Group A. |
 | Project root | `attimo/` holds `project.godot` (D-01). The repo root holds `KayKit/`, `docs/` and `.planning/`. | Godot never imports the raw packs. Moving the project root later would change every `res://` path (costly). |
 | Directory layout | Folders by type: `autoload/`, `scenes/`, `scripts/`, `assets/` (D-05), plus `tests/` and `tools/` (flagged assumption A6). Files are `snake_case`, nodes and classes `PascalCase`. | One predictable place per file type. |
-| Player architecture | `CharacterBody3D` (Player, layer 2) > `VisualRoot` (feet pivot) > Mannequin. A node-based `StateMachine` with `State` children is the source of truth (D-06, D-09). | Later phases rotate and scale `VisualRoot` only: flip/lean (P3), the hero swap (P9) and squash/stretch (P11). |
+| Player architecture | `CharacterBody3D` (Player, layer 2) > `VisualRoot` (feet pivot) > Mannequin. A node-based `StateMachine` with `State` children (Idle, Run, Jump, Fall, Dash) is the source of truth (D-06, D-09). In Phase 1 the states are timer-driven to match clip lengths and only rotate `VisualRoot` toward the input direction. Phase 2 adds velocity to the same states. | Later phases rotate and scale `VisualRoot` only: flip/lean (P3), the hero swap (P9) and squash/stretch (P11). |
 | Animation pipeline | `tools/build_animation_library.gd` merges the KayKit clips into `rig_medium_library.res` and sets loop modes. `tools/build_mannequin_state_machine.gd` writes the `AnimationTree` state machine `.tres`. `MannequinAnimator` maps FSM states to tree states through the LOCAL `state_changed` signal (D-07, D-08). | No retargeting is needed, because the Mannequin and Rig_Medium share the `Rig_Medium/Skeleton3D:<bone>` track paths. The build scripts keep the assets reproducible and the editor click-free. |
 | Feedback architecture | The `EventBus` autoload declares typed fact signals only. Gameplay emits them and never calls feedback (D-10, D-11). | Juice (P11-12) and audio (P14) connect later without gameplay edits. A smoke guard enforces the rule. |
 | Debug tooling | The event log is a `CanvasLayer` scene instanced by the test scene, not an autoload. F3 or the key left of 1 toggles it through the `debug_event_log` action (D-12). | It is easy to strip from release builds (REL-03). |
@@ -42,6 +42,7 @@ Pressing an Input Map action makes the KayKit Mannequin_Medium play the matching
 
 ## Out of Scope (Deferred to Later Slices)
 
+- ALL movement physics (D-09 Option A): velocity, gravity, real jump arcs, landing by floor contact, dash travel, the kinematic move call (Phase 2)
 - Tuned movement values, the MovementParams resource, coyote time, jump buffer, double jump, air-dash limits and cooldowns (Phase 2)
 - Follow camera, mouse look, sensitivity and invert-Y (Phase 2). Phase 1 uses one static `Camera3D` and world-axis input.
 - Collision for slopes, stairs and moving platforms (Phase 2, MOVE-08)
@@ -55,7 +56,7 @@ Pressing an Input Map action makes the KayKit Mannequin_Medium play the matching
 
 Each later phase adds one vertical slice on top of this skeleton without altering its architectural decisions:
 
-- Phase 2: run, sprint, variable jump, double jump and ground/air dash with a jitter-free mouse-look camera (MovementParams resource replaces the demo constants)
+- Phase 2: run, sprint, variable jump, double jump and ground/air dash with a jitter-free mouse-look camera. The movement physics and the MovementParams resource go into the existing Phase 1 states, replacing their demo timers.
 - Phase 3: every movement state animated from kit clips, plus aim mode with crosshair
 - Phase 4: Fernauslöser beam, module framework, turquoise interactable highlight, greybox mechanism kit
 - Phase 5: Pull/Push module with momentum, module pickups, teaching rooms
