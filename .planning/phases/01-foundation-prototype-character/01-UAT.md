@@ -3,7 +3,7 @@ status: complete
 phase: 01-foundation-prototype-character
 source: [01-VERIFICATION.md]
 started: 2026-11-04T14:40:32Z
-updated: 2026-11-04T15:07:27.906Z
+updated: 2026-11-04T15:20:13Z
 ---
 
 ## Current Test
@@ -18,8 +18,7 @@ result: pass
 
 ### 2. F3 event log feel
 expected: Log starts hidden, F3 (and the key left of 1) toggles it, newest line last, readable placement.
-result: skipped
-reason: "User on Mac could not press F3 to test (Fn+F3 / key left of 1 not tried); visual check of the log overlay not done. Toggle logic is covered by test_event_log."
+result: pass
 
 ### 3. Camera framing of the test scene
 expected: Static camera frames the 20x20 floor, wall ring, 1/2/4 m blocks and the Mannequin; Prototype Bits texture renders.
@@ -32,10 +31,10 @@ result: pass
 ## Summary
 
 total: 4
-passed: 3
+passed: 4
 issues: 0
 pending: 0
-skipped: 1
+skipped: 0
 blocked: 0
 
 ## Gaps
