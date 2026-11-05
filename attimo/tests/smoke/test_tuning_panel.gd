@@ -16,6 +16,9 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_toggle(tree, check)
 	await _scenario_row_count(tree, check)
 	await _scenario_live_retune(tree, check)
+	await _scenario_camera_settings(tree, check)
+	await _scenario_auto_follow(tree, check)
+	await _scenario_save_button(tree, check)
 	_cleanup_file(TEST_SETTINGS_PATH)
 
 
@@ -95,4 +98,58 @@ func _scenario_live_retune(tree: SceneTree, check: Callable) -> void:
 	var reached: int = await Fixtures.wait_until(tree, func() -> bool: return absf(player.horizontal_speed() - 9.0) <= 0.05, 120)
 	check.call(reached >= 0, "(3) the running player reaches 9.0 m/s without a restart (got %.2f)" % player.horizontal_speed())
 	check.call(shared.run_speed == shared_before, "(3) the shared res:// config keeps run_speed %.1f (the test used a duplicate)" % shared_before)
+	await _free_all(tree, nodes)
+
+
+# (4) sensitivity and invert-Y reach the rig and the saved file.
+func _scenario_camera_settings(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree)
+	var rig: CameraRig = nodes[2] as CameraRig
+	var panel: TuningPanel = nodes[3] as TuningPanel
+	panel.set_sensitivity(2.0)
+	panel.set_invert_y(true)
+	check.call(is_equal_approx(rig.settings.sensitivity, 2.0), "(4) set_sensitivity(2.0) reaches rig.settings (got %.2f)" % rig.settings.sensitivity)
+	check.call(rig.settings.invert_y, "(4) set_invert_y(true) reaches rig.settings")
+	var saved: CameraSettings = CameraSettings.load_from(TEST_SETTINGS_PATH)
+	check.call(is_equal_approx(saved.sensitivity, 2.0) and saved.invert_y, "(4) both are saved to the panel's settings_path (got %.2f, %s)" % [saved.sensitivity, saved.invert_y])
+	var slider: HSlider = panel.get_node("%SensitivitySlider") as HSlider
+	check.call(is_equal_approx(slider.min_value, CameraSettings.SENSITIVITY_MIN) and is_equal_approx(slider.max_value, CameraSettings.SENSITIVITY_MAX), "(4) the sensitivity slider range is [%.1f, %.1f]" % [slider.min_value, slider.max_value])
+	await _free_all(tree, nodes)
+
+
+# (5) the Auto-follow selector mirrors CameraSettings.AUTO_FOLLOW_MODES and refuses anything else.
+func _scenario_auto_follow(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree)
+	var rig: CameraRig = nodes[2] as CameraRig
+	var panel: TuningPanel = nodes[3] as TuningPanel
+	var selector: OptionButton = panel.get_node("%AutoFollowSelector") as OptionButton
+	var modes: Array[String] = CameraSettings.AUTO_FOLLOW_MODES
+	check.call(selector.item_count == modes.size(), "(5) the selector has %d items (got %d)" % [modes.size(), selector.item_count])
+	var texts: Array[String] = []
+	for i: int in selector.item_count:
+		texts.append(selector.get_item_text(i).to_lower())
+	check.call(texts == modes, "(5) the items follow AUTO_FOLLOW_MODES in order (got %s)" % [texts])
+	check.call(selector.selected == modes.find(rig.settings.auto_follow_mode), "(5) it starts on the rig's mode '%s'" % rig.settings.auto_follow_mode)
+	panel.set_auto_follow_mode("on")
+	check.call(rig.settings.auto_follow_mode == "on" and rig.auto_follow_active(), "(5) set_auto_follow_mode('on') applies it and auto-follow is active")
+	check.call(selector.get_item_text(selector.selected) == "On", "(5) the selector shows On")
+	check.call(CameraSettings.load_from(TEST_SETTINGS_PATH).auto_follow_mode == "on", "(5) 'on' is saved")
+	panel.set_auto_follow_mode("off")
+	check.call(not rig.auto_follow_active(), "(5) 'off' makes auto_follow_active false")
+	panel.set_auto_follow_mode("sideways")
+	check.call(rig.settings.auto_follow_mode == "off", "(5) 'sideways' is refused, the rig keeps 'off' (got '%s')" % rig.settings.auto_follow_mode)
+	check.call(CameraSettings.load_from(TEST_SETTINGS_PATH).auto_follow_mode == "off", "(5) the saved value stays 'off'")
+	check.call(selector.get_item_text(selector.selected) == "Off", "(5) the selector still shows Off")
+	# Choosing an item routes through the same setter.
+	selector.item_selected.emit(0)
+	check.call(rig.settings.auto_follow_mode == "auto", "(5) choosing the first item sets 'auto' (got '%s')" % rig.settings.auto_follow_mode)
+	await _free_all(tree, nodes)
+
+
+# (6) the Save button is disabled outside the editor.
+func _scenario_save_button(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree)
+	var panel: TuningPanel = nodes[3] as TuningPanel
+	var button: Button = panel.get_node("%SaveButton") as Button
+	check.call(OS.has_feature("editor") or button.disabled, "(6) the Save button is disabled when not running from the editor")
 	await _free_all(tree, nodes)
