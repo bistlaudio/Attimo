@@ -19,6 +19,10 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_jump_height(tree, check)
 	await _scenario_step_landing(tree, check)
 	await _scenario_ledge(tree, check)
+	await _scenario_wall_pull_in(tree, check)
+	await _scenario_open_space(tree, check)
+	await _scenario_corridor(tree, check, 10)
+	await _scenario_corridor(tree, check, 60)
 
 
 func _spawn(tree: SceneTree, position: Vector3 = Vector3.ZERO) -> Array[Node]:
@@ -197,4 +201,83 @@ func _scenario_ledge(tree: SceneTree, check: Callable) -> void:
 	await _run_for(tree, 0.5)
 	check.call(start_y - rig.global_position.y > 2.0, "(g) the rig dropped %.2f m by 0.5 s after landing (> 2)" % (start_y - rig.global_position.y))
 	nodes.append(platform)
+	await _free_all(tree, nodes)
+
+
+## Pivot to lens distance (the arm origin sits on the pivot when no offset source is set).
+func _arm_distance(rig: CameraRig) -> float:
+	return rig.camera.global_position.distance_to(rig.pitch_node.global_position)
+
+
+## True while the lens point is inside a World collider.
+func _lens_inside_world(tree: SceneTree, rig: CameraRig) -> bool:
+	var query: PhysicsPointQueryParameters3D = PhysicsPointQueryParameters3D.new()
+	query.position = rig.camera.global_position
+	query.collision_mask = PhysicsLayers.WORLD
+	return not rig.get_world_3d().direct_space_state.intersect_point(query, 1).is_empty()
+
+
+## True while a World collider sits on the segment from the pivot to the lens.
+func _wall_between(rig: CameraRig) -> bool:
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(rig.pitch_node.global_position, rig.camera.global_position, PhysicsLayers.WORLD)
+	return not rig.get_world_3d().direct_space_state.intersect_ray(query).is_empty()
+
+
+# (h) a wall 2 m behind the player pulls the lens in (CAM-01: never clips through walls).
+func _scenario_wall_pull_in(tree: SceneTree, check: Callable) -> void:
+	var wall: StaticBody3D = Fixtures.spawn_box(tree.root, Vector3(10.0, 10.0, 1.0), Vector3(0.0, 5.0, 2.5))
+	var nodes: Array[Node] = await _spawn(tree)
+	var rig: CameraRig = nodes[2] as CameraRig
+	await Fixtures.wait_physics(tree, 10)
+	await Fixtures.wait_process(tree, 2)
+	var distance: float = _arm_distance(rig)
+	check.call(distance <= 2.0, "(h) with a wall 2 m behind, the lens is %.2f m from the pivot (<= 2.0)" % distance)
+	check.call(not _lens_inside_world(tree, rig), "(h) the lens is not inside the wall")
+	nodes.append(wall)
+	await _free_all(tree, nodes)
+
+
+# (i) in open space the lens sits at spring_length; the player capsule never pulls it in.
+func _scenario_open_space(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree)
+	var rig: CameraRig = nodes[2] as CameraRig
+	await Fixtures.wait_physics(tree, 10)
+	await Fixtures.wait_process(tree, 2)
+	var distance: float = _arm_distance(rig)
+	check.call(absf(distance - rig.spring_arm.spring_length) < 0.15, "(i) in open space the lens is %.3f m out, spring_length %.2f" % [distance, rig.spring_arm.spring_length])
+	await _free_all(tree, nodes)
+
+
+# (j) orbiting inside a 3 m corridor never puts a wall between pivot and lens, at any tick rate.
+func _scenario_corridor(tree: SceneTree, check: Callable, tps: int) -> void:
+	Engine.physics_ticks_per_second = tps
+	Engine.max_fps = 144
+	await Fixtures.wait_physics(tree, 2)
+	var left_wall: StaticBody3D = Fixtures.spawn_box(tree.root, Vector3(1.0, 10.0, 40.0), Vector3(-2.0, 5.0, 0.0))
+	var right_wall: StaticBody3D = Fixtures.spawn_box(tree.root, Vector3(1.0, 10.0, 40.0), Vector3(2.0, 5.0, 0.0))
+	var nodes: Array[Node] = await _spawn(tree)
+	var rig: CameraRig = nodes[2] as CameraRig
+	await Fixtures.wait_physics(tree, maxi(5, tps / 10))
+	var frames: int = 0
+	var blocked: int = 0
+	var inside: int = 0
+	var worst: float = 0.0
+	var end_msec: int = Time.get_ticks_msec() + 2000
+	while Time.get_ticks_msec() < end_msec:
+		await tree.process_frame
+		frames += 1
+		if _wall_between(rig):
+			blocked += 1
+		if _lens_inside_world(tree, rig):
+			inside += 1
+		worst = maxf(worst, _arm_distance(rig))
+		rig.yaw += PI * tree.root.get_process_delta_time()
+	check.call(frames > 20, "(j) at %d TPS enough orbit frames were sampled (%d)" % [tps, frames])
+	check.call(blocked == 0, "(j) at %d TPS %d of %d frames had a wall between pivot and lens" % [tps, blocked, frames])
+	check.call(inside == 0, "(j) at %d TPS %d of %d frames had the lens inside a collider" % [tps, inside, frames])
+	Engine.physics_ticks_per_second = 60
+	Engine.max_fps = 0
+	await Fixtures.wait_physics(tree, 2)
+	nodes.append(left_wall)
+	nodes.append(right_wall)
 	await _free_all(tree, nodes)
