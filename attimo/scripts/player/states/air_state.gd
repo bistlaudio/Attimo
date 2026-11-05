@@ -16,7 +16,7 @@ func physics_update(delta: float) -> StringName:
 	var direction: Vector3 = actor.input_direction()
 	actor.face(direction, delta)
 	actor.accelerate_air(direction, delta)
-	if Input.is_action_just_pressed(&"dash"):
+	if Input.is_action_just_pressed(&"dash") and actor.can_dash():
 		return &"Dash"
 	if actor.is_grounded() and actor.vertical_speed <= 0.0:
 		if actor.wants_jump():

@@ -22,6 +22,12 @@ var coyote_timer: float = 0.0
 var jump_buffer_timer: float = 0.0
 ## True while the one air jump of this airtime is unspent. Landing refills it (D-07).
 var air_jump_available: bool = true
+## Seconds left before the next dash may start (D-11). Starts when a dash starts.
+var dash_cooldown_timer: float = 0.0
+## True while the one air dash of this airtime is unspent. Landing refills it (D-12).
+var air_dash_available: bool = true
+## Direction of the last dash started, flattened and normalized.
+var last_dash_direction: Vector3 = Vector3.ZERO
 
 var _was_on_floor: bool = true
 var _last_platform_velocity: Vector3 = Vector3.ZERO
@@ -168,11 +174,29 @@ func will_land_within(seconds: float) -> bool:
 	return _probe.get_normal().angle_to(Vector3.UP) <= floor_max_angle
 
 
-## Per-tick timers (coyote, buffer, later cooldown and chain). Runs before the states, so every state
+## True when a dash may start: the cooldown has elapsed, and on the ground always, in the air only while
+## the air dash of this airtime is unspent (D-12).
+func can_dash() -> bool:
+	if dash_cooldown_timer > 0.0:
+		return false
+	return is_grounded() or air_dash_available
+
+
+## Called by the Dash state on enter: starts the cooldown, spends the air dash when airborne and remembers
+## the direction (the long jump of a later plan reads it).
+func start_dash(direction: Vector3, in_air: bool) -> void:
+	dash_cooldown_timer = config.dash_cooldown
+	if in_air:
+		air_dash_available = false
+	last_dash_direction = direction
+
+
+## Per-tick timers (coyote, buffer, dash cooldown, later chain). Runs before the states, so every state
 ## sees the same timers. Polling just_pressed in the physics tick catches presses between two ticks.
 func _tick_timers(delta: float) -> void:
 	coyote_timer = maxf(coyote_timer - delta, 0.0)
 	jump_buffer_timer = maxf(jump_buffer_timer - delta, 0.0)
+	dash_cooldown_timer = maxf(dash_cooldown_timer - delta, 0.0)
 	if Input.is_action_just_pressed(&"jump"):
 		jump_buffer_timer = config.jump_buffer_time
 
@@ -215,6 +239,7 @@ func _post_move() -> void:
 
 func _land(impact_speed: float) -> void:
 	air_jump_available = true
+	air_dash_available = true
 	coyote_timer = 0.0
 	EventBus.landed.emit(global_position, impact_speed)
 

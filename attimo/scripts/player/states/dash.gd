@@ -1,35 +1,79 @@
 extends State
-## Dash: Dodge_Forward plays in place, no speed and no displacement (D-09). Phase 2 adds dash speed,
-## the air-dash limit and the cooldown (MOVE-06/07). Emits the dash_started fact once on enter.
+## Dash (D-10, D-11, D-12): a fixed burst in the input direction (the facing without input) at config.dash_speed
+## for config.dash_time. The facing snaps on the first tick. The burst is a velocity override that the
+## controller's single swept move call integrates, so walls stop it and no tunnelling guard is needed.
+## On the ground the floor snap keeps it on slopes. In the air it holds altitude (air_dash_gravity_scale, one
+## air dash per airtime, spent in PlayerController.start_dash). The exit carries a bounded speed
+## (dash_carry between run and dash speed, capped by dash_exit_cap) and air control continues afterwards.
+## A jump press during the dash leaves it: a ground dash into Jump, an air dash into the double jump (A27).
+## Emits the dash_started fact once on enter.
 
-## Equals the Dodge_Forward clip length in seconds (a D-09 demo timing).
-const DASH_TIME: float = 0.4
+## Direction of this dash (flattened, normalized). Read by the long jump of a later plan.
+var direction: Vector3 = Vector3.ZERO
+## True when the dash started off the floor.
+var in_air: bool = false
 
 var _timer: float = 0.0
-var _in_air: bool = false
 
 
-func enter(previous: StringName) -> void:
+func enter(_previous: StringName) -> void:
 	_timer = 0.0
-	var direction: Vector3 = actor.input_direction()
+	direction = actor.input_direction()
 	if direction == Vector3.ZERO:
 		direction = actor.visual_root.global_basis.z
-		direction.y = 0.0
+	direction.y = 0.0
 	direction = direction.normalized()
 	# A dodge snaps its facing instead of turning toward it.
-	actor.visual_root.rotation.y = atan2(direction.x, direction.z)
-	# Airborne is a state fact in Phase 1: no floor check exists (D-09).
-	_in_air = previous == &"Jump" or previous == &"Fall"
-	EventBus.dash_started.emit(actor.global_position, direction, _in_air)
+	actor.face_now(direction)
+	in_air = not actor.is_grounded()
+	actor.start_dash(direction, in_air)
+	if in_air:
+		actor.gravity_scale = actor.config.air_dash_gravity_scale
+		actor.vertical_speed = 0.0
+	EventBus.dash_started.emit(actor.global_position, direction, in_air)
+
+
+func exit() -> void:
+	actor.gravity_scale = 1.0
 
 
 func physics_update(delta: float) -> StringName:
 	_timer += delta
-	if _timer >= DASH_TIME:
-		if _in_air:
-			# The airborne stretch finishes through Fall, which emits landed.
-			return &"Fall"
-		if actor.input_direction() != Vector3.ZERO:
-			return &"Run"
-		return &"Idle"
+	if _timer >= actor.config.dash_time:
+		return _finish()
+	actor.move_velocity = direction * actor.config.dash_speed
+	if actor.wants_jump():
+		if not in_air:
+			# Interim hand-off: a normal jump at the bounded carry speed. The long jump replaces it.
+			_apply_exit_carry()
+			return &"Jump"
+		if actor.air_jump_available:
+			_apply_exit_carry()
+			return &"DoubleJump"
 	return &""
+
+
+## Horizontal speed leaving the dash: between run and dash speed by dash_carry, never above dash_exit_cap.
+func _exit_speed() -> float:
+	var config: MovementConfig = actor.config
+	return minf(lerpf(config.run_speed, config.dash_speed, config.dash_carry), config.dash_exit_cap)
+
+
+## Replaces the dash velocity by the exit carry. Airborne, the air control target speed follows it, so
+## steering after the dash works and the carry cannot be exceeded by holding a direction.
+func _apply_exit_carry() -> void:
+	var carry: float = _exit_speed()
+	actor.move_velocity = direction * carry
+	if not actor.is_grounded():
+		actor.air_speed_cap = maxf(actor.config.run_speed, carry)
+
+
+func _finish() -> StringName:
+	_apply_exit_carry()
+	if not actor.is_grounded():
+		return &"Fall"
+	if actor.input_direction() == Vector3.ZERO:
+		return &"Idle"
+	if Input.is_action_pressed(&"sprint"):
+		return &"Sprint"
+	return &"Run"
