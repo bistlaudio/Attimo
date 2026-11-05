@@ -70,6 +70,9 @@ Recent decisions that affect current work:
 - [Requirements]: Added POLISH-01/02 (Phase 12) and REL-01/02/03 (Phase 15, Windows export and performance). v1 = 71.
 - [Requirements]: FEEL-09 (A/B juice study) removed earlier. No playtest study, questionnaires or consent forms.
 - [Phase 2]: Camera is a hand-built CameraRig with SpringArm3D (D-18); Phantom Camera dropped. The rig exposes additive FOV/offset sources for Phases 3 and 11. CAM-01 framing is centered behind the character; the shoulder offset is aim-mode only (D-14).
+- [Phase 2]: Debug Draw 3D is not adopted in Phase 2 (no res://addons folder; the metrics overlay is Label-based and camera/slope/dash checks are headless). Revisit when aim-assist cones or wall-run raycasts need visual tuning (Phase 3 aim mode, v2 wall-run). Plan assumption A39.
+- [Phase 2]: Floor snap stays inside D-13's 0.3-0.5 m band at the shipped 60 TPS for every speed incl. dash (snap_min 0.3, snap_max 0.5, export range 0.3-0.5); 10 TPS is a diagnostic rate only and gets no wider snap. Plan assumption A35.
+- [Phase 2]: Auto-follow (D-16) has a CameraSettings mode auto (default) / on / off. Auto follows only after joypad input and stays off after mouse/keyboard input, so it is effectively off until gamepads arrive (Phase 13). The follow converges: camera-relative input steers through CameraRig.steering_yaw(), which excludes auto rotation until the move input changes. Plan assumptions A40, A41 (user decision, plan revision 2).
 
 ### Pending Todos
 

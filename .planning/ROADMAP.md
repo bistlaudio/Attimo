@@ -97,7 +97,7 @@ Plans:
 - [ ] 02-07-PLAN.md — Platforms, conveyors, slopes and stairs: MovingPlatform, FallReset, MOVE-08 tests (wave 2)
 - [ ] 02-08-PLAN.md — LatencyProbe (60/120 TPS, 66 ms target asserted) and F4 MetricsOverlay with F6 tick-rate cycle (wave 3)
 - [ ] 02-09-PLAN.md — Sprint, ground dash and air dash with cooldown, carry and no tunnelling (wave 3)
-- [ ] 02-10-PLAN.md — Camera controls: CameraSettings (sensitivity, invert-Y), auto-follow, recenter (wave 3)
+- [ ] 02-10-PLAN.md — Camera controls: CameraSettings (sensitivity, invert-Y, auto-follow mode auto/on/off), converging device-aware auto-follow, recenter (wave 3)
 - [ ] 02-11-PLAN.md — Jump chain and long jump: Jump 1 -> Jump 2 -> Dash -> Jump, dash speed carried and capped (wave 4)
 - [ ] 02-12-PLAN.md — F2 tuning panel: live MovementConfig sliders and camera settings (wave 4)
 - [ ] 02-13-PLAN.md — Generated docs/MOVEMENT-METRICS.md with asserted latency table and drift guard (wave 5)
