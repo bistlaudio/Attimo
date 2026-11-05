@@ -7,6 +7,7 @@ const ACTIONS: Array[StringName] = [
 	&"look_left", &"look_right", &"look_up", &"look_down",
 	&"jump", &"sprint", &"dash", &"aim", &"use_hand", &"interact",
 	&"module_next", &"module_prev", &"pause", &"debug_event_log",
+	&"camera_recenter", &"debug_tuning", &"debug_metrics", &"debug_tick_rate",
 ]
 const LOOK_ACTIONS: Array[StringName] = [&"look_left", &"look_right", &"look_up", &"look_down"]
 ## Game code roots scanned for raw input polling. res://tests is excluded: this file names the tokens.
@@ -69,6 +70,13 @@ func _check_specific_bindings(check: Callable) -> void:
 	check.call(_has_mouse_button(&"use_hand", MOUSE_BUTTON_LEFT), "use_hand maps to left mouse button")
 	check.call(_has_mouse_button(&"module_next", MOUSE_BUTTON_WHEEL_DOWN), "module_next maps to wheel down")
 	check.call(_has_mouse_button(&"module_prev", MOUSE_BUTTON_WHEEL_UP), "module_prev maps to wheel up")
+	check.call(_has_mouse_button(&"camera_recenter", MOUSE_BUTTON_MIDDLE), "camera_recenter maps to the middle mouse button")
+	check.call(_has_physical_key(&"debug_tuning", KEY_F2), "debug_tuning contains physical key F2")
+	check.call(_has_physical_key(&"debug_tuning", KEY_8), "debug_tuning contains physical key 8")
+	check.call(_has_physical_key(&"debug_metrics", KEY_F4), "debug_metrics contains physical key F4")
+	check.call(_has_physical_key(&"debug_metrics", KEY_9), "debug_metrics contains physical key 9")
+	check.call(_has_physical_key(&"debug_tick_rate", KEY_F6), "debug_tick_rate contains physical key F6")
+	check.call(_has_physical_key(&"debug_tick_rate", KEY_0), "debug_tick_rate contains physical key 0")
 
 
 func _has_physical_key(action: StringName, keycode: Key) -> bool:

@@ -10,8 +10,14 @@ const ACTIONS: Array[String] = [
 	"look_left", "look_right", "look_up", "look_down",
 	"jump", "sprint", "dash", "aim", "use_hand", "interact",
 	"module_next", "module_prev", "pause", "debug_event_log",
+	"camera_recenter", "debug_tuning", "debug_metrics", "debug_tick_rate",
 ]
-const FOLDERS: Array[String] = ["autoload/", "scenes/", "scripts/", "assets/", "tests/", "tools/"]
+const FOLDERS: Array[String] = [
+	"autoload/", "scenes/", "scripts/", "assets/", "tests/", "tools/",
+	"scripts/camera/", "scenes/camera/", "scripts/gym/", "resources/",
+]
+## Phase 2 contracts the doc must name.
+const DOC_TERMS: Array[String] = ["MovementConfig", "CameraRig", "user://settings.cfg"]
 ## Fixed read-only path, relative to the project root (attimo/).
 const DOC_RELATIVE_PATH: String = "../docs/CONVENTIONS.md"
 
@@ -20,7 +26,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	_check_layer_names(check)
 	_check_constants(check)
 	await _check_player_layers(tree, check)
-	_check_doc(check)
+	_check_doc(tree, check)
 
 
 func _check_layer_names(check: Callable) -> void:
@@ -55,7 +61,7 @@ func _check_player_layers(tree: SceneTree, check: Callable) -> void:
 	await tree.process_frame
 
 
-func _check_doc(check: Callable) -> void:
+func _check_doc(tree: SceneTree, check: Callable) -> void:
 	var doc_path: String = ProjectSettings.globalize_path("res://").path_join(DOC_RELATIVE_PATH).simplify_path()
 	check.call(FileAccess.file_exists(doc_path), "docs/CONVENTIONS.md exists (%s)" % doc_path)
 	var doc: String = FileAccess.get_file_as_string(doc_path)
@@ -68,3 +74,11 @@ func _check_doc(check: Callable) -> void:
 	check.call(doc.contains("player"), "doc mentions group 'player'")
 	for folder: String in FOLDERS:
 		check.call(doc.contains(folder), "doc mentions folder %s" % folder)
+	var bus_script: Script = tree.root.get_node("EventBus").get_script() as Script
+	var signals: Array[Dictionary] = bus_script.get_script_signal_list()
+	check.call(signals.size() >= 7, "EventBus declares at least 7 signals (got %d)" % signals.size())
+	for signal_info: Dictionary in signals:
+		var signal_name: String = str(signal_info["name"])
+		check.call(doc.contains("`%s`" % signal_name), "doc lists EventBus signal %s" % signal_name)
+	for term: String in DOC_TERMS:
+		check.call(doc.contains(term), "doc mentions %s" % term)
