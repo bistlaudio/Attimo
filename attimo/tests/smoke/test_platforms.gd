@@ -7,7 +7,14 @@ extends RefCounted
 const Fixtures := preload("res://tests/fixtures.gd")
 
 const PLATFORM_SCENE: String = "res://scenes/proto/moving_platform.tscn"
+const SLOPE_SCENE: String = "res://scenes/proto/primitive_slope.tscn"
+const BEAM_SCENE: String = "res://scenes/proto/primitive_beam.tscn"
 const SHIPPED_TPS: int = 60
+## Diagnostic rate (debug_tick_rate camera toggle), never shipped (A22).
+const DIAGNOSTIC_TPS: int = 10
+const SNAP_TOLERANCE: float = 1e-4
+## The ramp and stair runs use this speed (D-13).
+const RAMP_RUN_SPEED: float = 10.5
 
 
 func run(tree: SceneTree, check: Callable) -> void:
@@ -19,7 +26,11 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_vertical_platform(tree, check)
 	await _scenario_circle_platform(tree, check)
 	await _scenario_fall_reset(tree, check)
-	Engine.physics_ticks_per_second = SHIPPED_TPS
+	await _scenario_ramp(tree, check, SHIPPED_TPS)
+	await _scenario_ramp(tree, check, DIAGNOSTIC_TPS)
+	await _scenario_stairs(tree, check)
+	await _scenario_ledge(tree, check)
+	Engine.physics_ticks_per_second = 60  # the shipped rate, always restored
 
 
 func _free_all(tree: SceneTree, nodes: Array[Node]) -> void:
@@ -187,3 +198,157 @@ func _scenario_fall_reset(tree: SceneTree, check: Callable) -> void:
 	var pivot: Vector3 = player.get_global_transform_interpolated().origin
 	check.call(rig.global_position.distance_to(pivot) < 10.0, "the camera rig was snapped to the respawn (%.2f m from the player)" % rig.global_position.distance_to(pivot))
 	await _free_all(tree, [floor_body, marker, reset, rig, player])
+
+
+## Height of the surface straight below the player (World mask), or -INF without one.
+func _surface_below(player: PlayerController) -> float:
+	var space: PhysicsDirectSpaceState3D = player.get_world_3d().direct_space_state
+	var from: Vector3 = player.global_position + Vector3.UP * 0.5
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(from, from + Vector3.DOWN * 40.0, PhysicsLayers.WORLD)
+	var hit: Dictionary = space.intersect_ray(query)
+	if hit.is_empty():
+		return -INF
+	return (hit["position"] as Vector3).y
+
+
+## Holds `action` until `done` is true or `max_ticks` pass; samples the run every tick. Returns
+## {reached, ticks, airborne, max_height (above the surface below), max_gap (while airborne),
+##  max_y, band_ok, grounded_samples}.
+func _drive(tree: SceneTree, player: PlayerController, action: StringName, done: Callable, max_ticks: int) -> Dictionary:
+	var stats: Dictionary = {"reached": false, "ticks": 0, "airborne": 0, "max_height": 0.0, "max_gap": 0.0, "max_y": player.global_position.y, "band_ok": true, "grounded_samples": 0}
+	Input.action_press(action)
+	while stats["ticks"] < max_ticks:
+		await Fixtures.wait_physics(tree, 1)
+		stats["ticks"] += 1
+		var surface: float = _surface_below(player)
+		var height: float = player.global_position.y - surface if surface > -INF else 0.0
+		stats["max_height"] = maxf(stats["max_height"], height)
+		stats["max_y"] = maxf(stats["max_y"], player.global_position.y)
+		if player.is_grounded():
+			stats["grounded_samples"] += 1
+			var snap: float = player.floor_snap_length
+			if snap < 0.3 - SNAP_TOLERANCE or snap > 0.5 + SNAP_TOLERANCE:
+				stats["band_ok"] = false
+		else:
+			stats["airborne"] += 1
+			stats["max_gap"] = maxf(stats["max_gap"], height)
+		if done.call():
+			stats["reached"] = true
+			break
+	Input.action_release(action)
+	return stats
+
+
+## Floor, the 45 degree Slope at the origin (rising toward -X, 4 m high) and a plateau (top y 4) behind it.
+func _build_ramp(tree: SceneTree) -> Array[Node]:
+	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root, Vector3(80, 1, 40))
+	var slope: StaticBody3D = (load(SLOPE_SCENE) as PackedScene).instantiate() as StaticBody3D
+	tree.root.add_child(slope)
+	var plateau: StaticBody3D = Fixtures.spawn_box(tree.root, Vector3(8, 4, 4), Vector3(-6.0, 2.0, 0.0))
+	return [floor_body, slope, plateau]
+
+
+# 45 degree ramp up and down at 10.5 m/s. At 60 TPS: no airborne tick, no launch, snap inside D-13's band.
+# At 10 TPS (A22) only "no launch" and "reaches the far surface" are asserted; airborne counts are printed.
+func _scenario_ramp(tree: SceneTree, check: Callable, tps: int) -> void:
+	Engine.physics_ticks_per_second = tps
+	var label: String = "%d TPS" % tps
+	var shipped: bool = tps == SHIPPED_TPS
+	var path_length: float = 6.0 + sqrt(32.0) + 1.0
+	var budget: int = int(ceil((path_length / RAMP_RUN_SPEED + 0.5) * float(tps)))
+
+	# Up: from the floor at x 8 toward -X onto the plateau.
+	var nodes: Array[Node] = _build_ramp(tree)
+	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(8.0, 0.0, 0.0))
+	player.config = player.config.duplicate() as MovementConfig
+	player.config.run_speed = RAMP_RUN_SPEED
+	await Fixtures.wait_physics(tree, 5)
+	nodes.append(player)
+	var up: Dictionary = await _drive(tree, player, &"move_left", func() -> bool: return player.global_position.x < -3.0 and player.global_position.y > 3.9, budget)
+	print("DIAG [test_platforms] %s ramp up: reached=%s ticks=%d airborne=%d max_gap=%.3f max_height=%.3f max_y=%.3f" % [label, up["reached"], up["ticks"], up["airborne"], up["max_gap"], up["max_height"], up["max_y"]])
+	check.call(up["reached"], "%s ramp up: the plateau is reached within %d ticks (%d used)" % [label, budget, up["ticks"]])
+	if shipped:
+		check.call(up["airborne"] == 0, "%s ramp up: 0 airborne ticks (got %d)" % [label, up["airborne"]])
+		check.call(up["max_height"] <= 0.3, "%s ramp up: never more than 0.3 m above the surface (%.3f)" % [label, up["max_height"]])
+		check.call(up["band_ok"] and up["grounded_samples"] > 20, "%s ramp up: floor_snap_length inside [0.3, 0.5] on every grounded tick (%d samples)" % [label, up["grounded_samples"]])
+	else:
+		check.call(up["max_y"] <= 4.0 + 0.3, "%s ramp up: no launch, never above the highest surface + 0.3 m (max y %.3f)" % [label, up["max_y"]])
+		check.call(up["band_ok"], "%s ramp up: the snap band was not widened" % label)
+
+	# Down: from the plateau toward +X onto the floor beyond the ramp.
+	player.teleport(Vector3(-8.0, 4.0, 0.0))
+	await Fixtures.wait_physics(tree, 5)
+	var down: Dictionary = await _drive(tree, player, &"move_right", func() -> bool: return player.global_position.x > 4.0 and player.global_position.y < 0.1, budget)
+	print("DIAG [test_platforms] %s ramp down: reached=%s ticks=%d airborne=%d max_gap=%.3f max_height=%.3f max_y=%.3f" % [label, down["reached"], down["ticks"], down["airborne"], down["max_gap"], down["max_height"], down["max_y"]])
+	check.call(down["reached"], "%s ramp down: the floor beyond the ramp is reached within %d ticks (%d used)" % [label, budget, down["ticks"]])
+	if shipped:
+		check.call(down["airborne"] == 0, "%s ramp down: 0 airborne ticks (got %d)" % [label, down["airborne"]])
+		check.call(down["band_ok"] and down["grounded_samples"] > 20, "%s ramp down: floor_snap_length inside [0.3, 0.5] on every grounded tick (%d samples)" % [label, down["grounded_samples"]])
+	else:
+		check.call(down["max_y"] <= 4.0 + 0.3, "%s ramp down: no launch, never above the highest surface + 0.3 m (max y %.3f)" % [label, down["max_y"]])
+		check.call(down["band_ok"], "%s ramp down: the snap band was not widened" % label)
+
+	Engine.physics_ticks_per_second = SHIPPED_TPS
+	await _free_all(tree, nodes)
+
+
+## A Primitive_Beam riser with its top at `top_y`, sunk into the floor, turned so its 4 m length runs along Z
+## and its 1 m depth along X, centred at `x`.
+func _spawn_riser(tree: SceneTree, x: float, top_y: float) -> StaticBody3D:
+	var beam: StaticBody3D = (load(BEAM_SCENE) as PackedScene).instantiate() as StaticBody3D
+	beam.rotation.y = PI / 2.0
+	beam.position = Vector3(x, top_y - 1.0, 0.0)
+	tree.root.add_child(beam)
+	return beam
+
+
+# Six 0.15 m risers climbed at run speed without a jump, descended with 0 airborne ticks (A4).
+func _scenario_stairs(tree: SceneTree, check: Callable) -> void:
+	var bus: Node = tree.root.get_node("EventBus")
+	var jumped: Array[int] = [0]
+	var on_jumped: Callable = func(_position: Vector3) -> void: jumped[0] += 1
+	bus.connect(&"jumped", on_jumped)
+
+	var nodes: Array[Node] = [Fixtures.spawn_floor(tree.root, Vector3(80, 1, 40))]
+	for n: int in range(1, 7):
+		nodes.append(_spawn_riser(tree, 10.0 - float(n), 0.15 * float(n)))
+	nodes.append(Fixtures.spawn_box(tree.root, Vector3(8, 0.9, 4), Vector3(-0.5, 0.45, 0.0)))
+	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(14.0, 0.0, 0.0))
+	player.config = player.config.duplicate() as MovementConfig
+	player.config.run_speed = RAMP_RUN_SPEED
+	await Fixtures.wait_physics(tree, 5)
+	nodes.append(player)
+
+	var up: Dictionary = await _drive(tree, player, &"move_left", func() -> bool: return player.global_position.x < 0.0 and player.is_grounded(), 4 * SHIPPED_TPS)
+	await Fixtures.wait_physics(tree, 3)
+	check.call(up["reached"] and absf(player.global_position.y - 0.9) <= 0.05, "stairs up: the landing is reached at y 0.90 +/- 0.05 (y=%.3f)" % player.global_position.y)
+	check.call(jumped[0] == 0, "stairs up: no jumped fact, the risers are climbed by running (%d)" % jumped[0])
+	print("DIAG [test_platforms] stairs up: ticks=%d airborne=%d max_gap=%.3f" % [up["ticks"], up["airborne"], up["max_gap"]])
+
+	player.teleport(Vector3(-3.0, 0.9, 0.0))
+	await Fixtures.wait_physics(tree, 5)
+	var down: Dictionary = await _drive(tree, player, &"move_right", func() -> bool: return player.global_position.x > 12.0 and player.global_position.y < 0.05, 4 * SHIPPED_TPS)
+	check.call(down["reached"], "stairs down: the floor beyond the stairs is reached (%d ticks)" % down["ticks"])
+	check.call(down["airborne"] == 0, "stairs down: 0 airborne ticks at 60 TPS (got %d)" % down["airborne"])
+	check.call(jumped[0] == 0, "stairs down: still no jumped fact")
+
+	bus.disconnect(&"jumped", on_jumped)
+	await _free_all(tree, nodes)
+
+
+# A 0.25 m ledge blocks the player: taller ledges need a jump (the 0.18 m limit is documented).
+func _scenario_ledge(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = [Fixtures.spawn_floor(tree.root, Vector3(80, 1, 40))]
+	nodes.append(_spawn_riser(tree, 0.0, 0.25))
+	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(6.0, 0.0, 0.0))
+	player.config = player.config.duplicate() as MovementConfig
+	player.config.run_speed = RAMP_RUN_SPEED
+	await Fixtures.wait_physics(tree, 5)
+	nodes.append(player)
+
+	Input.action_press(&"move_left")
+	await Fixtures.wait_physics(tree, SHIPPED_TPS)
+	Input.action_release(&"move_left")
+	check.call(player.global_position.y < 0.05, "a 0.25 m ledge blocks the run: the player stays below y 0.05 (y=%.3f)" % player.global_position.y)
+	check.call(player.global_position.x > 0.9, "the player is held in front of the ledge (x=%.3f)" % player.global_position.x)
+	await _free_all(tree, nodes)
