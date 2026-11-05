@@ -57,8 +57,9 @@ func _scenario_structure(tree: SceneTree, check: Callable) -> void:
 	check.call(rig.physics_interpolation_mode == Node.PHYSICS_INTERPOLATION_MODE_OFF, "(a) the rig has physics interpolation off")
 	check.call(not player.is_ancestor_of(rig) and rig.get_parent() == player.get_parent(), "(a) the rig is a sibling of the player, not in its subtree")
 	check.call(rig.spring_arm.shape is SphereShape3D, "(a) the arm casts a SphereShape3D")
-	check.call((rig.spring_arm.collision_mask & PhysicsLayers.PLAYER) == 0, "(a) the arm mask excludes the Player layer")
-	check.call((rig.spring_arm.collision_mask & PhysicsLayers.WORLD) != 0, "(a) the arm mask includes the World layer")
+	check.call((rig.arm_collision_mask() & PhysicsLayers.PLAYER) == 0, "(a) the arm cast mask excludes the Player layer")
+	check.call((rig.arm_collision_mask() & PhysicsLayers.WORLD) != 0, "(a) the arm cast mask includes the World layer")
+	check.call(rig.spring_arm.collision_mask == 0, "(a) the SpringArm3D node's own mask is 0 (the rig casts per frame, A3)")
 	await _free_all(tree, nodes)
 
 

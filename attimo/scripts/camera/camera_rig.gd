@@ -25,6 +25,8 @@ extends Node3D
 @export var pitch_max: float = 0.6
 ## Field of view in degrees with no FOV source registered.
 @export var base_fov: float = 75.0
+## Rate in 1/s at which the arm lengthens again after a wall pull-in. Pulling in is instant.
+@export var arm_extend_rate: float = 8.0
 ## Airborne vertical band in m (D-15): the camera holds the last grounded height until the target
 ## rises more than this above it.
 @export var air_rise_band: float = 2.5
@@ -40,6 +42,13 @@ var _fov_sources: Dictionary[StringName, float] = {}
 var _offset_sources: Dictionary[StringName, Vector3] = {}
 ## Anchor height (target origin y + pivot_height) at the last grounded moment.
 var _grounded_height: float = 0.0
+## Longest arm in m, the SpringArm3D spring_length of the scene.
+var _max_arm_length: float = 5.0
+## Arm length in m after the last wall cast.
+var _arm_length: float = 5.0
+## World mask the arm casts against. The SpringArm3D node's own mask is zeroed (see _ready).
+var _arm_mask: int = 0
+var _arm_query: PhysicsShapeQueryParameters3D
 
 @onready var pitch_node: Node3D = $Pitch
 @onready var spring_arm: SpringArm3D = $Pitch/SpringArm3D
@@ -49,6 +58,12 @@ var _grounded_height: float = 0.0
 func _ready() -> void:
 	top_level = true
 	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	# SpringArm3D only casts on physics ticks, so at low tick rates the lens clips walls (A3, measured at
+	# 10 TPS). The rig casts every frame itself and sets the node's own mask to 0 so the two never disagree.
+	_max_arm_length = spring_arm.spring_length
+	_arm_length = _max_arm_length
+	_arm_mask = spring_arm.collision_mask
+	spring_arm.collision_mask = 0
 	snap_to_target()
 	if require_mouse_capture and DisplayServer.get_name() != "headless":
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -92,6 +107,34 @@ func _process(delta: float) -> void:
 	pitch_node.rotation.x = pitch
 	spring_arm.position = _offset_total()
 	camera.fov = get_fov_total()
+	_update_arm(delta)
+
+
+## The World mask the arm casts against. The SpringArm3D node's own mask is 0 because the rig casts.
+func arm_collision_mask() -> int:
+	return _arm_mask
+
+
+## Per-frame wall safety. Sphere cast along the arm after rotation and offsets: pull in instantly, extend eased.
+func _update_arm(delta: float) -> void:
+	var goal: float = _max_arm_length
+	if spring_arm.shape != null:
+		if _arm_query == null:
+			_arm_query = PhysicsShapeQueryParameters3D.new()
+		var arm_transform: Transform3D = spring_arm.global_transform
+		_arm_query.shape = spring_arm.shape
+		_arm_query.transform = Transform3D(Basis.IDENTITY, arm_transform.origin)
+		_arm_query.motion = arm_transform.basis.z.normalized() * _max_arm_length
+		_arm_query.collision_mask = _arm_mask
+		var fractions: PackedFloat32Array = get_world_3d().direct_space_state.cast_motion(_arm_query)
+		if fractions.size() >= 2 and fractions[0] < 1.0:
+			goal = maxf(_max_arm_length * fractions[0] - spring_arm.margin, 0.0)
+	if goal < _arm_length:
+		_arm_length = goal
+	else:
+		_arm_length = lerpf(_arm_length, goal, 1.0 - exp(-arm_extend_rate * delta))
+	spring_arm.spring_length = _arm_length
+	camera.position = Vector3(0.0, 0.0, _arm_length)
 
 
 ## The height the rig approaches (D-15). Grounded: the target itself. Airborne: the last grounded height,
