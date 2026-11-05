@@ -63,6 +63,8 @@ enum InputDevice { KEYBOARD_MOUSE, JOYPAD }
 @export var auto_follow_min_speed: float = 1.0
 ## Change in rad of the move input direction that re-bases steering.
 @export var steer_rebase_angle: float = 0.35
+## Seconds a recenter (camera_recenter, D-17) takes to turn the camera behind the character.
+@export var recenter_time: float = 0.15
 
 ## Yaw in rad, rotation about Y.
 var yaw: float = 0.0
@@ -78,6 +80,11 @@ var last_input_device: InputDevice = InputDevice.KEYBOARD_MOUSE
 var _auto_offset: float = 0.0
 ## Move input vector at the last steering re-base (ZERO while neutral).
 var _steer_reference: Vector2 = Vector2.ZERO
+## True while a recenter runs; mouse look cancels it.
+var _recentering: bool = false
+var _recenter_start_yaw: float = 0.0
+var _recenter_target_yaw: float = 0.0
+var _recenter_elapsed: float = 0.0
 ## Target origin of the previous frame, for targets that are not CharacterBody3D.
 var _last_target_origin: Vector3 = Vector3.ZERO
 
@@ -146,6 +153,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		yaw -= motion.relative.x * scale
 		pitch = clampf(pitch - vertical, pitch_min, pitch_max)
 		return
+	if event.is_action_pressed(&"camera_recenter") and (not require_mouse_capture or Input.mouse_mode == Input.MOUSE_MODE_CAPTURED):
+		recenter()
+		return
 	if event.is_action_pressed(&"pause") and require_mouse_capture:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		return
@@ -160,6 +170,7 @@ func _process(delta: float) -> void:
 		return
 	time_since_look += delta
 	_update_steering_latch()
+	_advance_recenter(delta)
 	_apply_auto_follow(delta)
 	var anchor: Vector3 = target.get_global_transform_interpolated().origin + Vector3.UP * pivot_height
 	var horizontal_weight: float = 1.0 - exp(-follow_rate * delta)
@@ -290,6 +301,39 @@ func steering_yaw() -> float:
 ## Marks look input (mouse now, gamepad stick in Phase 13): auto-follow waits auto_follow_delay again.
 func notify_look_activity() -> void:
 	time_since_look = 0.0
+	_recentering = false
+
+
+## Turns the camera behind the character's facing within recenter_time (D-17, A29). The rotation is added to the
+## steering offset like auto-follow's, so a held direction keeps its heading. Mouse look cancels it.
+func recenter() -> void:
+	if target == null:
+		return
+	var facing: Vector2 = Vector2.ZERO
+	var visual: Node3D = target.get(&"visual_root") as Node3D
+	if visual != null:
+		facing = Vector2(visual.global_basis.z.x, visual.global_basis.z.z)
+	var body := target as CharacterBody3D
+	if facing.length_squared() < 0.0001 and body != null:
+		facing = Vector2(body.velocity.x, body.velocity.z)
+	if facing.length_squared() < 0.0001:
+		return
+	_recenter_start_yaw = yaw
+	_recenter_target_yaw = atan2(-facing.x, -facing.y)
+	_recenter_elapsed = 0.0
+	_recentering = true
+
+
+func _advance_recenter(delta: float) -> void:
+	if not _recentering:
+		return
+	_recenter_elapsed += delta
+	var weight: float = clampf(_recenter_elapsed / maxf(recenter_time, 0.001), 0.0, 1.0)
+	var new_yaw: float = lerp_angle(_recenter_start_yaw, _recenter_target_yaw, weight)
+	_auto_offset += new_yaw - yaw
+	yaw = new_yaw
+	if weight >= 1.0:
+		_recentering = false
 
 
 ## Whether auto-follow may act: "on" always, "off" never, "auto" only after joypad input (A41).
@@ -330,7 +374,7 @@ func _target_heading(delta: float) -> Vector2:
 ## added to the yaw and to _auto_offset, so the held key keeps its world heading and the error converges to 0.
 func _apply_auto_follow(delta: float) -> void:
 	var heading: Vector2 = _target_heading(delta)
-	if not auto_follow_active() or time_since_look <= auto_follow_delay:
+	if _recentering or not auto_follow_active() or time_since_look <= auto_follow_delay:
 		return
 	if heading.length() <= auto_follow_min_speed:
 		return
