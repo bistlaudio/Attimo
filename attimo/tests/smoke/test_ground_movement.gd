@@ -287,7 +287,7 @@ func _scenario_sprint_release(tree: SceneTree, check: Callable) -> void:
 
 # (i) a jump from full sprint keeps the sprint speed in the air while the direction is held.
 func _scenario_sprint_jump(tree: SceneTree, check: Callable) -> void:
-	var nodes: Array[Node] = await _spawn(tree, Vector3(0.0, 0.0, 40.0))
+	var nodes: Array[Node] = await _spawn(tree, Vector3(0.0, 0.0, 25.0))
 	var player: PlayerController = nodes[1] as PlayerController
 	var config: MovementConfig = player.config
 	var sprint_speed: float = config.run_speed * config.sprint_multiplier

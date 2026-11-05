@@ -1,6 +1,7 @@
 extends GroundState
 ## Run: accelerates toward run_speed along the camera-relative input, skids when the input reverses
-## and brakes to a stop when released. Running_A plays in place (Locomotion blend by the animator).
+## and brakes to a stop when released. Hands over to Sprint while the sprint action is held with input.
+## Running_A plays in place (Locomotion blend by the animator).
 
 
 func _ground_update(delta: float) -> StringName:
@@ -12,4 +13,7 @@ func _ground_update(delta: float) -> StringName:
 		return &""
 	actor.face(direction, delta)
 	actor.accelerate_ground(direction, actor.config.run_speed, actor.config.ground_accel, delta)
+	# Sprint accelerates identically below run speed, so entering it one tick later loses nothing (A26).
+	if Input.is_action_pressed(&"sprint"):
+		return &"Sprint"
 	return &""
