@@ -34,6 +34,38 @@ static func spawn_player(root: Node, position: Vector3) -> PlayerController:
 	return player
 
 
+const CAMERA_RIG_SCENE: String = "res://scenes/camera/camera_rig.tscn"
+
+
+## Instances the CameraRig as a sibling of `target` under `root`. Mouse capture is off (headless).
+static func spawn_camera_rig(root: Node, target: Node3D) -> CameraRig:
+	var scene: PackedScene = load(CAMERA_RIG_SCENE) as PackedScene
+	var rig: CameraRig = scene.instantiate() as CameraRig
+	rig.target = target
+	rig.require_mouse_capture = false
+	root.add_child(rig)
+	rig.snap_to_target()
+	return rig
+
+
+## Sends an InputEventAction through the input pipeline (reaches _input, unlike Input.action_press).
+static func send_action_event(action: StringName, pressed: bool) -> void:
+	var event: InputEventAction = InputEventAction.new()
+	event.action = action
+	event.pressed = pressed
+	event.strength = 1.0
+	Input.parse_input_event(event)
+	Input.flush_buffered_events()
+
+
+## Sends a relative mouse motion through the input pipeline.
+static func send_mouse_motion(relative: Vector2) -> void:
+	var event: InputEventMouseMotion = InputEventMouseMotion.new()
+	event.relative = relative
+	Input.parse_input_event(event)
+	Input.flush_buffered_events()
+
+
 static func wait_physics(tree: SceneTree, frames: int) -> void:
 	for i: int in frames:
 		await tree.physics_frame

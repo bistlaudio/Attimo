@@ -51,7 +51,8 @@ func horizontal_speed() -> float:
 
 
 ## Movement input in world space, flattened, keeping the analog magnitude (<= 1).
-## Camera-relative: the yaw of the current camera. Without a camera it falls back to world axes (W = -Z).
+## Camera-relative: a camera under a CameraRig steers through the rig's steering_yaw() (A40), any
+## other current camera through its own yaw. Without a camera it falls back to world axes (W = -Z).
 func input_direction() -> Vector3:
 	var input: Vector2 = Input.get_vector(&"move_left", &"move_right", &"move_forward", &"move_back")
 	if input == Vector2.ZERO:
@@ -59,7 +60,11 @@ func input_direction() -> Vector3:
 	var yaw: float = 0.0
 	var camera: Camera3D = get_viewport().get_camera_3d()
 	if camera != null:
-		yaw = camera.global_basis.get_euler(EULER_ORDER_YXZ).y
+		var rig: CameraRig = _find_rig(camera)
+		if rig != null:
+			yaw = rig.steering_yaw()
+		else:
+			yaw = camera.global_basis.get_euler(EULER_ORDER_YXZ).y
 	var forward: Vector3 = Vector3(-sin(yaw), 0.0, -cos(yaw))
 	var right: Vector3 = Vector3(cos(yaw), 0.0, -sin(yaw))
 	return right * input.x - forward * input.y
@@ -113,6 +118,17 @@ func teleport(new_position: Vector3) -> void:
 	velocity = Vector3.ZERO
 	_was_on_floor = false
 	reset_physics_interpolation()
+
+
+## The nearest CameraRig above `node`, or null.
+func _find_rig(node: Node) -> CameraRig:
+	var current: Node = node.get_parent()
+	while current != null:
+		var rig := current as CameraRig
+		if rig != null:
+			return rig
+		current = current.get_parent()
+	return null
 
 
 ## Hook for per-tick timers (coyote, buffer, cooldown, chain). Runs before the states.

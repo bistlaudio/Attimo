@@ -12,6 +12,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_run_and_stop(tree, check)
 	await _scenario_skid(tree, check)
 	await _scenario_bare_camera(tree, check)
+	await _scenario_camera_rig(tree, check)
 	await _scenario_snap_band(tree, check)
 
 
@@ -105,6 +106,43 @@ func _scenario_bare_camera(tree: SceneTree, check: Callable) -> void:
 	check.call(moved.length() > 0.5 and heading > 0.95, "(c) bare camera yawed PI/2: move_forward heads along camera forward -X (dot %.3f)" % heading)
 
 	Input.action_release(&"move_forward")
+	await _free_all(tree, nodes)
+
+
+# (d) camera-relative through a CameraRig (steering_yaw), rig follow, mouse look.
+func _scenario_camera_rig(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree, Vector3.ZERO)
+	var player: PlayerController = nodes[1] as PlayerController
+	var rig: CameraRig = Fixtures.spawn_camera_rig(tree.root, player)
+	rig.yaw = PI / 2.0
+	await Fixtures.wait_process(tree, 2)
+
+	var start: Vector3 = player.global_position
+	Input.action_press(&"move_forward")
+	await Fixtures.wait_physics(tree, 30)
+	var moved: Vector3 = player.global_position - start
+	moved.y = 0.0
+	var heading: float = moved.normalized().dot(Vector3(-1.0, 0.0, 0.0))
+	check.call(moved.length() > 0.5 and heading > 0.95, "(d) rig yaw PI/2: move_forward steers along -X through steering_yaw (dot %.3f)" % heading)
+
+	check.call(rig.top_level, "(d) the rig is top level")
+	check.call(rig.physics_interpolation_mode == Node.PHYSICS_INTERPOLATION_MODE_OFF, "(d) the rig has physics interpolation off")
+	check.call(not player.is_ancestor_of(rig) and rig.get_parent() == player.get_parent(), "(d) the rig is a sibling of the player, not in its subtree")
+
+	await Fixtures.wait_physics(tree, 60)
+	await Fixtures.wait_process(tree, 2)
+	var pivot: Vector3 = player.get_global_transform_interpolated().origin
+	var gap: float = Vector2(rig.global_position.x - pivot.x, rig.global_position.z - pivot.z).length()
+	check.call(gap < 1.0, "(d) after 1 s of running the rig trails the player by %.2f m (< 1.0)" % gap)
+
+	var yaw_before: float = rig.yaw
+	Fixtures.send_mouse_motion(Vector2(100.0, 0.0))
+	await Fixtures.wait_process(tree, 2)
+	var expected_delta: float = 100.0 * rig.base_sensitivity
+	check.call(absf((yaw_before - rig.yaw) - expected_delta) < 1e-4, "(d) mouse motion of 100 px lowers yaw by %.4f (got %.4f)" % [expected_delta, yaw_before - rig.yaw])
+
+	Input.action_release(&"move_forward")
+	rig.queue_free()
 	await _free_all(tree, nodes)
 
 
