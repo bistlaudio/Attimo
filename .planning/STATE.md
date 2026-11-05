@@ -4,16 +4,16 @@ milestone: v0.11.0.4
 current_phase: 02
 current_phase_name: Movement Core & Follow Camera
 status: executing
-stopped_at: Completed 02-09-PLAN.md
-last_updated: "2026-11-05T21:36:00.590Z"
+stopped_at: Completed 02-10-PLAN.md
+last_updated: "2026-11-05T21:52:30.361Z"
 last_activity: 2026-11-05
 last_activity_desc: Phase 02 execution started
-state_head: b03840f07da9cbe1c824f7640b2fb29bbe7685dc
+state_head: c742baf7e615c03dc3d307884025b570454855ae
 progress:
   total_phases: 15
   completed_phases: 1
   total_plans: 21
-  completed_plans: 16
+  completed_plans: 17
 ---
 
 # Project State
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 02 (Movement Core & Follow Camera) — EXECUTING
-Plan: 10 of 14
+Plan: 11 of 14
 Status: Ready to execute
 Last activity: 2026-11-05 — Phase 02 execution started
 
@@ -65,6 +65,7 @@ Progress: [█░░░░░░░░░] 7%
 | Phase 02 P07 | 30 min | 2 tasks | 4 files |
 | Phase 02 P08 | 25 min | 2 tasks | 6 files |
 | Phase 02 P09 | 12 min | 2 tasks | 10 files |
+| Phase 02 P10 | 15 min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,8 @@ Recent decisions that affect current work:
 - [Phase 02]: 02-07: gym stairs are Primitive_Beam instances rotated 90 degrees about Y, sunk so each top is at 0.15*n; 10 TPS ramp down is airborne 4 ticks (diagnostic, A22)
 - [Phase 02]: 02-09: dash jump hand-offs apply the bounded exit carry (dash_exit_cap) before leaving Dash, so the interim normal jump cannot carry the raw dash speed; 02-11 replaces the ground branch with LongJump
 - [Phase 02]: 02-09: Sprint without input hands over to Run (which brakes into Idle) to keep the running pose while sliding to a stop
+- [Phase 02]: 02-10: CameraSettings reads ConfigFile keys via has_section_key (null defaults log engine errors); save_to also refuses '..' paths
+- [Phase 02]: 02-10: auto-follow converges because steering_yaw() = yaw - _auto_offset excludes auto-follow and recenter rotation until the move input changes (A40); auto/on/off mode keyed to last input device (A41)
 
 ### Pending Todos
 
@@ -121,6 +124,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-05T21:36:00.515Z
-Stopped at: Completed 02-09-PLAN.md
+Last session: 2026-11-05T21:52:30.251Z
+Stopped at: Completed 02-10-PLAN.md
 Resume file: None
