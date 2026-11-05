@@ -18,6 +18,15 @@ func run(tree: SceneTree, check: Callable) -> void:
 	_scenario_settings_round_trip(check)
 	_scenario_settings_tampering(check)
 	_scenario_settings_refusals(check)
+	await _scenario_device_detection(tree, check)
+	await _scenario_forced_on_with_mouse(tree, check)
+	await _scenario_forced_on_delay(tree, check)
+	await _scenario_converges_sideways(tree, check)
+	await _scenario_converges_diagonal(tree, check)
+	await _scenario_straight_runs(tree, check)
+	await _scenario_auto_keyboard(tree, check)
+	await _scenario_auto_joypad(tree, check)
+	await _scenario_off_mode(tree, check)
 
 
 func _cleanup_file(path: String) -> void:
@@ -144,3 +153,282 @@ func _scenario_settings_refusals(check: Callable) -> void:
 	_cleanup_file(TEST_PATH_A)
 	_cleanup_file(TEST_PATH_B)
 	_cleanup_file(TEST_PATH_C)
+
+
+# ---------------------------------------------------------------------------------------------------------
+# Auto-follow (D-16, A40, A41). Every scenario spawns its own floor, player and rig.
+# ---------------------------------------------------------------------------------------------------------
+
+func _spawn(tree: SceneTree, mode: String) -> Array[Node]:
+	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root, Vector3(400, 1, 400))
+	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3.ZERO)
+	var rig: CameraRig = Fixtures.spawn_camera_rig(tree.root, player)
+	var settings: CameraSettings = CameraSettings.new()
+	settings.auto_follow_mode = mode
+	rig.apply_settings(settings)
+	await Fixtures.wait_physics(tree, 10)
+	await Fixtures.wait_process(tree, 2)
+	rig.notify_look_activity()
+	return [floor_body, player, rig]
+
+
+func _free_all(tree: SceneTree, nodes: Array[Node]) -> void:
+	for action: StringName in [&"move_left", &"move_right", &"move_forward", &"move_back"]:
+		Input.action_release(action)
+	for node: Node in nodes:
+		if is_instance_valid(node):
+			node.queue_free()
+	await tree.process_frame
+
+
+## Awaits process frames for `seconds` of wall clock time.
+func _run_for(tree: SceneTree, seconds: float) -> void:
+	var end_msec: int = Time.get_ticks_msec() + int(seconds * 1000.0)
+	while Time.get_ticks_msec() < end_msec:
+		await tree.process_frame
+
+
+## Holds `actions` for `seconds` of wall clock time, sampling the rig yaw and the player's horizontal heading every
+## frame, then releases them. `mouse_pixels` != 0 sends that horizontal motion before every frame.
+## Returns times, yaws, headings (parallel arrays), yaw_start and mouse_events.
+func _hold(tree: SceneTree, rig: CameraRig, player: PlayerController, actions: Array[StringName], seconds: float, mouse_pixels: float = 0.0) -> Dictionary:
+	var times: PackedFloat64Array = PackedFloat64Array()
+	var yaws: PackedFloat64Array = PackedFloat64Array()
+	var headings: Array[Vector2] = []
+	var mouse_events: int = 0
+	var yaw_start: float = rig.yaw
+	for action: StringName in actions:
+		Input.action_press(action)
+	var start_msec: int = Time.get_ticks_msec()
+	var elapsed: float = 0.0
+	while elapsed < seconds:
+		if mouse_pixels != 0.0:
+			Fixtures.send_mouse_motion(Vector2(mouse_pixels, 0.0))
+			mouse_events += 1
+		await tree.process_frame
+		elapsed = float(Time.get_ticks_msec() - start_msec) / 1000.0
+		times.append(elapsed)
+		yaws.append(rig.yaw)
+		headings.append(Vector2(player.velocity.x, player.velocity.z))
+	for action: StringName in actions:
+		Input.action_release(action)
+	return {"times": times, "yaws": yaws, "headings": headings, "yaw_start": yaw_start, "mouse_events": mouse_events}
+
+
+## The yaw of the first sample at or after time `at`.
+func _yaw_at(held: Dictionary, at: float) -> float:
+	var times: PackedFloat64Array = held["times"]
+	var yaws: PackedFloat64Array = held["yaws"]
+	for i: int in times.size():
+		if times[i] >= at:
+			return yaws[i]
+	return yaws[yaws.size() - 1]
+
+
+func _heading_at(held: Dictionary, at: float) -> Vector2:
+	var times: PackedFloat64Array = held["times"]
+	var headings: Array = held["headings"]
+	for i: int in times.size():
+		if times[i] >= at:
+			return headings[i]
+	return headings[headings.size() - 1]
+
+
+## Largest |yaw - yaw_start| over the samples before time `until`.
+func _max_yaw_delta_before(held: Dictionary, until: float) -> float:
+	var times: PackedFloat64Array = held["times"]
+	var yaws: PackedFloat64Array = held["yaws"]
+	var largest: float = 0.0
+	for i: int in times.size():
+		if times[i] >= until:
+			break
+		largest = maxf(largest, absf(yaws[i] - float(held["yaw_start"])))
+	return largest
+
+
+func _camera_forward(rig: CameraRig) -> Vector2:
+	return Vector2(-rig.global_basis.z.x, -rig.global_basis.z.z)
+
+
+func _key_event(keycode: Key, pressed: bool) -> void:
+	var event: InputEventKey = InputEventKey.new()
+	event.keycode = keycode
+	event.physical_keycode = keycode
+	event.pressed = pressed
+	Input.parse_input_event(event)
+	Input.flush_buffered_events()
+
+
+func _joypad_button_event(pressed: bool) -> void:
+	var event: InputEventJoypadButton = InputEventJoypadButton.new()
+	event.device = 0
+	event.button_index = JOY_BUTTON_A
+	event.pressed = pressed
+	Input.parse_input_event(event)
+	Input.flush_buffered_events()
+
+
+func _joypad_motion_event(value: float) -> void:
+	var event: InputEventJoypadMotion = InputEventJoypadMotion.new()
+	event.device = 0
+	event.axis = JOY_AXIS_RIGHT_X
+	event.axis_value = value
+	Input.parse_input_event(event)
+	Input.flush_buffered_events()
+
+
+# (e) the last input device follows the events; stick noise below 0.2 is ignored; the mode picks auto_follow_active.
+func _scenario_device_detection(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree, "auto")
+	var rig: CameraRig = nodes[2] as CameraRig
+	check.call(rig.last_input_device == CameraRig.InputDevice.KEYBOARD_MOUSE, "(e) the rig starts as KEYBOARD_MOUSE")
+	check.call(not rig.auto_follow_active(), "(e) auto with KEYBOARD_MOUSE is not active")
+	_joypad_motion_event(0.1)
+	check.call(rig.last_input_device == CameraRig.InputDevice.KEYBOARD_MOUSE, "(e) joypad stick noise (0.1) is ignored")
+	_joypad_motion_event(0.5)
+	check.call(rig.last_input_device == CameraRig.InputDevice.JOYPAD, "(e) a joypad stick beyond 0.2 sets JOYPAD")
+	check.call(rig.auto_follow_active(), "(e) auto with JOYPAD is active")
+	Fixtures.send_mouse_motion(Vector2(1.0, 0.0))
+	check.call(rig.last_input_device == CameraRig.InputDevice.KEYBOARD_MOUSE, "(e) a mouse motion sets KEYBOARD_MOUSE")
+	var on: CameraSettings = CameraSettings.new()
+	on.auto_follow_mode = "on"
+	rig.apply_settings(on)
+	check.call(rig.auto_follow_active(), "(e) mode on is active with KEYBOARD_MOUSE")
+	var off: CameraSettings = CameraSettings.new()
+	off.auto_follow_mode = "off"
+	rig.apply_settings(off)
+	_joypad_button_event(true)
+	_joypad_button_event(false)
+	check.call(not rig.auto_follow_active(), "(e) mode off is never active, even after joypad input")
+	await _free_all(tree, nodes)
+
+
+# (f) look input arriving every frame is never fought (forced on).
+func _scenario_forced_on_with_mouse(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree, "on")
+	var player: PlayerController = nodes[1] as PlayerController
+	var rig: CameraRig = nodes[2] as CameraRig
+	var held: Dictionary = await _hold(tree, rig, player, [&"move_right"], 2.5, 1.0)
+	var expected: float = float(held["yaw_start"]) - float(held["mouse_events"]) * rig.base_sensitivity
+	check.call(absf(rig.yaw - expected) < 1e-3, "(f) running sideways with mouse input every frame: yaw is the mouse contribution only (off by %.5f over %d events)" % [rig.yaw - expected, held["mouse_events"]])
+	await _free_all(tree, nodes)
+
+
+# (g) forced on, no look input: still during the delay, then sideways running pulls the camera along.
+func _scenario_forced_on_delay(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree, "on")
+	var player: PlayerController = nodes[1] as PlayerController
+	var rig: CameraRig = nodes[2] as CameraRig
+	var held: Dictionary = await _hold(tree, rig, player, [&"move_right"], rig.auto_follow_delay + 1.5)
+	var early: float = _max_yaw_delta_before(held, rig.auto_follow_delay - 0.1)
+	check.call(early < 1e-4, "(g) the yaw does not change during the first auto_follow_delay - 0.1 s (%.6f)" % early)
+	var pulled: float = float(held["yaw_start"]) - rig.yaw
+	check.call(pulled > 0.3, "(g) by auto_follow_delay + 1.5 s the yaw has decreased by more than 0.3 rad (%.3f)" % pulled)
+	await _free_all(tree, nodes)
+
+
+## Stands auto_follow_delay + 0.1 s, then holds `actions` for 3 s and checks the convergence claims.
+func _check_convergence(tree: SceneTree, check: Callable, label: String, actions: Array[StringName]) -> Array[Node]:
+	var nodes: Array[Node] = await _spawn(tree, "on")
+	var player: PlayerController = nodes[1] as PlayerController
+	var rig: CameraRig = nodes[2] as CameraRig
+	await _run_for(tree, rig.auto_follow_delay + 0.1)
+	var held: Dictionary = await _hold(tree, rig, player, actions, 3.0)
+	var last_second: float = absf(rig.yaw - _yaw_at(held, 2.0))
+	check.call(last_second < 0.02, "%s the yaw changes by less than 0.02 rad over the last second (%.4f)" % [label, last_second])
+	var heading: Vector2 = _heading_at(held, 3.0)
+	var behind: float = absf(_camera_forward(rig).angle_to(heading))
+	check.call(behind < 0.1, "%s the camera ends behind the run, forward within 0.1 rad of the heading (%.3f)" % [label, behind])
+	var steered: float = absf(heading.angle_to(_heading_at(held, 0.5)))
+	check.call(steered < 0.05, "%s the player's heading stays fixed, no circling (%.3f)" % [label, steered])
+	check.call(float(held["yaw_start"]) - rig.yaw > 0.3, "%s the camera did swing (yaw down %.3f)" % [label, float(held["yaw_start"]) - rig.yaw])
+	return nodes
+
+
+# (h) held sideways key converges; the re-base then makes a new key relative to the current view.
+func _scenario_converges_sideways(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _check_convergence(tree, check, "(h)", [&"move_right"])
+	var player: PlayerController = nodes[1] as PlayerController
+	var rig: CameraRig = nodes[2] as CameraRig
+	Input.action_press(&"move_forward")
+	await Fixtures.wait_physics(tree, 30)
+	var moving: Vector2 = Vector2(player.velocity.x, player.velocity.z).normalized()
+	var alignment: float = moving.dot(_camera_forward(rig).normalized())
+	check.call(alignment > 0.95, "(h) after the move key changes, forward runs along the current camera forward (dot %.3f)" % alignment)
+	await _free_all(tree, nodes)
+
+
+# (i) held diagonal converges.
+func _scenario_converges_diagonal(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _check_convergence(tree, check, "(i)", [&"move_forward", &"move_right"])
+	await _free_all(tree, nodes)
+
+
+# (j) straight runs and runs toward the camera leave the yaw alone.
+func _scenario_straight_runs(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree, "on")
+	var player: PlayerController = nodes[1] as PlayerController
+	var rig: CameraRig = nodes[2] as CameraRig
+	var held: Dictionary = await _hold(tree, rig, player, [&"move_forward"], 2.5)
+	var drift: float = absf(rig.yaw - float(held["yaw_start"]))
+	check.call(drift < 0.02, "(j) running straight ahead for 2.5 s leaves the yaw alone (%.4f)" % drift)
+	await _free_all(tree, nodes)
+
+	nodes = await _spawn(tree, "on")
+	player = nodes[1] as PlayerController
+	rig = nodes[2] as CameraRig
+	held = await _hold(tree, rig, player, [&"move_back"], rig.auto_follow_delay + 2.0)
+	drift = absf(rig.yaw - float(held["yaw_start"]))
+	check.call(drift < 0.02, "(j) running toward the camera leaves the yaw alone (%.4f)" % drift)
+	await _free_all(tree, nodes)
+
+
+# (k) auto mode with keyboard and mouse never follows.
+func _scenario_auto_keyboard(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree, "auto")
+	var player: PlayerController = nodes[1] as PlayerController
+	var rig: CameraRig = nodes[2] as CameraRig
+	_key_event(KEY_K, true)
+	_key_event(KEY_K, false)
+	check.call(rig.last_input_device == CameraRig.InputDevice.KEYBOARD_MOUSE, "(k) a key event leaves the device at KEYBOARD_MOUSE")
+	var held: Dictionary = await _hold(tree, rig, player, [&"move_right"], rig.auto_follow_delay + 1.5)
+	var drift: float = absf(rig.yaw - float(held["yaw_start"]))
+	check.call(drift < 1e-4, "(k) auto with keyboard and mouse: running sideways leaves the yaw alone (%.6f)" % drift)
+	await _free_all(tree, nodes)
+
+
+# (l) auto mode follows after a joypad event and stops again mid-swing after a key event.
+func _scenario_auto_joypad(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree, "auto")
+	var player: PlayerController = nodes[1] as PlayerController
+	var rig: CameraRig = nodes[2] as CameraRig
+	_joypad_button_event(true)
+	_joypad_button_event(false)
+	check.call(rig.last_input_device == CameraRig.InputDevice.JOYPAD, "(l) a joypad button event sets JOYPAD")
+	var held: Dictionary = await _hold(tree, rig, player, [&"move_right"], rig.auto_follow_delay + 0.4)
+	var pulled: float = float(held["yaw_start"]) - rig.yaw
+	check.call(pulled > 0.3, "(l) auto after a joypad event: by auto_follow_delay + 0.4 s the yaw decreased by more than 0.3 rad (%.3f)" % pulled)
+	# The swing is still running (it takes about 1.7 s); a key event must stop it.
+	Input.action_press(&"move_right")
+	_key_event(KEY_K, true)
+	_key_event(KEY_K, false)
+	check.call(rig.last_input_device == CameraRig.InputDevice.KEYBOARD_MOUSE, "(l) a key event switches the device to KEYBOARD_MOUSE")
+	var yaw_after_key: float = rig.yaw
+	await _run_for(tree, 0.5)
+	Input.action_release(&"move_right")
+	var drift: float = absf(rig.yaw - yaw_after_key)
+	check.call(drift < 1e-4, "(l) the follow stops mid-swing after the key event (%.6f)" % drift)
+	await _free_all(tree, nodes)
+
+
+# (m) off mode never follows, even after joypad input.
+func _scenario_off_mode(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree, "off")
+	var player: PlayerController = nodes[1] as PlayerController
+	var rig: CameraRig = nodes[2] as CameraRig
+	_joypad_button_event(true)
+	_joypad_button_event(false)
+	var held: Dictionary = await _hold(tree, rig, player, [&"move_right"], rig.auto_follow_delay + 1.5)
+	var drift: float = absf(rig.yaw - float(held["yaw_start"]))
+	check.call(drift < 1e-4, "(m) off mode: running sideways leaves the yaw alone (%.6f)" % drift)
+	await _free_all(tree, nodes)
