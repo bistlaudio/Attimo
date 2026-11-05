@@ -1,12 +1,13 @@
-extends State
-## Idle: waits for input. Jump on the jump action, Run when a move direction is held.
+extends GroundState
+## Idle: brakes to a stop. Hands over to Run as soon as a move direction is held, and already
+## accelerates on that tick so no input tick is lost.
 
 
-func physics_update(_delta: float) -> StringName:
-	if Input.is_action_just_pressed(&"dash"):
-		return &"Dash"
-	if Input.is_action_just_pressed(&"jump"):
-		return &"Jump"
-	if actor.input_direction() != Vector3.ZERO:
-		return &"Run"
-	return &""
+func _ground_update(delta: float) -> StringName:
+	var direction: Vector3 = actor.input_direction()
+	if direction == Vector3.ZERO:
+		actor.accelerate_ground(Vector3.ZERO, 0.0, actor.config.ground_decel, delta)
+		return &""
+	actor.face(direction, delta)
+	actor.accelerate_ground(direction, actor.config.run_speed, actor.config.ground_accel, delta)
+	return &"Run"
