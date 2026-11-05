@@ -57,10 +57,15 @@ func _scenario_toggle_and_probe(tree: SceneTree, check: Callable) -> void:
 func _scenario_standing_jump(tree: SceneTree, check: Callable) -> void:
 	_begin(tree)
 	await Fixtures.wait_physics(tree, 10)
+	_tap(&"debug_metrics")
 	Fixtures.send_action_event(&"jump", true)
 	await Fixtures.wait_physics(tree, 5)
 	var landed: int = await Fixtures.wait_until(tree, func() -> bool: return _overlay.last_jump.has("height") and _player.is_grounded(), 240)
 	Fixtures.send_action_event(&"jump", false)
+	await tree.process_frame
+	await tree.process_frame
+	var text: String = (_overlay.get_node("%Lines") as RichTextLabel).text
+	check.call(text.contains("60 TPS") and text.contains("Jump [jump]") and text.contains("Latency jump"), "(2) the visible overlay lists tick rate, jump record and latency")
 	check.call(landed >= 0, "(2) a held standing jump closes an airtime record")
 	var jump: Dictionary = _overlay.last_jump
 	check.call(jump.get("kind", "") == "jump", "(2) the record kind is 'jump' (got '%s')" % jump.get("kind", ""))

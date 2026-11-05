@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/debug/metrics_overlay.gd" id="1_overlay"]
+[ext_resource type="Script" path="res://scripts/debug/latency_probe.gd" id="2_probe"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0, 0, 0, 0.6)
+
+[node name="MetricsOverlay" type="CanvasLayer"]
+layer = 101
+script = ExtResource("1_overlay")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(440, 0)
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -452.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = 52.0
+grow_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Lines" type="RichTextLabel" parent="PanelContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+bbcode_enabled = false
+fit_content = true
+
+[node name="LatencyProbe" type="Node" parent="."]
+script = ExtResource("2_probe")

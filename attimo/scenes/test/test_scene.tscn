@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="5_player"]
 [ext_resource type="PackedScene" path="res://scenes/debug/event_log.tscn" id="6_log"]
 [ext_resource type="PackedScene" path="res://scenes/camera/camera_rig.tscn" id="7_rig"]
+[ext_resource type="PackedScene" path="res://scenes/debug/metrics_overlay.tscn" id="8_metrics"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 
@@ -178,3 +179,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
 target = NodePath("../Player")
 
 [node name="EventLog" parent="." instance=ExtResource("6_log")]
+
+[node name="MetricsOverlay" parent="." instance=ExtResource("8_metrics")]
