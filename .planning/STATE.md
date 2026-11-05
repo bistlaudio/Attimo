@@ -4,16 +4,16 @@ milestone: v0.11.0.4
 current_phase: 02
 current_phase_name: Movement Core & Follow Camera
 status: executing
-stopped_at: Completed 02-08-PLAN.md
-last_updated: "2026-11-05T21:22:57.251Z"
+stopped_at: Completed 02-09-PLAN.md
+last_updated: "2026-11-05T21:36:00.590Z"
 last_activity: 2026-11-05
 last_activity_desc: Phase 02 execution started
-state_head: 2039e02d2458cd4f86e72ea9fe49562f0cb16f5a
+state_head: b03840f07da9cbe1c824f7640b2fb29bbe7685dc
 progress:
   total_phases: 15
   completed_phases: 1
   total_plans: 21
-  completed_plans: 15
+  completed_plans: 16
 ---
 
 # Project State
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 02 (Movement Core & Follow Camera) — EXECUTING
-Plan: 9 of 14
+Plan: 10 of 14
 Status: Ready to execute
 Last activity: 2026-11-05 — Phase 02 execution started
 
@@ -64,6 +64,7 @@ Progress: [█░░░░░░░░░] 7%
 | Phase 02 P06 | 15 min | 2 tasks | 2 files |
 | Phase 02 P07 | 30 min | 2 tasks | 4 files |
 | Phase 02 P08 | 25 min | 2 tasks | 6 files |
+| Phase 02 P09 | 12 min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,8 @@ Recent decisions that affect current work:
 - [Phase 02]: 02-06: SpringArm3D failed the 10-TPS corridor test (32 of 289 frames clipped), so CameraRig casts a sphere per frame itself (A3 fallback); node layout and API unchanged, SpringArm3D node mask is 0
 - [Phase 02]: 02-07: no snap_min/snap_max/platform_carry retune needed; ramps, stairs and platforms pass with shipped values, controller untouched
 - [Phase 02]: 02-07: gym stairs are Primitive_Beam instances rotated 90 degrees about Y, sunk so each top is at 0.15*n; 10 TPS ramp down is airborne 4 ticks (diagnostic, A22)
+- [Phase 02]: 02-09: dash jump hand-offs apply the bounded exit carry (dash_exit_cap) before leaving Dash, so the interim normal jump cannot carry the raw dash speed; 02-11 replaces the ground branch with LongJump
+- [Phase 02]: 02-09: Sprint without input hands over to Run (which brakes into Idle) to keep the running pose while sliding to a stop
 
 ### Pending Todos
 
@@ -118,6 +121,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-05T21:22:57.184Z
-Stopped at: Completed 02-08-PLAN.md
+Last session: 2026-11-05T21:36:00.515Z
+Stopped at: Completed 02-09-PLAN.md
 Resume file: None
