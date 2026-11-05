@@ -49,8 +49,8 @@ Ein 3D-Third-Person-Platformer als Uni-Prototyp (vertikaler Slice). Die Hauptfig
 
 | Technology | Version | Purpose | Why | Confidence |
 |------------|---------|---------|-----|------------|
-| **Phantom Camera** (ramokz/phantom-camera) | **v0.11.0.4** (2026-10-27); README states Godot 4.4+ | Over-the-shoulder follow cam, aim cam, priority-based blending | Third Person mode is built on `SpringArm3D` (collision mask, spring length, margin are configurable from the PhantomCamera node), 3D look-at modes, priority blending between virtual cameras (follow -> aim = raise priority of the aim camera, tween handled for you), and a camera-manager singleton. Matches the "hold key = aim mode with crosshair" requirement directly. Pin the exact version: it is 0.x and has had breaking changes between releases. Maintainer shipped fixes for Godot 4.7.x issues recently, so it is actively tracked against current Godot. | MEDIUM (version + features verified from repo; not yet run on 4.7.2 by us) |
-| `SpringArm3D` + `Camera3D` (hand-rolled fallback) | built-in | Fallback if Phantom Camera fights the controller | Ordinary pattern: `CameraRig (Node3D, yaw) > Pitch (Node3D) > SpringArm3D > Camera3D`. Keep this as a documented fallback; spike Phantom Camera first (1 day max). | HIGH |
+| **Hand-built `CameraRig`**: `CameraRig` (Node3D, yaw) > `Pitch` (Node3D) > `SpringArm3D` > `Camera3D` | built-in | Centered third-person follow camera with mouse look; additive FOV/offset sources for aim mode (Phase 3) and camera kick (Phase 11) | Decided in Phase 2 discuss (D-18): own the follow feel, no 0.x addon to pin. Top_level rig with physics interpolation off, reading the interpolated player; `SpringArm3D` masks World. Framing is centered behind the character, the shoulder offset is aim-mode only (D-14). | HIGH |
+| Fallback note | built-in | Per-frame shape cast inside `CameraRig` | If the `SpringArm3D` fails the 10-TPS corridor test, replace it with a per-frame shape cast inside `CameraRig` (D-18). Phantom Camera was dropped. | HIGH |
 
 ### Input (Input Map actions from day one; keyboard+mouse first, gamepad later)
 
@@ -71,8 +71,7 @@ Ein 3D-Third-Person-Platformer als Uni-Prototyp (vertikaler Slice). Die Hauptfig
 
 | Addon | Version | Purpose | When to Use |
 |-------|---------|---------|-------------|
-| Phantom Camera | v0.11.0.4 | Camera (above) | Adopt in the camera phase |
-| Debug Draw 3D (DmitriySalnikov/godot_debug_draw_3d) | 1.7.3 (2026-04-04; targets Godot 4.4.1+) | Draw raycasts, aim-assist cones, collision shapes, velocity vectors in-game | Adopt early: aim assist, wall-run raycasts and camera collision are far faster to tune when visible. Strip from release build. MEDIUM (check for a newer tag at install time) |
+| Debug Draw 3D (DmitriySalnikov/godot_debug_draw_3d) | 1.7.3 (2026-04-04; targets Godot 4.4.1+) | Draw raycasts, aim-assist cones, collision shapes, velocity vectors in-game | Deferred (A39): not adopted in Phase 2; revisit when aim or wall-run raycasts need visualisation. Strip from release build if adopted. MEDIUM (check for a newer tag at install time) |
 | gdUnit4 | v6.2.3 (2026-11-01) | Unit tests for pure logic (module system, state transitions, coyote/buffer timers) | OPTIONAL. Only test deterministic logic, not feel. Skip if time is short. MEDIUM |
 | Godot State Charts (derkork/godot-statecharts) | v0.22.5 (2026-06-26) | Hierarchical state charts | OPTIONAL, boss phases / mechanism logic only. Not for player movement. LOW-MEDIUM (docs for Godot version compat not checked) |
 
@@ -85,7 +84,7 @@ Ein 3D-Third-Person-Platformer als Uni-Prototyp (vertikaler Slice). Die Hauptfig
 | Engine version | 4.7.2 | 4.8-beta2 | Beta, addons may lag, no benefit for the slice |
 | Engine version | 4.7.2 | 4.6.x | Fine, but 4.7 has better particles and no reason to stay behind |
 | Renderer | Forward+ | Mobile / Compatibility | No volumetric fog / SDFGI / best glow; no target hardware reason |
-| Camera | Phantom Camera (pinned) | Fully hand-rolled | Hand-rolled is the documented fallback; PC gives blending/priorities for free |
+| Camera | Hand-built `CameraRig` (D-18) | Phantom Camera (dropped by D-18) | Own the follow feel; no 0.x addon to pin; the rig exposes additive FOV/offset sources for aim and camera kick |
 | Controller | Own `CharacterBody3D` script | Addon "ultimate character controller" | You cannot reach the target feel without owning the numbers |
 | State machine | Own node-based FSM | Addons (State Charts, LimboAI, Beehave) | Overkill for 6-8 states; LimboAI/Beehave are AI/behaviour-tree tools, only revisit for boss |
 | Kit placement | Scene instances + grid snap | GridMap | GridMap stores cells as packed int arrays in `.tscn` (unreadable/unmergeable for text tooling), poor fit for irregular floating islands |
@@ -99,7 +98,6 @@ Ein 3D-Third-Person-Platformer als Uni-Prototyp (vertikaler Slice). Die Hauptfig
 
 # Addons (copy into res://addons/, enable in Project Settings > Plugins; commit the addon folders):
 
-#   Phantom Camera  v0.11.0.4  -> https://github.com/ramokz/phantom-camera/releases
 
 #   Debug Draw 3D   1.7.3      -> https://github.com/DmitriySalnikov/godot_debug_draw_3d/releases
 
@@ -240,7 +238,7 @@ Ein 3D-Third-Person-Platformer als Uni-Prototyp (vertikaler Slice). Die Hauptfig
 - Godot 4.6 release page (Jolt default for new 3D projects, IK framework, glow/AgX changes): https://godotengine.org/releases/4.6/ - HIGH
 - Godot 4.7 release page (AreaLight3D, particle scale/rotation, nearest 3D scaling, MeshLibrary editor): https://godotengine.org/releases/4.7/ - HIGH
 - Godot docs, Using Jolt Physics (4.7 docs): https://docs.godotengine.org/en/stable/tutorials/physics/using_jolt_physics.html - HIGH
-- Phantom Camera repo and release feed (v0.11.0.4, Godot 4.4+): https://github.com/ramokz/phantom-camera - MEDIUM
+- Phantom Camera repo and release feed (v0.11.0.4, Godot 4.4+): https://github.com/ramokz/phantom-camera - MEDIUM (not adopted, D-18)
 - Debug Draw 3D releases (1.7.3, 4.4.1+): https://github.com/DmitriySalnikov/godot_debug_draw_3d/releases - MEDIUM
 - godot-statecharts releases (v0.22.5): https://github.com/derkork/godot-statecharts/releases - MEDIUM
 - gdUnit4 releases (v6.2.3): https://github.com/godot-gdunit-labs/gdUnit4/releases - MEDIUM
