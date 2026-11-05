@@ -24,7 +24,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [x] **MOVE-04**: Coyote time and jump buffering make jumps forgiving
 - [x] **MOVE-05**: Player can double jump once per airtime
 - [x] **MOVE-06**: Player can dash on the ground
-- [ ] **MOVE-07**: Player can dash once in the air (resets on landing), and a dash can flow into a jump
+- [x] **MOVE-07**: Player can dash once in the air (resets on landing), and a dash can flow into a jump
 - [ ] **MOVE-08**: Player keeps momentum from moving platforms and conveyors, and handles slopes and steps without sticking or launching
 - [ ] **MOVE-09**: Player animations follow movement state, built only from the KayKit Rig_Medium kit (clips, cuts, blends, playback speed, procedural root/visual rotation and scale): idle, run (Running_A), sprint (Running_B faster + lean), jump (Jump_Start → Jump_Idle → Jump_Land), double jump (Jump_Start re-cut + procedural flip), ground/air dash (Dodge_Forward, held pose in air), aim-mode strafe (Running_Strafe_L/R, Walking_Backwards)
 - [ ] **MOVE-11**: Movement verbs are limited to what the animation kit supports; a new verb needs a kit clip or a clip composition before it is added
@@ -174,7 +174,7 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | MOVE-04 | Phase 2 | Complete |
 | MOVE-05 | Phase 2 | Complete |
 | MOVE-06 | Phase 2 | Complete |
-| MOVE-07 | Phase 2 | Pending |
+| MOVE-07 | Phase 2 | Complete |
 | MOVE-08 | Phase 2 | Pending |
 | MOVE-09 | Phase 3 | Pending |
 | MOVE-10 | Phase 2 | Pending |

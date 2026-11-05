@@ -4,16 +4,16 @@ milestone: v0.11.0.4
 current_phase: 02
 current_phase_name: Movement Core & Follow Camera
 status: executing
-stopped_at: Completed 02-10-PLAN.md
-last_updated: "2026-11-05T21:52:30.361Z"
+stopped_at: Completed 02-11-PLAN.md
+last_updated: "2026-11-05T22:05:12.429Z"
 last_activity: 2026-11-05
 last_activity_desc: Phase 02 execution started
-state_head: c742baf7e615c03dc3d307884025b570454855ae
+state_head: bb2f28d8d52ecc65f6b53763f767869da8eb5828
 progress:
   total_phases: 15
   completed_phases: 1
   total_plans: 21
-  completed_plans: 17
+  completed_plans: 18
 ---
 
 # Project State
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 02 (Movement Core & Follow Camera) — EXECUTING
-Plan: 11 of 14
+Plan: 12 of 14
 Status: Ready to execute
 Last activity: 2026-11-05 — Phase 02 execution started
 
@@ -66,6 +66,7 @@ Progress: [█░░░░░░░░░] 7%
 | Phase 02 P08 | 25 min | 2 tasks | 6 files |
 | Phase 02 P09 | 12 min | 2 tasks | 10 files |
 | Phase 02 P10 | 15 min | 3 tasks | 6 files |
+| Phase 02 P11 | 9 min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,8 @@ Recent decisions that affect current work:
 - [Phase 02]: 02-09: Sprint without input hands over to Run (which brakes into Idle) to keep the running pose while sliding to a stop
 - [Phase 02]: 02-10: CameraSettings reads ConfigFile keys via has_section_key (null defaults log engine errors); save_to also refuses '..' paths
 - [Phase 02]: 02-10: auto-follow converges because steering_yaw() = yaw - _auto_offset excludes auto-follow and recenter rotation until the move input changes (A40); auto/on/off mode keyed to last input device (A41)
+- [Phase 02]: 02-11: ground dash end holds an open chain window through dash_jump_grace so a late-grace long jump keeps its stage
+- [Phase 02]: 02-11: LongJump reads the live dash speed (no exit carry before the ground-jump hand-off) and caps it with long_jump_speed_cap
 
 ### Pending Todos
 
@@ -124,6 +127,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-05T21:52:30.251Z
-Stopped at: Completed 02-10-PLAN.md
+Last session: 2026-11-05T22:05:12.359Z
+Stopped at: Completed 02-11-PLAN.md
 Resume file: None

@@ -85,7 +85,7 @@ Plans:
   3. The player can dash on the ground and once in the air. The air dash refills on landing, a dash can flow straight into a jump, and a dash never tunnels through walls.
   4. Moving platforms and conveyors carry the player, and the player keeps their momentum when leaving them. Gym slopes and stairs never make the player stick or launch.
   5. All movement values are live-tunable in one resource. A movement-metrics table (jump height/distance, dash distance) is recorded, and the measured jump and dash input latency meets the 66 ms target (hard limit 100 ms). Movement is signed off without any juice.
-**Plans:** 10/14 plans executed
+**Plans:** 11/14 plans executed
 
 Plans:
 - [x] 02-01-PLAN.md — Tracer: camera-relative run and real jump on MovementConfig + PlayerController (single move_and_slide), CameraRig follow, proven by test_ground_movement (wave 1)
@@ -98,7 +98,7 @@ Plans:
 - [x] 02-08-PLAN.md — LatencyProbe (60/120 TPS, 66 ms target asserted) and F4 MetricsOverlay with F6 tick-rate cycle (wave 3)
 - [x] 02-09-PLAN.md — Sprint, ground dash and air dash with cooldown, carry and no tunnelling (wave 3)
 - [x] 02-10-PLAN.md — Camera controls: CameraSettings (sensitivity, invert-Y, auto-follow mode auto/on/off), converging device-aware auto-follow, recenter (wave 3)
-- [ ] 02-11-PLAN.md — Jump chain and long jump: Jump 1 -> Jump 2 -> Dash -> Jump, dash speed carried and capped (wave 4)
+- [x] 02-11-PLAN.md — Jump chain and long jump: Jump 1 -> Jump 2 -> Dash -> Jump, dash speed carried and capped (wave 4)
 - [ ] 02-12-PLAN.md — F2 tuning panel: live MovementConfig sliders and camera settings (wave 4)
 - [ ] 02-13-PLAN.md — Generated docs/MOVEMENT-METRICS.md with asserted latency table and drift guard (wave 5)
 - [ ] 02-14-PLAN.md — Movement gym as main scene and the end-of-phase sign-off without juice, incl. mandatory 144 Hz check (wave 6)
@@ -302,7 +302,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 (en
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Prototype Character | 7/7 | Complete    | 2026-11-04 |
-| 2. Movement Core & Follow Camera | 10/14 | In Progress | - |
+| 2. Movement Core & Follow Camera | 11/14 | In Progress | - |
 | 3. Animated Mannequin & Aim Mode | 0/TBD | Not started | - |
 | 4. Fernauslöser & Mechanism Kit | 0/TBD | Not started | - |
 | 5. Pull/Push & Module Unlocks | 0/TBD | Not started | - |
