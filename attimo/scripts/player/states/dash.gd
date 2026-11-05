@@ -5,7 +5,9 @@ extends State
 ## On the ground the floor snap keeps it on slopes. In the air it holds altitude (air_dash_gravity_scale, one
 ## air dash per airtime, spent in PlayerController.start_dash). The exit carries a bounded speed
 ## (dash_carry between run and dash speed, capped by dash_exit_cap) and air control continues afterwards.
-## A jump press during the dash leaves it: a ground dash into Jump, an air dash into the double jump (A27).
+## A jump press during the dash leaves it: a ground dash into the LongJump (D-06; it reads the live dash speed
+## itself), an air dash into the double jump (A27, A1). A ground dash that ended on the ground opens the
+## config.dash_jump_grace window in which a jump is still a long jump (GroundState).
 ## Emits the dash_started fact once on enter.
 
 ## Direction of this dash (flattened, normalized). Read by the long jump of a later plan.
@@ -27,6 +29,8 @@ func enter(_previous: StringName) -> void:
 	actor.face_now(direction)
 	in_air = not actor.is_grounded()
 	actor.start_dash(direction, in_air)
+	if not in_air:
+		actor.refresh_chain_window()
 	if in_air:
 		actor.gravity_scale = actor.config.air_dash_gravity_scale
 		actor.vertical_speed = 0.0
@@ -43,10 +47,10 @@ func physics_update(delta: float) -> StringName:
 		return _finish()
 	actor.move_velocity = direction * actor.config.dash_speed
 	if actor.wants_jump():
-		if not in_air:
-			# Interim hand-off: a normal jump at the bounded carry speed. The long jump replaces it.
-			_apply_exit_carry()
-			return &"Jump"
+		# The long jump reads the live dash speed (set above this tick) and bounds it itself (A30: a ground dash
+		# that ran off a ledge can still be cancelled into it while coyote time lasts).
+		if not in_air and (actor.is_grounded() or actor.can_coyote_jump()):
+			return &"LongJump"
 		if actor.air_jump_available:
 			_apply_exit_carry()
 			return &"DoubleJump"
@@ -70,6 +74,9 @@ func _apply_exit_carry() -> void:
 
 func _finish() -> StringName:
 	_apply_exit_carry()
+	if not in_air and actor.is_grounded():
+		actor.dash_jump_grace_timer = actor.config.dash_jump_grace
+		actor.hold_chain_through_grace()
 	if not actor.is_grounded():
 		return &"Fall"
 	if actor.input_direction() == Vector3.ZERO:

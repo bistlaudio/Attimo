@@ -12,6 +12,7 @@
 [ext_resource type="Resource" path="res://resources/player/movement_default.tres" id="10_cfg"]
 [ext_resource type="Script" path="res://scripts/player/states/double_jump.gd" id="11_double_jump"]
 [ext_resource type="Script" path="res://scripts/player/states/sprint.gd" id="12_sprint"]
+[ext_resource type="Script" path="res://scripts/player/states/long_jump.gd" id="13_long_jump"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.5
@@ -43,6 +44,9 @@ script = ExtResource("4_jump")
 
 [node name="DoubleJump" type="Node" parent="StateMachine"]
 script = ExtResource("11_double_jump")
+
+[node name="LongJump" type="Node" parent="StateMachine"]
+script = ExtResource("13_long_jump")
 
 [node name="Run" type="Node" parent="StateMachine"]
 script = ExtResource("7_run")
