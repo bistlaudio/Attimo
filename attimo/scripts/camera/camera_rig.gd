@@ -5,7 +5,19 @@ extends Node3D
 ## The rig is a top-level SIBLING of its target, never a child: it runs in _process, reads the
 ## interpolated target transform and has physics interpolation switched off, so it stays smooth at
 ## any tick rate. FOV and arm-origin offsets are additive per-source channels (D-18): later phases
-## (aim, camera kick) register a source by name and the rig sums them. Auto-follow and recenter come later.
+## (aim, camera kick) register a source by name and the rig sums them.
+##
+## Auto-follow (D-16) converges instead of circling (A40). Movement input is camera-relative, so a camera that
+## rotated with a held A/D key would rotate the key's world direction too and never settle. The follow term is
+## therefore the angle e from camera forward to the player's heading, and steering_yaw() (read by
+## PlayerController.input_direction()) excludes every rotation the follow adds (`_auto_offset`). A held key keeps
+## its world heading while the camera swings behind it, e shrinks into the dead zone and the swing stops. The
+## offset is dropped (steering re-based to the current view) when the move input goes between neutral and held or
+## turns by more than steer_rebase_angle. Mouse look changes yaw only, so it turns the steering with it.
+## Straight runs (e about 0) and runs toward the camera (|e| above auto_follow_max_angle) are left alone.
+##
+## Auto-follow mode (A41, CameraSettings.auto_follow_mode): "on" always follows, "off" never, "auto" only while
+## the last input event came from a joypad. `_input` records the device and never consumes the event.
 
 ## The node to follow (the Player).
 @export var target: Node3D
@@ -34,10 +46,40 @@ extends Node3D
 ## Player camera settings (sensitivity, invert-Y, auto-follow mode). Loaded from user://settings.cfg in _ready.
 var settings: CameraSettings
 
+## Input device families tracked for the auto-follow mode (A41).
+enum InputDevice { KEYBOARD_MOUSE, JOYPAD }
+
+## Seconds without look input before auto-follow may act (D-16 "about 1 s").
+@export var auto_follow_delay: float = 1.0
+## Maximum auto-follow swing speed in rad/s.
+@export var auto_follow_rate: float = 1.4
+## Swing speed in 1/s per rad of heading error, below the rate cap.
+@export var auto_follow_gain: float = 3.0
+## Heading errors in rad smaller than this are left alone.
+@export var auto_follow_dead_zone: float = 0.03
+## Headings in rad further from the camera forward than this (toward the camera) are left alone.
+@export var auto_follow_max_angle: float = 2.0
+## Horizontal target speed in m/s below which auto-follow does not act.
+@export var auto_follow_min_speed: float = 1.0
+## Change in rad of the move input direction that re-bases steering.
+@export var steer_rebase_angle: float = 0.35
+
 ## Yaw in rad, rotation about Y.
 var yaw: float = 0.0
 ## Pitch in rad, rotation about X (negative lifts the camera above the target).
 var pitch: float = -0.3
+
+## Seconds since the last look input (mouse motion; gamepad stick in Phase 13).
+var time_since_look: float = 0.0
+## The device family of the last input event (A41).
+var last_input_device: InputDevice = InputDevice.KEYBOARD_MOUSE
+
+## Rotation added by auto-follow since steering was last re-based (A40).
+var _auto_offset: float = 0.0
+## Move input vector at the last steering re-base (ZERO while neutral).
+var _steer_reference: Vector2 = Vector2.ZERO
+## Target origin of the previous frame, for targets that are not CharacterBody3D.
+var _last_target_origin: Vector3 = Vector3.ZERO
 
 ## FOV contributions in degrees by source name.
 var _fov_sources: Dictionary[StringName, float] = {}
@@ -78,11 +120,25 @@ func _notification(what: int) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
+## Records the last used device family for the auto-follow mode (A41). _input, not _unhandled_input, so a UI
+## control that consumes events cannot hide a device change. Never consumes the event.
+func _input(event: InputEvent) -> void:
+	if event is InputEventJoypadButton:
+		last_input_device = InputDevice.JOYPAD
+	elif event is InputEventJoypadMotion:
+		if absf((event as InputEventJoypadMotion).axis_value) >= 0.2:
+			last_input_device = InputDevice.JOYPAD
+	elif event is InputEventKey or event is InputEventMouseButton or event is InputEventMouseMotion:
+		last_input_device = InputDevice.KEYBOARD_MOUSE
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	var motion := event as InputEventMouseMotion
 	if motion != null:
 		if require_mouse_capture and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 			return
+		if motion.relative != Vector2.ZERO:
+			notify_look_activity()
 		var scale: float = base_sensitivity * settings.sensitivity
 		var vertical: float = motion.relative.y * scale
 		if settings.invert_y:
@@ -102,6 +158,9 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	if target == null:
 		return
+	time_since_look += delta
+	_update_steering_latch()
+	_apply_auto_follow(delta)
 	var anchor: Vector3 = target.get_global_transform_interpolated().origin + Vector3.UP * pivot_height
 	var horizontal_weight: float = 1.0 - exp(-follow_rate * delta)
 	var vertical_weight: float = 1.0 - exp(-vertical_follow_rate * delta)
@@ -176,6 +235,7 @@ func snap_to_target() -> void:
 	if target != null:
 		global_position = target.get_global_transform_interpolated().origin + Vector3.UP * pivot_height
 		_grounded_height = global_position.y
+		_last_target_origin = target.get_global_transform_interpolated().origin
 	rotation.y = yaw
 	if pitch_node != null:
 		pitch_node.rotation.x = pitch
@@ -221,7 +281,64 @@ func _offset_total() -> Vector3:
 	return total
 
 
-## The yaw that camera-relative movement input uses. Here it is simply the camera yaw; 02-10
-## excludes auto-follow and recenter rotation from it until the move input changes (A40).
+## The yaw that camera-relative movement input uses: the camera yaw without the rotation auto-follow added
+## since the move input last changed (A40). Mouse look is included, so the player turns with the view.
 func steering_yaw() -> float:
-	return yaw
+	return yaw - _auto_offset
+
+
+## Marks look input (mouse now, gamepad stick in Phase 13): auto-follow waits auto_follow_delay again.
+func notify_look_activity() -> void:
+	time_since_look = 0.0
+
+
+## Whether auto-follow may act: "on" always, "off" never, "auto" only after joypad input (A41).
+func auto_follow_active() -> bool:
+	match settings.auto_follow_mode:
+		"on":
+			return true
+		"off":
+			return false
+	return last_input_device == InputDevice.JOYPAD
+
+
+## Drops the auto-follow rotation from steering when the move input goes between neutral and held, or turns by
+## more than steer_rebase_angle: the new direction is then relative to the view on screen (A40).
+func _update_steering_latch() -> void:
+	var move: Vector2 = Input.get_vector(&"move_left", &"move_right", &"move_forward", &"move_back")
+	var deflected: bool = move.length() >= 0.1
+	var was_deflected: bool = _steer_reference.length() >= 0.1
+	if deflected != was_deflected or (deflected and absf(move.angle_to(_steer_reference)) > steer_rebase_angle):
+		_auto_offset = 0.0
+		_steer_reference = move if deflected else Vector2.ZERO
+
+
+## Horizontal heading of the target in m/s: the CharacterBody3D velocity, else the interpolated position delta.
+func _target_heading(delta: float) -> Vector2:
+	var origin: Vector3 = target.get_global_transform_interpolated().origin
+	var heading: Vector2 = Vector2.ZERO
+	var body := target as CharacterBody3D
+	if body != null:
+		heading = Vector2(body.velocity.x, body.velocity.z)
+	elif delta > 0.0:
+		heading = Vector2(origin.x - _last_target_origin.x, origin.z - _last_target_origin.z) / delta
+	_last_target_origin = origin
+	return heading
+
+
+## Swings the camera toward the player's heading (D-16). Step = gain * error capped at the rate; every step is
+## added to the yaw and to _auto_offset, so the held key keeps its world heading and the error converges to 0.
+func _apply_auto_follow(delta: float) -> void:
+	var heading: Vector2 = _target_heading(delta)
+	if not auto_follow_active() or time_since_look <= auto_follow_delay:
+		return
+	if heading.length() <= auto_follow_min_speed:
+		return
+	var error: float = angle_difference(yaw, atan2(-heading.x, -heading.y))
+	var magnitude: float = absf(error)
+	if magnitude < auto_follow_dead_zone or magnitude > auto_follow_max_angle:
+		return
+	var speed: float = clampf(magnitude * auto_follow_gain, 0.0, auto_follow_rate)
+	var step: float = signf(error) * minf(speed * delta, magnitude)
+	yaw += step
+	_auto_offset += step
