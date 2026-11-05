@@ -85,7 +85,20 @@ Plans:
   3. The player can dash on the ground and once in the air. The air dash refills on landing, a dash can flow straight into a jump, and a dash never tunnels through walls.
   4. Moving platforms and conveyors carry the player, and the player keeps their momentum when leaving them. Gym slopes and stairs never make the player stick or launch.
   5. All movement values are live-tunable in one resource. A movement-metrics table (jump height/distance, dash distance) is recorded, and the measured jump and dash input latency meets the 66 ms target (hard limit 100 ms). Movement is signed off without any juice.
-**Plans**: TBD
+**Plans:** 11 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Tracer: camera-relative run and real jump on MovementConfig + PlayerController (single move_and_slide), CameraRig follow, Phase 1 tests repaired (wave 1)
+- [ ] 02-02-PLAN.md — Contracts and docs: camera_recenter + debug actions, new EventBus facts, CONVENTIONS, CLAUDE/STACK/STATE/REQUIREMENTS/ROADMAP camera edits (wave 1)
+- [ ] 02-03-PLAN.md — Jump feel: variable height, coyote, buffer, one double jump (wave 2)
+- [ ] 02-04-PLAN.md — Camera quality: vertical follow band, additive FOV/offset sources, jitter and wall-clipping tests at 10/60 TPS (wave 2)
+- [ ] 02-05-PLAN.md — Platforms, conveyors, slopes and stairs: Slope/Beam wrappers, MovingPlatform, FallReset, MOVE-08 tests (wave 2)
+- [ ] 02-06-PLAN.md — LatencyProbe (60/120 TPS) and F4 MetricsOverlay with F6 tick-rate cycle (wave 2)
+- [ ] 02-07-PLAN.md — Sprint, ground dash and air dash with cooldown, carry and no tunnelling (wave 3)
+- [ ] 02-08-PLAN.md — Camera controls: CameraSettings (sensitivity, invert-Y), auto-follow, recenter, F2 tuning panel (wave 3)
+- [ ] 02-09-PLAN.md — Jump chain and long jump: Jump 1 -> Jump 2 -> Dash -> Jump (wave 4)
+- [ ] 02-10-PLAN.md — Generated docs/MOVEMENT-METRICS.md with latency table and drift guard (wave 5)
+- [ ] 02-11-PLAN.md — Movement gym as main scene and the end-of-phase sign-off without juice (wave 6)
 **Notes**: Spike Phantom Camera v0.11.0.4 for at most one day, with SpringArm3D as the fallback. The spike also checks that the camera allows an additive FOV/offset stack, which Phase 11 needs, so the camera choice causes no rework later. Measure latency at 60 and at 120 TPS. Here the Mannequin plays the Phase 1 base clips; the full state mapping comes in Phase 3.
 
 ### Phase 3: Animated Mannequin & Aim Mode
@@ -286,7 +299,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 (en
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Prototype Character | 7/7 | Complete    | 2026-11-04 |
-| 2. Movement Core & Follow Camera | 0/TBD | Not started | - |
+| 2. Movement Core & Follow Camera | 0/11 | Planned | - |
 | 3. Animated Mannequin & Aim Mode | 0/TBD | Not started | - |
 | 4. Fernauslöser & Mechanism Kit | 0/TBD | Not started | - |
 | 5. Pull/Push & Module Unlocks | 0/TBD | Not started | - |
