@@ -12,6 +12,8 @@ const TEST_PATH_C: String = "user://test_camera_c.cfg"
 
 
 func run(tree: SceneTree, check: Callable) -> void:
+	# The runner calls us from _initialize, before the root is inside the tree (global transforms would error).
+	await tree.process_frame
 	await _scenario_mouse_look(tree, check)
 	_scenario_settings_round_trip(check)
 	_scenario_settings_tampering(check)

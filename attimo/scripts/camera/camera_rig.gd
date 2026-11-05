@@ -31,6 +31,9 @@ extends Node3D
 ## rises more than this above it.
 @export var air_rise_band: float = 2.5
 
+## Player camera settings (sensitivity, invert-Y, auto-follow mode). Loaded from user://settings.cfg in _ready.
+var settings: CameraSettings
+
 ## Yaw in rad, rotation about Y.
 var yaw: float = 0.0
 ## Pitch in rad, rotation about X (negative lifts the camera above the target).
@@ -64,6 +67,7 @@ func _ready() -> void:
 	_arm_length = _max_arm_length
 	_arm_mask = spring_arm.collision_mask
 	spring_arm.collision_mask = 0
+	settings = CameraSettings.load_from()
 	snap_to_target()
 	if require_mouse_capture and DisplayServer.get_name() != "headless":
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -79,8 +83,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	if motion != null:
 		if require_mouse_capture and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 			return
-		yaw -= motion.relative.x * base_sensitivity
-		pitch = clampf(pitch - motion.relative.y * base_sensitivity, pitch_min, pitch_max)
+		var scale: float = base_sensitivity * settings.sensitivity
+		var vertical: float = motion.relative.y * scale
+		if settings.invert_y:
+			vertical = -vertical
+		yaw -= motion.relative.x * scale
+		pitch = clampf(pitch - vertical, pitch_min, pitch_max)
 		return
 	if event.is_action_pressed(&"pause") and require_mouse_capture:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -156,6 +164,11 @@ func _target_grounded() -> bool:
 	if not target.has_method(&"is_grounded"):
 		return true
 	return bool(target.call(&"is_grounded"))
+
+
+## Replaces the camera settings (the F2 panel and tests call this). null falls back to defaults.
+func apply_settings(new_settings: CameraSettings) -> void:
+	settings = new_settings if new_settings != null else CameraSettings.new()
 
 
 ## Places the rig on the target pivot with no smoothing (spawn, teleport).

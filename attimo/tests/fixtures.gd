@@ -44,6 +44,8 @@ static func spawn_camera_rig(root: Node, target: Node3D) -> CameraRig:
 	rig.target = target
 	rig.require_mouse_capture = false
 	root.add_child(rig)
+	# Default settings, so no test depends on the developer's saved user://settings.cfg (02-10).
+	rig.apply_settings(CameraSettings.new())
 	rig.snap_to_target()
 	return rig
 
