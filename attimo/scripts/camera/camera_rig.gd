@@ -4,7 +4,8 @@ extends Node3D
 ## CameraRig (yaw) > Pitch > SpringArm3D > Camera3D.
 ## The rig is a top-level SIBLING of its target, never a child: it runs in _process, reads the
 ## interpolated target transform and has physics interpolation switched off, so it stays smooth at
-## any tick rate. Later plans add additive FOV and offset sources, auto-follow and recenter.
+## any tick rate. FOV and arm-origin offsets are additive per-source channels (D-18): later phases
+## (aim, camera kick) register a source by name and the rig sums them. Auto-follow and recenter come later.
 
 ## The node to follow (the Player).
 @export var target: Node3D
@@ -22,11 +23,23 @@ extends Node3D
 @export var pitch_min: float = -1.2
 ## Highest pitch in rad.
 @export var pitch_max: float = 0.6
+## Field of view in degrees with no FOV source registered.
+@export var base_fov: float = 75.0
+## Airborne vertical band in m (D-15): the camera holds the last grounded height until the target
+## rises more than this above it.
+@export var air_rise_band: float = 2.5
 
 ## Yaw in rad, rotation about Y.
 var yaw: float = 0.0
 ## Pitch in rad, rotation about X (negative lifts the camera above the target).
 var pitch: float = -0.3
+
+## FOV contributions in degrees by source name.
+var _fov_sources: Dictionary[StringName, float] = {}
+## Arm origin contributions in Pitch-local space by source name.
+var _offset_sources: Dictionary[StringName, Vector3] = {}
+## Anchor height (target origin y + pivot_height) at the last grounded moment.
+var _grounded_height: float = 0.0
 
 @onready var pitch_node: Node3D = $Pitch
 @onready var spring_arm: SpringArm3D = $Pitch/SpringArm3D
@@ -72,19 +85,84 @@ func _process(delta: float) -> void:
 	var current: Vector3 = global_position
 	current.x = lerpf(current.x, anchor.x, horizontal_weight)
 	current.z = lerpf(current.z, anchor.z, horizontal_weight)
-	current.y = lerpf(current.y, anchor.y, vertical_weight)
+	current.y = lerpf(current.y, _vertical_goal(anchor.y), vertical_weight)
 	global_position = current
+	pitch = clampf(pitch, pitch_min, pitch_max)
 	rotation.y = yaw
 	pitch_node.rotation.x = pitch
+	spring_arm.position = _offset_total()
+	camera.fov = get_fov_total()
+
+
+## The height the rig approaches (D-15). Grounded: the target itself. Airborne: the last grounded height,
+## unless the target rose more than air_rise_band above it (then it trails by the band) or fell below it
+## (then falls are followed).
+func _vertical_goal(anchor_y: float) -> float:
+	if _target_grounded():
+		_grounded_height = anchor_y
+		return anchor_y
+	if anchor_y - _grounded_height > air_rise_band:
+		return anchor_y - air_rise_band
+	if anchor_y < _grounded_height:
+		return anchor_y
+	return _grounded_height
+
+
+## Targets without is_grounded() count as always grounded.
+func _target_grounded() -> bool:
+	if not target.has_method(&"is_grounded"):
+		return true
+	return bool(target.call(&"is_grounded"))
 
 
 ## Places the rig on the target pivot with no smoothing (spawn, teleport).
 func snap_to_target() -> void:
 	if target != null:
 		global_position = target.get_global_transform_interpolated().origin + Vector3.UP * pivot_height
+		_grounded_height = global_position.y
 	rotation.y = yaw
 	if pitch_node != null:
 		pitch_node.rotation.x = pitch
+
+
+## Adds or replaces the FOV contribution of `source` in degrees (positive widens).
+func set_fov_offset(source: StringName, degrees: float) -> void:
+	_fov_sources[source] = degrees
+
+
+## Removes the FOV contribution of `source`; other sources stay.
+func clear_fov_offset(source: StringName) -> void:
+	_fov_sources.erase(source)
+
+
+## Base FOV plus all sources, clamped to a valid projection (1..179 degrees).
+func get_fov_total() -> float:
+	var total: float = base_fov
+	var keys: Array = _fov_sources.keys()
+	keys.sort()
+	for key: StringName in keys:
+		total += _fov_sources[key]
+	return clampf(total, 1.0, 179.0)
+
+
+## Adds or replaces the arm origin offset of `source`, in Pitch-local space. The cast origin moves with
+## it, so wall collision accounts for the offset.
+func set_offset(source: StringName, offset: Vector3) -> void:
+	_offset_sources[source] = offset
+
+
+## Removes the arm origin offset of `source`; other sources stay.
+func clear_offset(source: StringName) -> void:
+	_offset_sources.erase(source)
+
+
+func _offset_total() -> Vector3:
+	var total: Vector3 = Vector3.ZERO
+	var keys: Array = _offset_sources.keys()
+	keys.sort()
+	for key: StringName in keys:
+		total += _offset_sources[key]
+	return total
 
 
 ## The yaw that camera-relative movement input uses. Here it is simply the camera yaw; 02-10
