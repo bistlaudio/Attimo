@@ -1,0 +1,37 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/debug/tuning_panel.gd" id="1_panel"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0, 0, 0, 0.6)
+
+[node name="TuningPanel" type="CanvasLayer"]
+layer = 102
+script = ExtResource("1_panel")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 412.0
+offset_bottom = -12.0
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Scroll" type="ScrollContainer" parent="PanelContainer"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Content" type="VBoxContainer" parent="PanelContainer/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Title" type="Label" parent="PanelContainer/Scroll/Content"]
+layout_mode = 2
+text = "Tuning (F2 / 8)"
+
+[node name="Rows" type="VBoxContainer" parent="PanelContainer/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
