@@ -4,16 +4,16 @@ milestone: v0.11.0.4
 current_phase: 02
 current_phase_name: Movement Core & Follow Camera
 status: executing
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-11-05T14:40:51.492Z"
+stopped_at: Completed 02-03-PLAN.md
+last_updated: "2026-11-05T18:14:00.674Z"
 last_activity: 2026-11-05
 last_activity_desc: Phase 02 execution started
-state_head: b5893fd1ba2b5ee35d12c68c550fef9482a761bf
+state_head: ce80546fb03e2a0f3120f4b2cf7b0c1c84115ca9
 progress:
   total_phases: 15
   completed_phases: 1
   total_plans: 21
-  completed_plans: 9
+  completed_plans: 10
 ---
 
 # Project State
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 02 (Movement Core & Follow Camera) — EXECUTING
-Plan: 3 of 14
+Plan: 4 of 14
 Status: Ready to execute
 Last activity: 2026-11-05 — Phase 02 execution started
 
@@ -58,6 +58,7 @@ Progress: [█░░░░░░░░░] 7%
 |------|----------|-------|-------|
 | Phase 02 P01 | 30 min | 3 tasks | 14 files |
 | Phase 02 P02 | 6 min | 2 tasks | 7 files |
+| Phase 02 P03 | 12 min | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,7 @@ Recent decisions that affect current work:
 - [Phase 02]: Snap-band test asserts the clamp to snap_max above 21 m/s, not 15: the specified formula only reaches 0.5 m at about 20.1 m/s
 - [Phase 02]: Camera decision D-18 recorded in CLAUDE.md and STACK.md: hand-built CameraRig, Phantom Camera dropped; per-frame shape cast is the fallback if SpringArm3D fails the 10-TPS corridor test
 - [Phase 02]: Debug keys use the F-row plus top-row digits 8/9/0 as Mac-friendly alternates (A9); camera_recenter is the middle mouse button (D-17); no gamepad events before Phase 13
+- [Phase 02]: Only Primitive_Slope and Primitive_Beam are copied from Prototype Bits (A37); gym stairs use Beam risers of at most 0.15 m with no step-up code (A4)
 
 ### Pending Todos
 
@@ -105,6 +107,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-05T14:40:51.427Z
-Stopped at: Completed 02-02-PLAN.md
+Last session: 2026-11-05T18:14:00.614Z
+Stopped at: Completed 02-03-PLAN.md
 Resume file: None
