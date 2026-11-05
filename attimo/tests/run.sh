@@ -50,6 +50,8 @@ if [ "${1:-}" != "--tool" ]; then
 		"$PROTOTYPE_GLTF/Primitive_Wall.gltf"
 		"$PROTOTYPE_GLTF/Primitive_Cube_Small.gltf"
 		"$PROTOTYPE_GLTF/Primitive_Pillar.gltf"
+		"$PROTOTYPE_GLTF/Primitive_Slope.gltf"
+		"$PROTOTYPE_GLTF/Primitive_Beam.gltf"
 		"$PROTOTYPE_GLTF/prototypebits_texture.png"
 	)
 	for original in "${ORIGINALS[@]}"; do

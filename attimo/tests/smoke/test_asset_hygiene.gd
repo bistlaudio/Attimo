@@ -1,6 +1,6 @@
 extends RefCounted
 ## FOUND-04 (D-01..D-05): only the whitelisted KayKit files live under res://assets, no raw pack sits inside
-## the project, and the D-05 folder layout exists. The whitelist is fixed at planning time (2026-11-04). Do not
+## the project, and the D-05 folder layout exists. The whitelist is fixed at planning time (2026-11-04); extended to 31 entries in Phase 2 plan 02-03 (Primitive_Slope, Primitive_Beam). Do not
 ## derive it from the disk: a new asset is a deliberate edit of this list, in the same change as the asset.
 ## The "raw packs stay tracked at the repo root" and "no Git LFS" checks live in tests/run.sh (they need git).
 
@@ -33,6 +33,12 @@ const WHITELIST: PackedStringArray = [
 	"prototype_bits/Primitive_Pillar.gltf",
 	"prototype_bits/Primitive_Pillar.gltf.import",
 	"prototype_bits/Primitive_Pillar.bin",
+	"prototype_bits/Primitive_Slope.gltf",
+	"prototype_bits/Primitive_Slope.gltf.import",
+	"prototype_bits/Primitive_Slope.bin",
+	"prototype_bits/Primitive_Beam.gltf",
+	"prototype_bits/Primitive_Beam.gltf.import",
+	"prototype_bits/Primitive_Beam.bin",
 ]
 
 ## D-05 layout plus tests and tools (A6).
@@ -49,7 +55,7 @@ const FORBIDDEN_EXTENSIONS: PackedStringArray = ["fbx", "obj"]
 
 
 func run(_tree: SceneTree, check: Callable) -> void:
-	check.call(WHITELIST.size() == 25, "the whitelist holds exactly 25 entries (got %d)" % WHITELIST.size())
+	check.call(WHITELIST.size() == 31, "the whitelist holds exactly 31 entries (got %d)" % WHITELIST.size())
 
 	var found: PackedStringArray = PackedStringArray()
 	_collect_files(ASSETS_DIR, found)
