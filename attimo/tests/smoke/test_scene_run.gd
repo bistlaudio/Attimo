@@ -1,7 +1,8 @@
 extends RefCounted
-## FOUND-01 / FOUND-05 / FEEL-01: the Prototype Bits test scene is the main scene, is built from sanctioned
-## pieces only, and the Mannequin plays its clips in place from Input Map actions while the facts reach the
-## event log. Nothing moves (D-09, Option A).
+## FOUND-01 / FOUND-05 / FEEL-01 / MOVE-01 / CAM-01: the Prototype Bits test scene is the main scene, is built from
+## sanctioned pieces only, carries the follow camera (a top-level CameraRig that is a sibling of the Player with
+## physics interpolation off), and the Player runs camera-relative, jumps for real and dashes from Input Map actions
+## while the facts reach the event log.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
@@ -9,6 +10,10 @@ const TEST_SCENE: String = "res://scenes/test/test_scene.tscn"
 const PROTO_PREFIX: String = "res://scenes/proto/"
 const MANNEQUIN_SCENE: String = "res://scenes/player/mannequin.tscn"
 const SPAWN: Vector3 = Vector3(0.0, 0.0, 4.0)
+const SPAWN_TOLERANCE: float = 0.05
+const MIN_RUN_DISTANCE: float = 1.0
+## The tree follows the FSM after its 0.1 s crossfade, so tests allow a few ticks.
+const TREE_TRAVEL_TICKS: int = 15
 const AABB_TOLERANCE: float = 0.01
 
 var _bus: Node
@@ -93,12 +98,30 @@ func _check_composition(scene: Node, check: Callable) -> PlayerController:
 	check.call(cameras.size() == 1, "exactly one Camera3D (got %d)" % cameras.size())
 	if cameras.size() == 1:
 		check.call(cameras[0].current, "the camera is current")
-		check.call(cameras[0].get_script() == null, "the camera has no script (A14)")
+		_check_camera_rig(cameras[0], player, check)
 	check.call(lights == 1, "exactly one DirectionalLight3D (got %d)" % lights)
 	check.call(logs.size() == 1, "an EventLog node exists (got %d)" % logs.size())
 	if logs.size() == 1:
 		check.call(not logs[0].visible, "the EventLog starts hidden")
 	return player
+
+
+## The only camera sits in a CameraRig that is a top-level, interpolation-off sibling of the Player (D-14, D-18).
+func _check_camera_rig(camera: Camera3D, player: PlayerController, check: Callable) -> void:
+	var rig: CameraRig = null
+	var current: Node = camera.get_parent()
+	while current != null and rig == null:
+		rig = current as CameraRig
+		current = current.get_parent()
+	check.call(rig != null, "the camera has a CameraRig ancestor")
+	if rig == null:
+		return
+	check.call(rig.top_level, "the CameraRig is top_level")
+	check.call(rig.physics_interpolation_mode == Node.PHYSICS_INTERPOLATION_MODE_OFF, "the CameraRig has physics interpolation OFF")
+	if player != null:
+		check.call(not player.is_ancestor_of(rig), "the CameraRig is not inside the Player subtree")
+		check.call(rig.get_parent() == player.get_parent(), "the CameraRig is a sibling of the Player")
+		check.call(rig.target == player, "the CameraRig targets the Player")
 
 
 func _check_walls(scene: Node, check: Callable) -> void:
@@ -138,41 +161,43 @@ func _play_through(tree: SceneTree, scene: Node, player: PlayerController, check
 	_on_dash = func(position: Vector3, direction: Vector3, in_air: bool) -> void: _dashes.append([position, direction, in_air])
 	_bus.connect(&"dash_started", _on_dash)
 
-	check.call(player.global_position.is_equal_approx(SPAWN), "player starts at the spawn point (got %s)" % player.global_position)
+	check.call(player.global_position.distance_to(SPAWN) < SPAWN_TOLERANCE, "player starts at the spawn point (got %s)" % player.global_position)
 
-	# Run: hold move_forward.
+	# Run: hold move_forward; the player moves away from the camera (along the camera's flat forward axis).
+	var camera: Camera3D = tree.root.get_viewport().get_camera_3d()
+	var camera_forward: Vector3 = -camera.global_basis.z
+	camera_forward.y = 0.0
+	camera_forward = camera_forward.normalized()
+	var run_start: Vector3 = player.global_position
 	Input.action_press(&"move_forward")
 	await Fixtures.wait_physics(tree, 30)
+	var traveled: float = (player.global_position - run_start).dot(camera_forward)
+	check.call(traveled > MIN_RUN_DISTANCE, "move_forward: the player moved %.2f m away from the camera in 30 ticks" % traveled)
 	check.call(playback.get_current_node() == &"Locomotion", "move_forward: tree is in Locomotion (got %s)" % playback.get_current_node())
 	var blend: float = animation_tree.get(&"parameters/Locomotion/blend_position") as float
 	check.call(is_equal_approx(blend, 1.0), "move_forward: Locomotion blend_position is 1.0 (got %s)" % blend)
 	Input.action_release(&"move_forward")
-	await Fixtures.wait_physics(tree, 10)
+	var stopped: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Idle", 60)
+	check.call(stopped >= 0, "releasing move_forward returns to Idle (got %s)" % player.state_machine.current.name)
 
-	# Jump: timer-driven, ends with a landed fact (about 0.9 s).
+	# Jump: real physics, ends with a landed fact.
 	await Fixtures.tap_action(tree, &"jump")
 	var waited: int = 0
 	while landed.is_empty() and waited < 120:
 		await tree.physics_frame
 		waited += 1
 	check.call(not landed.is_empty(), "jump ends with a landed fact within 120 frames (waited %d)" % waited)
-	await Fixtures.wait_physics(tree, 20)
+	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Idle", 60)
+	await Fixtures.wait_physics(tree, 5)
 
 	# Dash: the tree travels to Dash within 3 frames and one dash_started is recorded.
 	await Fixtures.tap_action(tree, &"dash")
-	var reached_dash: bool = playback.get_current_node() == &"Dash"
-	for i: int in 3:
-		if reached_dash:
-			break
-		await tree.physics_frame
-		reached_dash = playback.get_current_node() == &"Dash"
-	check.call(reached_dash, "dash: tree travels to Dash (got %s)" % playback.get_current_node())
+	var reached_dash: int = await Fixtures.wait_until(tree, func() -> bool: return playback.get_current_node() == &"Dash", TREE_TRAVEL_TICKS)
+	check.call(reached_dash >= 0, "dash: tree travels to Dash within %d ticks (got %s)" % [TREE_TRAVEL_TICKS, playback.get_current_node()])
 	check.call(_dashes.size() == 1, "dash: exactly one dash_started (got %d)" % _dashes.size())
 	await Fixtures.wait_physics(tree, 40)
 
-	# D-09 guard and log contents.
-	check.call(player.global_position.is_equal_approx(SPAWN), "D-09: player still at the spawn point (got %s)" % player.global_position)
-	check.call(player.velocity == Vector3.ZERO, "D-09: player velocity is zero (got %s)" % player.velocity)
+	# Event log contents.
 	check.call(log_node != null, "event log found for the content check")
 	if log_node != null:
 		var text: String = "\n".join(log_node.lines)

@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/proto/primitive_pillar.tscn" id="4_pillar"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="5_player"]
 [ext_resource type="PackedScene" path="res://scenes/debug/event_log.tscn" id="6_log"]
+[ext_resource type="PackedScene" path="res://scenes/camera/camera_rig.tscn" id="7_rig"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 
@@ -25,10 +26,6 @@ environment = SubResource("Environment_main")
 [node name="Sun" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.866025, 0.383022, -0.321394, 0, 0.642788, 0.766044, 0.5, -0.663414, 0.55667, 0, 0, 0)
 shadow_enabled = true
-
-[node name="Camera" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 9, 16)
-current = true
 
 [node name="Floor_m8_m8" parent="." instance=ExtResource("1_floor")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, -8)
@@ -176,5 +173,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 0, -5.5)
 
 [node name="Player" parent="." instance=ExtResource("5_player")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
+
+[node name="CameraRig" parent="." node_paths=PackedStringArray("target") instance=ExtResource("7_rig")]
+target = NodePath("../Player")
 
 [node name="EventLog" parent="." instance=ExtResource("6_log")]

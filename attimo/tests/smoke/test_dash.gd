@@ -1,12 +1,14 @@
 extends RefCounted
-## MOVE-06 groundwork / FEEL-01: dash plays Dodge_Forward in place from grounded and airborne states and emits
-## `dash_started` exactly once (direction, in_air). No displacement: Phase 1 dashes do not move the body (D-09).
+## MOVE-06 groundwork / FEEL-01: dash plays Dodge_Forward from grounded and airborne states on a real floor and emits
+## `dash_started` exactly once (direction, in_air). Plan 02-09 extends this file with the real dash scenarios.
 
 const Fixtures := preload("res://tests/fixtures.gd")
+const TREE_TRAVEL_TICKS: int = 15
 
 var _bus: Node
 var _dashes: Array[Array] = []
 var _landed: Array[Array] = []
+var _floor: StaticBody3D
 var _on_dash: Callable
 var _on_landed: Callable
 
@@ -25,13 +27,9 @@ func _scenario_grounded_run_dash(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.wait_physics(tree, 5)
 	await Fixtures.tap_action(tree, &"dash")
 	check.call(player.state_machine.current.name == &"Dash", "(1) dash press enters Dash (got %s)" % player.state_machine.current.name)
-	var reached_dash: bool = playback.get_current_node() == &"Dash"
-	for i: int in 3:
-		if reached_dash:
-			break
-		await tree.physics_frame
-		reached_dash = playback.get_current_node() == &"Dash"
-	check.call(reached_dash, "(1) tree travels to Dash (got %s)" % playback.get_current_node())
+	# The tree follows the FSM after its 0.1 s crossfade, so allow a few ticks (the FSM state is the truth).
+	var reached_dash: int = await Fixtures.wait_until(tree, func() -> bool: return playback.get_current_node() == &"Dash", TREE_TRAVEL_TICKS)
+	check.call(reached_dash >= 0, "(1) tree travels to Dash within %d ticks (got %s)" % [TREE_TRAVEL_TICKS, playback.get_current_node()])
 	check.call(_dashes.size() == 1, "(1) exactly one dash_started (got %d)" % _dashes.size())
 	if _dashes.size() == 1:
 		check.call(_dashes[0][1].dot(Vector3(0, 0, -1)) > 0.95, "(1) direction points to -Z (got %s)" % _dashes[0][1])
@@ -74,9 +72,8 @@ func _scenario_air_dash(tree: SceneTree, check: Callable) -> void:
 	check.call(_landed.size() == 0, "(3) no landed fact yet")
 	await Fixtures.wait_physics(tree, 26)
 	check.call(player.state_machine.current.name == &"Fall", "(3) Fall after DASH_TIME (got %s)" % player.state_machine.current.name)
-	await Fixtures.wait_physics(tree, 40)
-	check.call(_landed.size() == 1, "(3) exactly one landed fact (got %d)" % _landed.size())
-	check.call(player.state_machine.current.name == &"Idle", "(3) Idle after landing (got %s)" % player.state_machine.current.name)
+	var settled: int = await Fixtures.wait_until(tree, func() -> bool: return _landed.size() == 1 and player.state_machine.current.name == &"Idle", 90)
+	check.call(settled >= 0, "(3) the jump ends with exactly one landed fact and Idle within 90 ticks (landed %d, state %s)" % [_landed.size(), player.state_machine.current.name])
 	await _end(player, check, "(3)")
 
 
@@ -87,18 +84,19 @@ func _begin(tree: SceneTree) -> PlayerController:
 	_on_landed = func(position: Vector3, impact_speed: float) -> void: _landed.append([position, impact_speed])
 	_bus.connect(&"dash_started", _on_dash)
 	_bus.connect(&"landed", _on_landed)
+	_floor = Fixtures.spawn_floor(tree.root)
 	return Fixtures.spawn_player(tree.root, Vector3.ZERO)
 
 
-## Every scenario ends with the D-09 guard, then frees its player and disconnects the recorders.
-func _end(player: PlayerController, check: Callable, label: String) -> void:
-	check.call(player.global_position == Vector3.ZERO and player.velocity == Vector3.ZERO, "%s D-09: position unchanged and velocity zero" % label)
+## Every scenario ends by disconnecting the recorders and freeing its player and floor.
+func _end(player: PlayerController, _check: Callable, _label: String) -> void:
 	_bus.disconnect(&"dash_started", _on_dash)
 	_bus.disconnect(&"landed", _on_landed)
 	# The lambdas capture self; drop them so this RefCounted test object is not kept alive by a cycle.
 	_on_dash = Callable()
 	_on_landed = Callable()
 	player.queue_free()
+	_floor.queue_free()
 	await player.tree_exited
 
 
