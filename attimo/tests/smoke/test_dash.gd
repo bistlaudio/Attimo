@@ -62,7 +62,8 @@ func _scenario_idle_dash(tree: SceneTree, check: Callable) -> void:
 func _scenario_air_dash(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = _begin(tree)
 	await Fixtures.wait_physics(tree, 5)
-	await Fixtures.tap_action(tree, &"jump")
+	# The jump is held: a released button cuts the rise (D-04) and would end the airtime early.
+	Input.action_press(&"jump")
 	await Fixtures.wait_physics(tree, 8)
 	check.call(player.state_machine.current.name == &"Jump", "(3) still in Jump before the dash (got %s)" % player.state_machine.current.name)
 	await Fixtures.tap_action(tree, &"dash")
@@ -74,6 +75,7 @@ func _scenario_air_dash(tree: SceneTree, check: Callable) -> void:
 	check.call(player.state_machine.current.name == &"Fall", "(3) Fall after DASH_TIME (got %s)" % player.state_machine.current.name)
 	var settled: int = await Fixtures.wait_until(tree, func() -> bool: return _landed.size() == 1 and player.state_machine.current.name == &"Idle", 90)
 	check.call(settled >= 0, "(3) the jump ends with exactly one landed fact and Idle within 90 ticks (landed %d, state %s)" % [_landed.size(), player.state_machine.current.name])
+	Input.action_release(&"jump")
 	await _end(player, check, "(3)")
 
 

@@ -275,7 +275,7 @@ func _scenario_double_jump_held(tree: SceneTree, check: Callable) -> void:
 	_reset()
 	await _jump_to_apex(tree, player)
 	_press_jump()
-	await Fixtures.wait_physics(tree, 1)
+	await Fixtures.wait_until(tree, func() -> bool: return _double.size() >= 1, 6)
 	check.call(_double.size() == 1, "(f) a held press at the apex emits exactly one double_jumped (got %d)" % _double.size())
 	var start_y: float = _double_y[0] if not _double_y.is_empty() else 0.0
 	var rise: float = await _rise_above(tree, player, start_y)
@@ -292,7 +292,7 @@ func _scenario_double_jump_tapped(tree: SceneTree, check: Callable) -> void:
 	_reset()
 	await _jump_to_apex(tree, player)
 	_tap_jump()
-	await Fixtures.wait_physics(tree, 1)
+	await Fixtures.wait_until(tree, func() -> bool: return _double.size() >= 1, 6)
 	check.call(_double.size() == 1, "(g) a tap at the apex emits exactly one double_jumped (got %d)" % _double.size())
 	var start_y: float = _double_y[0] if not _double_y.is_empty() else 0.0
 	var rise: float = await _rise_above(tree, player, start_y)
@@ -353,7 +353,10 @@ func _scenario_spent_press_expires(tree: SceneTree, check: Callable) -> void:
 	var config: MovementConfig = player.config
 	_reset()
 	await _jump_to_apex(tree, player)
-	_tap_jump()
+	_press_jump()
+	await Fixtures.wait_until(tree, func() -> bool: return _double.size() >= 1, 6)
+	await Fixtures.wait_until(tree, func() -> bool: return player.vertical_speed <= 0.0, 120)
+	_release_jump()
 	await Fixtures.wait_until(tree, func() -> bool: return player.vertical_speed < 0.0 and not player.will_land_within(config.jump_buffer_time * 3.0), 240)
 	var far_above: bool = not player.is_grounded() and not player.will_land_within(config.jump_buffer_time * 3.0)
 	_tap_jump()

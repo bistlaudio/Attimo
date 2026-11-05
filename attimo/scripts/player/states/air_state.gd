@@ -53,4 +53,6 @@ func _airborne_jump_decision() -> StringName:
 		return &"Jump"
 	if actor.vertical_speed <= 0.0 and actor.will_land_within(actor.config.jump_buffer_time):
 		return &""
+	if actor.air_jump_available:
+		return &"DoubleJump"
 	return &""

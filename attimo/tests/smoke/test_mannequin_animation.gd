@@ -47,7 +47,9 @@ func run(tree: SceneTree, check: Callable) -> void:
 	check.call(_max_pose_delta(skeleton, pose_b) > POSE_CHANGE_EPSILON, "bone poses still change past one clip length (Idle_A loops)")
 
 	# Space -> Jump_Start.
-	await Fixtures.tap_action(tree, &"jump", 2)
+	# Held through the rise: a released button cuts the jump (D-04) and the descent would be too short to see Fall.
+	Input.action_press(&"jump")
+	await Fixtures.wait_physics(tree, 2)
 	var reached_jump: bool = playback.get_current_node() == &"Jump"
 	for i: int in 3:
 		if reached_jump:
@@ -69,6 +71,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 		if fsm_idle_again and seen.has(&"Land") and node == &"Locomotion":
 			back_in_locomotion = true
 			break
+	Input.action_release(&"jump")
 	check.call(fsm_idle_again, "FSM reports Idle again after the jump")
 	check.call(seen.has(&"Fall"), "tree passed through Fall on the way down (seen %s)" % [seen.keys()])
 	check.call(seen.has(&"Land"), "tree played Land on the way back (seen %s)" % [seen.keys()])
