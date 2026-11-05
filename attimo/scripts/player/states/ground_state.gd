@@ -9,7 +9,7 @@ func physics_update(delta: float) -> StringName:
 		return &"Fall"
 	if Input.is_action_just_pressed(&"dash"):
 		return &"Dash"
-	if Input.is_action_just_pressed(&"jump"):
+	if actor.wants_jump():
 		return &"Jump"
 	return _ground_update(delta)
 

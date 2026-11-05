@@ -16,9 +16,16 @@ var vertical_speed: float = 0.0
 var gravity_scale: float = 1.0
 ## Upper bound of the air control target speed, set on leaving the floor.
 var air_speed_cap: float = 0.0
+## Seconds left in which a ground jump is still allowed after walking off a ledge (D-09).
+var coyote_timer: float = 0.0
+## Seconds left in which a jump press is remembered (D-09).
+var jump_buffer_timer: float = 0.0
+## True while the one air jump of this airtime is unspent. Landing refills it (D-07).
+var air_jump_available: bool = true
 
 var _was_on_floor: bool = true
 var _last_platform_velocity: Vector3 = Vector3.ZERO
+var _probe: KinematicCollision3D
 
 @onready var visual_root: Node3D = $VisualRoot
 @onready var state_machine: StateMachine = $StateMachine
@@ -131,9 +138,43 @@ func _find_rig(node: Node) -> CameraRig:
 	return null
 
 
-## Hook for per-tick timers (coyote, buffer, cooldown, chain). Runs before the states.
-func _tick_timers(_delta: float) -> void:
-	pass
+## True while a jump press is remembered.
+func wants_jump() -> bool:
+	return jump_buffer_timer > 0.0
+
+
+## Spends the remembered press and the coyote window. Every jump calls this first.
+func consume_jump() -> void:
+	jump_buffer_timer = 0.0
+	coyote_timer = 0.0
+
+
+## True while a ground jump is still allowed after walking off a ledge.
+func can_coyote_jump() -> bool:
+	return coyote_timer > 0.0
+
+
+## True when the body is not rising and a walkable floor is hit within `seconds` of predicted motion
+## (current horizontal velocity, current fall speed, fall gravity).
+func will_land_within(seconds: float) -> bool:
+	if vertical_speed > 0.0 or seconds <= 0.0:
+		return false
+	if _probe == null:
+		_probe = KinematicCollision3D.new()
+	var drop: float = absf(vertical_speed) * seconds + 0.5 * config.gravity() * config.fall_multiplier * seconds * seconds
+	var motion: Vector3 = move_velocity * seconds + Vector3.DOWN * drop
+	if not test_move(global_transform, motion, _probe):
+		return false
+	return _probe.get_normal().angle_to(Vector3.UP) <= floor_max_angle
+
+
+## Per-tick timers (coyote, buffer, later cooldown and chain). Runs before the states, so every state
+## sees the same timers. Polling just_pressed in the physics tick catches presses between two ticks.
+func _tick_timers(delta: float) -> void:
+	coyote_timer = maxf(coyote_timer - delta, 0.0)
+	jump_buffer_timer = maxf(jump_buffer_timer - delta, 0.0)
+	if Input.is_action_just_pressed(&"jump"):
+		jump_buffer_timer = config.jump_buffer_time
 
 
 func _integrate(delta: float) -> void:
@@ -173,10 +214,15 @@ func _post_move() -> void:
 
 
 func _land(impact_speed: float) -> void:
+	air_jump_available = true
+	coyote_timer = 0.0
 	EventBus.landed.emit(global_position, impact_speed)
 
 
 func _leave_floor() -> void:
+	# Coyote time starts only when the body walked off (a jump take-off leaves with upward speed).
+	if vertical_speed <= 0.0:
+		coyote_timer = config.coyote_time
 	move_velocity.x += _last_platform_velocity.x * config.platform_carry
 	move_velocity.z += _last_platform_velocity.z * config.platform_carry
 	air_speed_cap = maxf(config.run_speed, horizontal_speed())
