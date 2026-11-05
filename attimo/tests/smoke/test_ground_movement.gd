@@ -14,6 +14,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_bare_camera(tree, check)
 	await _scenario_camera_rig(tree, check)
 	await _scenario_snap_band(tree, check)
+	await _scenario_jump(tree, check)
 
 
 func _tick() -> float:
@@ -188,4 +189,44 @@ func _scenario_snap_band(tree: SceneTree, check: Callable) -> void:
 	check.call(config.run_speed < config.dash_speed, "(f) the shared config resource was not mutated (run_speed %.1f)" % config.run_speed)
 
 	Input.action_release(&"move_forward")
+	await _free_all(tree, nodes)
+
+
+# (e) tracer: a held jump reaches jump_height, lands once, ends in Idle.
+func _scenario_jump(tree: SceneTree, check: Callable) -> void:
+	var bus: Node = tree.root.get_node("EventBus")
+	var jumped: Array[int] = [0]
+	var landed: Array[int] = [0]
+	var impacts: Array[float] = []
+	var on_jumped: Callable = func(_position: Vector3) -> void: jumped[0] += 1
+	var on_landed: Callable = func(_position: Vector3, impact_speed: float) -> void:
+		landed[0] += 1
+		impacts.append(impact_speed)
+	bus.connect(&"jumped", on_jumped)
+	bus.connect(&"landed", on_landed)
+
+	var nodes: Array[Node] = await _spawn(tree, Vector3.ZERO)
+	var player: PlayerController = nodes[1] as PlayerController
+	var config: MovementConfig = player.config
+	check.call(landed[0] == 0 and jumped[0] == 0, "(e) no jumped or landed fact while standing")
+
+	Input.action_press(&"jump")
+	var max_y: float = 0.0
+	var ticks: int = 0
+	while landed[0] == 0 and ticks < 120:
+		await Fixtures.wait_physics(tree, 1)
+		max_y = maxf(max_y, player.global_position.y)
+		ticks += 1
+	await Fixtures.wait_physics(tree, 3)
+
+	check.call(absf(max_y - config.jump_height) < 0.1, "(e) held jump apex %.3f m is within 0.1 of jump_height %.2f" % [max_y, config.jump_height])
+	check.call(jumped[0] == 1, "(e) exactly one jumped fact (got %d)" % jumped[0])
+	check.call(landed[0] == 1, "(e) exactly one landed fact (got %d)" % landed[0])
+	check.call(impacts.size() == 1 and impacts[0] > 0.0, "(e) landed carries a real impact speed (%.2f m/s)" % (impacts[0] if impacts.size() > 0 else -1.0))
+	check.call(player.state_machine.current.name == &"Idle", "(e) the player lands in Idle")
+	check.call(absf(player.global_position.y) < 0.05, "(e) the player stands on the floor top (y=%.3f)" % player.global_position.y)
+
+	bus.disconnect(&"jumped", on_jumped)
+	bus.disconnect(&"landed", on_landed)
+	Input.action_release(&"jump")
 	await _free_all(tree, nodes)
