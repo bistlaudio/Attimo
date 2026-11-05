@@ -28,6 +28,13 @@ var dash_cooldown_timer: float = 0.0
 var air_dash_available: bool = true
 ## Direction of the last dash started, flattened and normalized.
 var last_dash_direction: Vector3 = Vector3.ZERO
+## Ground-jump chain stage: 0 none, 1 after Jump 1, 2 after Jump 2 (D-05). Changes emit chain_stage_changed.
+var chain_stage: int = 0
+## Seconds left of the landing window in which the next ground jump advances the chain. Counts down only
+## while grounded; at 0 the chain resets (D-07).
+var chain_timer: float = 0.0
+## Seconds left after a ground dash ended in which a jump still is a long jump (D-06).
+var dash_jump_grace_timer: float = 0.0
 
 var _was_on_floor: bool = true
 var _last_platform_velocity: Vector3 = Vector3.ZERO
@@ -191,14 +198,66 @@ func start_dash(direction: Vector3, in_air: bool) -> void:
 	last_dash_direction = direction
 
 
-## Per-tick timers (coyote, buffer, dash cooldown, later chain). Runs before the states, so every state
+## Called by Jump on enter for every ground jump (also coyote and buffered landing jumps). Returns the stage of
+## this jump: 2 when it follows Jump 1 inside the open landing window, otherwise 1 (also at stage 2, which
+## starts a new chain, A8). The window closes; it reopens on landing.
+func advance_chain_for_ground_jump() -> int:
+	var stage: int = 2 if chain_stage == 1 and chain_timer > 0.0 else 1
+	chain_timer = 0.0
+	_set_chain_stage(stage)
+	return stage
+
+
+## Called by LongJump on enter. Returns the chain stage the long jump spends (0..2) and resets the chain.
+func take_chain_for_long_jump() -> int:
+	var stage: int = chain_stage
+	chain_timer = 0.0
+	_set_chain_stage(0)
+	return stage
+
+
+## A ground dash inside the open landing window keeps the stage and restarts the window (D-05).
+func refresh_chain_window() -> void:
+	if chain_stage > 0 and chain_timer > 0.0:
+		chain_timer = config.chain_window
+
+
+## A ground dash that ended on the ground keeps an open window alive at least through the long jump grace, so
+## a jump pressed late in the grace still finds its chain stage.
+func hold_chain_through_grace() -> void:
+	if chain_stage > 0 and chain_timer > 0.0:
+		chain_timer = maxf(chain_timer, config.dash_jump_grace)
+
+
+func _set_chain_stage(stage: int) -> void:
+	if stage == chain_stage:
+		return
+	chain_stage = stage
+	EventBus.chain_stage_changed.emit(stage)
+
+
+## Per-tick timers (coyote, buffer, dash cooldown, long jump grace, chain). Runs before the states, so every state
 ## sees the same timers. Polling just_pressed in the physics tick catches presses between two ticks.
 func _tick_timers(delta: float) -> void:
 	coyote_timer = maxf(coyote_timer - delta, 0.0)
 	jump_buffer_timer = maxf(jump_buffer_timer - delta, 0.0)
 	dash_cooldown_timer = maxf(dash_cooldown_timer - delta, 0.0)
+	dash_jump_grace_timer = maxf(dash_jump_grace_timer - delta, 0.0)
+	_tick_chain(delta)
 	if Input.is_action_just_pressed(&"jump"):
 		jump_buffer_timer = config.jump_buffer_time
+
+
+## The chain window counts down on the ground and resets the stage at 0. Standing still on the ground (below
+## chain_reset_speed, outside a dash) resets it at once (D-07).
+func _tick_chain(delta: float) -> void:
+	if chain_stage == 0 or not is_grounded():
+		return
+	chain_timer = maxf(chain_timer - delta, 0.0)
+	var standing: bool = horizontal_speed() < config.chain_reset_speed and state_machine.current.name != &"Dash"
+	if chain_timer <= 0.0 or standing:
+		chain_timer = 0.0
+		_set_chain_stage(0)
 
 
 func _integrate(delta: float) -> void:
@@ -241,6 +300,8 @@ func _land(impact_speed: float) -> void:
 	air_jump_available = true
 	air_dash_available = true
 	coyote_timer = 0.0
+	if chain_stage > 0:
+		chain_timer = config.chain_window
 	EventBus.landed.emit(global_position, impact_speed)
 
 
