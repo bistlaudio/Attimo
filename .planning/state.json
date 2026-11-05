@@ -11,7 +11,7 @@
     {
       "number": "2",
       "name": "Movement Core & Follow Camera",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "number": "3",
@@ -81,8 +81,8 @@
   ],
   "next": {
     "command": "/gsd-progress --next",
-    "label": "Advance to the next step (plan phase 2)",
-    "reason": "Phase 2 of 15 — needs a plan"
+    "label": "Advance to the next step",
+    "reason": "Phase 2 of 15 · executing"
   },
-  "updated_at": "2026-11-04T15:22:19.182Z"
+  "updated_at": "2026-11-05T18:13:59.862Z"
 }
