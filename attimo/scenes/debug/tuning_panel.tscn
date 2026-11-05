@@ -31,6 +31,59 @@ size_flags_horizontal = 3
 layout_mode = 2
 text = "Tuning (F2 / 8)"
 
+[node name="CameraHeader" type="Label" parent="PanelContainer/Scroll/Content"]
+layout_mode = 2
+text = "- Camera -"
+
+[node name="SensitivityRow" type="HBoxContainer" parent="PanelContainer/Scroll/Content"]
+layout_mode = 2
+
+[node name="SensitivityLabel" type="Label" parent="PanelContainer/Scroll/Content/SensitivityRow"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "Sensitivity"
+
+[node name="SensitivitySlider" type="HSlider" parent="PanelContainer/Scroll/Content/SensitivityRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 0.1
+max_value = 3.0
+step = 0.05
+value = 1.0
+
+[node name="SensitivityValue" type="Label" parent="PanelContainer/Scroll/Content/SensitivityRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(52, 0)
+layout_mode = 2
+text = "1.00"
+horizontal_alignment = 2
+
+[node name="InvertYCheck" type="CheckBox" parent="PanelContainer/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Invert Y"
+
+[node name="AutoFollowRow" type="HBoxContainer" parent="PanelContainer/Scroll/Content"]
+layout_mode = 2
+
+[node name="AutoFollowLabel" type="Label" parent="PanelContainer/Scroll/Content/AutoFollowRow"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "Auto-follow"
+
+[node name="AutoFollowSelector" type="OptionButton" parent="PanelContainer/Scroll/Content/AutoFollowRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SaveButton" type="Button" parent="PanelContainer/Scroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Save movement config"
+
 [node name="Rows" type="VBoxContainer" parent="PanelContainer/Scroll/Content"]
 unique_name_in_owner = true
 layout_mode = 2
