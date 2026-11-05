@@ -20,9 +20,9 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 
 - [ ] **MOVE-01**: Player can run with acceleration/deceleration curves and camera-relative steering
 - [ ] **MOVE-02**: Player can sprint
-- [ ] **MOVE-03**: Player can jump with variable height (release early = lower jump), with heavier fall gravity
-- [ ] **MOVE-04**: Coyote time and jump buffering make jumps forgiving
-- [ ] **MOVE-05**: Player can double jump once per airtime
+- [x] **MOVE-03**: Player can jump with variable height (release early = lower jump), with heavier fall gravity
+- [x] **MOVE-04**: Coyote time and jump buffering make jumps forgiving
+- [x] **MOVE-05**: Player can double jump once per airtime
 - [ ] **MOVE-06**: Player can dash on the ground
 - [ ] **MOVE-07**: Player can dash once in the air (resets on landing), and a dash can flow into a jump
 - [ ] **MOVE-08**: Player keeps momentum from moving platforms and conveyors, and handles slopes and steps without sticking or launching
@@ -170,9 +170,9 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | FOUND-06 | Phase 9 | Pending |
 | MOVE-01 | Phase 2 | Pending |
 | MOVE-02 | Phase 2 | Pending |
-| MOVE-03 | Phase 2 | Pending |
-| MOVE-04 | Phase 2 | Pending |
-| MOVE-05 | Phase 2 | Pending |
+| MOVE-03 | Phase 2 | Complete |
+| MOVE-04 | Phase 2 | Complete |
+| MOVE-05 | Phase 2 | Complete |
 | MOVE-06 | Phase 2 | Pending |
 | MOVE-07 | Phase 2 | Pending |
 | MOVE-08 | Phase 2 | Pending |

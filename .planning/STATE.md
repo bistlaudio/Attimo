@@ -4,16 +4,16 @@ milestone: v0.11.0.4
 current_phase: 02
 current_phase_name: Movement Core & Follow Camera
 status: executing
-stopped_at: Completed 02-04-PLAN.md
-last_updated: "2026-11-05T18:41:34.871Z"
+stopped_at: Completed 02-05-PLAN.md
+last_updated: "2026-11-05T18:54:24.829Z"
 last_activity: 2026-11-05
 last_activity_desc: Phase 02 execution started
-state_head: 89d6d1352bbc7358a246b77157cc5d9edc34d28b
+state_head: f68c3b0a4ec7bbdbe3eb4d5b22e686f3fb7e33d3
 progress:
   total_phases: 15
   completed_phases: 1
   total_plans: 21
-  completed_plans: 11
+  completed_plans: 12
 ---
 
 # Project State
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 02 (Movement Core & Follow Camera) — EXECUTING
-Plan: 5 of 14
+Plan: 6 of 14
 Status: Ready to execute
 Last activity: 2026-11-05 — Phase 02 execution started
 
@@ -60,6 +60,7 @@ Progress: [█░░░░░░░░░] 7%
 | Phase 02 P02 | 6 min | 2 tasks | 7 files |
 | Phase 02 P03 | 12 min | 2 tasks | 11 files |
 | Phase 02 P04 | 25 min | 2 tasks | 8 files |
+| Phase 02 P05 | 25 min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,7 @@ Recent decisions that affect current work:
 - [Phase 02]: Only Primitive_Slope and Primitive_Beam are copied from Prototype Bits (A37); gym stairs use Beam risers of at most 0.15 m with no step-up code (A4)
 - [Phase 02]: 02-04: animator tree-travel assertions allow 15 ticks (0.1 s crossfade); the FSM state is the truth
 - [Phase 02]: 02-04: MannequinAnimator gets RUNNING_STATES next to AIRBORNE_STATES
+- [Phase 02]: 02-05: jump rules A6/A7/A19 held; press past coyote is the double jump, press about to land is a buffered ground jump, double jump sets the rise and obeys the release cut
 
 ### Pending Todos
 
@@ -110,6 +112,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-05T18:41:34.801Z
-Stopped at: Completed 02-04-PLAN.md
+Last session: 2026-11-05T18:54:24.768Z
+Stopped at: Completed 02-05-PLAN.md
 Resume file: None
