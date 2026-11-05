@@ -4,16 +4,16 @@ milestone: v0.11.0.4
 current_phase: 02
 current_phase_name: Movement Core & Follow Camera
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-11-05T14:37:44.629Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-11-05T14:40:51.492Z"
 last_activity: 2026-11-05
 last_activity_desc: Phase 02 execution started
-state_head: 177e92278e2de61230ca617d98c36ce29d0b5096
+state_head: b5893fd1ba2b5ee35d12c68c550fef9482a761bf
 progress:
   total_phases: 15
   completed_phases: 1
   total_plans: 21
-  completed_plans: 8
+  completed_plans: 9
 ---
 
 # Project State
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 02 (Movement Core & Follow Camera) — EXECUTING
-Plan: 2 of 14
+Plan: 3 of 14
 Status: Ready to execute
 Last activity: 2026-11-05 — Phase 02 execution started
 
@@ -57,6 +57,7 @@ Progress: [█░░░░░░░░░] 7%
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 02 P01 | 30 min | 3 tasks | 14 files |
+| Phase 02 P02 | 6 min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,8 @@ Recent decisions that affect current work:
 - [Phase 2]: Auto-follow (D-16) has a CameraSettings mode auto (default) / on / off. Auto follows only after joypad input and stays off after mouse/keyboard input, so it is effectively off until gamepads arrive (Phase 13). The follow converges: camera-relative input steers through CameraRig.steering_yaw(), which excludes auto rotation until the move input changes. Plan assumptions A40, A41 (user decision, plan revision 2).
 - [Phase 02]: Idle accelerates on its hand-over tick to Run, and Run holds until speed < 0.01 m/s, so no input tick is lost and the run clip plays through the stop
 - [Phase 02]: Snap-band test asserts the clamp to snap_max above 21 m/s, not 15: the specified formula only reaches 0.5 m at about 20.1 m/s
+- [Phase 02]: Camera decision D-18 recorded in CLAUDE.md and STACK.md: hand-built CameraRig, Phantom Camera dropped; per-frame shape cast is the fallback if SpringArm3D fails the 10-TPS corridor test
+- [Phase 02]: Debug keys use the F-row plus top-row digits 8/9/0 as Mac-friendly alternates (A9); camera_recenter is the middle mouse button (D-17); no gamepad events before Phase 13
 
 ### Pending Todos
 
@@ -102,6 +105,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-05T14:37:44.518Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-11-05T14:40:51.427Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None
