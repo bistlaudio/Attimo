@@ -4,16 +4,16 @@ milestone: v0.11.0.4
 current_phase: 02
 current_phase_name: Movement Core & Follow Camera
 status: executing
-stopped_at: Completed 02-06-PLAN.md
-last_updated: "2026-11-05T19:02:59.150Z"
+stopped_at: Completed 02-07-PLAN.md
+last_updated: "2026-11-05T19:10:36.118Z"
 last_activity: 2026-11-05
 last_activity_desc: Phase 02 execution started
-state_head: 592d0564074a14b3e16b196e523ce0463ea139ca
+state_head: 14accc3c3052a3f23548bae1c0c72467866824aa
 progress:
   total_phases: 15
   completed_phases: 1
   total_plans: 21
-  completed_plans: 13
+  completed_plans: 14
 ---
 
 # Project State
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 02 (Movement Core & Follow Camera) — EXECUTING
-Plan: 7 of 14
+Plan: 8 of 14
 Status: Ready to execute
 Last activity: 2026-11-05 — Phase 02 execution started
 
@@ -62,6 +62,7 @@ Progress: [█░░░░░░░░░] 7%
 | Phase 02 P04 | 25 min | 2 tasks | 8 files |
 | Phase 02 P05 | 25 min | 2 tasks | 9 files |
 | Phase 02 P06 | 15 min | 2 tasks | 2 files |
+| Phase 02 P07 | 30 min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,8 @@ Recent decisions that affect current work:
 - [Phase 02]: 02-04: MannequinAnimator gets RUNNING_STATES next to AIRBORNE_STATES
 - [Phase 02]: 02-05: jump rules A6/A7/A19 held; press past coyote is the double jump, press about to land is a buffered ground jump, double jump sets the rise and obeys the release cut
 - [Phase 02]: 02-06: SpringArm3D failed the 10-TPS corridor test (32 of 289 frames clipped), so CameraRig casts a sphere per frame itself (A3 fallback); node layout and API unchanged, SpringArm3D node mask is 0
+- [Phase 02]: 02-07: no snap_min/snap_max/platform_carry retune needed; ramps, stairs and platforms pass with shipped values, controller untouched
+- [Phase 02]: 02-07: gym stairs are Primitive_Beam instances rotated 90 degrees about Y, sunk so each top is at 0.15*n; 10 TPS ramp down is airborne 4 ticks (diagnostic, A22)
 
 ### Pending Todos
 
@@ -114,6 +117,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-05T19:02:59.091Z
-Stopped at: Completed 02-06-PLAN.md
+Last session: 2026-11-05T19:10:36.055Z
+Stopped at: Completed 02-07-PLAN.md
 Resume file: None
