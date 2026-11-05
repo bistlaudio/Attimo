@@ -1,8 +1,8 @@
 extends RefCounted
-## FOUND-01 / FOUND-05 / FEEL-01 / MOVE-01 / CAM-01: the Prototype Bits test scene is the main scene, is built from
-## sanctioned pieces only, carries the follow camera (a top-level CameraRig that is a sibling of the Player with
-## physics interpolation off), and the Player runs camera-relative, jumps for real and dashes from Input Map actions
-## while the facts reach the event log.
+## FOUND-01 / FOUND-05 / FEEL-01 / MOVE-01 / CAM-01: the Prototype Bits test scene (the Phase 1 backdrop, loaded
+## directly; the movement gym owns the main scene since 02-14) is built from sanctioned pieces only, carries the
+## follow camera (a top-level CameraRig that is a sibling of the Player with physics interpolation off), and the
+## Player runs camera-relative, jumps for real and dashes from Input Map actions while the facts reach the event log.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
@@ -23,10 +23,6 @@ var _on_dash: Callable
 
 func run(tree: SceneTree, check: Callable) -> void:
 	_bus = tree.root.get_node("EventBus")
-	check.call(
-		ProjectSettings.get_setting("application/run/main_scene") == TEST_SCENE,
-		"application/run/main_scene is the test scene (got %s)" % ProjectSettings.get_setting("application/run/main_scene"),
-	)
 	var packed: PackedScene = load(TEST_SCENE) as PackedScene
 	check.call(packed != null, "test scene loads")
 	if packed == null:

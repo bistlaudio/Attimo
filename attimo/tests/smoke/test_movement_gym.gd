@@ -16,6 +16,14 @@ const CONTRACT_NODES: Array[String] = [
 const RISER_COUNT: int = 6
 const RISER_STEP: float = 0.15
 const STEP_TOLERANCE: float = 0.01
+const SPAWN_TOLERANCE: float = 0.05
+const MIN_RUN_DISTANCE: float = 1.0
+const PLATFORM_TICKS: int = 60
+const MIN_PLATFORM_TRAVEL: float = 0.5
+## Above the middle of the 12 m gap of the gap course's second leg, over the pit.
+const PIT_DROP_POSITION: Vector3 = Vector3(-14.0, 3.0, -20.0)
+const RESET_TICKS: int = 180
+const RESET_TOLERANCE: float = 1.0
 
 
 func run(tree: SceneTree, check: Callable) -> void:
@@ -30,7 +38,9 @@ func run(tree: SceneTree, check: Callable) -> void:
 	tree.root.add_child(gym)
 	await Fixtures.wait_physics(tree, 30)
 
-	_check_composition(gym, check)
+	var player: PlayerController = _check_composition(gym, check)
+	if player != null:
+		await _play_through(tree, gym, player, check)
 
 	gym.queue_free()
 	await gym.tree_exited
@@ -181,6 +191,53 @@ func _check_overlays(gym: Node, check: Callable) -> void:
 	check.call(event_log != null and not event_log.visible, "the EventLog is present and hidden")
 	check.call(metrics != null and not metrics.visible, "the MetricsOverlay is present and hidden")
 	check.call(tuning != null and not tuning.visible, "the TuningPanel is present and hidden")
+
+
+func _play_through(tree: SceneTree, gym: Node, player: PlayerController, check: Callable) -> void:
+	var spawn: Marker3D = gym.get_node("Spawn") as Marker3D
+	check.call(player.global_position.distance_to(spawn.global_position) < SPAWN_TOLERANCE, "the player starts at Spawn (got %s)" % player.global_position)
+	check.call(player.is_grounded(), "the player spawns grounded")
+
+	# The moving platforms are in motion: each one has left its position of 60 ticks ago.
+	var platforms: Array[Node] = tree.get_nodes_in_group(&"moving_platform")
+	var before: Dictionary[Node, Vector3] = {}
+	for platform: Node in platforms:
+		before[platform] = (platform as Node3D).global_position
+	await Fixtures.wait_physics(tree, PLATFORM_TICKS)
+	var moved: int = 0
+	for platform: Node in platforms:
+		if (platform as Node3D).global_position.distance_to(before[platform]) > MIN_PLATFORM_TRAVEL:
+			moved += 1
+	check.call(moved == platforms.size(), "each of the %d moving platforms moved more than %.1f m in %d ticks (moved: %d)" % [platforms.size(), MIN_PLATFORM_TRAVEL, PLATFORM_TICKS, moved])
+
+	# Run: hold move_forward; the player moves away from the camera, along its flattened forward axis.
+	var camera: Camera3D = tree.root.get_viewport().get_camera_3d()
+	var camera_forward: Vector3 = -camera.global_basis.z
+	camera_forward.y = 0.0
+	camera_forward = camera_forward.normalized()
+	var run_start: Vector3 = player.global_position
+	Input.action_press(&"move_forward")
+	await Fixtures.wait_physics(tree, 30)
+	Input.action_release(&"move_forward")
+	var traveled: float = (player.global_position - run_start).dot(camera_forward)
+	check.call(traveled > MIN_RUN_DISTANCE, "move_forward: the player ran %.2f m along the camera's forward axis in 30 ticks" % traveled)
+	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Idle", 60)
+
+	# A fall into the gap course returns the player to that course's respawn marker.
+	var respawn: Marker3D = gym.get_node("Zone_Gaps/Respawn_Gaps") as Marker3D
+	player.teleport(PIT_DROP_POSITION)
+	var lowest: float = player.global_position.y
+	var returned: int = -1
+	for tick: int in RESET_TICKS:
+		await tree.physics_frame
+		lowest = minf(lowest, player.global_position.y)
+		if player.global_position.distance_to(respawn.global_position) < RESET_TOLERANCE:
+			returned = tick
+			break
+	check.call(lowest < -2.0, "the dropped player fell into the pit (lowest y %.1f)" % lowest)
+	check.call(returned >= 0, "the FallReset returns the player to the gap course respawn within %d ticks (ticks: %d, at %s)" % [RESET_TICKS, returned, player.global_position])
+	await Fixtures.wait_physics(tree, 30)
+	check.call(player.is_grounded(), "the player stands on the course start island after the reset")
 
 
 func _all_nodes(root: Node) -> Array[Node]:
