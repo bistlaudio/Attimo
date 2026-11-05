@@ -1,0 +1,19 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/gym/moving_platform.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/prototype_bits/Primitive_Floor.gltf" id="2_mesh"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_platform"]
+size = Vector3(4, 1, 4)
+
+[node name="MovingPlatform" type="AnimatableBody3D"]
+collision_layer = 1
+collision_mask = 0
+sync_to_physics = true
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("BoxShape3D_platform")
+
+[node name="Mesh" parent="." instance=ExtResource("2_mesh")]
