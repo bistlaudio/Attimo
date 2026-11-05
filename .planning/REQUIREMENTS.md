@@ -32,7 +32,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 
 ### Camera & Aim
 
-- [ ] **CAM-01**: Over-the-shoulder third-person camera follows smoothly with mouse look, without jitter and without clipping through walls
+- [ ] **CAM-01**: Third-person follow camera, centered behind the character (shoulder offset only in aim mode), follows smoothly with mouse look, without jitter and without clipping through walls
 - [ ] **CAM-02**: Holding the aim button blends into an aim mode with crosshair, tighter FOV and shoulder offset
 - [ ] **CAM-03**: Mouse sensitivity and invert-Y are configurable
 - [ ] **CAM-04**: Interactables in range glow turquoise; the targeted one is clearly highlighted

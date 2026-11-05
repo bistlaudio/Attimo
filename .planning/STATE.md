@@ -69,6 +69,7 @@ Recent decisions that affect current work:
 - [Requirements]: No juice presets, levels or toggles (user decision). FEEL-05 and FEEL-08 reworded, FEEL-04 lost "toggleable", the juice toggle was removed from UX-03, FEEL-07 (reduce motion) and FEEL-11 (readable with juice off) moved to Out of Scope.
 - [Requirements]: Added POLISH-01/02 (Phase 12) and REL-01/02/03 (Phase 15, Windows export and performance). v1 = 71.
 - [Requirements]: FEEL-09 (A/B juice study) removed earlier. No playtest study, questionnaires or consent forms.
+- [Phase 2]: Camera is a hand-built CameraRig with SpringArm3D (D-18); Phantom Camera dropped. The rig exposes additive FOV/offset sources for Phases 3 and 11. CAM-01 framing is centered behind the character; the shoulder offset is aim-mode only (D-14).
 
 ### Pending Todos
 
@@ -76,7 +77,6 @@ None yet.
 
 ### Blockers/Concerns
 
-- [Phase 2]: Spike needed: Phantom Camera on 4.7.x (fallback SpringArm3D). The spike must also confirm an additive FOV/offset stack for Phase 11.
 - [Phase 5]: The pull/push feel has a thin evidence base, so it needs a focused prototype and momentum test room first.
 - [Phase 9]: Open style decisions: second accent colour, player arm-core glow vs the turquoise rule, final hero triangle budget (~6-9k). The Meshy licence tier is unverified; check it before the final hero is produced.
 - [Phase 11]: Spike needed: `Engine.time_scale` x physics interpolation at 10 TPS before hit-stop is built.

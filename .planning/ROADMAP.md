@@ -80,26 +80,29 @@ Plans:
 **Depends on**: Phase 1
 **Requirements**: MOVE-01, MOVE-02, MOVE-03, MOVE-04, MOVE-05, MOVE-06, MOVE-07, MOVE-08, MOVE-10, CAM-01, CAM-03, FEEL-06
 **Success Criteria** (what must be TRUE):
-  1. In a movement gym built from Prototype Bits, the player steers the Mannequin relative to an over-the-shoulder mouse-look camera, with smooth acceleration and deceleration, and can sprint. The camera follows without jitter at 10 TPS and at 144 Hz, and never clips through walls. Mouse sensitivity and invert-Y can be changed.
+  1. In a movement gym built from Prototype Bits, the player steers the Mannequin relative to a third-person mouse-look follow camera centered behind the character (shoulder offset only in aim mode, Phase 3), with smooth acceleration and deceleration, and can sprint. The camera follows without jitter at 10 TPS and at 144 Hz, and never clips through walls. Mouse sensitivity and invert-Y can be changed.
   2. Tapping jump gives a lower jump than holding it, and the fall is heavier than the rise. A jump pressed just after leaving a ledge, or just before landing, still fires. Exactly one double jump is available per airtime.
   3. The player can dash on the ground and once in the air. The air dash refills on landing, a dash can flow straight into a jump, and a dash never tunnels through walls.
   4. Moving platforms and conveyors carry the player, and the player keeps their momentum when leaving them. Gym slopes and stairs never make the player stick or launch.
   5. All movement values are live-tunable in one resource. A movement-metrics table (jump height/distance, dash distance) is recorded, and the measured jump and dash input latency meets the 66 ms target (hard limit 100 ms). Movement is signed off without any juice.
-**Plans:** 11 plans
+**Plans:** 14 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Tracer: camera-relative run and real jump on MovementConfig + PlayerController (single move_and_slide), CameraRig follow, Phase 1 tests repaired (wave 1)
-- [ ] 02-02-PLAN.md — Contracts and docs: camera_recenter + debug actions, new EventBus facts, CONVENTIONS, CLAUDE/STACK/STATE/REQUIREMENTS/ROADMAP camera edits (wave 1)
-- [ ] 02-03-PLAN.md — Jump feel: variable height, coyote, buffer, one double jump (wave 2)
-- [ ] 02-04-PLAN.md — Camera quality: vertical follow band, additive FOV/offset sources, jitter and wall-clipping tests at 10/60 TPS (wave 2)
-- [ ] 02-05-PLAN.md — Platforms, conveyors, slopes and stairs: Slope/Beam wrappers, MovingPlatform, FallReset, MOVE-08 tests (wave 2)
-- [ ] 02-06-PLAN.md — LatencyProbe (60/120 TPS) and F4 MetricsOverlay with F6 tick-rate cycle (wave 2)
-- [ ] 02-07-PLAN.md — Sprint, ground dash and air dash with cooldown, carry and no tunnelling (wave 3)
-- [ ] 02-08-PLAN.md — Camera controls: CameraSettings (sensitivity, invert-Y), auto-follow, recenter, F2 tuning panel (wave 3)
-- [ ] 02-09-PLAN.md — Jump chain and long jump: Jump 1 -> Jump 2 -> Dash -> Jump (wave 4)
-- [ ] 02-10-PLAN.md — Generated docs/MOVEMENT-METRICS.md with latency table and drift guard (wave 5)
-- [ ] 02-11-PLAN.md — Movement gym as main scene and the end-of-phase sign-off without juice (wave 6)
-**Notes**: Spike Phantom Camera v0.11.0.4 for at most one day, with SpringArm3D as the fallback. The spike also checks that the camera allows an additive FOV/offset stack, which Phase 11 needs, so the camera choice causes no rework later. Measure latency at 60 and at 120 TPS. Here the Mannequin plays the Phase 1 base clips; the full state mapping comes in Phase 3.
+- [ ] 02-01-PLAN.md — Tracer: camera-relative run and real jump on MovementConfig + PlayerController (single move_and_slide), CameraRig follow, proven by test_ground_movement (wave 1)
+- [ ] 02-02-PLAN.md — Contracts and docs: camera_recenter + debug actions, new EventBus facts, CONVENTIONS, CLAUDE/STACK camera edits (wave 1)
+- [ ] 02-03-PLAN.md — Prototype Bits Slope and Beam: copies, collision wrappers, 31-file whitelist, run.sh originals (wave 1)
+- [ ] 02-04-PLAN.md — Phase 1 tests repaired for real physics, test_dash rename, animator state names, CameraRig in the test scene (wave 2)
+- [ ] 02-05-PLAN.md — Jump feel: variable height, coyote, buffer, one double jump (wave 2)
+- [ ] 02-06-PLAN.md — Camera quality: vertical follow band, additive FOV/offset sources, jitter proxy and wall-clipping tests at 10/60 TPS (wave 2)
+- [ ] 02-07-PLAN.md — Platforms, conveyors, slopes and stairs: MovingPlatform, FallReset, MOVE-08 tests (wave 2)
+- [ ] 02-08-PLAN.md — LatencyProbe (60/120 TPS, 66 ms target asserted) and F4 MetricsOverlay with F6 tick-rate cycle (wave 3)
+- [ ] 02-09-PLAN.md — Sprint, ground dash and air dash with cooldown, carry and no tunnelling (wave 3)
+- [ ] 02-10-PLAN.md — Camera controls: CameraSettings (sensitivity, invert-Y), auto-follow, recenter (wave 3)
+- [ ] 02-11-PLAN.md — Jump chain and long jump: Jump 1 -> Jump 2 -> Dash -> Jump, dash speed carried and capped (wave 4)
+- [ ] 02-12-PLAN.md — F2 tuning panel: live MovementConfig sliders and camera settings (wave 4)
+- [ ] 02-13-PLAN.md — Generated docs/MOVEMENT-METRICS.md with asserted latency table and drift guard (wave 5)
+- [ ] 02-14-PLAN.md — Movement gym as main scene and the end-of-phase sign-off without juice, incl. mandatory 144 Hz check (wave 6)
+**Notes**: The camera is a hand-built CameraRig (SpringArm3D), decided in discuss (D-18); Phantom Camera is not used. The camera rig must allow an additive FOV/offset stack, which Phase 11 needs. Measure latency at 60 and at 120 TPS. Here the Mannequin plays the Phase 1 base clips; the full state mapping comes in Phase 3.
 
 ### Phase 3: Animated Mannequin & Aim Mode
 **Group:** A (Prototyp)
@@ -299,7 +302,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 (en
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Prototype Character | 7/7 | Complete    | 2026-11-04 |
-| 2. Movement Core & Follow Camera | 0/11 | Planned | - |
+| 2. Movement Core & Follow Camera | 0/14 | Planned | - |
 | 3. Animated Mannequin & Aim Mode | 0/TBD | Not started | - |
 | 4. Fernauslöser & Mechanism Kit | 0/TBD | Not started | - |
 | 5. Pull/Push & Module Unlocks | 0/TBD | Not started | - |

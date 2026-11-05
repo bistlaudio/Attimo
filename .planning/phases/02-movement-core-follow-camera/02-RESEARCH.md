@@ -586,16 +586,25 @@ Hero is about 2.2 m tall with a 0.5 m radius capsule; grid pieces are 4 m / 1 m.
 | A10 | Sensitivity multiplier range 0.1-3.0 and base 0.0022 rad/px | Pattern 7 | Low: UX-03 sets final range |
 | A11 | Direct-space-state / `_input` visibility of `InputEventAction` in `_input` for tests | Pattern 8 | Low |
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+All six questions are resolved by the Phase 2 plans; each resolution is a flagged plan assumption (A1-A6) that the developer can veto at review or at the gym sign-off.
 
 1. **D-05 chain: is the "Dash" in "Jump 1 -> Jump 2 -> Dash -> Jump" a ground dash or an air dash?**
    - What we know: D-06 says a jump during/right after a plain *ground* dash is a small long jump; D-08 treats the air dash as a separate air option.
    - What's unclear: whether the dash in the chain happens after landing from Jump 2 (ground) or in the air.
    - Recommendation: implement as ground dash inside the landing window (Pattern 5), record three long-jump rows in the metrics doc, and let the gym sign-off decide. Cheap to change (it is a config/state-flag question).
+   - RESOLVED: ground dash inside the landing window; an air dash between jumps is a separate air option and never carries a chain stage into a long jump (plan 02-11, assumption A1).
 2. **Capsule size vs the 2.2 m Mannequin.** CONVENTIONS says Phase 2 retunes the capsule; the step-height result depends on radius. Recommendation: keep radius 0.5, test height 2.0 vs 2.2 in the gym; if radius changes, redo the step table.
+   - RESOLVED: the capsule stays radius 0.5 m, height 2.0 m for Phase 2; the gym sign-off re-checks it against the Mannequin in the low-ceiling passage, and a change becomes a follow-up that redoes the step table (plans 02-01, 02-02, 02-14, assumption A2).
 3. **Does SpringArm3D's physics-rate pull-in pass the 10-TPS corridor test?** Recommendation: build it as specified, run the test, and keep the `cast_motion`-in-`_process` fallback ready (same rig interface).
+   - RESOLVED: SpringArm3D is built and tested in the 10-TPS and 60-TPS corridor; if it fails, the rig switches to a per-frame shape cast in `_process` with the SpringArm3D's own mask set to 0, without changing the node layout or public API (plan 02-06, assumption A3).
 4. **Stairs policy.** Recommendation: risers <= 0.15 m, no explicit step-up code; document the 0.18 m limit in `docs/MOVEMENT-METRICS.md`. If the user wants taller auto-steps, that is a new task, not part of this phase.
+   - RESOLVED: gym risers are at most 0.15 m with no step-up code; the 0.18 m theoretical limit and the 0.25 m "needs a jump" ledge are documented in CONVENTIONS and MOVEMENT-METRICS (plans 02-02, 02-07, 02-13, assumption A4).
 5. **Dash key.** CONVENTIONS keeps both Q and Left Ctrl ("decide in tuning"). Recommendation: keep both until the gym sign-off.
+   - RESOLVED: both Q and Left Ctrl stay bound; the developer names the preferred key at the gym sign-off and a change is a follow-up (plans 02-02, 02-09, 02-14, assumption A5).
+6. **Unused first jump past coyote time (Assumptions Log A6: "confirm in discuss/plan").** Does walking off a ledge and pressing jump after coyote time give a ground jump, the double jump, or nothing?
+   - RESOLVED: it uses the one air jump (it becomes the double jump); the first jump is not banked beyond coyote time (plan 02-05, assumption A6, pinned by test_jump).
 
 ## Environment Availability
 
