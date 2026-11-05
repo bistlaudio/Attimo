@@ -27,6 +27,9 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_auto_keyboard(tree, check)
 	await _scenario_auto_joypad(tree, check)
 	await _scenario_off_mode(tree, check)
+	await _scenario_recenter(tree, check)
+	await _scenario_recenter_cancelled_by_mouse(tree, check)
+	await _scenario_recenter_while_running(tree, check)
 
 
 func _cleanup_file(path: String) -> void:
@@ -431,4 +434,65 @@ func _scenario_off_mode(tree: SceneTree, check: Callable) -> void:
 	var held: Dictionary = await _hold(tree, rig, player, [&"move_right"], rig.auto_follow_delay + 1.5)
 	var drift: float = absf(rig.yaw - float(held["yaw_start"]))
 	check.call(drift < 1e-4, "(m) off mode: running sideways leaves the yaw alone (%.6f)" % drift)
+	await _free_all(tree, nodes)
+
+
+# ---------------------------------------------------------------------------------------------------------
+# Recenter (D-17)
+# ---------------------------------------------------------------------------------------------------------
+
+func _press_recenter() -> void:
+	Fixtures.send_action_event(&"camera_recenter", true)
+	Fixtures.send_action_event(&"camera_recenter", false)
+
+
+# (n) the camera turns behind the character's facing within recenter_time.
+func _scenario_recenter(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree, "auto")
+	var rig: CameraRig = nodes[2] as CameraRig
+	rig.yaw = 0.5
+	await Fixtures.wait_process(tree, 2)
+	_press_recenter()
+	await _run_for(tree, rig.recenter_time + 0.05)
+	var away: float = absf(angle_difference(rig.yaw, PI))
+	check.call(away < 0.05, "(n) recenter brings the yaw within 0.05 rad of PI, behind a character facing +Z (%.4f)" % away)
+	await _free_all(tree, nodes)
+
+
+# (o) mouse motion during a recenter cancels it.
+func _scenario_recenter_cancelled_by_mouse(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree, "auto")
+	var rig: CameraRig = nodes[2] as CameraRig
+	rig.yaw = 0.5
+	await Fixtures.wait_process(tree, 2)
+	_press_recenter()
+	Fixtures.send_mouse_motion(Vector2(1.0, 0.0))
+	await _run_for(tree, rig.recenter_time + 0.2)
+	var away: float = absf(angle_difference(rig.yaw, PI))
+	check.call(away > 1.0, "(o) a mouse motion right after the press cancels the recenter (%.3f rad from PI)" % away)
+	await _free_all(tree, nodes)
+
+
+# (p) recentering while a direction is held swings the camera behind the run without re-steering it.
+func _scenario_recenter_while_running(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree, "auto")
+	var player: PlayerController = nodes[1] as PlayerController
+	var rig: CameraRig = nodes[2] as CameraRig
+	Input.action_press(&"move_right")
+	await _run_for(tree, 1.0)
+	var heading_before: Vector2 = Vector2(player.velocity.x, player.velocity.z)
+	var yaw_before: float = rig.yaw
+	_press_recenter()
+	var largest_turn: float = 0.0
+	var end_msec: int = Time.get_ticks_msec() + 300
+	while Time.get_ticks_msec() < end_msec:
+		await tree.process_frame
+		var heading: Vector2 = Vector2(player.velocity.x, player.velocity.z)
+		largest_turn = maxf(largest_turn, absf(heading.angle_to(heading_before)))
+	var final_heading: Vector2 = Vector2(player.velocity.x, player.velocity.z)
+	Input.action_release(&"move_right")
+	check.call(absf(rig.yaw - yaw_before) > 0.3, "(p) the recenter turned the camera while running (%.3f rad)" % (rig.yaw - yaw_before))
+	var behind: float = absf(_camera_forward(rig).angle_to(final_heading))
+	check.call(behind < 0.1, "(p) the camera ends behind the running character (%.3f rad)" % behind)
+	check.call(largest_turn < 0.05, "(p) the player's heading changes by less than 0.05 rad during the recenter (%.4f)" % largest_turn)
 	await _free_all(tree, nodes)
