@@ -1,19 +1,19 @@
 ---
 gsd_state_version: "1.0"
 milestone: v0.11.0.4
-current_phase: 2
+current_phase: 02
 current_phase_name: Movement Core & Follow Camera
-status: planning
-stopped_at: Phase 2 context gathered
-last_updated: "2026-11-04T16:09:52.109Z"
-last_activity: 2026-11-04
-last_activity_desc: Phase 1 complete, transitioned to Phase 2
-state_head: 614a8055b6efd49156efdf63fa1aef25a084263c
+status: executing
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-11-05T14:37:44.629Z"
+last_activity: 2026-11-05
+last_activity_desc: Phase 02 execution started
+state_head: 177e92278e2de61230ca617d98c36ce29d0b5096
 progress:
   total_phases: 15
   completed_phases: 1
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 21
+  completed_plans: 8
 ---
 
 # Project State
@@ -23,14 +23,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-02)
 
 **Core value:** Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprint, Sprung und Dash fühlen sich smooth an, und die Hand verbindet sich nahtlos damit.
-**Current focus:** Phase 01 — Foundation & Prototype Character
+**Current focus:** Phase 02 — Movement Core & Follow Camera
 
 ## Current Position
 
-Phase: 2 — Movement Core & Follow Camera
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-11-04 — Phase 1 complete, transitioned to Phase 2
+Phase: 02 (Movement Core & Follow Camera) — EXECUTING
+Plan: 2 of 14
+Status: Ready to execute
+Last activity: 2026-11-05 — Phase 02 execution started
 
 Progress: [█░░░░░░░░░] 7%
 
@@ -52,6 +52,11 @@ Progress: [█░░░░░░░░░] 7%
 - Trend: -
 
 *Updated after each plan completion*
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 02 P01 | 30 min | 3 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -73,6 +78,8 @@ Recent decisions that affect current work:
 - [Phase 2]: Debug Draw 3D is not adopted in Phase 2 (no res://addons folder; the metrics overlay is Label-based and camera/slope/dash checks are headless). Revisit when aim-assist cones or wall-run raycasts need visual tuning (Phase 3 aim mode, v2 wall-run). Plan assumption A39.
 - [Phase 2]: Floor snap stays inside D-13's 0.3-0.5 m band at the shipped 60 TPS for every speed incl. dash (snap_min 0.3, snap_max 0.5, export range 0.3-0.5); 10 TPS is a diagnostic rate only and gets no wider snap. Plan assumption A35.
 - [Phase 2]: Auto-follow (D-16) has a CameraSettings mode auto (default) / on / off. Auto follows only after joypad input and stays off after mouse/keyboard input, so it is effectively off until gamepads arrive (Phase 13). The follow converges: camera-relative input steers through CameraRig.steering_yaw(), which excludes auto rotation until the move input changes. Plan assumptions A40, A41 (user decision, plan revision 2).
+- [Phase 02]: Idle accelerates on its hand-over tick to Run, and Run holds until speed < 0.01 m/s, so no input tick is lost and the run clip plays through the stop
+- [Phase 02]: Snap-band test asserts the clamp to snap_max above 21 m/s, not 15: the specified formula only reaches 0.5 m at about 20.1 m/s
 
 ### Pending Todos
 
@@ -95,6 +102,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-04T16:09:52.060Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-movement-core-follow-camera/02-CONTEXT.md
+Last session: 2026-11-05T14:37:44.518Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: None

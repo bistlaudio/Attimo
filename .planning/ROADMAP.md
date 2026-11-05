@@ -85,10 +85,10 @@ Plans:
   3. The player can dash on the ground and once in the air. The air dash refills on landing, a dash can flow straight into a jump, and a dash never tunnels through walls.
   4. Moving platforms and conveyors carry the player, and the player keeps their momentum when leaving them. Gym slopes and stairs never make the player stick or launch.
   5. All movement values are live-tunable in one resource. A movement-metrics table (jump height/distance, dash distance) is recorded, and the measured jump and dash input latency meets the 66 ms target (hard limit 100 ms). Movement is signed off without any juice.
-**Plans:** 14 plans
+**Plans:** 1/14 plans executed
 
 Plans:
-- [ ] 02-01-PLAN.md — Tracer: camera-relative run and real jump on MovementConfig + PlayerController (single move_and_slide), CameraRig follow, proven by test_ground_movement (wave 1)
+- [x] 02-01-PLAN.md — Tracer: camera-relative run and real jump on MovementConfig + PlayerController (single move_and_slide), CameraRig follow, proven by test_ground_movement (wave 1)
 - [ ] 02-02-PLAN.md — Contracts and docs: camera_recenter + debug actions, new EventBus facts, CONVENTIONS, CLAUDE/STACK camera edits (wave 1)
 - [ ] 02-03-PLAN.md — Prototype Bits Slope and Beam: copies, collision wrappers, 31-file whitelist, run.sh originals (wave 1)
 - [ ] 02-04-PLAN.md — Phase 1 tests repaired for real physics, test_dash rename, animator state names, CameraRig in the test scene (wave 2)
@@ -302,7 +302,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 (en
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Prototype Character | 7/7 | Complete    | 2026-11-04 |
-| 2. Movement Core & Follow Camera | 0/14 | Planned | - |
+| 2. Movement Core & Follow Camera | 1/14 | In Progress | - |
 | 3. Animated Mannequin & Aim Mode | 0/TBD | Not started | - |
 | 4. Fernauslöser & Mechanism Kit | 0/TBD | Not started | - |
 | 5. Pull/Push & Module Unlocks | 0/TBD | Not started | - |
