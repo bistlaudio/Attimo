@@ -4,16 +4,16 @@ milestone: v0.11.0.4
 current_phase: 02
 current_phase_name: Movement Core & Follow Camera
 status: executing
-stopped_at: Completed 02-12-PLAN.md
-last_updated: "2026-11-05T22:12:22.886Z"
+stopped_at: Completed 02-13-PLAN.md
+last_updated: "2026-11-05T22:28:17.191Z"
 last_activity: 2026-11-05
 last_activity_desc: Phase 02 execution started
-state_head: ddc44d8f8c389cb3f30e432a63f7f680f57f6d85
+state_head: b33688227fce9a4621f89cae9e48ceb6a037ad83
 progress:
   total_phases: 15
   completed_phases: 1
   total_plans: 21
-  completed_plans: 19
+  completed_plans: 20
 ---
 
 # Project State
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 02 (Movement Core & Follow Camera) — EXECUTING
-Plan: 13 of 14
+Plan: 14 of 14
 Status: Ready to execute
 Last activity: 2026-11-05 — Phase 02 execution started
 
@@ -68,6 +68,7 @@ Progress: [█░░░░░░░░░] 7%
 | Phase 02 P10 | 15 min | 3 tasks | 6 files |
 | Phase 02 P11 | 9 min | 2 tasks | 10 files |
 | Phase 02 P12 | 12 min | 2 tasks | 6 files |
+| Phase 02 P13 | 15 min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -107,6 +108,7 @@ Recent decisions that affect current work:
 - [Phase 02]: 02-11: ground dash end holds an open chain window through dash_jump_grace so a late-grace long jump keeps its stage
 - [Phase 02]: 02-11: LongJump reads the live dash speed (no exit carry before the ground-jump hand-off) and caps it with long_jump_speed_cap
 - [Phase 02]: 02-12: TuningPanel rows are generated from MovementConfig.get_property_list (float + editor + range hint); camera controls copy rig settings, apply_settings, then save_to(settings_path); Save button editor-only (A15, T-02-16)
+- [Phase 02]: 02-13: measure tool split into a SceneTree loader (measure_movement.gd) and a RefCounted worker (movement_metrics.gd) because a -s script compiles before the autoloads exist
 
 ### Pending Todos
 
@@ -129,6 +131,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-05T22:12:22.815Z
-Stopped at: Completed 02-12-PLAN.md
+Last session: 2026-11-05T22:28:17.119Z
+Stopped at: Completed 02-13-PLAN.md
 Resume file: None

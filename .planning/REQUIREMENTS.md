@@ -28,7 +28,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [ ] **MOVE-08**: Player keeps momentum from moving platforms and conveyors, and handles slopes and steps without sticking or launching
 - [ ] **MOVE-09**: Player animations follow movement state, built only from the KayKit Rig_Medium kit (clips, cuts, blends, playback speed, procedural root/visual rotation and scale): idle, run (Running_A), sprint (Running_B faster + lean), jump (Jump_Start → Jump_Idle → Jump_Land), double jump (Jump_Start re-cut + procedural flip), ground/air dash (Dodge_Forward, held pose in air), aim-mode strafe (Running_Strafe_L/R, Walking_Backwards)
 - [ ] **MOVE-11**: Movement verbs are limited to what the animation kit supports; a new verb needs a kit clip or a clip composition before it is added
-- [ ] **MOVE-10**: Movement values live in a tunable resource and are documented in a movement-metrics table (jump height/distance, dash distance)
+- [x] **MOVE-10**: Movement values live in a tunable resource and are documented in a movement-metrics table (jump height/distance, dash distance)
 
 ### Camera & Aim
 
@@ -87,7 +87,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [ ] **FEEL-03**: Every hand action and mechanism activation has visual feedback (beam, impact, pull, push, activation)
 - [ ] **FEEL-04**: Camera feedback (trauma-based shake, FOV kick) and hit-stop on impacts
 - [ ] **FEEL-05**: Juice is tuned to one fixed, strong level (no presets or toggles)
-- [ ] **FEEL-06**: Input-to-response latency is measured; target ≤ 66 ms, hard limit 100 ms
+- [x] **FEEL-06**: Input-to-response latency is measured; target ≤ 66 ms, hard limit 100 ms
 - [ ] **FEEL-08**: Juice catalogue lives as data (cues per action with empty SFX slots so audio plugs in last without code changes)
 - [ ] **FEEL-10**: Pull/momentum metrics table (range, speed cap, carry-over, release boost) documented and tuned
 
@@ -177,7 +177,7 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | MOVE-07 | Phase 2 | Complete |
 | MOVE-08 | Phase 2 | Pending |
 | MOVE-09 | Phase 3 | Pending |
-| MOVE-10 | Phase 2 | Pending |
+| MOVE-10 | Phase 2 | Complete |
 | MOVE-11 | Phase 3 | Pending |
 | CAM-01 | Phase 2 | Pending |
 | CAM-02 | Phase 3 | Pending |
@@ -213,7 +213,7 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | FEEL-03 | Phase 12 | Pending |
 | FEEL-04 | Phase 11 | Pending |
 | FEEL-05 | Phase 11 | Pending |
-| FEEL-06 | Phase 2 | Pending |
+| FEEL-06 | Phase 2 | Complete |
 | FEEL-08 | Phase 11 | Pending |
 | FEEL-10 | Phase 5 | Pending |
 | POLISH-01 | Phase 12 | Pending |
