@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/prototype_bits/Primitive_Slope.gltf" id="1_mesh"]
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_slope"]
+points = PackedVector3Array(-2, 0, -2, -2, 0, 2, -2, 4, -2, -2, 4, 2, 2, 0, -2, 2, 0, 2)
+
+[node name="PrimitiveSlope" type="StaticBody3D"]
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("ConvexPolygonShape3D_slope")
+
+[node name="Mesh" parent="." instance=ExtResource("1_mesh")]
