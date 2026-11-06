@@ -23,6 +23,7 @@ const CAMERA_RIG: String = "res://scenes/camera/camera_rig.tscn"
 const EVENT_LOG: String = "res://scenes/debug/event_log.tscn"
 const METRICS_OVERLAY: String = "res://scenes/debug/metrics_overlay.tscn"
 const TUNING_PANEL: String = "res://scenes/debug/tuning_panel.tscn"
+const HIT_PUFFS: String = "res://scenes/debug/hit_puffs.tscn"
 
 ## Hall lattice: cell (i, j) is a 4 m tile centred at (4 i, 4 j), top at y 0.
 const CELLS_X: Vector2i = Vector2i(-10, 10)
@@ -72,6 +73,7 @@ func build() -> Node3D:
 	_instance_node(_root, EVENT_LOG, "EventLog")
 	_instance_node(_root, METRICS_OVERLAY, "MetricsOverlay")
 	_instance_node(_root, TUNING_PANEL, "TuningPanel")
+	_instance_node(_root, HIT_PUFFS, "HitPuffs")
 
 	if failure != "":
 		_root.free()

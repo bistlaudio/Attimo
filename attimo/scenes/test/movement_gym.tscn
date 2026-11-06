@@ -1,49 +1,51 @@
 [gd_scene format=3]
 
-[ext_resource type="PackedScene" path="res://scenes/proto/primitive_floor.tscn" id="1_b2cw1"]
-[ext_resource type="PackedScene" path="res://scenes/proto/primitive_wall.tscn" id="2_cew64"]
-[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="3_jp52v"]
-[ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="4_dbbyd"]
-[ext_resource type="Resource" path="res://resources/player/movement_default.tres" id="5_x8l4b"]
-[ext_resource type="PackedScene" path="res://scenes/camera/camera_rig.tscn" id="6_qqmp3"]
-[ext_resource type="Script" path="res://scripts/camera/camera_rig.gd" id="7_ayfqj"]
-[ext_resource type="PackedScene" path="res://scenes/proto/primitive_cube_small.tscn" id="8_fv03r"]
-[ext_resource type="PackedScene" path="res://scenes/proto/primitive_pillar.tscn" id="9_xo2l3"]
-[ext_resource type="PackedScene" path="res://scenes/proto/primitive_slope.tscn" id="10_46p4w"]
-[ext_resource type="PackedScene" path="res://scenes/proto/primitive_beam.tscn" id="11_5d340"]
-[ext_resource type="Script" path="res://scripts/gym/fall_reset.gd" id="12_d7ysu"]
-[ext_resource type="PackedScene" path="res://scenes/proto/moving_platform.tscn" id="13_1hs2y"]
-[ext_resource type="Script" path="res://scripts/gym/moving_platform.gd" id="14_frnn4"]
-[ext_resource type="PackedScene" path="res://scenes/debug/event_log.tscn" id="15_4iwxr"]
-[ext_resource type="Script" path="res://scripts/debug/event_log.gd" id="16_ktu1a"]
-[ext_resource type="PackedScene" path="res://scenes/debug/metrics_overlay.tscn" id="17_2r725"]
-[ext_resource type="Script" path="res://scripts/debug/metrics_overlay.gd" id="18_cmsii"]
-[ext_resource type="PackedScene" path="res://scenes/debug/tuning_panel.tscn" id="19_sj3xs"]
-[ext_resource type="Script" path="res://scripts/debug/tuning_panel.gd" id="20_cjxh4"]
+[ext_resource type="PackedScene" path="res://scenes/proto/primitive_floor.tscn" id="1_jp52v"]
+[ext_resource type="PackedScene" path="res://scenes/proto/primitive_wall.tscn" id="2_dbbyd"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="3_x8l4b"]
+[ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="4_qqmp3"]
+[ext_resource type="Resource" path="res://resources/player/movement_default.tres" id="5_ayfqj"]
+[ext_resource type="PackedScene" path="res://scenes/camera/camera_rig.tscn" id="6_fv03r"]
+[ext_resource type="Script" path="res://scripts/camera/camera_rig.gd" id="7_xo2l3"]
+[ext_resource type="PackedScene" path="res://scenes/proto/primitive_cube_small.tscn" id="8_46p4w"]
+[ext_resource type="PackedScene" path="res://scenes/proto/primitive_pillar.tscn" id="9_5d340"]
+[ext_resource type="PackedScene" path="res://scenes/proto/primitive_slope.tscn" id="10_d7ysu"]
+[ext_resource type="PackedScene" path="res://scenes/proto/primitive_beam.tscn" id="11_1hs2y"]
+[ext_resource type="Script" path="res://scripts/gym/fall_reset.gd" id="12_frnn4"]
+[ext_resource type="PackedScene" path="res://scenes/proto/moving_platform.tscn" id="13_4iwxr"]
+[ext_resource type="Script" path="res://scripts/gym/moving_platform.gd" id="14_ktu1a"]
+[ext_resource type="PackedScene" path="res://scenes/debug/event_log.tscn" id="15_2r725"]
+[ext_resource type="Script" path="res://scripts/debug/event_log.gd" id="16_cmsii"]
+[ext_resource type="PackedScene" path="res://scenes/debug/metrics_overlay.tscn" id="17_sj3xs"]
+[ext_resource type="Script" path="res://scripts/debug/metrics_overlay.gd" id="18_cjxh4"]
+[ext_resource type="PackedScene" path="res://scenes/debug/tuning_panel.tscn" id="19_nlb7f"]
+[ext_resource type="Script" path="res://scripts/debug/tuning_panel.gd" id="20_jarg8"]
+[ext_resource type="PackedScene" path="res://scenes/debug/hit_puffs.tscn" id="21_ynbot"]
+[ext_resource type="Script" path="res://scripts/debug/hit_puffs.gd" id="22_cbepn"]
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_nlb7f"]
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_frvvs"]
 
-[sub_resource type="Sky" id="Sky_jarg8"]
-sky_material = SubResource("ProceduralSkyMaterial_nlb7f")
+[sub_resource type="Sky" id="Sky_gggp8"]
+sky_material = SubResource("ProceduralSkyMaterial_frvvs")
 
-[sub_resource type="Environment" id="Environment_ynbot"]
+[sub_resource type="Environment" id="Environment_qnlsa"]
 background_mode = 2
-sky = SubResource("Sky_jarg8")
+sky = SubResource("Sky_gggp8")
 ambient_light_source = 3
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_cbepn"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_minib"]
 size = Vector3(12, 4, 60)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_frvvs"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_qxkxu"]
 size = Vector3(40, 4, 12)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_gggp8"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_6g4d3"]
 size = Vector3(160, 4, 160)
 
 [node name="MovementGym" type="Node3D"]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_ynbot")
+environment = SubResource("Environment_qnlsa")
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.866025, 0.383022, -0.321394, 0, 0.642788, 0.766044, 0.5, -0.663414, 0.55667, 0, 0, 0)
@@ -51,1815 +53,1815 @@ shadow_enabled = true
 
 [node name="Hall" type="Node3D" parent="."]
 
-[node name="Floor_m10_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m10_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, -1, -48)
 collision_mask = 0
 
-[node name="Floor_m10_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m10_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, -1, -44)
 collision_mask = 0
 
-[node name="Floor_m10_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m10_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, -1, -40)
 collision_mask = 0
 
-[node name="Floor_m10_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m10_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, -1, -36)
 collision_mask = 0
 
-[node name="Floor_m10_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m10_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, -1, -32)
 collision_mask = 0
 
-[node name="Floor_m10_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m10_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, -1, -28)
 collision_mask = 0
 
-[node name="Floor_m9_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m9_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, -1, -48)
 collision_mask = 0
 
-[node name="Floor_m9_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m9_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, -1, -44)
 collision_mask = 0
 
-[node name="Floor_m9_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m9_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, -1, -40)
 collision_mask = 0
 
-[node name="Floor_m9_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m9_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, -1, -36)
 collision_mask = 0
 
-[node name="Floor_m9_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m9_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, -1, -32)
 collision_mask = 0
 
-[node name="Floor_m9_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m9_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, -1, -28)
 collision_mask = 0
 
-[node name="Floor_m8_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m8_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32, -1, -48)
 collision_mask = 0
 
-[node name="Floor_m8_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m8_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32, -1, -44)
 collision_mask = 0
 
-[node name="Floor_m8_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m8_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32, -1, -40)
 collision_mask = 0
 
-[node name="Floor_m8_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m8_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32, -1, -36)
 collision_mask = 0
 
-[node name="Floor_m8_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m8_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32, -1, -32)
 collision_mask = 0
 
-[node name="Floor_m8_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m8_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32, -1, -28)
 collision_mask = 0
 
-[node name="Floor_m7_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m7_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, -1, -48)
 collision_mask = 0
 
-[node name="Floor_m7_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m7_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, -1, -44)
 collision_mask = 0
 
-[node name="Floor_m7_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m7_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, -1, -40)
 collision_mask = 0
 
-[node name="Floor_m7_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m7_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, -1, -36)
 collision_mask = 0
 
-[node name="Floor_m7_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m7_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, -1, -32)
 collision_mask = 0
 
-[node name="Floor_m7_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m7_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, -1, -28)
 collision_mask = 0
 
-[node name="Floor_m7_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m7_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, -1, -12)
 collision_mask = 0
 
-[node name="Floor_m7_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m7_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, -1, -8)
 collision_mask = 0
 
-[node name="Floor_m7_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m7_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, -1, -4)
 collision_mask = 0
 
-[node name="Floor_m7_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m7_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, -1, 0)
 collision_mask = 0
 
-[node name="Floor_m7_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m7_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, -1, 4)
 collision_mask = 0
 
-[node name="Floor_m7_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m7_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, -1, 8)
 collision_mask = 0
 
-[node name="Floor_m7_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m7_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, -1, 12)
 collision_mask = 0
 
-[node name="Floor_m7_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m7_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, -1, 16)
 collision_mask = 0
 
-[node name="Floor_m7_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m7_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, -1, 20)
 collision_mask = 0
 
-[node name="Floor_m7_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m7_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, -1, 24)
 collision_mask = 0
 
-[node name="Floor_m7_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m7_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, -1, 28)
 collision_mask = 0
 
-[node name="Floor_m7_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m7_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, -1, 32)
 collision_mask = 0
 
-[node name="Floor_m6_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m6_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -1, -48)
 collision_mask = 0
 
-[node name="Floor_m6_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m6_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -1, -44)
 collision_mask = 0
 
-[node name="Floor_m6_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m6_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -1, -40)
 collision_mask = 0
 
-[node name="Floor_m6_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m6_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -1, -36)
 collision_mask = 0
 
-[node name="Floor_m6_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m6_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -1, -32)
 collision_mask = 0
 
-[node name="Floor_m6_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m6_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -1, -28)
 collision_mask = 0
 
-[node name="Floor_m6_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m6_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -1, -12)
 collision_mask = 0
 
-[node name="Floor_m6_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m6_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -1, -8)
 collision_mask = 0
 
-[node name="Floor_m6_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m6_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -1, -4)
 collision_mask = 0
 
-[node name="Floor_m6_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m6_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -1, 0)
 collision_mask = 0
 
-[node name="Floor_m6_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m6_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -1, 4)
 collision_mask = 0
 
-[node name="Floor_m6_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m6_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -1, 8)
 collision_mask = 0
 
-[node name="Floor_m6_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m6_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -1, 16)
 collision_mask = 0
 
-[node name="Floor_m6_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m6_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -1, 24)
 collision_mask = 0
 
-[node name="Floor_m6_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m6_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -1, 28)
 collision_mask = 0
 
-[node name="Floor_m6_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m6_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -1, 32)
 collision_mask = 0
 
-[node name="Floor_m5_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m5_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -1, -48)
 collision_mask = 0
 
-[node name="Floor_m5_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m5_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -1, -44)
 collision_mask = 0
 
-[node name="Floor_m5_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m5_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -1, -40)
 collision_mask = 0
 
-[node name="Floor_m5_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m5_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -1, -36)
 collision_mask = 0
 
-[node name="Floor_m5_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m5_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -1, -32)
 collision_mask = 0
 
-[node name="Floor_m5_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m5_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -1, -28)
 collision_mask = 0
 
-[node name="Floor_m5_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m5_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -1, -12)
 collision_mask = 0
 
-[node name="Floor_m5_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m5_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -1, -8)
 collision_mask = 0
 
-[node name="Floor_m5_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m5_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -1, -4)
 collision_mask = 0
 
-[node name="Floor_m5_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m5_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -1, 0)
 collision_mask = 0
 
-[node name="Floor_m5_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m5_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -1, 4)
 collision_mask = 0
 
-[node name="Floor_m5_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m5_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -1, 8)
 collision_mask = 0
 
-[node name="Floor_m5_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m5_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -1, 16)
 collision_mask = 0
 
-[node name="Floor_m5_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m5_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -1, 24)
 collision_mask = 0
 
-[node name="Floor_m5_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m5_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -1, 28)
 collision_mask = 0
 
-[node name="Floor_m5_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m5_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -1, 32)
 collision_mask = 0
 
-[node name="Floor_m4_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m4_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, -1, -48)
 collision_mask = 0
 
-[node name="Floor_m4_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m4_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, -1, -44)
 collision_mask = 0
 
-[node name="Floor_m4_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m4_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, -1, -40)
 collision_mask = 0
 
-[node name="Floor_m4_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m4_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, -1, -36)
 collision_mask = 0
 
-[node name="Floor_m4_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m4_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, -1, -32)
 collision_mask = 0
 
-[node name="Floor_m4_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m4_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, -1, -28)
 collision_mask = 0
 
-[node name="Floor_m4_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m4_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, -1, -12)
 collision_mask = 0
 
-[node name="Floor_m4_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m4_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, -1, -8)
 collision_mask = 0
 
-[node name="Floor_m4_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m4_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, -1, -4)
 collision_mask = 0
 
-[node name="Floor_m4_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m4_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, -1, 0)
 collision_mask = 0
 
-[node name="Floor_m4_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m4_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, -1, 4)
 collision_mask = 0
 
-[node name="Floor_m4_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m4_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, -1, 8)
 collision_mask = 0
 
-[node name="Floor_m4_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m4_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, -1, 16)
 collision_mask = 0
 
-[node name="Floor_m4_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m4_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, -1, 24)
 collision_mask = 0
 
-[node name="Floor_m4_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m4_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, -1, 28)
 collision_mask = 0
 
-[node name="Floor_m4_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m4_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, -1, 32)
 collision_mask = 0
 
-[node name="Floor_m3_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m3_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -1, -48)
 collision_mask = 0
 
-[node name="Floor_m3_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m3_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -1, -44)
 collision_mask = 0
 
-[node name="Floor_m3_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m3_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -1, -40)
 collision_mask = 0
 
-[node name="Floor_m3_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m3_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -1, -36)
 collision_mask = 0
 
-[node name="Floor_m3_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m3_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -1, -32)
 collision_mask = 0
 
-[node name="Floor_m3_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m3_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -1, -28)
 collision_mask = 0
 
-[node name="Floor_m3_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m3_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -1, -12)
 collision_mask = 0
 
-[node name="Floor_m3_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m3_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -1, -8)
 collision_mask = 0
 
-[node name="Floor_m3_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m3_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -1, -4)
 collision_mask = 0
 
-[node name="Floor_m3_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m3_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -1, 0)
 collision_mask = 0
 
-[node name="Floor_m3_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m3_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -1, 4)
 collision_mask = 0
 
-[node name="Floor_m3_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m3_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -1, 8)
 collision_mask = 0
 
-[node name="Floor_m3_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m3_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -1, 16)
 collision_mask = 0
 
-[node name="Floor_m3_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m3_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -1, 24)
 collision_mask = 0
 
-[node name="Floor_m3_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m3_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -1, 28)
 collision_mask = 0
 
-[node name="Floor_m3_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m3_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -1, 32)
 collision_mask = 0
 
-[node name="Floor_m2_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m2_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, -48)
 collision_mask = 0
 
-[node name="Floor_m2_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m2_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, -44)
 collision_mask = 0
 
-[node name="Floor_m2_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m2_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, -40)
 collision_mask = 0
 
-[node name="Floor_m2_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m2_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, -36)
 collision_mask = 0
 
-[node name="Floor_m2_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m2_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, -32)
 collision_mask = 0
 
-[node name="Floor_m2_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m2_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, -28)
 collision_mask = 0
 
-[node name="Floor_m2_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m2_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, -12)
 collision_mask = 0
 
-[node name="Floor_m2_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m2_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, -8)
 collision_mask = 0
 
-[node name="Floor_m2_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m2_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, -4)
 collision_mask = 0
 
-[node name="Floor_m2_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m2_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, 0)
 collision_mask = 0
 
-[node name="Floor_m2_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m2_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, 4)
 collision_mask = 0
 
-[node name="Floor_m2_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m2_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, 8)
 collision_mask = 0
 
-[node name="Floor_m2_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m2_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, 12)
 collision_mask = 0
 
-[node name="Floor_m2_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m2_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, 16)
 collision_mask = 0
 
-[node name="Floor_m2_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m2_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, 20)
 collision_mask = 0
 
-[node name="Floor_m2_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m2_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, 24)
 collision_mask = 0
 
-[node name="Floor_m2_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m2_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, 28)
 collision_mask = 0
 
-[node name="Floor_m2_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m2_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, -1, 32)
 collision_mask = 0
 
-[node name="Floor_m1_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m1_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -1, -48)
 collision_mask = 0
 
-[node name="Floor_m1_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m1_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -1, -44)
 collision_mask = 0
 
-[node name="Floor_m1_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m1_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -1, -40)
 collision_mask = 0
 
-[node name="Floor_m1_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m1_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -1, -36)
 collision_mask = 0
 
-[node name="Floor_m1_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m1_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -1, -32)
 collision_mask = 0
 
-[node name="Floor_m1_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m1_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -1, -28)
 collision_mask = 0
 
-[node name="Floor_m1_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m1_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -1, -12)
 collision_mask = 0
 
-[node name="Floor_m1_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m1_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -1, -8)
 collision_mask = 0
 
-[node name="Floor_m1_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m1_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -1, -4)
 collision_mask = 0
 
-[node name="Floor_m1_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m1_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -1, 0)
 collision_mask = 0
 
-[node name="Floor_m1_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m1_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -1, 4)
 collision_mask = 0
 
-[node name="Floor_m1_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m1_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -1, 8)
 collision_mask = 0
 
-[node name="Floor_m1_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m1_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -1, 12)
 collision_mask = 0
 
-[node name="Floor_m1_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m1_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -1, 16)
 collision_mask = 0
 
-[node name="Floor_m1_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m1_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -1, 20)
 collision_mask = 0
 
-[node name="Floor_m1_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m1_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -1, 24)
 collision_mask = 0
 
-[node name="Floor_m1_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m1_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -1, 28)
 collision_mask = 0
 
-[node name="Floor_m1_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_m1_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, -1, 32)
 collision_mask = 0
 
-[node name="Floor_0_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, -48)
 collision_mask = 0
 
-[node name="Floor_0_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, -44)
 collision_mask = 0
 
-[node name="Floor_0_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, -40)
 collision_mask = 0
 
-[node name="Floor_0_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, -36)
 collision_mask = 0
 
-[node name="Floor_0_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, -32)
 collision_mask = 0
 
-[node name="Floor_0_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, -28)
 collision_mask = 0
 
-[node name="Floor_0_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, -24)
 collision_mask = 0
 
-[node name="Floor_0_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, -20)
 collision_mask = 0
 
-[node name="Floor_0_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, -16)
 collision_mask = 0
 
-[node name="Floor_0_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, -12)
 collision_mask = 0
 
-[node name="Floor_0_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, -8)
 collision_mask = 0
 
-[node name="Floor_0_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, -4)
 collision_mask = 0
 
-[node name="Floor_0_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
 collision_mask = 0
 
-[node name="Floor_0_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 4)
 collision_mask = 0
 
-[node name="Floor_0_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 8)
 collision_mask = 0
 
-[node name="Floor_0_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 12)
 collision_mask = 0
 
-[node name="Floor_0_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 16)
 collision_mask = 0
 
-[node name="Floor_0_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 20)
 collision_mask = 0
 
-[node name="Floor_0_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 24)
 collision_mask = 0
 
-[node name="Floor_0_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 28)
 collision_mask = 0
 
-[node name="Floor_0_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_0_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 32)
 collision_mask = 0
 
-[node name="Floor_1_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, -48)
 collision_mask = 0
 
-[node name="Floor_1_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, -44)
 collision_mask = 0
 
-[node name="Floor_1_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, -40)
 collision_mask = 0
 
-[node name="Floor_1_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, -36)
 collision_mask = 0
 
-[node name="Floor_1_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, -32)
 collision_mask = 0
 
-[node name="Floor_1_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, -28)
 collision_mask = 0
 
-[node name="Floor_1_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, -24)
 collision_mask = 0
 
-[node name="Floor_1_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, -20)
 collision_mask = 0
 
-[node name="Floor_1_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, -16)
 collision_mask = 0
 
-[node name="Floor_1_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, -12)
 collision_mask = 0
 
-[node name="Floor_1_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, -8)
 collision_mask = 0
 
-[node name="Floor_1_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, -4)
 collision_mask = 0
 
-[node name="Floor_1_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, 0)
 collision_mask = 0
 
-[node name="Floor_1_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, 4)
 collision_mask = 0
 
-[node name="Floor_1_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, 8)
 collision_mask = 0
 
-[node name="Floor_1_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, 12)
 collision_mask = 0
 
-[node name="Floor_1_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, 16)
 collision_mask = 0
 
-[node name="Floor_1_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, 20)
 collision_mask = 0
 
-[node name="Floor_1_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, 24)
 collision_mask = 0
 
-[node name="Floor_1_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, 28)
 collision_mask = 0
 
-[node name="Floor_1_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_1_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, -1, 32)
 collision_mask = 0
 
-[node name="Floor_2_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, -48)
 collision_mask = 0
 
-[node name="Floor_2_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, -44)
 collision_mask = 0
 
-[node name="Floor_2_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, -40)
 collision_mask = 0
 
-[node name="Floor_2_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, -36)
 collision_mask = 0
 
-[node name="Floor_2_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, -32)
 collision_mask = 0
 
-[node name="Floor_2_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, -28)
 collision_mask = 0
 
-[node name="Floor_2_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, -24)
 collision_mask = 0
 
-[node name="Floor_2_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, -20)
 collision_mask = 0
 
-[node name="Floor_2_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, -16)
 collision_mask = 0
 
-[node name="Floor_2_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, -12)
 collision_mask = 0
 
-[node name="Floor_2_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, -8)
 collision_mask = 0
 
-[node name="Floor_2_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, -4)
 collision_mask = 0
 
-[node name="Floor_2_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, 0)
 collision_mask = 0
 
-[node name="Floor_2_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, 4)
 collision_mask = 0
 
-[node name="Floor_2_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, 8)
 collision_mask = 0
 
-[node name="Floor_2_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, 12)
 collision_mask = 0
 
-[node name="Floor_2_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, 16)
 collision_mask = 0
 
-[node name="Floor_2_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, 20)
 collision_mask = 0
 
-[node name="Floor_2_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, 24)
 collision_mask = 0
 
-[node name="Floor_2_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, 28)
 collision_mask = 0
 
-[node name="Floor_2_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_2_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, -1, 32)
 collision_mask = 0
 
-[node name="Floor_3_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, -48)
 collision_mask = 0
 
-[node name="Floor_3_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, -44)
 collision_mask = 0
 
-[node name="Floor_3_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, -40)
 collision_mask = 0
 
-[node name="Floor_3_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, -36)
 collision_mask = 0
 
-[node name="Floor_3_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, -32)
 collision_mask = 0
 
-[node name="Floor_3_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, -28)
 collision_mask = 0
 
-[node name="Floor_3_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, -24)
 collision_mask = 0
 
-[node name="Floor_3_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, -20)
 collision_mask = 0
 
-[node name="Floor_3_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, -16)
 collision_mask = 0
 
-[node name="Floor_3_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, -12)
 collision_mask = 0
 
-[node name="Floor_3_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, -8)
 collision_mask = 0
 
-[node name="Floor_3_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, -4)
 collision_mask = 0
 
-[node name="Floor_3_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, 0)
 collision_mask = 0
 
-[node name="Floor_3_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, 4)
 collision_mask = 0
 
-[node name="Floor_3_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, 8)
 collision_mask = 0
 
-[node name="Floor_3_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, 12)
 collision_mask = 0
 
-[node name="Floor_3_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, 16)
 collision_mask = 0
 
-[node name="Floor_3_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, 20)
 collision_mask = 0
 
-[node name="Floor_3_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, 24)
 collision_mask = 0
 
-[node name="Floor_3_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, 28)
 collision_mask = 0
 
-[node name="Floor_3_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_3_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, -1, 32)
 collision_mask = 0
 
-[node name="Floor_4_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, -48)
 collision_mask = 0
 
-[node name="Floor_4_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, -44)
 collision_mask = 0
 
-[node name="Floor_4_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, -40)
 collision_mask = 0
 
-[node name="Floor_4_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, -36)
 collision_mask = 0
 
-[node name="Floor_4_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, -32)
 collision_mask = 0
 
-[node name="Floor_4_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, -28)
 collision_mask = 0
 
-[node name="Floor_4_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, -24)
 collision_mask = 0
 
-[node name="Floor_4_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, -20)
 collision_mask = 0
 
-[node name="Floor_4_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, -16)
 collision_mask = 0
 
-[node name="Floor_4_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, -12)
 collision_mask = 0
 
-[node name="Floor_4_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, -8)
 collision_mask = 0
 
-[node name="Floor_4_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, -4)
 collision_mask = 0
 
-[node name="Floor_4_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, 0)
 collision_mask = 0
 
-[node name="Floor_4_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, 4)
 collision_mask = 0
 
-[node name="Floor_4_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, 8)
 collision_mask = 0
 
-[node name="Floor_4_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, 12)
 collision_mask = 0
 
-[node name="Floor_4_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, 16)
 collision_mask = 0
 
-[node name="Floor_4_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, 20)
 collision_mask = 0
 
-[node name="Floor_4_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, 24)
 collision_mask = 0
 
-[node name="Floor_4_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, 28)
 collision_mask = 0
 
-[node name="Floor_4_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_4_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -1, 32)
 collision_mask = 0
 
-[node name="Floor_5_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, -48)
 collision_mask = 0
 
-[node name="Floor_5_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, -44)
 collision_mask = 0
 
-[node name="Floor_5_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, -40)
 collision_mask = 0
 
-[node name="Floor_5_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, -36)
 collision_mask = 0
 
-[node name="Floor_5_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, -32)
 collision_mask = 0
 
-[node name="Floor_5_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, -28)
 collision_mask = 0
 
-[node name="Floor_5_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, -24)
 collision_mask = 0
 
-[node name="Floor_5_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, -20)
 collision_mask = 0
 
-[node name="Floor_5_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, -16)
 collision_mask = 0
 
-[node name="Floor_5_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, -12)
 collision_mask = 0
 
-[node name="Floor_5_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, -8)
 collision_mask = 0
 
-[node name="Floor_5_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, -4)
 collision_mask = 0
 
-[node name="Floor_5_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, 0)
 collision_mask = 0
 
-[node name="Floor_5_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, 4)
 collision_mask = 0
 
-[node name="Floor_5_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, 8)
 collision_mask = 0
 
-[node name="Floor_5_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, 12)
 collision_mask = 0
 
-[node name="Floor_5_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, 16)
 collision_mask = 0
 
-[node name="Floor_5_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, 20)
 collision_mask = 0
 
-[node name="Floor_5_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, 24)
 collision_mask = 0
 
-[node name="Floor_5_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, 28)
 collision_mask = 0
 
-[node name="Floor_5_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_5_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, -1, 32)
 collision_mask = 0
 
-[node name="Floor_6_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, -48)
 collision_mask = 0
 
-[node name="Floor_6_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, -44)
 collision_mask = 0
 
-[node name="Floor_6_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, -40)
 collision_mask = 0
 
-[node name="Floor_6_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, -36)
 collision_mask = 0
 
-[node name="Floor_6_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, -32)
 collision_mask = 0
 
-[node name="Floor_6_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, -28)
 collision_mask = 0
 
-[node name="Floor_6_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, -24)
 collision_mask = 0
 
-[node name="Floor_6_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, -20)
 collision_mask = 0
 
-[node name="Floor_6_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, -16)
 collision_mask = 0
 
-[node name="Floor_6_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, -12)
 collision_mask = 0
 
-[node name="Floor_6_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, -8)
 collision_mask = 0
 
-[node name="Floor_6_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, -4)
 collision_mask = 0
 
-[node name="Floor_6_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, 0)
 collision_mask = 0
 
-[node name="Floor_6_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, 4)
 collision_mask = 0
 
-[node name="Floor_6_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, 8)
 collision_mask = 0
 
-[node name="Floor_6_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, 12)
 collision_mask = 0
 
-[node name="Floor_6_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, 16)
 collision_mask = 0
 
-[node name="Floor_6_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, 20)
 collision_mask = 0
 
-[node name="Floor_6_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, 24)
 collision_mask = 0
 
-[node name="Floor_6_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, 28)
 collision_mask = 0
 
-[node name="Floor_6_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_6_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, -1, 32)
 collision_mask = 0
 
-[node name="Floor_7_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, -48)
 collision_mask = 0
 
-[node name="Floor_7_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, -44)
 collision_mask = 0
 
-[node name="Floor_7_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, -40)
 collision_mask = 0
 
-[node name="Floor_7_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, -36)
 collision_mask = 0
 
-[node name="Floor_7_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, -32)
 collision_mask = 0
 
-[node name="Floor_7_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, -28)
 collision_mask = 0
 
-[node name="Floor_7_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, -24)
 collision_mask = 0
 
-[node name="Floor_7_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, -20)
 collision_mask = 0
 
-[node name="Floor_7_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, -16)
 collision_mask = 0
 
-[node name="Floor_7_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, -12)
 collision_mask = 0
 
-[node name="Floor_7_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, -8)
 collision_mask = 0
 
-[node name="Floor_7_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, -4)
 collision_mask = 0
 
-[node name="Floor_7_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, 0)
 collision_mask = 0
 
-[node name="Floor_7_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, 4)
 collision_mask = 0
 
-[node name="Floor_7_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, 8)
 collision_mask = 0
 
-[node name="Floor_7_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, 12)
 collision_mask = 0
 
-[node name="Floor_7_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, 16)
 collision_mask = 0
 
-[node name="Floor_7_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, 20)
 collision_mask = 0
 
-[node name="Floor_7_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, 24)
 collision_mask = 0
 
-[node name="Floor_7_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, 28)
 collision_mask = 0
 
-[node name="Floor_7_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_7_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, -1, 32)
 collision_mask = 0
 
-[node name="Floor_8_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, -48)
 collision_mask = 0
 
-[node name="Floor_8_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, -44)
 collision_mask = 0
 
-[node name="Floor_8_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, -40)
 collision_mask = 0
 
-[node name="Floor_8_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, -36)
 collision_mask = 0
 
-[node name="Floor_8_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, -32)
 collision_mask = 0
 
-[node name="Floor_8_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, -28)
 collision_mask = 0
 
-[node name="Floor_8_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, -24)
 collision_mask = 0
 
-[node name="Floor_8_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, -20)
 collision_mask = 0
 
-[node name="Floor_8_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, -16)
 collision_mask = 0
 
-[node name="Floor_8_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, -12)
 collision_mask = 0
 
-[node name="Floor_8_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, -8)
 collision_mask = 0
 
-[node name="Floor_8_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, -4)
 collision_mask = 0
 
-[node name="Floor_8_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, 0)
 collision_mask = 0
 
-[node name="Floor_8_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, 4)
 collision_mask = 0
 
-[node name="Floor_8_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, 8)
 collision_mask = 0
 
-[node name="Floor_8_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, 12)
 collision_mask = 0
 
-[node name="Floor_8_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, 16)
 collision_mask = 0
 
-[node name="Floor_8_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, 20)
 collision_mask = 0
 
-[node name="Floor_8_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, 24)
 collision_mask = 0
 
-[node name="Floor_8_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, 28)
 collision_mask = 0
 
-[node name="Floor_8_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_8_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, -1, 32)
 collision_mask = 0
 
-[node name="Floor_9_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, -48)
 collision_mask = 0
 
-[node name="Floor_9_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, -44)
 collision_mask = 0
 
-[node name="Floor_9_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, -40)
 collision_mask = 0
 
-[node name="Floor_9_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, -36)
 collision_mask = 0
 
-[node name="Floor_9_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, -32)
 collision_mask = 0
 
-[node name="Floor_9_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, -28)
 collision_mask = 0
 
-[node name="Floor_9_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, -24)
 collision_mask = 0
 
-[node name="Floor_9_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, -20)
 collision_mask = 0
 
-[node name="Floor_9_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, -16)
 collision_mask = 0
 
-[node name="Floor_9_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, -12)
 collision_mask = 0
 
-[node name="Floor_9_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, -8)
 collision_mask = 0
 
-[node name="Floor_9_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, -4)
 collision_mask = 0
 
-[node name="Floor_9_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, 0)
 collision_mask = 0
 
-[node name="Floor_9_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, 4)
 collision_mask = 0
 
-[node name="Floor_9_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, 8)
 collision_mask = 0
 
-[node name="Floor_9_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, 12)
 collision_mask = 0
 
-[node name="Floor_9_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, 20)
 collision_mask = 0
 
-[node name="Floor_9_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, 24)
 collision_mask = 0
 
-[node name="Floor_9_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, 28)
 collision_mask = 0
 
-[node name="Floor_9_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_9_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, 32)
 collision_mask = 0
 
-[node name="Floor_10_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, -48)
 collision_mask = 0
 
-[node name="Floor_10_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, -44)
 collision_mask = 0
 
-[node name="Floor_10_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, -40)
 collision_mask = 0
 
-[node name="Floor_10_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, -36)
 collision_mask = 0
 
-[node name="Floor_10_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, -32)
 collision_mask = 0
 
-[node name="Floor_10_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, -28)
 collision_mask = 0
 
-[node name="Floor_10_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, -24)
 collision_mask = 0
 
-[node name="Floor_10_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, -20)
 collision_mask = 0
 
-[node name="Floor_10_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, -16)
 collision_mask = 0
 
-[node name="Floor_10_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, -12)
 collision_mask = 0
 
-[node name="Floor_10_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, -8)
 collision_mask = 0
 
-[node name="Floor_10_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, -4)
 collision_mask = 0
 
-[node name="Floor_10_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_0" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, 0)
 collision_mask = 0
 
-[node name="Floor_10_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_1" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, 4)
 collision_mask = 0
 
-[node name="Floor_10_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_2" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, 8)
 collision_mask = 0
 
-[node name="Floor_10_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_3" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, 12)
 collision_mask = 0
 
-[node name="Floor_10_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_4" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, 16)
 collision_mask = 0
 
-[node name="Floor_10_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_5" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, 20)
 collision_mask = 0
 
-[node name="Floor_10_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_6" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, 24)
 collision_mask = 0
 
-[node name="Floor_10_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_7" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, 28)
 collision_mask = 0
 
-[node name="Floor_10_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_b2cw1")]
+[node name="Floor_10_8" type="StaticBody3D" parent="Hall" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, -1, 32)
 collision_mask = 0
 
-[node name="WallNorth_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -32, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_0" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_0" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_0" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_0" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_1" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_1" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_1" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_1" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_2" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_2" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_2" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_2" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_3" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_3" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_3" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_3" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_4" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_4" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_4" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_4" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_5" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_5" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_5" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_5" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_6" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_6" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_6" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_6" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_7" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_7" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_7" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_7" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_8" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_8" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_8" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_8" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_9" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_9" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_9" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_9" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 0, 34.5)
 collision_mask = 0
 
-[node name="WallNorth_10" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallNorth_10" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, -50.5)
 collision_mask = 0
 
-[node name="WallSouth_10" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallSouth_10" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, 34.5)
 collision_mask = 0
 
-[node name="WallEast_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, -48)
 collision_mask = 0
 
-[node name="WallWest_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_m12" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, -48)
 collision_mask = 0
 
-[node name="WallEast_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, -44)
 collision_mask = 0
 
-[node name="WallWest_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_m11" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, -44)
 collision_mask = 0
 
-[node name="WallEast_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, -40)
 collision_mask = 0
 
-[node name="WallWest_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_m10" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, -40)
 collision_mask = 0
 
-[node name="WallEast_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, -36)
 collision_mask = 0
 
-[node name="WallWest_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_m9" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, -36)
 collision_mask = 0
 
-[node name="WallEast_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, -32)
 collision_mask = 0
 
-[node name="WallWest_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_m8" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, -32)
 collision_mask = 0
 
-[node name="WallEast_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, -28)
 collision_mask = 0
 
-[node name="WallWest_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_m7" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, -28)
 collision_mask = 0
 
-[node name="WallEast_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, -24)
 collision_mask = 0
 
-[node name="WallWest_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_m6" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, -24)
 collision_mask = 0
 
-[node name="WallEast_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, -20)
 collision_mask = 0
 
-[node name="WallWest_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_m5" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, -20)
 collision_mask = 0
 
-[node name="WallEast_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, -16)
 collision_mask = 0
 
-[node name="WallWest_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_m4" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, -16)
 collision_mask = 0
 
-[node name="WallEast_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, -12)
 collision_mask = 0
 
-[node name="WallWest_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_m3" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, -12)
 collision_mask = 0
 
-[node name="WallEast_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, -8)
 collision_mask = 0
 
-[node name="WallWest_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_m2" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, -8)
 collision_mask = 0
 
-[node name="WallEast_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, -4)
 collision_mask = 0
 
-[node name="WallWest_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_m1" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, -4)
 collision_mask = 0
 
-[node name="WallEast_0" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_0" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, 0)
 collision_mask = 0
 
-[node name="WallWest_0" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_0" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, 0)
 collision_mask = 0
 
-[node name="WallEast_1" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_1" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, 4)
 collision_mask = 0
 
-[node name="WallWest_1" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_1" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, 4)
 collision_mask = 0
 
-[node name="WallEast_2" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_2" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, 8)
 collision_mask = 0
 
-[node name="WallWest_2" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_2" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, 8)
 collision_mask = 0
 
-[node name="WallEast_3" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_3" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, 12)
 collision_mask = 0
 
-[node name="WallWest_3" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_3" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, 12)
 collision_mask = 0
 
-[node name="WallEast_4" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_4" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, 16)
 collision_mask = 0
 
-[node name="WallWest_4" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_4" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, 16)
 collision_mask = 0
 
-[node name="WallEast_5" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_5" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, 20)
 collision_mask = 0
 
-[node name="WallWest_5" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_5" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, 20)
 collision_mask = 0
 
-[node name="WallEast_6" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_6" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, 24)
 collision_mask = 0
 
-[node name="WallWest_6" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_6" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, 24)
 collision_mask = 0
 
-[node name="WallEast_7" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_7" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, 28)
 collision_mask = 0
 
-[node name="WallWest_7" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_7" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, 28)
 collision_mask = 0
 
-[node name="WallEast_8" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallEast_8" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, 0, 32)
 collision_mask = 0
 
-[node name="WallWest_8" type="StaticBody3D" parent="Hall" instance=ExtResource("2_cew64")]
+[node name="WallWest_8" type="StaticBody3D" parent="Hall" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -42.5, 0, 32)
 collision_mask = 0
 
 [node name="Spawn" type="Marker3D" parent="."]
 
-[node name="Player" type="CharacterBody3D" parent="." groups=["player"] instance=ExtResource("3_jp52v")]
+[node name="Player" type="CharacterBody3D" parent="." groups=["player"] instance=ExtResource("3_x8l4b")]
 collision_layer = 2
-script = ExtResource("4_dbbyd")
-config = ExtResource("5_x8l4b")
+script = ExtResource("4_qqmp3")
+config = ExtResource("5_ayfqj")
 
-[node name="CameraRig" type="Node3D" parent="." node_paths=PackedStringArray("target") instance=ExtResource("6_qqmp3")]
-script = ExtResource("7_ayfqj")
+[node name="CameraRig" type="Node3D" parent="." node_paths=PackedStringArray("target") instance=ExtResource("6_fv03r")]
+script = ExtResource("7_xo2l3")
 target = NodePath("../Player")
 
 [node name="Zone_MeasurementStrip" type="Node3D" parent="."]
@@ -2011,23 +2013,23 @@ billboard = 1
 text = "40 m"
 font_size = 64
 
-[node name="Height_1m" type="StaticBody3D" parent="Zone_MeasurementStrip" instance=ExtResource("1_b2cw1")]
+[node name="Height_1m" type="StaticBody3D" parent="Zone_MeasurementStrip" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -6)
 collision_mask = 0
 
-[node name="Height_2m" type="StaticBody3D" parent="Zone_MeasurementStrip" instance=ExtResource("8_fv03r")]
+[node name="Height_2m" type="StaticBody3D" parent="Zone_MeasurementStrip" instance=ExtResource("8_46p4w")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, -6)
 collision_mask = 0
 
-[node name="Height_3m_Cube" type="StaticBody3D" parent="Zone_MeasurementStrip" instance=ExtResource("8_fv03r")]
+[node name="Height_3m_Cube" type="StaticBody3D" parent="Zone_MeasurementStrip" instance=ExtResource("8_46p4w")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, -6)
 collision_mask = 0
 
-[node name="Height_3m_Slab" type="StaticBody3D" parent="Zone_MeasurementStrip" instance=ExtResource("1_b2cw1")]
+[node name="Height_3m_Slab" type="StaticBody3D" parent="Zone_MeasurementStrip" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 2, -6)
 collision_mask = 0
 
-[node name="Height_4m" type="StaticBody3D" parent="Zone_MeasurementStrip" instance=ExtResource("9_xo2l3")]
+[node name="Height_4m" type="StaticBody3D" parent="Zone_MeasurementStrip" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, -6)
 collision_mask = 0
 
@@ -2061,35 +2063,35 @@ font_size = 64
 
 [node name="Zone_RampsStairs" type="Node3D" parent="."]
 
-[node name="Slope45" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("10_46p4w")]
+[node name="Slope45" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("10_d7ysu")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, -44)
 collision_mask = 0
 
-[node name="Plateau_0" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("1_b2cw1")]
+[node name="Plateau_0" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 3, -44)
 collision_mask = 0
 
-[node name="Plateau_1" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("1_b2cw1")]
+[node name="Plateau_1" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3, -44)
 collision_mask = 0
 
-[node name="PlateauWallNorth_0" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("2_cew64")]
+[node name="PlateauWallNorth_0" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, -46.5)
 collision_mask = 0
 
-[node name="PlateauWallSouth_0" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("2_cew64")]
+[node name="PlateauWallSouth_0" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, -41.5)
 collision_mask = 0
 
-[node name="PlateauWallNorth_1" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("2_cew64")]
+[node name="PlateauWallNorth_1" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -46.5)
 collision_mask = 0
 
-[node name="PlateauWallSouth_1" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("2_cew64")]
+[node name="PlateauWallSouth_1" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -41.5)
 collision_mask = 0
 
-[node name="PlateauWallWest" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("2_cew64")]
+[node name="PlateauWallWest" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 5.5, 0, -44)
 collision_mask = 0
 
@@ -2107,11 +2109,11 @@ billboard = 1
 text = "plateau 4 m"
 font_size = 64
 
-[node name="Ramp20_0" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("1_b2cw1")]
+[node name="Ramp20_0" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("1_jp52v")]
 transform = Transform3D(0.9396926, 0.34202012, 0, -0.34202012, 0.9396926, 0, 0, 0, 1, 25.778595, -0.2556523, -36)
 collision_mask = 0
 
-[node name="Ramp20_1" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("1_b2cw1")]
+[node name="Ramp20_1" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("1_jp52v")]
 transform = Transform3D(0.9396926, 0.34202012, 0, -0.34202012, 0.9396926, 0, 0, 0, 1, 22.019823, 1.1124283, -36)
 collision_mask = 0
 
@@ -2122,31 +2124,31 @@ billboard = 1
 text = "20 deg ramp"
 font_size = 64
 
-[node name="Riser_1" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("11_5d340")]
+[node name="Riser_1" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("11_1hs2y")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 29.5, -0.85, -28)
 collision_mask = 0
 
-[node name="Riser_2" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("11_5d340")]
+[node name="Riser_2" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("11_1hs2y")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 28.5, -0.7, -28)
 collision_mask = 0
 
-[node name="Riser_3" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("11_5d340")]
+[node name="Riser_3" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("11_1hs2y")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 27.5, -0.55, -28)
 collision_mask = 0
 
-[node name="Riser_4" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("11_5d340")]
+[node name="Riser_4" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("11_1hs2y")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 26.5, -0.4, -28)
 collision_mask = 0
 
-[node name="Riser_5" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("11_5d340")]
+[node name="Riser_5" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("11_1hs2y")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 25.5, -0.25, -28)
 collision_mask = 0
 
-[node name="Riser_6" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("11_5d340")]
+[node name="Riser_6" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("11_1hs2y")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 24.5, -0.1, -28)
 collision_mask = 0
 
-[node name="StairLanding" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("1_b2cw1")]
+[node name="StairLanding" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, -0.1, -28)
 collision_mask = 0
 
@@ -2164,7 +2166,7 @@ billboard = 1
 text = "landing 0.9 m"
 font_size = 64
 
-[node name="Ledge_025" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("11_5d340")]
+[node name="Ledge_025" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("11_1hs2y")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 34, -0.75, -22)
 collision_mask = 0
 
@@ -2175,7 +2177,7 @@ billboard = 1
 text = "ledge 0.25 m"
 font_size = 64
 
-[node name="Ledge_035" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("11_5d340")]
+[node name="Ledge_035" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("11_1hs2y")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 34, -0.65, -17)
 collision_mask = 0
 
@@ -2186,7 +2188,7 @@ billboard = 1
 text = "ledge 0.35 m"
 font_size = 64
 
-[node name="Ledge_050" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("11_5d340")]
+[node name="Ledge_050" type="StaticBody3D" parent="Zone_RampsStairs" instance=ExtResource("11_1hs2y")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 34, -0.5, -12)
 collision_mask = 0
 
@@ -2199,7 +2201,7 @@ font_size = 64
 
 [node name="Zone_Gaps" type="Node3D" parent="."]
 
-[node name="Island_0" type="StaticBody3D" parent="Zone_Gaps" instance=ExtResource("1_b2cw1")]
+[node name="Island_0" type="StaticBody3D" parent="Zone_Gaps" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, -1, 32)
 collision_mask = 0
 
@@ -2210,7 +2212,7 @@ billboard = 1
 text = "gap 2 m"
 font_size = 64
 
-[node name="Island_1" type="StaticBody3D" parent="Zone_Gaps" instance=ExtResource("1_b2cw1")]
+[node name="Island_1" type="StaticBody3D" parent="Zone_Gaps" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, -1, 26)
 collision_mask = 0
 
@@ -2221,7 +2223,7 @@ billboard = 1
 text = "gap 3 m"
 font_size = 64
 
-[node name="Island_2" type="StaticBody3D" parent="Zone_Gaps" instance=ExtResource("1_b2cw1")]
+[node name="Island_2" type="StaticBody3D" parent="Zone_Gaps" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, -1, 19)
 collision_mask = 0
 
@@ -2232,7 +2234,7 @@ billboard = 1
 text = "gap 4 m"
 font_size = 64
 
-[node name="Island_3" type="StaticBody3D" parent="Zone_Gaps" instance=ExtResource("1_b2cw1")]
+[node name="Island_3" type="StaticBody3D" parent="Zone_Gaps" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, -1, 11)
 collision_mask = 0
 
@@ -2243,7 +2245,7 @@ billboard = 1
 text = "gap 5 m"
 font_size = 64
 
-[node name="Island_4" type="StaticBody3D" parent="Zone_Gaps" instance=ExtResource("1_b2cw1")]
+[node name="Island_4" type="StaticBody3D" parent="Zone_Gaps" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, -1, 2)
 collision_mask = 0
 
@@ -2254,7 +2256,7 @@ billboard = 1
 text = "gap 6 m"
 font_size = 64
 
-[node name="Island_5" type="StaticBody3D" parent="Zone_Gaps" instance=ExtResource("1_b2cw1")]
+[node name="Island_5" type="StaticBody3D" parent="Zone_Gaps" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, -1, -8)
 collision_mask = 0
 
@@ -2265,7 +2267,7 @@ billboard = 1
 text = "gap 8 m"
 font_size = 64
 
-[node name="Island_6" type="StaticBody3D" parent="Zone_Gaps" instance=ExtResource("1_b2cw1")]
+[node name="Island_6" type="StaticBody3D" parent="Zone_Gaps" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, -1, -20)
 collision_mask = 0
 
@@ -2276,7 +2278,7 @@ billboard = 1
 text = "gap 10 m"
 font_size = 64
 
-[node name="Island_7" type="StaticBody3D" parent="Zone_Gaps" instance=ExtResource("1_b2cw1")]
+[node name="Island_7" type="StaticBody3D" parent="Zone_Gaps" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, -1, -20)
 collision_mask = 0
 
@@ -2287,7 +2289,7 @@ billboard = 1
 text = "gap 12 m"
 font_size = 64
 
-[node name="Island_8" type="StaticBody3D" parent="Zone_Gaps" instance=ExtResource("1_b2cw1")]
+[node name="Island_8" type="StaticBody3D" parent="Zone_Gaps" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, -1, -20)
 collision_mask = 0
 
@@ -2302,24 +2304,24 @@ font_size = 64
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, 0, 32)
 
 [node name="FallResetGaps" type="Area3D" parent="Zone_Gaps" node_paths=PackedStringArray("respawn", "camera_rig")]
-script = ExtResource("12_d7ysu")
+script = ExtResource("12_frnn4")
 respawn = NodePath("../Respawn_Gaps")
 camera_rig = NodePath("../../CameraRig")
 
 [node name="Leg1" type="CollisionShape3D" parent="Zone_Gaps/FallResetGaps"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, -8, 4)
-shape = SubResource("BoxShape3D_cbepn")
+shape = SubResource("BoxShape3D_minib")
 
 [node name="Leg2" type="CollisionShape3D" parent="Zone_Gaps/FallResetGaps"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, -8, -20)
-shape = SubResource("BoxShape3D_frvvs")
+shape = SubResource("BoxShape3D_qxkxu")
 
 [node name="Zone_MovingPlatforms" type="Node3D" parent="."]
 
-[node name="Platform_Linear" type="AnimatableBody3D" parent="Zone_MovingPlatforms" instance=ExtResource("13_1hs2y")]
+[node name="Platform_Linear" type="AnimatableBody3D" parent="Zone_MovingPlatforms" instance=ExtResource("13_4iwxr")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 12)
 collision_mask = 0
-script = ExtResource("14_frnn4")
+script = ExtResource("14_ktu1a")
 travel = Vector3(12, 0, 0)
 
 [node name="Label_Linear" type="Label3D" parent="Zone_MovingPlatforms"]
@@ -2329,10 +2331,10 @@ billboard = 1
 text = "linear 12 m, 3 m/s"
 font_size = 64
 
-[node name="Platform_Circle" type="AnimatableBody3D" parent="Zone_MovingPlatforms" instance=ExtResource("13_1hs2y")]
+[node name="Platform_Circle" type="AnimatableBody3D" parent="Zone_MovingPlatforms" instance=ExtResource("13_4iwxr")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, 26)
 collision_mask = 0
-script = ExtResource("14_frnn4")
+script = ExtResource("14_ktu1a")
 mode = 1
 radius = 6.0
 
@@ -2343,18 +2345,18 @@ billboard = 1
 text = "circle r 6 m, 3 m/s"
 font_size = 64
 
-[node name="LiftHoleBottom" type="StaticBody3D" parent="Zone_MovingPlatforms" instance=ExtResource("1_b2cw1")]
+[node name="LiftHoleBottom" type="StaticBody3D" parent="Zone_MovingPlatforms" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -2, 16)
 collision_mask = 0
 
-[node name="Platform_Vertical" type="AnimatableBody3D" parent="Zone_MovingPlatforms" instance=ExtResource("13_1hs2y")]
+[node name="Platform_Vertical" type="AnimatableBody3D" parent="Zone_MovingPlatforms" instance=ExtResource("13_4iwxr")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, -1, 16)
 collision_mask = 0
-script = ExtResource("14_frnn4")
+script = ExtResource("14_ktu1a")
 travel = Vector3(0, 6, 0)
 speed = 2.0
 
-[node name="LiftLedge" type="StaticBody3D" parent="Zone_MovingPlatforms" instance=ExtResource("1_b2cw1")]
+[node name="LiftLedge" type="StaticBody3D" parent="Zone_MovingPlatforms" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 5, 20)
 collision_mask = 0
 
@@ -2374,42 +2376,42 @@ font_size = 64
 
 [node name="Zone_Conveyors" type="Node3D" parent="."]
 
-[node name="Conveyor_3ms_0" type="StaticBody3D" parent="Zone_Conveyors" instance=ExtResource("1_b2cw1")]
+[node name="Conveyor_3ms_0" type="StaticBody3D" parent="Zone_Conveyors" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -1, 12)
 collision_mask = 0
 constant_linear_velocity = Vector3(3, 0, 0)
 
-[node name="Conveyor_3ms_1" type="StaticBody3D" parent="Zone_Conveyors" instance=ExtResource("1_b2cw1")]
+[node name="Conveyor_3ms_1" type="StaticBody3D" parent="Zone_Conveyors" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -1, 12)
 collision_mask = 0
 constant_linear_velocity = Vector3(3, 0, 0)
 
-[node name="Conveyor_3ms_2" type="StaticBody3D" parent="Zone_Conveyors" instance=ExtResource("1_b2cw1")]
+[node name="Conveyor_3ms_2" type="StaticBody3D" parent="Zone_Conveyors" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, -1, 12)
 collision_mask = 0
 constant_linear_velocity = Vector3(3, 0, 0)
 
-[node name="Conveyor_3ms_3" type="StaticBody3D" parent="Zone_Conveyors" instance=ExtResource("1_b2cw1")]
+[node name="Conveyor_3ms_3" type="StaticBody3D" parent="Zone_Conveyors" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -1, 12)
 collision_mask = 0
 constant_linear_velocity = Vector3(3, 0, 0)
 
-[node name="Conveyor_5ms_0" type="StaticBody3D" parent="Zone_Conveyors" instance=ExtResource("1_b2cw1")]
+[node name="Conveyor_5ms_0" type="StaticBody3D" parent="Zone_Conveyors" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, -1, 20)
 collision_mask = 0
 constant_linear_velocity = Vector3(-5, 0, 0)
 
-[node name="Conveyor_5ms_1" type="StaticBody3D" parent="Zone_Conveyors" instance=ExtResource("1_b2cw1")]
+[node name="Conveyor_5ms_1" type="StaticBody3D" parent="Zone_Conveyors" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -1, 20)
 collision_mask = 0
 constant_linear_velocity = Vector3(-5, 0, 0)
 
-[node name="Conveyor_5ms_2" type="StaticBody3D" parent="Zone_Conveyors" instance=ExtResource("1_b2cw1")]
+[node name="Conveyor_5ms_2" type="StaticBody3D" parent="Zone_Conveyors" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, -1, 20)
 collision_mask = 0
 constant_linear_velocity = Vector3(-5, 0, 0)
 
-[node name="Conveyor_5ms_3" type="StaticBody3D" parent="Zone_Conveyors" instance=ExtResource("1_b2cw1")]
+[node name="Conveyor_5ms_3" type="StaticBody3D" parent="Zone_Conveyors" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, -1, 20)
 collision_mask = 0
 constant_linear_velocity = Vector3(-5, 0, 0)
@@ -2430,43 +2432,43 @@ font_size = 64
 
 [node name="Zone_CameraTests" type="Node3D" parent="."]
 
-[node name="PassageWallNorth_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("2_cew64")]
+[node name="PassageWallNorth_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 0, -3.5)
 collision_mask = 0
 
-[node name="PassageWallSouth_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("2_cew64")]
+[node name="PassageWallSouth_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 0, -0.5)
 collision_mask = 0
 
-[node name="PassageWallNorth_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("2_cew64")]
+[node name="PassageWallNorth_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0, -3.5)
 collision_mask = 0
 
-[node name="PassageWallSouth_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("2_cew64")]
+[node name="PassageWallSouth_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 0, -0.5)
 collision_mask = 0
 
-[node name="PassageWallNorth_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("2_cew64")]
+[node name="PassageWallNorth_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0, -3.5)
 collision_mask = 0
 
-[node name="PassageWallSouth_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("2_cew64")]
+[node name="PassageWallSouth_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 0, -0.5)
 collision_mask = 0
 
-[node name="PassageWallNorth_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("2_cew64")]
+[node name="PassageWallNorth_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, -3.5)
 collision_mask = 0
 
-[node name="PassageWallSouth_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("2_cew64")]
+[node name="PassageWallSouth_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("2_dbbyd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, -0.5)
 collision_mask = 0
 
-[node name="PassageCeiling_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("1_b2cw1")]
+[node name="PassageCeiling_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 3, -2)
 collision_mask = 0
 
-[node name="PassageCeiling_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("1_b2cw1")]
+[node name="PassageCeiling_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("1_jp52v")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 3, -2)
 collision_mask = 0
 
@@ -2484,195 +2486,195 @@ billboard = 1
 text = "ceiling 3 m"
 font_size = 64
 
-[node name="Pillar_0_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_0_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 10)
 collision_mask = 0
 
-[node name="Pillar_0_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_0_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, 10)
 collision_mask = 0
 
-[node name="Pillar_0_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_0_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 10)
 collision_mask = 0
 
-[node name="Pillar_0_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_0_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 10)
 collision_mask = 0
 
-[node name="Pillar_0_4" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_0_4" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 10)
 collision_mask = 0
 
-[node name="Pillar_0_5" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_0_5" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 10)
 collision_mask = 0
 
-[node name="Pillar_1_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_1_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 13)
 collision_mask = 0
 
-[node name="Pillar_1_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_1_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 13)
 collision_mask = 0
 
-[node name="Pillar_1_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_1_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 13)
 collision_mask = 0
 
-[node name="Pillar_1_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_1_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 13)
 collision_mask = 0
 
-[node name="Pillar_1_4" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_1_4" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 13)
 collision_mask = 0
 
-[node name="Pillar_1_5" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_1_5" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 13)
 collision_mask = 0
 
-[node name="Pillar_2_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_2_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 16)
 collision_mask = 0
 
-[node name="Pillar_2_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_2_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, 16)
 collision_mask = 0
 
-[node name="Pillar_2_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_2_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 16)
 collision_mask = 0
 
-[node name="Pillar_2_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_2_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 16)
 collision_mask = 0
 
-[node name="Pillar_2_4" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_2_4" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 16)
 collision_mask = 0
 
-[node name="Pillar_2_5" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_2_5" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 16)
 collision_mask = 0
 
-[node name="Pillar_3_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_3_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 19)
 collision_mask = 0
 
-[node name="Pillar_3_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_3_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 19)
 collision_mask = 0
 
-[node name="Pillar_3_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_3_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 19)
 collision_mask = 0
 
-[node name="Pillar_3_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_3_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 19)
 collision_mask = 0
 
-[node name="Pillar_3_4" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_3_4" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 19)
 collision_mask = 0
 
-[node name="Pillar_3_5" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_3_5" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 19)
 collision_mask = 0
 
-[node name="Pillar_4_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_4_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 22)
 collision_mask = 0
 
-[node name="Pillar_4_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_4_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, 22)
 collision_mask = 0
 
-[node name="Pillar_4_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_4_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 22)
 collision_mask = 0
 
-[node name="Pillar_4_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_4_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 22)
 collision_mask = 0
 
-[node name="Pillar_4_4" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_4_4" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 22)
 collision_mask = 0
 
-[node name="Pillar_4_5" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_4_5" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 22)
 collision_mask = 0
 
-[node name="Pillar_5_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_5_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 25)
 collision_mask = 0
 
-[node name="Pillar_5_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_5_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 25)
 collision_mask = 0
 
-[node name="Pillar_5_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_5_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 25)
 collision_mask = 0
 
-[node name="Pillar_5_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_5_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 25)
 collision_mask = 0
 
-[node name="Pillar_5_4" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_5_4" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 25)
 collision_mask = 0
 
-[node name="Pillar_5_5" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_5_5" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 25)
 collision_mask = 0
 
-[node name="Pillar_6_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_6_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, 28)
 collision_mask = 0
 
-[node name="Pillar_6_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_6_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, 28)
 collision_mask = 0
 
-[node name="Pillar_6_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_6_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 28)
 collision_mask = 0
 
-[node name="Pillar_6_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_6_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 28)
 collision_mask = 0
 
-[node name="Pillar_6_4" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_6_4" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 28)
 collision_mask = 0
 
-[node name="Pillar_6_5" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_6_5" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 28)
 collision_mask = 0
 
-[node name="Pillar_7_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_7_0" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 31)
 collision_mask = 0
 
-[node name="Pillar_7_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_7_1" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 31)
 collision_mask = 0
 
-[node name="Pillar_7_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_7_2" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 31)
 collision_mask = 0
 
-[node name="Pillar_7_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_7_3" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 31)
 collision_mask = 0
 
-[node name="Pillar_7_4" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_7_4" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 31)
 collision_mask = 0
 
-[node name="Pillar_7_5" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_xo2l3")]
+[node name="Pillar_7_5" type="StaticBody3D" parent="Zone_CameraTests" instance=ExtResource("9_5d340")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 31)
 collision_mask = 0
 
@@ -2685,21 +2687,24 @@ font_size = 64
 
 [node name="FallResetHall" type="Area3D" parent="." node_paths=PackedStringArray("respawn", "camera_rig")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -30, -8)
-script = ExtResource("12_d7ysu")
+script = ExtResource("12_frnn4")
 respawn = NodePath("../Spawn")
 camera_rig = NodePath("../CameraRig")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="FallResetHall"]
-shape = SubResource("BoxShape3D_gggp8")
+shape = SubResource("BoxShape3D_6g4d3")
 
-[node name="EventLog" type="CanvasLayer" parent="." instance=ExtResource("15_4iwxr")]
+[node name="EventLog" type="CanvasLayer" parent="." instance=ExtResource("15_2r725")]
 layer = 100
-script = ExtResource("16_ktu1a")
+script = ExtResource("16_cmsii")
 
-[node name="MetricsOverlay" type="CanvasLayer" parent="." instance=ExtResource("17_2r725")]
+[node name="MetricsOverlay" type="CanvasLayer" parent="." instance=ExtResource("17_sj3xs")]
 layer = 101
-script = ExtResource("18_cmsii")
+script = ExtResource("18_cjxh4")
 
-[node name="TuningPanel" type="CanvasLayer" parent="." instance=ExtResource("19_sj3xs")]
+[node name="TuningPanel" type="CanvasLayer" parent="." instance=ExtResource("19_nlb7f")]
 layer = 102
-script = ExtResource("20_cjxh4")
+script = ExtResource("20_jarg8")
+
+[node name="HitPuffs" type="Node" parent="." instance=ExtResource("21_ynbot")]
+script = ExtResource("22_cbepn")

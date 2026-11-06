@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_puff"]
+shading_mode = 0
+vertex_color_use_as_albedo = true
+
+[sub_resource type="SphereMesh" id="SphereMesh_puff"]
+material = SubResource("StandardMaterial3D_puff")
+radius = 0.12
+height = 0.24
+radial_segments = 6
+rings = 3
+
+[node name="HitPuff" type="CPUParticles3D"]
+emitting = false
+amount = 14
+lifetime = 0.45
+one_shot = true
+explosiveness = 1.0
+mesh = SubResource("SphereMesh_puff")
+direction = Vector3(0, 1, 0)
+spread = 70.0
+gravity = Vector3(0, -4, 0)
+initial_velocity_min = 2.0
+initial_velocity_max = 4.0
+scale_amount_min = 0.6
+scale_amount_max = 1.2
+color = Color(1, 1, 1, 1)

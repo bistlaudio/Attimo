@@ -128,6 +128,8 @@ Keys are stored as physical keys (layout independent) with device -1 (all device
 
 The `EventBus` autoload carries gameplay **facts** (D-10, D-11). Gameplay code only emits typed fact signals. It never calls audio, particles, tweens, time scale or camera effects. Feedback systems connect to the bus and react.
 
+Exception: placeholder hit puffs in `scripts/debug` + `scenes/debug/hit_puff.tscn`, driven only by EventBus facts; real juice stays Phase 3+. `test_feedback_guard` allowlists exactly that one scene and still fails on any other particle node or on a gameplay script that names the puff.
+
 | Signal | Payload | Emitted by |
 |---|---|---|
 | `jumped` | `position: Vector3` | `Jump.enter`, for ground jumps (Jump 1, Jump 2 and Jump 3, the salto). There is no air jump. |
