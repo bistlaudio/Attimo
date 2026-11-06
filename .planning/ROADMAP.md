@@ -176,7 +176,7 @@ Plans:
   2. Each module opens areas the player has already seen locked (lock before key), and both teaching rooms sit on the level route.
   3. Every puzzle can be reset, and no sequence of player actions leaves the player soft-locked.
   4. The pause menu offers resume, restart from checkpoint and quit. The mouse is released while paused and recaptured on resume.
-  5. The settings menu changes mouse sensitivity and invert-Y with immediate effect and stores the volume. All values persist after a restart.
+  5. The settings menu changes mouse sensitivity and invert-Y with immediate effect, offers a VSync on/off option and stores the volume. All values persist after a restart.
 **Plans**: TBD
 **UI hint**: yes
 **Notes**: Gates use the measured movement and pull metrics plus a margin. Do a sequence-break pass. Keep the grid compatible with the steampunk kit planned for Phase 10, so pieces swap in place. The volume value drives the audio buses and becomes audible in Phase 14.
