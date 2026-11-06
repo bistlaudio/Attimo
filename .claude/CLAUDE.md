@@ -36,11 +36,11 @@ Ein 3D-Third-Person-Platformer als Uni-Prototyp (vertikaler Slice). Die Hauptfig
 
 | Technology | Version | Purpose | Why |
 |------------|---------|---------|-----|
-| `CharacterBody3D` + own `PlayerController` script | built-in | Walk, sprint, jump, dash, wall-run | The only sensible base for tuned platformer feel: you own acceleration, gravity, coyote time, jump buffer, variable jump height. Do NOT use `RigidBody3D` or an addon controller; the feel IS the product. |
-| Hand-rolled node-based state machine (`State` nodes under a `StateMachine` node: Idle, Run, Sprint, Jump, Fall, Dash, WallRun, Aim) | n/a | Movement states | Small (~100 lines), debuggable, trivial for Claude to extend per phase when the wall-run/modules land. An addon is overkill for ~6 movement states. |
+| `CharacterBody3D` + own `PlayerController` script | built-in | Walk, jump chain, dash, dash hop, wall-run | The only sensible base for tuned platformer feel: you own acceleration, gravity, coyote time, jump buffer, variable jump height. Do NOT use `RigidBody3D` or an addon controller; the feel IS the product. |
+| Hand-rolled node-based state machine (`State` nodes under a `StateMachine` node: Idle, Run, Jump, LongJump, Fall, Dash, WallRun, Aim) | n/a | Movement states | Small (~100 lines), debuggable, trivial for Claude to extend per phase when the wall-run/modules land. An addon is overkill for ~6 movement states. |
 | Physics interpolation (Project Settings > Physics > Common > Physics Interpolation = on) | built-in (3D since 4.4) | Smooth visuals at 60 Hz physics | Removes jitter between physics ticks so the camera and character look smooth at any monitor refresh rate. Move camera in `_process`, physics in `_physics_process`. MEDIUM (verify no artefacts with the SpringArm camera in the first spike). |
 - `motion_mode = GROUNDED`, `floor_snap_length` ~0.3-0.5, `floor_max_angle` ~50 degrees, `floor_stop_on_slope = true`.
-- Horizontal speed via `move_toward`/exponential smoothing with separate ground and air acceleration; sprint is a speed multiplier with its own accel curve.
+- Horizontal speed via `move_toward`/exponential smoothing with separate ground and air acceleration; there is one run speed (no sprint); extra speed comes from the dash and the dash-hop long jump.
 - Coyote time ~0.1 s, jump buffer ~0.1-0.15 s, variable jump height (cut velocity on release), higher gravity when falling (fall multiplier 1.5-2x), terminal velocity clamp.
 - Dash = short velocity override with a cooldown, preserves air control on exit.
 - Tune against a test level with fixed-size reference geometry (see grid in Asset Pipeline) so jump height/distance map onto kit pieces.

@@ -16,7 +16,7 @@ Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprungkette, Dash und Dash-Hop m
 
 ### Active
 
-- [ ] Third-Person-Basis-Movement: Laufen, Sprint, Sprung, Dash, evtl. Wall-Run, mit Fokus auf flüssiges, schnelles Gefühl (Coyote-Time, Jump-Buffering, weiche Beschleunigung)
+- [ ] Third-Person-Basis-Movement: Laufen, Sprungkette, Dash, Dash-Hop, evtl. Wall-Run, mit Fokus auf flüssiges, schnelles Gefühl (Coyote-Time, Jump-Buffering, weiche Beschleunigung)
 - [ ] Over-the-Shoulder-Kamera; Taste halten = Zielmodus mit Fadenkreuz
 - [ ] Interagierbares leuchtet türkis (Energiekerne), leichte Zielhilfe
 - [ ] Hand-Modul-System als Rahmen: Module lassen sich leicht hinzufügen und tauschen; jedes Modul hat klare Eingabe, klaren Effekt und eine Level-Situation, in der es gebraucht wird

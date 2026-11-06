@@ -1,7 +1,7 @@
 # Requirements: Attimo
 
 **Defined:** 2026-11-02
-**Core Value:** Flüssiges, schnelles Bewegungsgefühl — Laufen, Sprint, Sprung und Dash fühlen sich smooth an, und die Hand verbindet sich nahtlos damit.
+**Core Value:** Flüssiges, schnelles Bewegungsgefühl — Laufen, Sprungkette, Dash und Dash-Hop fühlen sich smooth an, und die Hand verbindet sich nahtlos damit.
 
 ## v1 Requirements
 
