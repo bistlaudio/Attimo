@@ -129,7 +129,7 @@ func _scenario_tick_rate(tree: SceneTree, check: Callable) -> void:
 		_press_jump()
 		var held: Dictionary = await _record_jump(tree, player)
 		_release_jump()
-		var tolerance: float = config.gravity() / float(tps * tps) / 8.0 + 0.03
+		var tolerance: float = config.rise_gravity / float(tps * tps) / 8.0 + 0.03
 		check.call(absf(held.apex - config.jump_height) <= tolerance, "(b) at %d TPS the held apex %.3f m is within %.3f of jump_height %.2f" % [tps, held.apex, tolerance, config.jump_height])
 		await _free_all(tree, nodes)
 	Engine.physics_ticks_per_second = 60

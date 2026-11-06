@@ -30,7 +30,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 ### Group A: Prototyp (Phases 1-8)
 
 - [x] **Phase 1: Foundation & Prototype Character** - Pinned Godot project, conventions, repo hygiene, Mannequin_Medium animating in a Prototype Bits test scene, and the gameplay fact bus (completed 2026-11-04)
-- [ ] **Phase 2: Movement Core & Follow Camera** - Run, sprint, variable jump, double jump, ground and air dash, platforms, and a jitter-free mouse-look camera, signed off without juice
+- [ ] **Phase 2: Movement Core & Follow Camera** - Run, variable jump with a Jump 1-2-3 chain, ground and air dash, the dash-hop long jump, platforms, and a jitter-free mouse-look camera, signed off without juice
 - [ ] **Phase 3: Animated Mannequin & Aim Mode** - The Mannequin animates with every movement state from kit clips, plus aim mode with crosshair
 - [ ] **Phase 4: Fernauslöser & Mechanism Kit** - Hand module framework, turquoise highlight with aim assist, Module 1 remote-trigger beam, and greybox switches, valves, gears, conveyors, doors and logic
 - [ ] **Phase 5: Pull/Push & Module Unlocks** - Module 2 with a momentum test room, module pickup, hand poses from kit clips, and a teaching room per module
@@ -75,14 +75,14 @@ Plans:
 
 ### Phase 2: Movement Core & Follow Camera
 **Group:** A (Prototyp)
-**Goal:** As a player, I want to run, sprint, jump, double jump and dash with a smooth camera, so that moving feels fluid and fast.
+**Goal:** As a player, I want to run, jump (Jump 1-2-3 chain), dash and dash hop with a smooth camera, so that moving feels fluid and fast.
 **Mode:** mvp
 **Depends on**: Phase 1
 **Requirements**: MOVE-01, MOVE-02, MOVE-03, MOVE-04, MOVE-05, MOVE-06, MOVE-07, MOVE-08, MOVE-10, CAM-01, CAM-03, FEEL-06
 **Success Criteria** (what must be TRUE):
-  1. In a movement gym built from Prototype Bits, the player steers the Mannequin relative to a third-person mouse-look follow camera centered behind the character (shoulder offset only in aim mode, Phase 3), with smooth acceleration and deceleration, and can sprint. The camera follows without jitter at 10 TPS and at 144 Hz, and never clips through walls. Mouse sensitivity and invert-Y can be changed.
-  2. Tapping jump gives a lower jump than holding it, and the fall is heavier than the rise. A jump pressed just after leaving a ledge, or just before landing, still fires. Exactly one double jump is available per airtime.
-  3. The player can dash on the ground and once in the air. The air dash refills on landing, a dash can flow straight into a jump, and a dash never tunnels through walls.
+  1. In a movement gym built from Prototype Bits, the player steers the Mannequin relative to a third-person mouse-look follow camera centered behind the character (shoulder offset only in aim mode, Phase 3), with smooth acceleration and deceleration, at one tunable run speed. The camera follows without jitter at 10 TPS and at 144 Hz, and never clips through walls. Mouse sensitivity and invert-Y can be changed.
+  2. Tapping jump gives a lower jump than holding it, and the fall is heavier than the rise. A jump pressed just after leaving a ledge, or just before landing, still fires. Ground jumps chain Jump 1 -> Jump 2 -> Jump 3 (the highest, a salto) inside a landing window, and there is no air jump.
+  3. The player can dash on the ground and once in the air. The air dash refills on landing, a dash can flow straight into a jump (a long jump whose speed stacks over three stages on clean repeats), and a dash never tunnels through walls.
   4. Moving platforms and conveyors carry the player, and the player keeps their momentum when leaving them. Gym slopes and stairs never make the player stick or launch.
   5. All movement values are live-tunable in one resource. A movement-metrics table (jump height/distance, dash distance) is recorded, and the measured jump and dash input latency meets the 66 ms target (hard limit 100 ms). Movement is signed off without any juice.
 **Plans:** 14/14 plans executed
@@ -111,7 +111,7 @@ Plans:
 **Depends on**: Phase 2
 **Requirements**: MOVE-09, MOVE-11, CAM-02
 **Success Criteria** (what must be TRUE):
-  1. The Mannequin's animation follows every movement state, using only Rig_Medium clips, cuts, blends and procedural rotation/scale. This covers idle, run, sprint with lean, jump start/air/land, the double-jump flip, the ground dash and the held air-dash pose.
+  1. The Mannequin's animation follows every movement state, using only Rig_Medium clips, cuts, blends and procedural rotation/scale. This covers idle, run, jump start/air/land, the Jump 3 salto flip, the long jump, the ground dash and the held air-dash pose.
   2. Every movement verb in the game is backed by a kit clip or a documented clip composition. Verbs without one, such as wall-run and ledge grab, stay out.
   3. Holding the aim button blends into an aim mode with a crosshair, a tighter FOV and a shoulder offset. In aim mode the Mannequin strafes and walks backwards using kit clips.
   4. The animation changes on the same frame as the movement state, and no clip delays control: there is no landing lock and no anticipation longer than 2 frames. The Phase 2 latency numbers still hold.
@@ -232,8 +232,8 @@ Plans:
 **Requirements**: FEEL-02, FEEL-04, FEEL-05, FEEL-08
 **Success Criteria** (what must be TRUE):
   1. Feedback cues live as data, one per action, each with an empty SFX slot. They react to the gameplay facts from Phase 1, with no changes to gameplay code.
-  2. Jump, landing (scaled by fall speed), double jump, dash and sprint each show visible feedback in cream or amber, never turquoise. The feedback is squash/stretch, dust, a steam ring or a lean, as fits the move.
-  3. Sprint, dashes and hard landings produce FOV kicks and bounded camera shake without roll, and these hold up in the level's tight rooms. Damage taken and hits on enemies and the boss trigger a short hit-stop that freezes the world without stutter.
+  2. Jump, landing (scaled by fall speed), the Jump 3 salto, dash and long jump each show visible feedback in cream or amber, never turquoise. The feedback is squash/stretch, dust, a steam ring or a lean, as fits the move.
+  3. Dashes, long jumps and hard landings produce FOV kicks and bounded camera shake without roll, and these hold up in the level's tight rooms. Damage taken and hits on enemies and the boss trigger a short hit-stop that freezes the world without stutter.
   4. Juice runs at one fixed, strong level, tuned per cue. There are no juice presets, sliders or toggles. No feedback delays control or changes movement timing.
   5. No effect causes a hitch or jitter, even the first time it fires, at 10 TPS and at 144 Hz.
 **Plans**: TBD

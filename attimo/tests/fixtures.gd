@@ -57,7 +57,7 @@ static func will_land_within(player: PlayerController, seconds: float) -> bool:
 	if player.vertical_speed > 0.0 or seconds <= 0.0:
 		return false
 	var config: MovementConfig = player.config
-	var drop: float = absf(player.vertical_speed) * seconds + 0.5 * config.gravity() * config.fall_multiplier * seconds * seconds
+	var drop: float = absf(player.vertical_speed) * seconds + 0.5 * config.fall_gravity() * seconds * seconds
 	var motion: Vector3 = player.move_velocity * seconds + Vector3.DOWN * drop
 	var hit: KinematicCollision3D = KinematicCollision3D.new()
 	if not player.test_move(player.global_transform, motion, hit):

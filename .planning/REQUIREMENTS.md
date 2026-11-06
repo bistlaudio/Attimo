@@ -19,14 +19,14 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 ### Movement
 
 - [x] **MOVE-01**: Player can run with acceleration/deceleration curves and camera-relative steering
-- [x] **MOVE-02**: Player can sprint
+- [x] **MOVE-02**: Player runs at one tunable run speed (no separate sprint); extra speed comes from the dash and the dash-hop long jump
 - [x] **MOVE-03**: Player can jump with variable height (release early = lower jump), with heavier fall gravity
 - [x] **MOVE-04**: Coyote time and jump buffering make jumps forgiving
-- [x] **MOVE-05**: Player can double jump once per airtime
+- [x] **MOVE-05**: Ground jumps chain Jump 1 -> Jump 2 -> Jump 3 (salto, highest) inside a landing window; there is no air jump, glide, dive or ground-pound
 - [x] **MOVE-06**: Player can dash on the ground
-- [x] **MOVE-07**: Player can dash once in the air (resets on landing), and a dash can flow into a jump
+- [x] **MOVE-07**: Player can dash once in the air (resets on landing), and a dash can flow into a jump (dash + jump = long jump; clean repeats on landing stack its speed over three stages)
 - [x] **MOVE-08**: Player keeps momentum from moving platforms and conveyors, and handles slopes and steps without sticking or launching
-- [ ] **MOVE-09**: Player animations follow movement state, built only from the KayKit Rig_Medium kit (clips, cuts, blends, playback speed, procedural root/visual rotation and scale): idle, run (Running_A), sprint (Running_B faster + lean), jump (Jump_Start → Jump_Idle → Jump_Land), double jump (Jump_Start re-cut + procedural flip), ground/air dash (Dodge_Forward, held pose in air), aim-mode strafe (Running_Strafe_L/R, Walking_Backwards)
+- [ ] **MOVE-09**: Player animations follow movement state, built only from the KayKit Rig_Medium kit (clips, cuts, blends, playback speed, procedural root/visual rotation and scale): idle, run (Running_A), jump (Jump_Start → Jump_Idle → Jump_Land), Jump 3 salto (Jump_Start re-cut + procedural flip), ground/air dash (Dodge_Forward, held pose in air), aim-mode strafe (Running_Strafe_L/R, Walking_Backwards)
 - [ ] **MOVE-11**: Movement verbs are limited to what the animation kit supports; a new verb needs a kit clip or a clip composition before it is added
 - [x] **MOVE-10**: Movement values live in a tunable resource and are documented in a movement-metrics table (jump height/distance, dash distance)
 
@@ -83,7 +83,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 ### Feel & Juice
 
 - [x] **FEEL-01**: Feedback hooks: gameplay events are broadcast so juice can be layered on without touching gameplay code
-- [ ] **FEEL-02**: Every movement action has visual/kinetic feedback (landing, jump, double jump, dash, sprint)
+- [ ] **FEEL-02**: Every movement action has visual/kinetic feedback (landing, jump, Jump 3 salto, dash, long jump)
 - [ ] **FEEL-03**: Every hand action and mechanism activation has visual feedback (beam, impact, pull, push, activation)
 - [ ] **FEEL-04**: Camera feedback (trauma-based shake, FOV kick) and hit-stop on impacts
 - [ ] **FEEL-05**: Juice is tuned to one fixed, strong level (no presets or toggles)

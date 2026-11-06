@@ -14,12 +14,12 @@ Every number comes from the real Player driven headless with scripted per-tick i
 
 | Verb | Height (m) | Distance (m) | Airtime (s) | Rise to apex (s) | Entry speed (m/s) | Note |
 |---|---|---|---|---|---|---|
-| Tap jump | 0.80 | 0.00 | 0.42 | 0.22 | 0.00 | standing, press and release on one tick |
-| Tap jump (run) | 0.80 | 3.68 | 0.42 | 0.22 | 8.50 | at run speed |
-| Full jump (standing) | 2.00 | 0.00 | 0.67 | 0.37 | 0.00 | held to the apex |
-| Full jump (run) | 2.00 | 5.81 | 0.67 | 0.37 | 8.50 | held to the apex, at run speed |
-| Jump 2 (chain) | 2.60 | 6.52 | 0.75 | 0.42 | 8.50 | pressed on the landing tick of Jump 1 (Jump 1 for comparison: 2.00 m, 5.81 m) |
-| Jump 3 (salto) | 3.40 | 7.51 | 0.87 | 0.47 | 8.50 | pressed on the landing tick of Jump 2, the highest ground jump; a fourth jump inside the window is Jump 1 again |
+| Tap jump | 0.80 | 0.00 | 0.40 | 0.20 | 0.00 | standing, press and release on one tick |
+| Tap jump (run) | 0.80 | 3.54 | 0.40 | 0.20 | 8.50 | at run speed |
+| Full jump (standing) | 2.00 | 0.00 | 0.63 | 0.33 | 0.00 | held to the apex |
+| Full jump (run) | 2.00 | 5.52 | 0.63 | 0.33 | 8.50 | held to the apex, at run speed |
+| Jump 2 (chain) | 2.60 | 6.37 | 0.73 | 0.37 | 8.50 | pressed on the landing tick of Jump 1 (Jump 1 for comparison: 2.00 m, 5.52 m) |
+| Jump 3 (salto) | 3.40 | 7.23 | 0.83 | 0.43 | 8.50 | pressed on the landing tick of Jump 2, the highest ground jump; a fourth jump inside the window is Jump 1 again |
 
 ## Air options and dash
 
@@ -34,11 +34,11 @@ The long jump is the dash hop: a jump during a ground dash or within dash_jump_g
 
 | Verb | Stage | Height (m) | Distance (m) | Take-off speed (m/s) | Airtime (s) | Note |
 |---|---|---|---|---|---|---|
-| Long jump stage 1 | 1 | 2.00 | 9.57 | 14.00 | 0.67 | dash + jump on one tick from a run, long_jump_speed_1 14.0 m/s |
-| Long jump stage 2 | 2 | 2.50 | 12.00 | 16.00 | 0.73 | dash + jump on the landing tick of stage 1, long_jump_speed_2 16.0 m/s |
-| Long jump stage 3 | 3 | 3.00 | 14.70 | 18.00 | 0.80 | dash + jump on the landing tick of stage 2, long_jump_speed_3 18.0 m/s |
-| Long jump stage 3 (repeat) | 3 | 3.00 | 14.70 | 18.00 | 0.80 | a further clean hop stays at stage 3 |
-| Long jump (last grace tick) | 1 | 2.00 | 9.57 | 14.00 | 0.67 | jump in the last tick of dash_jump_grace, stage 1 row applies |
+| Long jump stage 1 | 1 | 2.00 | 9.10 | 14.00 | 0.63 | dash + jump on one tick from a run, long_jump_speed_1 14.0 m/s |
+| Long jump stage 2 | 2 | 2.50 | 11.73 | 16.00 | 0.72 | dash + jump on the landing tick of stage 1, long_jump_speed_2 16.0 m/s |
+| Long jump stage 3 | 3 | 3.00 | 14.40 | 18.00 | 0.78 | dash + jump on the landing tick of stage 2, long_jump_speed_3 18.0 m/s |
+| Long jump stage 3 (repeat) | 3 | 3.00 | 14.40 | 18.00 | 0.78 | a further clean hop stays at stage 3 |
+| Long jump (last grace tick) | 1 | 2.00 | 9.10 | 14.00 | 0.63 | jump in the last tick of dash_jump_grace, stage 1 row applies |
 
 ## Timing windows
 
@@ -71,10 +71,10 @@ Display, compositor and USB latency are outside the software measurement (D-22).
 
 | Action | Accumulated input on: median (ms) | on: max (ms) | off: median (ms) | off: max (ms) | Verdict |
 |---|---|---|---|---|---|
-| Latency jump 60 TPS | 13.94 | 20.48 | 13.13 | 20.57 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency jump 120 TPS | 7.00 | 15.68 | 6.45 | 7.77 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 60 TPS | 12.24 | 14.05 | 12.19 | 20.86 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 120 TPS | 6.31 | 11.78 | 6.38 | 14.40 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 60 TPS | 14.06 | 20.05 | 13.41 | 20.11 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 120 TPS | 6.48 | 14.38 | 6.67 | 14.46 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 60 TPS | 15.83 | 20.84 | 16.48 | 21.15 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 120 TPS | 6.53 | 13.39 | 6.74 | 13.63 | Target met (median <= 66 ms, max <= 100 ms) |
 
 ## Grid cross-check
 
@@ -82,12 +82,12 @@ How the numbers map onto the 1 m grid and the 4 m kit pieces. The widest gap ass
 
 | Verb | Distance (m) | Widest gap (1 m grid) | 4 m modules | Tallest ledge (m) |
 |---|---|---|---|---|
-| Run jump | 5.81 | 5 | 1.45 | 2.0 |
-| Jump 2 chain jump | 6.52 | 6 | 1.63 | 2.6 |
-| Jump 3 salto | 7.51 | 7 | 1.88 | 3.4 |
-| Long jump stage 1 gap | 9.57 | 9 | 2.39 | 2.0 |
-| Long jump stage 2 gap | 12.00 | 12 | 3.00 | 2.5 |
-| Long jump stage 3 gap | 14.70 | 14 | 3.68 | 3.0 |
+| Run jump | 5.52 | 5 | 1.38 | 2.0 |
+| Jump 2 chain jump | 6.37 | 6 | 1.59 | 2.6 |
+| Jump 3 salto | 7.23 | 7 | 1.81 | 3.4 |
+| Long jump stage 1 gap | 9.10 | 9 | 2.28 | 2.0 |
+| Long jump stage 2 gap | 11.73 | 11 | 2.93 | 2.5 |
+| Long jump stage 3 gap | 14.40 | 14 | 3.60 | 3.0 |
 
 ## Config snapshot
 
@@ -100,32 +100,31 @@ Every MovementConfig float of res://resources/player/movement_default.tres at ge
 | `ground_decel` | 55.000 |
 | `turn_decel` | 90.000 |
 | `turn_rate` | 14.000 |
-| `air_accel` | 35.000 |
+| `air_accel` | 45.000 |
 | `air_decel` | 0.000 |
-| `reference_jump_height` | 2.500 |
-| `reference_apex_time` | 0.420 |
+| `rise_gravity` | 34.000 |
+| `fall_multiplier` | 1.300 |
+| `terminal_speed` | 40.000 |
 | `jump_height` | 2.000 |
 | `jump_2_height` | 2.600 |
 | `jump_3_height` | 3.400 |
 | `jump_min_height` | 0.800 |
-| `fall_multiplier` | 1.700 |
-| `terminal_speed` | 40.000 |
-| `coyote_time` | 0.100 |
-| `jump_buffer_time` | 0.120 |
 | `dash_speed` | 22.000 |
 | `dash_time` | 0.180 |
 | `dash_cooldown` | 0.400 |
 | `dash_exit_speed` | 12.000 |
 | `air_dash_gravity_scale` | 0.000 |
-| `landing_window` | 0.350 |
-| `dash_jump_grace` | 0.150 |
-| `combo_reset_speed` | 0.500 |
 | `long_jump_height_1` | 2.000 |
 | `long_jump_height_2` | 2.500 |
 | `long_jump_height_3` | 3.000 |
 | `long_jump_speed_1` | 14.000 |
 | `long_jump_speed_2` | 16.000 |
 | `long_jump_speed_3` | 18.000 |
+| `coyote_time` | 0.100 |
+| `jump_buffer_time` | 0.120 |
+| `landing_window` | 0.350 |
+| `dash_jump_grace` | 0.150 |
+| `combo_reset_speed` | 0.500 |
 | `snap_min` | 0.300 |
 | `snap_max` | 0.500 |
 | `floor_max_angle_deg` | 50.000 |

@@ -256,9 +256,10 @@ func _tick_combo(delta: float) -> void:
 
 func _integrate(delta: float) -> void:
 	floor_max_angle = deg_to_rad(config.floor_max_angle_deg)
-	var g: float = config.gravity() * gravity_scale
+	var g: float = config.rise_gravity
 	if vertical_speed < 0.0:
-		g *= config.fall_multiplier
+		g = config.fall_gravity()
+	g *= gravity_scale
 	# Half-step gravity around the move keeps the jump height tick-rate independent.
 	vertical_speed = maxf(vertical_speed - g * delta * 0.5, -config.terminal_speed)
 	velocity = Vector3(move_velocity.x, vertical_speed, move_velocity.z)
