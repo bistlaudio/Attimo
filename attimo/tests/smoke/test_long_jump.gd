@@ -30,6 +30,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_chain_new_after_stage_three(tree, check)
 	await _scenario_salto_then_one_air_dash(tree, check)
 	await _scenario_plain_long_jump(tree, check)
+	await _scenario_no_air_dash_after_long_jump(tree, check)
 	await _scenario_hop_stack(tree, check)
 	await _scenario_stack_misses(tree, check)
 	await _scenario_grace(tree, check)
@@ -328,6 +329,36 @@ func _scenario_plain_long_jump(tree: SceneTree, check: Callable) -> void:
 	var distance: float = _flat_distance(takeoff, flight.land)
 	check.call(distance > normal_distance + 2.0, "(l1) the long jump (%.2f m) is farther than a normal running jump (%.2f m)" % [distance, normal_distance])
 	check.call(absf(flight.apex - config.long_jump_height_1) < 0.15, "(l1) the apex %.3f m is within 0.15 of long_jump_height_1 %.2f" % [flight.apex, config.long_jump_height_1])
+	await _end(player)
+
+
+# U5 follow-up: after a dash hop long jump there is no air dash; landing refills it.
+func _scenario_no_air_dash_after_long_jump(tree: SceneTree, check: Callable) -> void:
+	var player: PlayerController = await _begin(tree)
+	# Cooldown 0 so only the per-airtime flag can refuse the dash.
+	player.config = player.config.duplicate() as MovementConfig
+	player.config.dash_cooldown = 0.0
+	await _run_up(tree, player)
+	var longs_before: int = _longs.size()
+	Fixtures.send_action_event(&"dash", true)
+	Fixtures.send_action_event(&"jump", true)
+	Fixtures.send_action_event(&"dash", false)
+	var started: int = await Fixtures.wait_until(tree, func() -> bool: return _longs.size() > longs_before, 12)
+	check.call(started >= 0, "(l9) the dash hop starts a long jump")
+	if started < 0:
+		Fixtures.send_action_event(&"jump", false)
+		await _end(player)
+		return
+	check.call(not player.air_dash_available, "(l9) the air dash is spent on take-off")
+	var air_before: int = _air_dashes
+	Fixtures.send_action_event(&"dash", true)
+	Fixtures.send_action_event(&"dash", false)
+	await Fixtures.wait_physics(tree, 3)
+	check.call(_air_dashes == air_before, "(l9) a dash press in the air after a long jump starts no air dash (air dashes %d)" % _air_dashes)
+	check.call(player.state_machine.current.name != &"Dash", "(l9) the state is not Dash (state %s)" % player.state_machine.current.name)
+	await _fly(tree, player, true)
+	await Fixtures.wait_physics(tree, 2)
+	check.call(player.air_dash_available, "(l9) landing refills the air dash")
 	await _end(player)
 
 

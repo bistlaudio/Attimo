@@ -5,12 +5,14 @@ extends AirState
 ## row (Pitfall 12). The stage comes from actor.advance_long_jump_stage(): 1 for the first hop, one more for each
 ## clean repeat (a ground dash started inside the landing window after touchdown, then a jump), then 3 again.
 ## Its height (config.long_jump_height) and speed rows size the arc. The ground-jump chain is reset. The release cut
-## applies like for every jump (D-04). Emits the long_jumped fact on enter.
+## applies like for every jump (D-04). The air dash is spent on take-off (refilled on landing). Emits the long_jumped fact on enter.
 
 
 func enter(_previous: StringName) -> void:
 	actor.consume_jump()
 	actor.dash_jump_grace_timer = 0.0
+	# The dash hop is the dash's payoff, so the air dash is spent: no second dash until the next landing.
+	actor.air_dash_available = false
 	var config: MovementConfig = actor.config
 	var stage: int = actor.advance_long_jump_stage()
 	var direction: Vector3 = _direction()
