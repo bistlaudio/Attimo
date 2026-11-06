@@ -1,6 +1,6 @@
 extends RefCounted
 ## MOVE-03 / MOVE-04 / MOVE-05: variable jump height, heavier fall, tick-rate independence, coyote time,
-## the jump buffer and the double jump. Every expectation derives from player.config.
+## the jump buffer and the absence of any air jump. Every expectation derives from player.config.
 ## Jump presses go through the input pipeline (Fixtures.send_action_event), so a press and a release inside
 ## one tick reaches the controller as just_pressed with the button already up. Actions are released and the
 ## tick rate is restored to 60 before nodes are freed.
@@ -10,31 +10,24 @@ const Fixtures := preload("res://tests/fixtures.gd")
 var _bus: Node
 var _jumped: Array[int] = []
 var _landed: Array[int] = []
-var _double: Array[int] = []
-var _double_y: Array[float] = []
 
 
 func run(tree: SceneTree, check: Callable) -> void:
 	_bus = tree.root.get_node("EventBus")
 	_bus.connect(&"jumped", _on_jumped)
 	_bus.connect(&"landed", _on_landed)
-	_bus.connect(&"double_jumped", _on_double_jumped)
 
 	await _scenario_hold_and_tap(tree, check)
 	await _scenario_tick_rate(tree, check)
 	await _scenario_coyote(tree, check)
 	await _scenario_buffer_keeps_speed(tree, check)
 	await _scenario_buffer_released(tree, check)
-	await _scenario_double_jump_held(tree, check)
-	await _scenario_double_jump_tapped(tree, check)
-	await _scenario_one_per_airtime(tree, check)
-	await _scenario_ledge_double_jump(tree, check)
-	await _scenario_near_landing_is_not_double(tree, check)
-	await _scenario_spent_press_expires(tree, check)
+	await _scenario_no_air_jump(tree, check)
+	await _scenario_air_press_never_rises(tree, check)
+	await _scenario_late_press_buffers_to_landing(tree, check)
 
 	_bus.disconnect(&"jumped", _on_jumped)
 	_bus.disconnect(&"landed", _on_landed)
-	_bus.disconnect(&"double_jumped", _on_double_jumped)
 
 
 func _on_jumped(_position: Vector3) -> void:
@@ -45,16 +38,9 @@ func _on_landed(_position: Vector3, _impact_speed: float) -> void:
 	_landed.append(Engine.get_physics_frames())
 
 
-func _on_double_jumped(position: Vector3) -> void:
-	_double.append(Engine.get_physics_frames())
-	_double_y.append(position.y)
-
-
 func _reset() -> void:
 	_jumped.clear()
 	_landed.clear()
-	_double.clear()
-	_double_y.clear()
 
 
 func _press_jump() -> void:
@@ -151,7 +137,8 @@ func _scenario_tick_rate(tree: SceneTree, check: Callable) -> void:
 
 
 ## Runs off a ledge, waits `offset` ticks after the player left the floor and taps jump.
-## Returns {"jumped": ..., "double": ...}, the facts caused by that tap (-1 when the player never left the ledge).
+## Returns {"jumped": ..., "rose": ...}: the jumped facts caused by that tap and whether the body rose afterwards
+## (-1 and false when the player never left the ledge).
 func _coyote_case(tree: SceneTree, offset: int) -> Dictionary:
 	var ledge: StaticBody3D = Fixtures.spawn_box(tree.root, Vector3(10, 1, 10), Vector3(0, -0.5, 0))
 	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(0, 0, -2))
@@ -162,10 +149,13 @@ func _coyote_case(tree: SceneTree, offset: int) -> Dictionary:
 	await Fixtures.wait_physics(tree, offset)
 	var airborne: bool = left >= 0 and not player.is_grounded()
 	_tap_jump()
-	await Fixtures.wait_physics(tree, 3)
+	var rose: bool = false
+	for i: int in 3:
+		await tree.physics_frame
+		rose = rose or player.vertical_speed > 0.0
 	var result: Dictionary = {
 		"jumped": _jumped.size() if airborne else -1,
-		"double": _double.size() if airborne else -1,
+		"rose": airborne and rose,
 	}
 	Input.action_release(&"move_forward")
 	await _free_all(tree, [ledge, player])
@@ -184,10 +174,11 @@ func _scenario_coyote(tree: SceneTree, check: Callable) -> void:
 	var outside_jumps: int = outside_case.jumped
 	check.call(inside_jumps == 1, "(c) a jump %d ticks after walking off a ledge is a ground jump (jumped=%d)" % [inside, inside_jumps])
 	check.call(outside_jumps == 0, "(c) a jump %d ticks after walking off a ledge is not a ground jump (jumped=%d)" % [outside, outside_jumps])
-	check.call(inside_case.double == 0, "(c) the coyote ground jump leaves the double jump unspent (double_jumped=%d)" % inside_case.double)
+	check.call(inside_case.rose, "(c) the coyote ground jump rises")
+	check.call(not outside_case.rose, "(c) a press %d ticks after walking off a ledge adds no rise" % outside)
 
 
-## Drops the player from 4 m, taps jump once will_land_within(jump_buffer_time * 0.5) holds, and records
+## Drops the player from 4 m, taps jump once the landing prediction (Fixtures.will_land_within, jump_buffer_time * 0.5) holds, and records
 ## the speeds around the buffered jump. `forward` holds move_forward, `released` taps (press + release).
 func _buffer_case(tree: SceneTree, forward: bool) -> Dictionary:
 	var nodes: Array[Node] = await _spawn(tree, Vector3(0.0, 4.0, 0.0), false)
@@ -205,7 +196,7 @@ func _buffer_case(tree: SceneTree, forward: bool) -> Dictionary:
 		frames += 1
 		if _landed.is_empty():
 			speed_before = player.horizontal_speed()
-		if not tapped and player.vertical_speed < 0.0 and player.will_land_within(config.jump_buffer_time * 0.5):
+		if not tapped and player.vertical_speed < 0.0 and Fixtures.will_land_within(player, config.jump_buffer_time * 0.5):
 			tap_predicted = true
 			tapped = true
 			_tap_jump()
@@ -233,7 +224,7 @@ func _buffer_case(tree: SceneTree, forward: bool) -> Dictionary:
 func _scenario_buffer_keeps_speed(tree: SceneTree, check: Callable) -> void:
 	var data: Dictionary = await _buffer_case(tree, true)
 	var gap: int = data.jumped - data.landed
-	check.call(data.predicted, "(d) will_land_within(jump_buffer_time * 0.5) became true while falling")
+	check.call(data.predicted, "(d) the landing prediction within jump_buffer_time * 0.5 became true while falling")
 	check.call(gap >= 0 and gap <= 2, "(d) the buffered jump fires %d ticks after landed (within 2)" % gap)
 	check.call(data.speed_after >= 0.98 * data.speed_before, "(d) the buffered jump keeps the horizontal speed (%.2f after, %.2f before)" % [data.speed_after, data.speed_before])
 	check.call(data.speed_before > data.config.run_speed - 0.5, "(d) the player was running in the air (%.2f m/s)" % data.speed_before)
@@ -267,101 +258,59 @@ func _rise_above(tree: SceneTree, player: PlayerController, start_y: float, limi
 	return max_y - start_y
 
 
-# (f) a held press at the apex of the first jump rises about double_jump_height (MOVE-05, A19).
-func _scenario_double_jump_held(tree: SceneTree, check: Callable) -> void:
+# (f) there is no air jump: a held press at the apex adds no rise, emits no jumped fact and nothing fires on
+# the later landing (the press expired in the air).
+func _scenario_no_air_jump(tree: SceneTree, check: Callable) -> void:
 	var nodes: Array[Node] = await _spawn(tree, Vector3.ZERO)
 	var player: PlayerController = nodes[1] as PlayerController
-	var config: MovementConfig = player.config
 	_reset()
 	await _jump_to_apex(tree, player)
+	check.call(_jumped.size() == 1, "(f) the first jump emitted one jumped (got %d)" % _jumped.size())
 	_press_jump()
-	await Fixtures.wait_until(tree, func() -> bool: return _double.size() >= 1, 6)
-	check.call(_double.size() == 1, "(f) a held press at the apex emits exactly one double_jumped (got %d)" % _double.size())
-	var start_y: float = _double_y[0] if not _double_y.is_empty() else 0.0
-	var rise: float = await _rise_above(tree, player, start_y)
-	check.call(absf(rise - config.double_jump_height) < 0.15, "(f) the held double jump rises %.3f m, within 0.15 of double_jump_height %.2f" % [rise, config.double_jump_height])
+	var rose: bool = false
+	for i: int in 12:
+		await tree.physics_frame
+		rose = rose or player.vertical_speed > 0.0
 	_release_jump()
-	await _free_all(tree, nodes)
-
-
-# (g) the release cut applies to the double jump: a one-tick tap rises about jump_min_height (D-04).
-func _scenario_double_jump_tapped(tree: SceneTree, check: Callable) -> void:
-	var nodes: Array[Node] = await _spawn(tree, Vector3.ZERO)
-	var player: PlayerController = nodes[1] as PlayerController
-	var config: MovementConfig = player.config
-	_reset()
-	await _jump_to_apex(tree, player)
-	_tap_jump()
-	await Fixtures.wait_until(tree, func() -> bool: return _double.size() >= 1, 6)
-	check.call(_double.size() == 1, "(g) a tap at the apex emits exactly one double_jumped (got %d)" % _double.size())
-	var start_y: float = _double_y[0] if not _double_y.is_empty() else 0.0
-	var rise: float = await _rise_above(tree, player, start_y)
-	check.call(absf(rise - config.jump_min_height) < 0.15, "(g) the tapped double jump rises %.3f m, within 0.15 of jump_min_height %.2f" % [rise, config.jump_min_height])
-	await _free_all(tree, nodes)
-
-
-# (h) exactly one double jump per airtime, refilled on landing (D-07).
-func _scenario_one_per_airtime(tree: SceneTree, check: Callable) -> void:
-	var nodes: Array[Node] = await _spawn(tree, Vector3.ZERO)
-	var player: PlayerController = nodes[1] as PlayerController
-	_reset()
-	await _jump_to_apex(tree, player)
-	_tap_jump()
-	await Fixtures.wait_physics(tree, 6)
-	check.call(_double.size() == 1, "(h) the first air press emits double_jumped (got %d)" % _double.size())
-	_tap_jump()
-	await Fixtures.wait_physics(tree, 20)
-	check.call(_double.size() == 1, "(h) a second air press in the same airtime emits nothing (got %d)" % _double.size())
+	check.call(not rose, "(f) a held press at the apex never makes the body rise again")
+	check.call(_jumped.size() == 1, "(f) and emits no second jumped fact in the air (got %d)" % _jumped.size())
 	await Fixtures.wait_until(tree, func() -> bool: return not _landed.is_empty(), 240)
-	await Fixtures.wait_physics(tree, 8)
-	_tap_jump()
-	await Fixtures.wait_physics(tree, 8)
-	_tap_jump()
-	await Fixtures.wait_physics(tree, 4)
-	check.call(_jumped.size() == 2 and _double.size() == 2, "(h) after landing a ground jump and an air press emit jumped and double_jumped again (jumped=%d double=%d)" % [_jumped.size(), _double.size()])
+	await Fixtures.wait_physics(tree, 10)
+	check.call(_jumped.size() == 1, "(f) the expired press causes no jump after landing (jumped=%d)" % _jumped.size())
 	await _free_all(tree, nodes)
 
 
-# (i) walking off a ledge and pressing past coyote time uses the double jump (A6).
-func _scenario_ledge_double_jump(tree: SceneTree, check: Callable) -> void:
-	var config: MovementConfig = (load("res://resources/player/movement_default.tres") as MovementConfig)
-	var outside: int = int(ceil(config.coyote_time * float(Engine.physics_ticks_per_second))) + 3
-	var result: Dictionary = await _coyote_case(tree, outside)
-	check.call(result.double == 1 and result.jumped == 0, "(i) a press %d ticks after walking off a ledge is the double jump (double_jumped=%d jumped=%d)" % [outside, result.double, result.jumped])
+# (g) a tapped press far above the floor, after the coyote window, never rises and never fires on landing.
+func _scenario_air_press_never_rises(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree, Vector3(0.0, 6.0, 0.0), false)
+	var player: PlayerController = nodes[1] as PlayerController
+	var config: MovementConfig = player.config
+	_reset()
+	await Fixtures.wait_until(tree, func() -> bool: return player.vertical_speed < 0.0 and not player.can_coyote_jump() and not Fixtures.will_land_within(player, config.jump_buffer_time * 3.0), 60)
+	var far_above: bool = not player.is_grounded() and not Fixtures.will_land_within(player, config.jump_buffer_time * 3.0)
+	_tap_jump()
+	var rose: bool = false
+	for i: int in 6:
+		await tree.physics_frame
+		rose = rose or player.vertical_speed > 0.0
+	check.call(far_above, "(g) the press was sent far above the floor")
+	check.call(not rose and _jumped.is_empty(), "(g) an air press far above the floor adds no rise and no jumped (jumped=%d)" % _jumped.size())
+	await Fixtures.wait_until(tree, func() -> bool: return not _landed.is_empty(), 240)
+	await Fixtures.wait_physics(tree, 10)
+	check.call(_jumped.is_empty(), "(g) the expired press causes no jump after landing (jumped=%d)" % _jumped.size())
+	await _free_all(tree, nodes)
 
 
-# (j) a press about to land is a buffered ground jump, not the double jump (A7).
-func _scenario_near_landing_is_not_double(tree: SceneTree, check: Callable) -> void:
+# (h) a press about to land is a buffered ground jump on the landing tick, not an air jump.
+func _scenario_late_press_buffers_to_landing(tree: SceneTree, check: Callable) -> void:
 	var nodes: Array[Node] = await _spawn(tree, Vector3.ZERO)
 	var player: PlayerController = nodes[1] as PlayerController
 	var config: MovementConfig = player.config
 	_reset()
 	_tap_jump()
-	await Fixtures.wait_until(tree, func() -> bool: return player.vertical_speed < 0.0 and player.will_land_within(config.jump_buffer_time * 0.5), 120)
+	await Fixtures.wait_until(tree, func() -> bool: return player.vertical_speed < 0.0 and Fixtures.will_land_within(player, config.jump_buffer_time * 0.5), 120)
 	_tap_jump()
 	await Fixtures.wait_until(tree, func() -> bool: return _jumped.size() >= 2, 40)
 	await Fixtures.wait_physics(tree, 2)
-	check.call(_double.is_empty(), "(j) a press about to land emits no double_jumped (got %d)" % _double.size())
-	check.call(_jumped.size() == 2 and not _landed.is_empty() and _jumped[1] >= _landed[0], "(j) the press fires a ground jump on landing (jumped=%d)" % _jumped.size())
-	await _free_all(tree, nodes)
-
-
-# (k) with the double jump spent, a press far above the floor expires (rule 4).
-func _scenario_spent_press_expires(tree: SceneTree, check: Callable) -> void:
-	var nodes: Array[Node] = await _spawn(tree, Vector3.ZERO)
-	var player: PlayerController = nodes[1] as PlayerController
-	var config: MovementConfig = player.config
-	_reset()
-	await _jump_to_apex(tree, player)
-	_press_jump()
-	await Fixtures.wait_until(tree, func() -> bool: return _double.size() >= 1, 6)
-	await Fixtures.wait_until(tree, func() -> bool: return player.vertical_speed <= 0.0, 120)
-	_release_jump()
-	await Fixtures.wait_until(tree, func() -> bool: return player.vertical_speed < 0.0 and not player.will_land_within(config.jump_buffer_time * 3.0), 240)
-	var far_above: bool = not player.is_grounded() and not player.will_land_within(config.jump_buffer_time * 3.0)
-	_tap_jump()
-	await Fixtures.wait_until(tree, func() -> bool: return not _landed.is_empty(), 240)
-	await Fixtures.wait_physics(tree, 10)
-	check.call(far_above and _double.size() == 1, "(k) the double jump was spent before the late press (double_jumped=%d)" % _double.size())
-	check.call(_jumped.size() == 1, "(k) the expired press causes no jump after landing (jumped=%d)" % _jumped.size())
+	check.call(_jumped.size() == 2 and not _landed.is_empty() and _jumped[1] >= _landed[0], "(h) the press fires a ground jump on landing (jumped=%d)" % _jumped.size())
 	await _free_all(tree, nodes)

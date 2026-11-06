@@ -36,7 +36,7 @@ const STEP_HEIGHTS: Array[float] = [0.10, 0.15, 0.20, 0.25]
 ## Slack above the cap when checking the long-jump take-off speed (the tick-sampled speed is not exact).
 const CAP_SLACK: float = 0.1
 
-const TAKEOFF_KINDS: Array[StringName] = [&"jumped", &"double_jumped", &"long_jumped"]
+const TAKEOFF_KINDS: Array[StringName] = [&"jumped", &"long_jumped"]
 const RELEASE_ACTIONS: Array[StringName] = [&"move_forward", &"move_left", &"jump", &"dash"]
 
 var _tree: SceneTree
@@ -88,10 +88,6 @@ func _main() -> void:
 
 func _on_jumped(position: Vector3) -> void:
 	_record(&"jumped", position, 0)
-
-
-func _on_double_jumped(position: Vector3) -> void:
-	_record(&"double_jumped", position, 0)
 
 
 func _on_long_jumped(position: Vector3, stage: int) -> void:
@@ -154,7 +150,6 @@ func _begin(position: Vector3 = START) -> PlayerController:
 	_log = []
 	_extras = []
 	_bus.connect(&"jumped", _on_jumped)
-	_bus.connect(&"double_jumped", _on_double_jumped)
 	_bus.connect(&"long_jumped", _on_long_jumped)
 	_bus.connect(&"landed", _on_landed)
 	_bus.connect(&"dash_started", _on_dash_started)
@@ -168,7 +163,6 @@ func _begin(position: Vector3 = START) -> PlayerController:
 func _end(player: PlayerController) -> void:
 	_release_all()
 	_bus.disconnect(&"jumped", _on_jumped)
-	_bus.disconnect(&"double_jumped", _on_double_jumped)
 	_bus.disconnect(&"long_jumped", _on_long_jumped)
 	_bus.disconnect(&"landed", _on_landed)
 	_bus.disconnect(&"dash_started", _on_dash_started)
@@ -241,7 +235,7 @@ func _fly(player: PlayerController, takeoff: Dictionary, hold: bool) -> Dictiona
 
 
 func _empty_flight() -> Dictionary:
-	return {"started": false, "landed": false, "apex": 0.0, "distance": 0.0, "air": 0.0, "rise": 0.0, "max_speed": 0.0, "entry_speed": 0.0, "first_speed": 0.0, "stage": 0, "extra": 0.0}
+	return {"started": false, "landed": false, "apex": 0.0, "distance": 0.0, "air": 0.0, "rise": 0.0, "max_speed": 0.0, "entry_speed": 0.0, "first_speed": 0.0, "stage": 0}
 
 
 ## One ground jump from the current state: press (held, or a tap that releases in the same tick), take-off, flight.
@@ -302,50 +296,14 @@ func _measure_jumps() -> Dictionary:
 	out["full_run"] = await _jump_flight(player, false)
 	await _end(player)
 
-	# Jump 1 held, landing, Jump 2 held inside the chain window.
+	# Jump 1, 2 and 3 (salto) held, each pressed on the landing tick of the one before inside the landing window.
 	player = await _begin()
 	await _run_up(player)
 	out["jump_1"] = await _jump_flight(player, false)
 	out["jump_2"] = await _jump_flight(player, false)
-	await _end(player)
-
-	# Double jump: Jump 1 held to its apex, then a second press on the first falling tick.
-	player = await _begin()
-	await _run_up(player)
-	out["double"] = await _double_jump(player)
+	out["jump_3"] = await _jump_flight(player, false)
 	await _end(player)
 	return out
-
-
-func _double_jump(player: PlayerController) -> Dictionary:
-	var entry_speed: float = player.horizontal_speed()
-	var before: int = _takeoff_count()
-	Fixtures.send_action_event(&"jump", true)
-	var waited: int = await Fixtures.wait_until(_tree, func() -> bool: return _takeoff_count() > before, 12)
-	if waited < 0:
-		Fixtures.send_action_event(&"jump", false)
-		_fail("the first press of the double jump did not take off")
-		return _empty_flight()
-	var first: Dictionary = _last_takeoff()
-	await Fixtures.wait_until(_tree, func() -> bool: return player.vertical_speed <= 0.0 and not player.is_grounded(), 120)
-	Fixtures.send_action_event(&"jump", false)
-	await Fixtures.wait_physics(_tree, 1)
-	var doubles_before: int = _count(&"double_jumped")
-	Fixtures.send_action_event(&"jump", true)
-	var doubled: int = await Fixtures.wait_until(_tree, func() -> bool: return _count(&"double_jumped") > doubles_before, 12)
-	if doubled < 0:
-		Fixtures.send_action_event(&"jump", false)
-		_fail("the second press of the double jump did not give double_jumped")
-		return _empty_flight()
-	var second: Dictionary = _last(&"double_jumped")
-	var flight: Dictionary = await _fly(player, first, true)
-	var first_pos: Vector3 = first["pos"]
-	var second_pos: Vector3 = second["pos"]
-	var total_apex: float = flight["apex"]
-	flight["entry_speed"] = entry_speed
-	# Height the second jump added above the point where it started.
-	flight["extra"] = (first_pos.y + total_apex) - second_pos.y
-	return flight
 
 
 # --- dashes ---------------------------------------------------------------------------------------------
@@ -363,7 +321,7 @@ func _measure_dashes() -> Dictionary:
 	Fixtures.send_action_event(&"jump", true)
 	var before: int = _takeoff_count()
 	await Fixtures.wait_until(_tree, func() -> bool: return _takeoff_count() > before, 12)
-	# The press must be older than the jump buffer, so the dash is not turned into a double jump.
+	# Wait until the press is older than the jump buffer: the dash then starts from a plain airtime.
 	await Fixtures.wait_physics(_tree, ceili(player.config.jump_buffer_time * float(TPS)) + 3)
 	var air: Dictionary = await _dash(player)
 	Fixtures.send_action_event(&"jump", false)
@@ -583,6 +541,12 @@ func _check_invariants(config: MovementConfig, jumps: Dictionary, longs: Diction
 	if not (tap_apex < full_apex):
 		_fail("tap jump apex %.3f m is not below the held jump apex %.3f m" % [tap_apex, full_apex])
 
+	var apex_1: float = jumps["jump_1"]["apex"]
+	var apex_2: float = jumps["jump_2"]["apex"]
+	var apex_3: float = jumps["jump_3"]["apex"]
+	if not (apex_1 < apex_2 and apex_2 < apex_3):
+		_fail("chain jump apexes are not ordered Jump 1 < Jump 2 < Jump 3 (%.2f, %.2f, %.2f m)" % [apex_1, apex_2, apex_3])
+
 	var distances: Array[float] = []
 	for stage: int in 3:
 		for prefix: String in ["press", "grace"]:
@@ -678,9 +642,8 @@ func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, d
 	lines.append(_jump_row("Tap jump (run)", jumps["tap_run"], "at run speed"))
 	lines.append(_jump_row("Full jump (standing)", jumps["full_standing"], "held to the apex"))
 	lines.append(_jump_row("Full jump (run)", jumps["full_run"], "held to the apex, at run speed"))
-	var double: Dictionary = jumps["double"]
-	lines.append(_jump_row("Double jump", double, "Jump 1 held, second press on the first falling tick; height is the total above the first take-off, the second jump adds %.2f m" % float(double["extra"])))
 	lines.append(_jump_row("Jump 2 (chain)", jumps["jump_2"], "pressed on the landing tick of Jump 1 (Jump 1 for comparison: %.2f m, %.2f m)" % [float(jumps["jump_1"]["apex"]), float(jumps["jump_1"]["distance"])]))
+	lines.append(_jump_row("Jump 3 (salto)", jumps["jump_3"], "pressed on the landing tick of Jump 2, the highest ground jump; a fourth jump inside the window is Jump 1 again"))
 	lines.append("")
 
 	lines.append("## Air options and dash")
@@ -760,8 +723,8 @@ func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, d
 	lines.append("| Verb | Distance (m) | Widest gap (1 m grid) | 4 m modules | Tallest ledge (m) |")
 	lines.append("|---|---|---|---|---|")
 	lines.append(_grid_row("Run jump", jumps["full_run"]))
-	lines.append(_grid_row("Double jump (run)", double))
 	lines.append(_grid_row("Jump 2 chain jump", jumps["jump_2"]))
+	lines.append(_grid_row("Jump 3 salto", jumps["jump_3"]))
 	for stage: int in 3:
 		lines.append(_grid_row("Long jump %s gap" % names[stage], longs["press_%d" % stage]))
 	lines.append("")

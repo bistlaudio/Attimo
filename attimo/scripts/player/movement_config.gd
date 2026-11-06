@@ -29,12 +29,12 @@ extends Resource
 @export_range(0.15, 1.0, 0.01) var reference_apex_time: float = 0.42
 ## Full-hold height of the first ground jump in m.
 @export_range(0.5, 6.0, 0.05) var jump_height: float = 2.0
-## Full-hold height of a chained second ground jump in m.
-@export_range(0.5, 6.0, 0.05) var chain_jump_height: float = 2.6
+## Full-hold height of Jump 2 of the ground chain in m.
+@export_range(0.5, 6.0, 0.05) var jump_2_height: float = 2.6
+## Full-hold height of Jump 3 (the salto, the highest ground jump) in m.
+@export_range(0.5, 6.0, 0.05) var jump_3_height: float = 3.4
 ## Tap height in m (release cuts the rise to this height).
 @export_range(0.1, 3.0, 0.05) var jump_min_height: float = 0.8
-## Full-hold height of the double jump in m.
-@export_range(0.5, 6.0, 0.05) var double_jump_height: float = 2.0
 ## Gravity multiplier while falling (D-04).
 @export_range(1.0, 3.0, 0.05) var fall_multiplier: float = 1.7
 ## Maximum fall speed in m/s.
@@ -104,6 +104,17 @@ func jump_speed(height: float) -> float:
 ## Rising speed a released jump is cut down to (tap height).
 func cut_speed() -> float:
 	return jump_speed(jump_min_height)
+
+
+## Full-hold height of ground jump `stage` (1, 2 or 3, clamped).
+func jump_height_for_stage(stage: int) -> float:
+	match clampi(stage, 1, 3):
+		1:
+			return jump_height
+		2:
+			return jump_2_height
+		_:
+			return jump_3_height
 
 
 ## Long jump height for a chain stage 0, 1 or 2 (clamped).

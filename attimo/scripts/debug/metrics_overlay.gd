@@ -39,7 +39,6 @@ var _dash_time: float = 0.0
 func _ready() -> void:
 	visible = false
 	EventBus.jumped.connect(_on_jumped)
-	EventBus.double_jumped.connect(_on_double_jumped)
 	EventBus.long_jumped.connect(_on_long_jumped)
 	EventBus.dash_started.connect(_on_dash_started)
 	EventBus.movement_state_changed.connect(_on_state_changed)
@@ -119,10 +118,6 @@ func _note_jump(label: String) -> void:
 
 func _on_jumped(_position: Vector3) -> void:
 	_note_jump("jump")
-
-
-func _on_double_jumped(_position: Vector3) -> void:
-	_note_jump("double")
 
 
 func _on_long_jumped(_position: Vector3, stage: int) -> void:

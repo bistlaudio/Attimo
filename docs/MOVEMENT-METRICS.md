@@ -18,8 +18,8 @@ Every number comes from the real Player driven headless with scripted per-tick i
 | Tap jump (run) | 0.80 | 3.68 | 0.42 | 0.22 | 8.50 | at run speed |
 | Full jump (standing) | 2.00 | 0.00 | 0.67 | 0.37 | 0.00 | held to the apex |
 | Full jump (run) | 2.00 | 5.81 | 0.67 | 0.37 | 8.50 | held to the apex, at run speed |
-| Double jump | 3.96 | 10.34 | 1.20 | 0.78 | 8.50 | Jump 1 held, second press on the first falling tick; height is the total above the first take-off, the second jump adds 2.00 m |
 | Jump 2 (chain) | 2.60 | 6.52 | 0.75 | 0.42 | 8.50 | pressed on the landing tick of Jump 1 (Jump 1 for comparison: 2.00 m, 5.81 m) |
+| Jump 3 (salto) | 3.40 | 7.51 | 0.87 | 0.47 | 8.50 | pressed on the landing tick of Jump 2, the highest ground jump; a fourth jump inside the window is Jump 1 again |
 
 ## Air options and dash
 
@@ -72,10 +72,10 @@ Display, compositor and USB latency are outside the software measurement (D-22).
 
 | Action | Accumulated input on: median (ms) | on: max (ms) | off: median (ms) | off: max (ms) | Verdict |
 |---|---|---|---|---|---|
-| Latency jump 60 TPS | 13.40 | 20.12 | 13.57 | 20.66 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency jump 120 TPS | 7.06 | 14.52 | 7.14 | 14.11 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 60 TPS | 13.48 | 21.15 | 13.25 | 20.05 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 120 TPS | 7.03 | 13.65 | 6.43 | 14.11 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 60 TPS | 13.86 | 21.05 | 13.81 | 21.50 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 120 TPS | 11.19 | 14.81 | 7.81 | 12.99 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 60 TPS | 12.96 | 20.96 | 12.73 | 21.38 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 120 TPS | 6.75 | 13.74 | 6.77 | 13.50 | Target met (median <= 66 ms, max <= 100 ms) |
 
 ## Grid cross-check
 
@@ -84,8 +84,8 @@ How the numbers map onto the 1 m grid and the 4 m kit pieces. The widest gap ass
 | Verb | Distance (m) | Widest gap (1 m grid) | 4 m modules | Tallest ledge (m) |
 |---|---|---|---|---|
 | Run jump | 5.81 | 5 | 1.45 | 2.0 |
-| Double jump (run) | 10.34 | 10 | 2.59 | 3.9 |
 | Jump 2 chain jump | 6.52 | 6 | 1.63 | 2.6 |
+| Jump 3 salto | 7.51 | 7 | 1.88 | 3.4 |
 | Long jump small gap | 10.63 | 10 | 2.66 | 1.0 |
 | Long jump mid gap | 11.73 | 11 | 2.93 | 1.2 |
 | Long jump max gap | 12.47 | 12 | 3.12 | 1.4 |
@@ -106,9 +106,9 @@ Every MovementConfig float of res://resources/player/movement_default.tres at ge
 | `reference_jump_height` | 2.500 |
 | `reference_apex_time` | 0.420 |
 | `jump_height` | 2.000 |
-| `chain_jump_height` | 2.600 |
+| `jump_2_height` | 2.600 |
+| `jump_3_height` | 3.400 |
 | `jump_min_height` | 0.800 |
-| `double_jump_height` | 2.000 |
 | `fall_multiplier` | 1.700 |
 | `terminal_speed` | 40.000 |
 | `coyote_time` | 0.100 |

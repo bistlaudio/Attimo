@@ -76,7 +76,7 @@ func _check_doc(tree: SceneTree, check: Callable) -> void:
 		check.call(doc.contains(folder), "doc mentions folder %s" % folder)
 	var bus_script: Script = tree.root.get_node("EventBus").get_script() as Script
 	var signals: Array[Dictionary] = bus_script.get_script_signal_list()
-	check.call(signals.size() >= 7, "EventBus declares at least 7 signals (got %d)" % signals.size())
+	check.call(signals.size() >= 6, "EventBus declares at least 6 signals (got %d)" % signals.size())
 	for signal_info: Dictionary in signals:
 		var signal_name: String = str(signal_info["name"])
 		check.call(doc.contains("`%s`" % signal_name), "doc lists EventBus signal %s" % signal_name)

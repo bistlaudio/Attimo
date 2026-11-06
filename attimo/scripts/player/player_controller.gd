@@ -20,15 +20,13 @@ var air_speed_cap: float = 0.0
 var coyote_timer: float = 0.0
 ## Seconds left in which a jump press is remembered (D-09).
 var jump_buffer_timer: float = 0.0
-## True while the one air jump of this airtime is unspent. Landing refills it (D-07).
-var air_jump_available: bool = true
 ## Seconds left before the next dash may start (D-11). Starts when a dash starts.
 var dash_cooldown_timer: float = 0.0
 ## True while the one air dash of this airtime is unspent. Landing refills it (D-12).
 var air_dash_available: bool = true
 ## Direction of the last dash started, flattened and normalized.
 var last_dash_direction: Vector3 = Vector3.ZERO
-## Ground-jump chain stage: 0 none, 1 after Jump 1, 2 after Jump 2 (D-05). Changes emit chain_stage_changed.
+## Ground-jump chain stage: 0 none, 1 after Jump 1, 2 after Jump 2, 3 after Jump 3, the salto (D-05). Changes emit chain_stage_changed.
 var chain_stage: int = 0
 ## Seconds left of the landing window in which the next ground jump advances the chain. Counts down only
 ## while grounded; at 0 the chain resets (D-07).
@@ -38,7 +36,6 @@ var dash_jump_grace_timer: float = 0.0
 
 var _was_on_floor: bool = true
 var _last_platform_velocity: Vector3 = Vector3.ZERO
-var _probe: KinematicCollision3D
 
 @onready var visual_root: Node3D = $VisualRoot
 @onready var state_machine: StateMachine = $StateMachine
@@ -167,20 +164,6 @@ func can_coyote_jump() -> bool:
 	return coyote_timer > 0.0
 
 
-## True when the body is not rising and a walkable floor is hit within `seconds` of predicted motion
-## (current horizontal velocity, current fall speed, fall gravity).
-func will_land_within(seconds: float) -> bool:
-	if vertical_speed > 0.0 or seconds <= 0.0:
-		return false
-	if _probe == null:
-		_probe = KinematicCollision3D.new()
-	var drop: float = absf(vertical_speed) * seconds + 0.5 * config.gravity() * config.fall_multiplier * seconds * seconds
-	var motion: Vector3 = move_velocity * seconds + Vector3.DOWN * drop
-	if not test_move(global_transform, motion, _probe):
-		return false
-	return _probe.get_normal().angle_to(Vector3.UP) <= floor_max_angle
-
-
 ## True when a dash may start: the cooldown has elapsed, and on the ground always, in the air only while
 ## the air dash of this airtime is unspent (D-12).
 func can_dash() -> bool:
@@ -199,18 +182,19 @@ func start_dash(direction: Vector3, in_air: bool) -> void:
 
 
 ## Called by Jump on enter for every ground jump (also coyote and buffered landing jumps). Returns the stage of
-## this jump: 2 when it follows Jump 1 inside the open landing window, otherwise 1 (also at stage 2, which
-## starts a new chain, A8). The window closes; it reopens on landing.
+## this jump: 2 after Jump 1 and 3 after Jump 2 inside the open landing window, otherwise 1 (also after Jump 3,
+## which starts a new chain, A8). The window closes; it reopens on landing.
 func advance_chain_for_ground_jump() -> int:
-	var stage: int = 2 if chain_stage == 1 and chain_timer > 0.0 else 1
+	var stage: int = chain_stage + 1 if (chain_stage == 1 or chain_stage == 2) and chain_timer > 0.0 else 1
 	chain_timer = 0.0
 	_set_chain_stage(stage)
 	return stage
 
 
 ## Called by LongJump on enter. Returns the chain stage the long jump spends (0..2) and resets the chain.
+## Jump 3 counts as stage 2 here; the dash hop stack replaces this feed in a later step.
 func take_chain_for_long_jump() -> int:
-	var stage: int = chain_stage
+	var stage: int = mini(chain_stage, 2)
 	chain_timer = 0.0
 	_set_chain_stage(0)
 	return stage
@@ -297,7 +281,6 @@ func _post_move() -> void:
 
 
 func _land(impact_speed: float) -> void:
-	air_jump_available = true
 	air_dash_available = true
 	coyote_timer = 0.0
 	if chain_stage > 0:

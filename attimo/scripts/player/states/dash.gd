@@ -5,9 +5,9 @@ extends State
 ## On the ground the floor snap keeps it on slopes. In the air it holds altitude (air_dash_gravity_scale, one
 ## air dash per airtime, spent in PlayerController.start_dash). The exit carries a bounded speed
 ## (dash_carry between run and dash speed, capped by dash_exit_cap) and air control continues afterwards.
-## A jump press during the dash leaves it: a ground dash into the LongJump (D-06; it reads the live dash speed
-## itself), an air dash into the double jump (A27, A1). A ground dash that ended on the ground opens the
-## config.dash_jump_grace window in which a jump is still a long jump (GroundState).
+## A jump press during a ground dash leaves it into the LongJump (D-06; it reads the live dash speed itself).
+## During an air dash a jump press only stays in the buffer: there is no air jump (MOVE-05). A ground dash that
+## ended on the ground opens the config.dash_jump_grace window in which a jump is still a long jump (GroundState).
 ## Emits the dash_started fact once on enter.
 
 ## Direction of this dash (flattened, normalized). Read by the long jump of a later plan.
@@ -51,9 +51,6 @@ func physics_update(delta: float) -> StringName:
 		# that ran off a ledge can still be cancelled into it while coyote time lasts).
 		if not in_air and (actor.is_grounded() or actor.can_coyote_jump()):
 			return &"LongJump"
-		if actor.air_jump_available:
-			_apply_exit_carry()
-			return &"DoubleJump"
 	return &""
 
 

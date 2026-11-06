@@ -50,6 +50,21 @@ static func spawn_camera_rig(root: Node, target: Node3D) -> CameraRig:
 	return rig
 
 
+## True when the player is not rising and a walkable floor is hit within `seconds` of predicted motion
+## (current horizontal velocity, current fall speed, fall gravity). Tests use it to time a press shortly
+## before landing; the game itself no longer predicts landings.
+static func will_land_within(player: PlayerController, seconds: float) -> bool:
+	if player.vertical_speed > 0.0 or seconds <= 0.0:
+		return false
+	var config: MovementConfig = player.config
+	var drop: float = absf(player.vertical_speed) * seconds + 0.5 * config.gravity() * config.fall_multiplier * seconds * seconds
+	var motion: Vector3 = player.move_velocity * seconds + Vector3.DOWN * drop
+	var hit: KinematicCollision3D = KinematicCollision3D.new()
+	if not player.test_move(player.global_transform, motion, hit):
+		return false
+	return hit.get_normal().angle_to(Vector3.UP) <= player.floor_max_angle
+
+
 ## Sends an InputEventAction through the input pipeline (reaches _input, unlike Input.action_press).
 static func send_action_event(action: StringName, pressed: bool) -> void:
 	var event: InputEventAction = InputEventAction.new()

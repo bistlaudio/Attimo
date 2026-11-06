@@ -1,15 +1,13 @@
 class_name AirState
 extends State
-## Shared base of the airborne states (Jump, Fall, later DoubleJump and LongJump). physics_update
-## applies air control and facing (D-02), takes a dash press, lands into Run, Idle or a buffered Jump,
-## and decides a jump press in the air. Subclasses add their rules in _air_update.
+## Shared base of the airborne states (Jump, Fall, LongJump). physics_update applies air control and
+## facing (D-02), takes a dash press, lands into Run, Idle or a buffered Jump, and decides a jump press in the
+## air. Subclasses add their rules in _air_update.
 ##
-## Jump decision rules (D-08 / D-09), in order:
+## Jump decision rules (D-09; there is no air jump, MOVE-05), in order:
 ##   1. grounded, or airborne with coyote time left: ground jump (Jump)
-##   2. airborne, falling and about to land within the buffer window: keep the press, the jump fires
-##      as a ground jump on the landing tick with no ground deceleration tick
-##   3. otherwise, with the air jump unspent: the double jump
-##   4. otherwise the press expires with the buffer
+##   2. otherwise the press stays in the jump buffer: landing inside the buffer window fires it as a ground
+##      jump on the landing tick (no ground deceleration tick), later it expires with the buffer
 
 
 func physics_update(delta: float) -> StringName:
@@ -45,14 +43,9 @@ func apply_jump_cut() -> void:
 		actor.vertical_speed = cut
 
 
-## The state a remembered jump press leads to while airborne, or &"" to keep it buffered or let it expire.
+## The state a remembered jump press leads to while airborne: Jump while coyote time is left, otherwise &""
+## (the press stays buffered and either fires on the landing tick or expires).
 func _airborne_jump_decision() -> StringName:
-	if not actor.wants_jump():
-		return &""
-	if actor.can_coyote_jump():
+	if actor.wants_jump() and actor.can_coyote_jump():
 		return &"Jump"
-	if actor.vertical_speed <= 0.0 and actor.will_land_within(actor.config.jump_buffer_time):
-		return &""
-	if actor.air_jump_available:
-		return &"DoubleJump"
 	return &""

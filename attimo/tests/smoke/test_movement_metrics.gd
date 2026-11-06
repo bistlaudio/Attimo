@@ -10,7 +10,7 @@ const REGENERATE_HINT: String = "re-run `bash attimo/tests/run.sh --tool res://t
 ## Row labels the doc contract requires (the first cell of a table row).
 const ROW_LABELS: Array[String] = [
 	"Run speed", "Tap jump", "Full jump (standing)", "Full jump (run)",
-	"Double jump", "Jump 2 (chain)", "Ground dash", "Air dash",
+	"Jump 2 (chain)", "Jump 3 (salto)", "Ground dash", "Air dash",
 	"Long jump small", "Long jump mid", "Long jump max",
 	"Coyote time", "Jump buffer", "Chain window", "Dash cooldown", "Dash-jump grace",
 	"Step 0.15 m", "Step 0.20 m",

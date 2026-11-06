@@ -14,11 +14,11 @@ const SNAP_TOLERANCE: float = 1e-4
 var _bus: Node
 var _dashes: Array[Array] = []
 var _landed: Array[Array] = []
-var _doubles: Array[int] = []
+var _jumps: Array[int] = []
 var _floor: StaticBody3D
 var _on_dash: Callable
 var _on_landed: Callable
-var _on_double: Callable
+var _on_jump: Callable
 
 
 func run(tree: SceneTree, check: Callable) -> void:
@@ -29,8 +29,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_ground_distance_and_carry(tree, check)
 	await _scenario_cooldown(tree, check)
 	await _scenario_air_dash(tree, check)
-	await _scenario_combo_dash_then_double(tree, check)
-	await _scenario_combo_double_then_dash(tree, check)
+	await _scenario_air_dash_then_jump_press(tree, check)
 	await _scenario_air_exit_and_steering(tree, check)
 	await _scenario_ground_dash_jump(tree, check)
 	Engine.physics_ticks_per_second = 10
@@ -166,39 +165,24 @@ func _scenario_air_dash(tree: SceneTree, check: Callable) -> void:
 	await _end(player)
 
 
-# D-08: jump -> air dash -> double jump, each once per airtime.
-func _scenario_combo_dash_then_double(tree: SceneTree, check: Callable) -> void:
+# U2: jump -> air dash -> jump press. There is no air jump: one airborne dash_started, no rise, no second jumped.
+func _scenario_air_dash_then_jump_press(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = _begin(tree)
 	await Fixtures.wait_physics(tree, 5)
 	_hold_jump()
 	await Fixtures.wait_physics(tree, 8)
 	await Fixtures.tap_action(tree, &"dash")
 	var in_dash: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Dash", 4)
-	check.call(in_dash >= 0, "(6a) the air dash is running before the second jump press")
+	check.call(in_dash >= 0, "(6) the air dash is running before the second jump press")
 	_release_jump()
 	_hold_jump()
-	await Fixtures.wait_until(tree, func() -> bool: return _doubles.size() >= 1, 8)
-	await Fixtures.wait_physics(tree, 4)
-	check.call(_doubles.size() == 1, "(6a) jump -> air dash -> double jump: exactly one double_jumped (got %d)" % _doubles.size())
-	check.call(_airborne_dashes() == 1, "(6a) jump -> air dash -> double jump: exactly one airborne dash_started (got %d)" % _airborne_dashes())
-	_release_jump()
-	await _end(player)
-
-
-# D-08: jump -> double jump -> air dash, each once per airtime.
-func _scenario_combo_double_then_dash(tree: SceneTree, check: Callable) -> void:
-	var player: PlayerController = _begin(tree)
-	await Fixtures.wait_physics(tree, 5)
-	_hold_jump()
-	await Fixtures.wait_physics(tree, 8)
-	_release_jump()
-	_hold_jump()
-	await Fixtures.wait_until(tree, func() -> bool: return _doubles.size() >= 1, 8)
-	await Fixtures.wait_physics(tree, 6)
-	await Fixtures.tap_action(tree, &"dash")
-	await Fixtures.wait_physics(tree, 4)
-	check.call(_doubles.size() == 1, "(6b) jump -> double jump -> air dash: exactly one double_jumped (got %d)" % _doubles.size())
-	check.call(_airborne_dashes() == 1, "(6b) jump -> double jump -> air dash: exactly one airborne dash_started (got %d)" % _airborne_dashes())
+	var rose: bool = false
+	for i: int in 20:
+		await Fixtures.wait_physics(tree, 1)
+		rose = rose or player.vertical_speed > 0.0
+	check.call(not rose, "(6) a jump press during and after the air dash adds no rise")
+	check.call(_airborne_dashes() == 1, "(6) jump -> air dash -> jump press: exactly one airborne dash_started (got %d)" % _airborne_dashes())
+	check.call(_jumps.size() == 1, "(6) and no second jumped fact (got %d)" % _jumps.size())
 	_release_jump()
 	await _end(player)
 
@@ -365,13 +349,13 @@ func _surface_below(player: PlayerController) -> float:
 
 
 func _connect_recorders() -> void:
-	_doubles = []
+	_jumps = []
 	_on_dash = func(position: Vector3, direction: Vector3, in_air: bool) -> void: _dashes.append([position, direction, in_air])
 	_on_landed = func(position: Vector3, impact_speed: float) -> void: _landed.append([position, impact_speed])
-	_on_double = func(_position: Vector3) -> void: _doubles.append(Engine.get_physics_frames())
+	_on_jump = func(_position: Vector3) -> void: _jumps.append(Engine.get_physics_frames())
 	_bus.connect(&"dash_started", _on_dash)
 	_bus.connect(&"landed", _on_landed)
-	_bus.connect(&"double_jumped", _on_double)
+	_bus.connect(&"jumped", _on_jump)
 
 
 func _begin(tree: SceneTree, position: Vector3 = Vector3.ZERO) -> PlayerController:
@@ -386,11 +370,11 @@ func _begin(tree: SceneTree, position: Vector3 = Vector3.ZERO) -> PlayerControll
 func _end(player: PlayerController) -> void:
 	_bus.disconnect(&"dash_started", _on_dash)
 	_bus.disconnect(&"landed", _on_landed)
-	_bus.disconnect(&"double_jumped", _on_double)
+	_bus.disconnect(&"jumped", _on_jump)
 	# The lambdas capture self; drop them so this RefCounted test object is not kept alive by a cycle.
 	_on_dash = Callable()
 	_on_landed = Callable()
-	_on_double = Callable()
+	_on_jump = Callable()
 	player.queue_free()
 	_floor.queue_free()
 	await player.tree_exited

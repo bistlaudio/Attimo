@@ -130,10 +130,9 @@ The `EventBus` autoload carries gameplay **facts** (D-10, D-11). Gameplay code o
 
 | Signal | Payload | Emitted by |
 |---|---|---|
-| `jumped` | `position: Vector3` | `Jump.enter`, for ground jumps (Jump 1 and Jump 2) |
-| `double_jumped` | `position: Vector3` | `DoubleJump.enter` |
+| `jumped` | `position: Vector3` | `Jump.enter`, for ground jumps (Jump 1, Jump 2 and Jump 3, the salto). There is no air jump. |
 | `long_jumped` | `position: Vector3, stage: int` | `LongJump.enter`; stage 0 small, 1 mid, 2 max |
-| `chain_stage_changed` | `stage: int` | `PlayerController` when the ground-jump chain stage changes; 0 on reset |
+| `chain_stage_changed` | `stage: int` | `PlayerController` when the ground-jump chain stage changes (1, 2, 3 for Jump 1, 2, 3; 0 on reset) |
 | `landed` | `position: Vector3, impact_speed: float` | `PlayerController._land` on floor contact; `impact_speed` is the downward speed at touchdown |
 | `dash_started` | `position: Vector3, direction: Vector3, in_air: bool` | `Dash.enter` |
 | `movement_state_changed` | `from_state: StringName, to_state: StringName` | `StateMachine` on every transition |

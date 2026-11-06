@@ -6,10 +6,10 @@ extends Node
 ## The figure excludes display, compositor and USB latency. After a fact it also records the time to the first drawn
 ## frame (last_frame_ms); that signal may never fire headless, so the value stays -1.0 there.
 
-## A press whose fact never came (a jump in mid-air with nothing left to spend) must not match a much later fact.
+## A press whose fact never came (a jump press in mid-air, where there is no air jump) must not match a much later fact.
 const STALE_USEC: int = 500000
 
-## Milliseconds from a jump press to the jumped / double_jumped / long_jumped fact, one entry per press.
+## Milliseconds from a jump press to the jumped / long_jumped fact, one entry per press.
 var jump_samples_ms: PackedFloat64Array = PackedFloat64Array()
 ## Milliseconds from a dash press to the dash_started fact, one entry per press.
 var dash_samples_ms: PackedFloat64Array = PackedFloat64Array()
@@ -23,7 +23,6 @@ var _frame_fact_usec: int = -1
 
 func _ready() -> void:
 	EventBus.jumped.connect(_on_jump_fact)
-	EventBus.double_jumped.connect(_on_jump_fact)
 	EventBus.long_jumped.connect(_on_jump_fact)
 	EventBus.dash_started.connect(_on_dash_fact)
 
