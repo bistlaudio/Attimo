@@ -179,7 +179,7 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | MOVE-09 | Phase 3 | Pending |
 | MOVE-10 | Phase 2 | Complete |
 | MOVE-11 | Phase 3 | Pending |
-| CAM-01 | Phase 2 | Pending |
+| CAM-01 | Phase 2 | Pending (144 Hz judder check not verified; accepted override, see 02-VERIFICATION.md) |
 | CAM-02 | Phase 3 | Pending |
 | CAM-03 | Phase 2 | Complete |
 | CAM-04 | Phase 4 | Pending |
