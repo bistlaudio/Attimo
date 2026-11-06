@@ -59,7 +59,7 @@ extends Resource
 @export_range(0.5, 6.0, 0.05) var long_jump_height_1: float = 2.0
 ## Long jump height at stage 2 in m; raise it for a higher second hop.
 @export_range(0.5, 6.0, 0.05) var long_jump_height_2: float = 2.5
-## Long jump height at stage 3 (top of the stack) in m; raise it for a higher third hop.
+## Long jump height at stage 3 (last hop of the combo) in m; raise it for a higher third hop.
 @export_range(0.5, 6.0, 0.05) var long_jump_height_3: float = 3.0
 ## Take-off speed of the stage 1 long jump in m/s; raise it for a longer first hop.
 @export_range(5.0, 22.0, 0.5) var long_jump_speed_1: float = 14.0

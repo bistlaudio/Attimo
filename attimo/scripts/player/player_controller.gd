@@ -196,9 +196,10 @@ func advance_chain_for_ground_jump() -> int:
 
 
 ## Called by LongJump on enter. Returns the long-jump stage 1..3: one above the stack while it lives (a clean
-## repeat), otherwise 1. Resets the ground-jump chain and closes the landing window; it reopens on landing.
+## repeat), otherwise 1. The combo ends after stage 3: the stack is spent, so the next hop starts again at 1 (like
+## the ground jump chain after Jump 3). Resets the ground-jump chain and closes the landing window; it reopens on landing.
 func advance_long_jump_stage() -> int:
-	var stage: int = mini(long_jump_stage + 1, 3) if long_jump_stage > 0 else 1
+	var stage: int = long_jump_stage + 1 if long_jump_stage == 1 or long_jump_stage == 2 else 1
 	long_jump_stage = stage
 	combo_timer = 0.0
 	_set_chain_stage(0)

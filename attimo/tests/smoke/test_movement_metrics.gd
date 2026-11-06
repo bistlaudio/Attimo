@@ -11,7 +11,7 @@ const REGENERATE_HINT: String = "re-run `bash attimo/tests/run.sh --tool res://t
 const ROW_LABELS: Array[String] = [
 	"Run speed", "Tap jump", "Full jump (standing)", "Full jump (run)",
 	"Jump 2 (chain)", "Jump 3 (salto)", "Ground dash", "Air dash",
-	"Long jump stage 1", "Long jump stage 2", "Long jump stage 3", "Long jump stage 3 (repeat)", "Long jump (last grace tick)",
+	"Long jump stage 1", "Long jump stage 2", "Long jump stage 3", "Long jump stage 1 (after stage 3)", "Long jump (last grace tick)",
 	"Coyote time", "Jump buffer", "Landing window", "Dash cooldown", "Dash-jump grace",
 	"Step 0.15 m", "Step 0.20 m",
 	"Latency jump 60 TPS", "Latency jump 120 TPS", "Latency dash 60 TPS", "Latency dash 120 TPS",

@@ -30,14 +30,14 @@ Every number comes from the real Player driven headless with scripted per-tick i
 
 ## Long jump (dash hop)
 
-The long jump is the dash hop: a jump during a ground dash or within dash_jump_grace after it. Its speed is set per stage (long_jump_speed_1/2/3), never carried from the dash. Stage 1 is the first hop; each clean repeat (a ground dash started inside the landing window after touchdown, then a jump) climbs to stage 2 and 3 and then stays at 3; a miss (window runs out, standing still, a normal jump in between) restarts at stage 1. The speeds are capped by an export maximum of 22 m/s, the envelope the camera and tunnelling tests cover. Take-off speed is the horizontal speed on the first tick of the long jump. One hop streak is measured: dash + jump on the landing tick of each hop.
+The long jump is the dash hop: a jump during a ground dash or within dash_jump_grace after it. Its speed is set per stage (long_jump_speed_1/2/3), never carried from the dash. Stage 1 is the first hop; each clean repeat (a ground dash started inside the landing window after touchdown, then a jump) climbs to stage 2 and 3; the combo ends after stage 3 and the next hop starts again at stage 1; a miss (window runs out, standing still, a normal jump in between) restarts at stage 1. The speeds are capped by an export maximum of 22 m/s, the envelope the camera and tunnelling tests cover. Take-off speed is the horizontal speed on the first tick of the long jump. One hop streak is measured: dash + jump on the landing tick of each hop.
 
 | Verb | Stage | Height (m) | Distance (m) | Take-off speed (m/s) | Airtime (s) | Note |
 |---|---|---|---|---|---|---|
 | Long jump stage 1 | 1 | 2.00 | 9.10 | 14.00 | 0.63 | dash + jump on one tick from a run, long_jump_speed_1 14.0 m/s |
 | Long jump stage 2 | 2 | 2.50 | 11.73 | 16.00 | 0.72 | dash + jump on the landing tick of stage 1, long_jump_speed_2 16.0 m/s |
 | Long jump stage 3 | 3 | 3.00 | 14.40 | 18.00 | 0.78 | dash + jump on the landing tick of stage 2, long_jump_speed_3 18.0 m/s |
-| Long jump stage 3 (repeat) | 3 | 3.00 | 14.40 | 18.00 | 0.78 | a further clean hop stays at stage 3 |
+| Long jump stage 1 (after stage 3) | 1 | 2.00 | 9.10 | 14.00 | 0.63 | the combo ends after stage 3; the next hop starts again at stage 1 |
 | Long jump (last grace tick) | 1 | 2.00 | 9.10 | 14.00 | 0.63 | jump in the last tick of dash_jump_grace, stage 1 row applies |
 
 ## Timing windows
@@ -71,10 +71,10 @@ Display, compositor and USB latency are outside the software measurement (D-22).
 
 | Action | Accumulated input on: median (ms) | on: max (ms) | off: median (ms) | off: max (ms) | Verdict |
 |---|---|---|---|---|---|
-| Latency jump 60 TPS | 14.06 | 20.05 | 13.41 | 20.11 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency jump 120 TPS | 6.48 | 14.38 | 6.67 | 14.46 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 60 TPS | 15.83 | 20.84 | 16.48 | 21.15 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 120 TPS | 6.53 | 13.39 | 6.74 | 13.63 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 60 TPS | 13.56 | 20.44 | 12.97 | 20.98 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 120 TPS | 6.41 | 12.99 | 6.57 | 13.67 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 60 TPS | 13.77 | 20.27 | 19.53 | 20.61 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 120 TPS | 6.30 | 13.75 | 7.04 | 13.69 | Target met (median <= 66 ms, max <= 100 ms) |
 
 ## Grid cross-check
 

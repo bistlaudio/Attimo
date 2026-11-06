@@ -133,7 +133,7 @@ Exception: placeholder hit puffs in `scripts/debug` + `scenes/debug/hit_puff.tsc
 | Signal | Payload | Emitted by |
 |---|---|---|
 | `jumped` | `position: Vector3` | `Jump.enter`, for ground jumps (Jump 1, Jump 2 and Jump 3, the salto). There is no air jump. |
-| `long_jumped` | `position: Vector3, stage: int` | `LongJump.enter`; stage 1 first dash hop, 2, 3 top of the stack (clean repeats on landing; stays at 3) |
+| `long_jumped` | `position: Vector3, stage: int` | `LongJump.enter`; stage 1 first dash hop, then 2 and 3 on clean repeats on landing; the combo ends after 3 and the next hop restarts at 1 |
 | `chain_stage_changed` | `stage: int` | `PlayerController` when the ground-jump chain stage changes (1, 2, 3 for Jump 1, 2, 3; 0 on reset) |
 | `landed` | `position: Vector3, impact_speed: float` | `PlayerController._land` on floor contact; `impact_speed` is the downward speed at touchdown |
 | `dash_started` | `position: Vector3, direction: Vector3, in_air: bool` | `Dash.enter` |

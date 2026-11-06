@@ -1,7 +1,7 @@
 extends RefCounted
 ## MOVE-07 / MOVE-05 / D-05 / D-06 / D-07: the ground-jump chain and the long jump. Jump 1 -> land -> Jump 2 ->
 ## land -> Jump 3 (the salto, highest) inside the landing window. Dash -> Jump = the dash hop, a long jump at the
-## speed of its stage (set, never carried); clean repeats on landing climb the stack 1 -> 2 -> 3 and stay at 3, a miss
+## speed of its stage (set, never carried); clean repeats on landing climb the stack 1 -> 2 -> 3, the combo ends after 3 and the next hop restarts at 1, a miss
 ## restarts at 1. Every expectation derives from player.config. Scenarios that need other numbers duplicate the config
 ## first (the shared resource is never mutated). Presses go through the input pipeline
 ## (Fixtures.send_action_event), actions are released before nodes are freed and the tick rate stays at 60.
@@ -362,8 +362,8 @@ func _scenario_no_air_dash_after_long_jump(tree: SceneTree, check: Callable) -> 
 	await _end(player)
 
 
-# U5: dash + jump on the landing tick of each long jump climbs the stack: stages 1, 2, 3, then 3 again. Take-off
-# speeds and apexes match the rows, distances rise over stages 1-3, no tick exceeds 22 m/s.
+# U5: dash + jump on the landing tick of each long jump climbs the stack: stages 1, 2, 3, then 1 again (the combo ends
+# after 3). Take-off speeds and apexes match the rows, distances rise over stages 1-3, the fourth hop matches stage 1, no tick exceeds 22 m/s.
 func _scenario_hop_stack(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree, Vector3(0.0, 0.0, 78.0))
 	var config: MovementConfig = player.config
@@ -379,15 +379,18 @@ func _scenario_hop_stack(tree: SceneTree, check: Callable) -> void:
 		var stages: Array[int] = []
 		for hop: Dictionary in hops:
 			stages.append(int(hop.stage))
-		check.call(stages == [1, 2, 3, 3], "(l3) long_jumped stages are 1, 2, 3, 3 (got %s)" % [stages])
+		check.call(stages == [1, 2, 3, 1], "(l3) long_jumped stages are 1, 2, 3, 1 (got %s)" % [stages])
 		for i: int in 4:
-			var stage: int = mini(i + 1, 3)
+			var stage: int = i % 3 + 1
 			var hop: Dictionary = hops[i]
 			check.call(absf(hop.first_speed - config.long_jump_speed(stage)) < 0.1, "(l3) hop %d takes off at long_jump_speed(%d) %.1f (got %.2f)" % [i + 1, stage, config.long_jump_speed(stage), hop.first_speed])
 			check.call(absf(hop.apex - config.long_jump_height(stage)) < 0.15, "(l3) hop %d apex %.3f m is within 0.15 of long_jump_height(%d) %.2f" % [i + 1, hop.apex, stage, config.long_jump_height(stage)])
 			check.call(hop.max_speed <= 22.1, "(l3) hop %d never exceeds 22 m/s (max %.2f)" % [i + 1, hop.max_speed])
 		check.call(hops[0].distance < hops[1].distance and hops[1].distance < hops[2].distance, "(l3) distances rise over stages 1-3 (%.2f < %.2f < %.2f m)" % [hops[0].distance, hops[1].distance, hops[2].distance])
-		check.call(absf(hops[3].distance - hops[2].distance) < 0.3, "(l3) the fourth hop stays at stage 3 (%.2f vs %.2f m)" % [hops[3].distance, hops[2].distance])
+		check.call(absf(hops[3].distance - hops[0].distance) < 0.3, "(l3) the fourth hop matches stage 1 distance (%.2f vs %.2f m)" % [hops[3].distance, hops[0].distance])
+		check.call(absf(hops[3].apex - hops[0].apex) < 0.15, "(l3) the fourth hop matches stage 1 apex (%.2f vs %.2f m)" % [hops[3].apex, hops[0].apex])
+		check.call(absf(hops[3].first_speed - hops[0].first_speed) < 0.1, "(l3) the fourth hop matches stage 1 take-off speed (%.2f vs %.2f m/s)" % [hops[3].first_speed, hops[0].first_speed])
+		check.call(player.long_jump_stage == 1, "(l3) the spent stack restarted: the stack is at 1 after the fourth hop (stack %d)" % player.long_jump_stage)
 	for stage: int in [1, 2, 3]:
 		check.call(config.long_jump_speed(stage) <= 22.0, "(l3) the row long_jump_speed(%d) %.1f is at most 22 m/s" % [stage, config.long_jump_speed(stage)])
 	await _end(player)
