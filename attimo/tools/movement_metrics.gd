@@ -37,7 +37,7 @@ const STEP_HEIGHTS: Array[float] = [0.10, 0.15, 0.20, 0.25]
 const CAP_SLACK: float = 0.1
 
 const TAKEOFF_KINDS: Array[StringName] = [&"jumped", &"double_jumped", &"long_jumped"]
-const RELEASE_ACTIONS: Array[StringName] = [&"move_forward", &"move_left", &"sprint", &"jump", &"dash"]
+const RELEASE_ACTIONS: Array[StringName] = [&"move_forward", &"move_left", &"jump", &"dash"]
 
 var _tree: SceneTree
 var _bus: Node
@@ -186,13 +186,10 @@ func _release_all() -> void:
 		Input.action_release(action)
 
 
-## Holds move_forward (and sprint) and waits until the player runs at the target speed.
-func _run_up(player: PlayerController, sprint: bool) -> void:
+## Holds move_forward and waits until the player runs at the run speed.
+func _run_up(player: PlayerController) -> void:
 	Input.action_press(&"move_forward")
 	var target: float = player.config.run_speed
-	if sprint:
-		Input.action_press(&"sprint")
-		target *= player.config.sprint_multiplier
 	await Fixtures.wait_until(_tree, func() -> bool: return absf(player.horizontal_speed() - target) < 0.05, 240)
 
 
@@ -269,7 +266,7 @@ func _jump_flight(player: PlayerController, tap: bool) -> Dictionary:
 func _measure_ground() -> Dictionary:
 	var player: PlayerController = await _begin()
 	var config: MovementConfig = player.config
-	var result: Dictionary = {"run_top": 0.0, "run_time": -1.0, "sprint_top": 0.0, "sprint_time": -1.0}
+	var result: Dictionary = {"run_top": 0.0, "run_time": -1.0}
 	Input.action_press(&"move_forward")
 	for tick: int in 120:
 		await _tree.physics_frame
@@ -278,15 +275,6 @@ func _measure_ground() -> Dictionary:
 		var run_time: float = result["run_time"]
 		if run_time < 0.0 and absf(player.horizontal_speed() - config.run_speed) < 0.05:
 			result["run_time"] = float(tick + 1) / float(TPS)
-	var sprint_target: float = config.run_speed * config.sprint_multiplier
-	Input.action_press(&"sprint")
-	for tick: int in 180:
-		await _tree.physics_frame
-		var sprint_top: float = result["sprint_top"]
-		result["sprint_top"] = maxf(sprint_top, player.horizontal_speed())
-		var sprint_time: float = result["sprint_time"]
-		if sprint_time < 0.0 and absf(player.horizontal_speed() - sprint_target) < 0.05:
-			result["sprint_time"] = float(tick + 1) / float(TPS)
 	await _end(player)
 	return result
 
@@ -305,30 +293,25 @@ func _measure_jumps() -> Dictionary:
 	await _end(player)
 
 	player = await _begin()
-	await _run_up(player, false)
+	await _run_up(player)
 	out["tap_run"] = await _jump_flight(player, true)
 	await _end(player)
 
 	player = await _begin()
-	await _run_up(player, false)
+	await _run_up(player)
 	out["full_run"] = await _jump_flight(player, false)
-	await _end(player)
-
-	player = await _begin()
-	await _run_up(player, true)
-	out["full_sprint"] = await _jump_flight(player, false)
 	await _end(player)
 
 	# Jump 1 held, landing, Jump 2 held inside the chain window.
 	player = await _begin()
-	await _run_up(player, false)
+	await _run_up(player)
 	out["jump_1"] = await _jump_flight(player, false)
 	out["jump_2"] = await _jump_flight(player, false)
 	await _end(player)
 
 	# Double jump: Jump 1 held to its apex, then a second press on the first falling tick.
 	player = await _begin()
-	await _run_up(player, false)
+	await _run_up(player)
 	out["double"] = await _double_jump(player)
 	await _end(player)
 	return out
@@ -371,12 +354,12 @@ func _measure_dashes() -> Dictionary:
 	var out: Dictionary = {}
 
 	var player: PlayerController = await _begin()
-	await _run_up(player, false)
+	await _run_up(player)
 	out["ground"] = await _dash(player)
 	await _end(player)
 
 	player = await _begin()
-	await _run_up(player, false)
+	await _run_up(player)
 	Fixtures.send_action_event(&"jump", true)
 	var before: int = _takeoff_count()
 	await Fixtures.wait_until(_tree, func() -> bool: return _takeoff_count() > before, 12)
@@ -428,7 +411,7 @@ func _measure_long_jumps() -> Dictionary:
 ## the dash (`late` false) or in the last tick of dash_jump_grace after the dash (`late` true).
 func _long_jump(stage: int, late: bool) -> Dictionary:
 	var player: PlayerController = await _begin()
-	await _run_up(player, false)
+	await _run_up(player)
 	for i: int in stage:
 		await _jump_flight(player, false)
 	var result: Dictionary = _empty_flight()
@@ -685,7 +668,6 @@ func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, d
 	lines.append("| Verb | Speed (m/s) | Time to speed (s) | Note |")
 	lines.append("|---|---|---|---|")
 	lines.append(_row(["Run speed", "%.2f" % float(ground["run_top"]), "%.2f" % float(ground["run_time"]), "move_forward held from standing, run_speed %.1f" % config.run_speed]))
-	lines.append(_row(["Sprint speed", "%.2f" % float(ground["sprint_top"]), "%.2f" % float(ground["sprint_time"]), "sprint held while running, run_speed x %.2f; time counted from the sprint press" % config.sprint_multiplier]))
 	lines.append("")
 
 	lines.append("## Jump")
@@ -696,7 +678,6 @@ func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, d
 	lines.append(_jump_row("Tap jump (run)", jumps["tap_run"], "at run speed"))
 	lines.append(_jump_row("Full jump (standing)", jumps["full_standing"], "held to the apex"))
 	lines.append(_jump_row("Full jump (run)", jumps["full_run"], "held to the apex, at run speed"))
-	lines.append(_jump_row("Full jump (sprint)", jumps["full_sprint"], "held to the apex, at sprint speed"))
 	var double: Dictionary = jumps["double"]
 	lines.append(_jump_row("Double jump", double, "Jump 1 held, second press on the first falling tick; height is the total above the first take-off, the second jump adds %.2f m" % float(double["extra"])))
 	lines.append(_jump_row("Jump 2 (chain)", jumps["jump_2"], "pressed on the landing tick of Jump 1 (Jump 1 for comparison: %.2f m, %.2f m)" % [float(jumps["jump_1"]["apex"]), float(jumps["jump_1"]["distance"])]))
@@ -779,7 +760,6 @@ func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, d
 	lines.append("| Verb | Distance (m) | Widest gap (1 m grid) | 4 m modules | Tallest ledge (m) |")
 	lines.append("|---|---|---|---|---|")
 	lines.append(_grid_row("Run jump", jumps["full_run"]))
-	lines.append(_grid_row("Sprint jump", jumps["full_sprint"]))
 	lines.append(_grid_row("Double jump (run)", double))
 	lines.append(_grid_row("Jump 2 chain jump", jumps["jump_2"]))
 	for stage: int in 3:

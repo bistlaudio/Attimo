@@ -9,7 +9,7 @@ const CONFIG_PATH: String = "res://resources/player/movement_default.tres"
 const REGENERATE_HINT: String = "re-run `bash attimo/tests/run.sh --tool res://tools/measure_movement.gd`"
 ## Row labels the doc contract requires (the first cell of a table row).
 const ROW_LABELS: Array[String] = [
-	"Run speed", "Sprint speed", "Tap jump", "Full jump (standing)", "Full jump (run)", "Full jump (sprint)",
+	"Run speed", "Tap jump", "Full jump (standing)", "Full jump (run)",
 	"Double jump", "Jump 2 (chain)", "Ground dash", "Air dash",
 	"Long jump small", "Long jump mid", "Long jump max",
 	"Coyote time", "Jump buffer", "Chain window", "Dash cooldown", "Dash-jump grace",

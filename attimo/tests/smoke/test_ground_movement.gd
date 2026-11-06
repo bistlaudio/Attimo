@@ -15,9 +15,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_camera_rig(tree, check)
 	await _scenario_snap_band(tree, check)
 	await _scenario_jump(tree, check)
-	await _scenario_sprint(tree, check)
-	await _scenario_sprint_release(tree, check)
-	await _scenario_sprint_jump(tree, check)
+	await _scenario_shift_dash(tree, check)
 
 
 func _tick() -> float:
@@ -50,7 +48,7 @@ func _scenario_run_and_stop(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.wait_physics(tree, 3)
 	check.call(player.horizontal_speed() > 0.1 and player.horizontal_speed() < config.run_speed, "(a) after 3 ticks the speed is still below run_speed (%.2f)" % player.horizontal_speed())
 
-	var accel_budget: int = int(ceil(config.run_speed / config.ground_accel / dt)) + 2
+	var accel_budget: int = int(ceil(config.run_speed / config.ground_accel / dt)) + 1
 	var reached: int = await Fixtures.wait_until(tree, func() -> bool: return absf(player.horizontal_speed() - config.run_speed) < 0.05, accel_budget - 3)
 	check.call(reached >= 0, "(a) run_speed reached within %d ticks of the press" % accel_budget)
 	check.call(player.global_position.z < -0.5 and absf(player.global_position.x) < 0.05, "(a) the player moved toward -Z without a camera (z=%.2f)" % player.global_position.z)
@@ -235,77 +233,47 @@ func _scenario_jump(tree: SceneTree, check: Callable) -> void:
 	await _free_all(tree, nodes)
 
 
-# (g) hold-to-sprint (D-03, A26): Idle -> Run -> Sprint, own slower curve above run speed, about 1.5x run.
-func _scenario_sprint(tree: SceneTree, check: Callable) -> void:
-	var nodes: Array[Node] = await _spawn(tree, Vector3.ZERO)
-	var player: PlayerController = nodes[1] as PlayerController
-	var config: MovementConfig = player.config
-	var sprint_speed: float = config.run_speed * config.sprint_multiplier
-	var run_ticks: int = int(ceil(config.run_speed / config.ground_accel * float(Engine.physics_ticks_per_second)))
-	var extra_ticks: int = int(ceil(config.run_speed * (config.sprint_multiplier - 1.0) / config.sprint_accel * float(Engine.physics_ticks_per_second)))
-	var budget: int = run_ticks + extra_ticks + 3
+# (g) tracer (U1, U3): a real Left Shift key event dashes exactly once (a tap, no repeat), the run returns to
+# the one run speed afterwards, and no extra run state exists.
+func _scenario_shift_dash(tree: SceneTree, check: Callable) -> void:
+	var bus: Node = tree.root.get_node("EventBus")
+	var dashes: Array[int] = [0]
+	var on_dash: Callable = func(_position: Vector3, _direction: Vector3, _in_air: bool) -> void: dashes[0] += 1
+	bus.connect(&"dash_started", on_dash)
 
-	Input.action_press(&"move_forward")
-	Input.action_press(&"sprint")
-	var entered: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Sprint", 3)
-	check.call(entered >= 0 and entered <= 2, "(g) Sprint is entered within 2 ticks of the press (waited %d, state %s)" % [entered, player.state_machine.current.name])
-
-	# Ticks already spent while waiting count toward the curve.
-	var spent: int = maxi(entered, 0)
-	await Fixtures.wait_physics(tree, run_ticks + 3 - spent)
-	check.call(player.horizontal_speed() < sprint_speed - 0.05, "(g) %d ticks in, the speed %.2f is still below sprint speed %.2f (own, slower curve)" % [run_ticks + 3, player.horizontal_speed(), sprint_speed])
-	var reached: int = await Fixtures.wait_until(tree, func() -> bool: return absf(player.horizontal_speed() - sprint_speed) < 0.05, budget - (run_ticks + 3))
-	check.call(reached >= 0, "(g) sprint speed %.2f reached within %d ticks of the press (speed %.2f)" % [sprint_speed, budget, player.horizontal_speed()])
-	await Fixtures.wait_physics(tree, 10)
-	var ratio: float = player.horizontal_speed() / config.run_speed
-	check.call(absf(ratio - config.sprint_multiplier) < 0.02, "(g) top speed / run_speed is %.3f, sprint_multiplier %.2f" % [ratio, config.sprint_multiplier])
-	check.call(player.state_machine.current.name == &"Sprint", "(g) state is Sprint at top speed (got %s)" % player.state_machine.current.name)
-
-	Input.action_release(&"sprint")
-	Input.action_release(&"move_forward")
-	await _free_all(tree, nodes)
-
-
-# (h) releasing sprint with the direction held returns to Run and to run speed.
-func _scenario_sprint_release(tree: SceneTree, check: Callable) -> void:
-	var nodes: Array[Node] = await _spawn(tree, Vector3.ZERO)
-	var player: PlayerController = nodes[1] as PlayerController
-	var config: MovementConfig = player.config
-	var sprint_speed: float = config.run_speed * config.sprint_multiplier
-
-	Input.action_press(&"move_forward")
-	Input.action_press(&"sprint")
-	var at_top: int = await Fixtures.wait_until(tree, func() -> bool: return absf(player.horizontal_speed() - sprint_speed) < 0.05, 60)
-	check.call(at_top >= 0, "(h) full sprint speed was reached before the release")
-	Input.action_release(&"sprint")
-	var back: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Run" and absf(player.horizontal_speed() - config.run_speed) < 0.05, 20)
-	check.call(back >= 0, "(h) releasing sprint enters Run at run_speed within 20 ticks (state %s, speed %.2f)" % [player.state_machine.current.name, player.horizontal_speed()])
-
-	Input.action_release(&"move_forward")
-	await _free_all(tree, nodes)
-
-
-# (i) a jump from full sprint keeps the sprint speed in the air while the direction is held.
-func _scenario_sprint_jump(tree: SceneTree, check: Callable) -> void:
 	var nodes: Array[Node] = await _spawn(tree, Vector3(0.0, 0.0, 25.0))
 	var player: PlayerController = nodes[1] as PlayerController
 	var config: MovementConfig = player.config
-	var sprint_speed: float = config.run_speed * config.sprint_multiplier
 
 	Input.action_press(&"move_forward")
-	Input.action_press(&"sprint")
-	var at_top: int = await Fixtures.wait_until(tree, func() -> bool: return absf(player.horizontal_speed() - sprint_speed) < 0.05, 60)
-	check.call(at_top >= 0, "(i) full sprint speed was reached before the jump")
-	Input.action_press(&"jump")
-	var airborne: int = await Fixtures.wait_until(tree, func() -> bool: return not player.is_grounded(), 10)
-	check.call(airborne >= 0, "(i) the sprint jump leaves the floor")
-	var slowest: float = INF
-	for i: int in 15:
-		await Fixtures.wait_physics(tree, 1)
-		slowest = minf(slowest, player.horizontal_speed())
-	check.call(slowest >= 0.98 * sprint_speed, "(i) the slowest airborne speed %.2f keeps 0.98 x sprint speed %.2f" % [slowest, sprint_speed])
+	var at_top: int = await Fixtures.wait_until(tree, func() -> bool: return absf(player.horizontal_speed() - config.run_speed) < 0.05, 60)
+	check.call(at_top >= 0, "(g) run_speed was reached before the dash")
+	check.call(dashes[0] == 0, "(g) no dash_started fact before the key press")
 
-	Input.action_release(&"jump")
-	Input.action_release(&"sprint")
+	_send_shift(true)
+	var entered: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Dash", 3)
+	check.call(entered >= 0 and entered <= 2, "(g) a real Left Shift key press enters Dash within 2 ticks (waited %d, state %s)" % [entered, player.state_machine.current.name])
+	await Fixtures.wait_physics(tree, 30)
+	check.call(dashes[0] == 1, "(g) exactly one dash_started while the key stays held for 30 ticks (got %d)" % dashes[0])
+	check.call(player.state_machine.current.name == &"Run", "(g) the dash ended in Run with the direction held (got %s)" % player.state_machine.current.name)
+
+	_send_shift(false)
+	var settled: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Run" and absf(player.horizontal_speed() - config.run_speed) < 0.05, 30)
+	check.call(settled >= 0, "(g) after the release the speed settles at run_speed %.2f (state %s, speed %.2f)" % [config.run_speed, player.state_machine.current.name, player.horizontal_speed()])
+	check.call(dashes[0] == 1, "(g) the key release does not dash again (got %d)" % dashes[0])
+	check.call(not player.state_machine.has_node(String(&"Sprint")), "(g) the StateMachine has no extra run state node")
+
 	Input.action_release(&"move_forward")
+	bus.disconnect(&"dash_started", on_dash)
 	await _free_all(tree, nodes)
+
+
+## Sends the physical left Shift key through the input pipeline the way the OS reports it.
+func _send_shift(pressed: bool) -> void:
+	var event: InputEventKey = InputEventKey.new()
+	event.physical_keycode = KEY_SHIFT
+	event.location = KEY_LOCATION_LEFT
+	event.pressed = pressed
+	event.shift_pressed = pressed
+	Input.parse_input_event(event)
+	Input.flush_buffered_events()

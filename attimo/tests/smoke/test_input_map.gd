@@ -5,7 +5,7 @@ extends RefCounted
 const ACTIONS: Array[StringName] = [
 	&"move_forward", &"move_back", &"move_left", &"move_right",
 	&"look_left", &"look_right", &"look_up", &"look_down",
-	&"jump", &"sprint", &"dash", &"aim", &"use_hand", &"interact",
+	&"jump", &"dash", &"aim", &"use_hand", &"interact",
 	&"module_next", &"module_prev", &"pause", &"debug_event_log",
 	&"camera_recenter", &"debug_tuning", &"debug_metrics", &"debug_tick_rate",
 ]
@@ -56,10 +56,14 @@ func _check_specific_bindings(check: Callable) -> void:
 	check.call(_has_physical_key(&"jump", KEY_SPACE), "jump maps to physical key Space")
 	check.call(_has_physical_key(&"debug_event_log", KEY_F3), "debug_event_log contains physical key F3")
 	check.call(_has_physical_key(&"debug_event_log", KEY_QUOTELEFT), "debug_event_log contains physical key QuoteLeft")
-	check.call(InputMap.action_get_events(&"dash").size() == 2, "dash has two events (Q and Left Ctrl)")
-	check.call(_has_physical_key(&"dash", KEY_Q), "dash contains Q")
-	check.call(_has_physical_key(&"dash", KEY_CTRL), "dash contains Ctrl")
-	check.call(_has_physical_key(&"sprint", KEY_SHIFT), "sprint maps to Shift")
+	var dash_events: Array[InputEvent] = InputMap.action_get_events(&"dash")
+	check.call(dash_events.size() == 1, "dash has exactly one event (Left Shift, U3)")
+	var dash_key: InputEventKey = dash_events[0] as InputEventKey if dash_events.size() > 0 else null
+	check.call(dash_key != null and dash_key.physical_keycode == KEY_SHIFT, "the dash event is the physical Shift key")
+	check.call(dash_key != null and dash_key.location == KEY_LOCATION_LEFT, "the dash event is the left Shift key")
+	check.call(not InputMap.has_action(&"sprint"), "there is no sprint action (U1)")
+	check.call(not _has_physical_key(&"dash", KEY_Q), "Q does not dash")
+	check.call(not _has_physical_key(&"dash", KEY_CTRL), "Left Ctrl does not dash")
 	check.call(_has_physical_key(&"interact", KEY_E), "interact maps to E")
 	check.call(_has_physical_key(&"pause", KEY_ESCAPE), "pause maps to Escape")
 	check.call(_has_physical_key(&"move_forward", KEY_W), "move_forward maps to W")

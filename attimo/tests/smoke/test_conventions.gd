@@ -8,7 +8,7 @@ const LAYER_NAMES: Array[String] = ["World", "Player", "Interactable", "Enemy", 
 const ACTIONS: Array[String] = [
 	"move_forward", "move_back", "move_left", "move_right",
 	"look_left", "look_right", "look_up", "look_down",
-	"jump", "sprint", "dash", "aim", "use_hand", "interact",
+	"jump", "dash", "aim", "use_hand", "interact",
 	"module_next", "module_prev", "pause", "debug_event_log",
 	"camera_recenter", "debug_tuning", "debug_metrics", "debug_tick_rate",
 ]

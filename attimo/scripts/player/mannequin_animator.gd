@@ -9,7 +9,6 @@ extends Node
 const STATE_TO_ANIM: Dictionary[StringName, StringName] = {
 	&"Idle": &"Locomotion",
 	&"Run": &"Locomotion",
-	&"Sprint": &"Locomotion",
 	&"Jump": &"Jump",
 	&"DoubleJump": &"Jump",
 	&"LongJump": &"Jump",
@@ -20,7 +19,7 @@ const STATE_TO_ANIM: Dictionary[StringName, StringName] = {
 ## States that count as airborne for the landing check (Landing into Idle plays Land).
 const AIRBORNE_STATES: Array[StringName] = [&"Jump", &"Fall", &"DoubleJump", &"LongJump"]
 ## States that blend Locomotion to its run end (blend_position 1.0).
-const RUNNING_STATES: Array[StringName] = [&"Run", &"Sprint"]
+const RUNNING_STATES: Array[StringName] = [&"Run"]
 
 var _playback: AnimationNodeStateMachinePlayback
 

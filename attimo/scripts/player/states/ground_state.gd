@@ -1,6 +1,6 @@
 class_name GroundState
 extends State
-## Shared base of the grounded states (Idle, Run, later Sprint). physics_update runs the common
+## Shared base of the grounded states (Idle and Run). physics_update runs the common
 ## transitions first (left the floor, dash, jump or the long jump inside the dash grace), then the subclass hook _ground_update.
 
 

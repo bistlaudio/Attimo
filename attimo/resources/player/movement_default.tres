@@ -4,10 +4,8 @@
 
 [resource]
 script = ExtResource("1_cfg")
-run_speed = 7.0
-sprint_multiplier = 1.5
-ground_accel = 40.0
-sprint_accel = 25.0
+run_speed = 8.5
+ground_accel = 70.0
 ground_decel = 55.0
 turn_decel = 90.0
 turn_rate = 14.0

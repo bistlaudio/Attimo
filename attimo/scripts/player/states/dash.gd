@@ -81,6 +81,4 @@ func _finish() -> StringName:
 		return &"Fall"
 	if actor.input_direction() == Vector3.ZERO:
 		return &"Idle"
-	if Input.is_action_pressed(&"sprint"):
-		return &"Sprint"
 	return &"Run"

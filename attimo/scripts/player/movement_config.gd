@@ -5,14 +5,10 @@ extends Resource
 ## changes the fall feel. Every divisor field has a strictly positive minimum (T-02-02).
 
 @export_group("Ground")
-## Top running speed in m/s.
-@export_range(1.0, 20.0, 0.1) var run_speed: float = 7.0
-## Sprint target speed as a multiple of run_speed.
-@export_range(1.0, 3.0, 0.05) var sprint_multiplier: float = 1.5
+## The one run speed in m/s (there is no separate fast run; extra speed comes from the dash).
+@export_range(1.0, 20.0, 0.1) var run_speed: float = 8.5
 ## Ground acceleration toward run speed in m/s^2.
-@export_range(5.0, 200.0, 1.0) var ground_accel: float = 40.0
-## Ground acceleration toward sprint speed in m/s^2 (slower, builds up).
-@export_range(5.0, 200.0, 1.0) var sprint_accel: float = 25.0
+@export_range(5.0, 200.0, 1.0) var ground_accel: float = 70.0
 ## Braking when input is released in m/s^2.
 @export_range(5.0, 200.0, 1.0) var ground_decel: float = 55.0
 ## Braking when input opposes the current velocity in m/s^2 (the skid).

@@ -111,8 +111,7 @@ Keys are stored as physical keys (layout independent) with device -1 (all device
 | `look_up` | none | Right stick up | See `look_left`. |
 | `look_down` | none | Right stick down | See `look_left`. |
 | `jump` | Space | A / Cross | |
-| `sprint` | Left Shift | L3 or trigger | Hold. |
-| `dash` | Q and Left Ctrl | B / Circle | Two bindings; CLAUDE.md says "decide in tuning" (kept until the gym sign-off, A5). |
+| `dash` | Left Shift (left side only) | B / Circle | Tap. Single binding, decided after the gym sign-off (U3). There is no sprint action. |
 | `aim` | Right mouse button | L2 / LT | Hold. |
 | `use_hand` | Left mouse button | R2 / RT | Fire or trigger the module. |
 | `interact` | E | X / Square | |
