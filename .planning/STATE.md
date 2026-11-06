@@ -3,17 +3,17 @@ gsd_state_version: "1.0"
 milestone: v0.11.0.4
 current_phase: 02
 current_phase_name: Movement Core & Follow Camera
-status: executing
-stopped_at: Completed 02-13-PLAN.md
-last_updated: "2026-11-05T22:28:17.191Z"
+status: verifying
+stopped_at: "Completed 02-14-PLAN.md (144 Hz item not verified; follow-ups: dash/sprint keys, long-jump arc, lightness, double jump)"
+last_updated: "2026-11-06T09:22:58.726Z"
 last_activity: 2026-11-05
 last_activity_desc: Phase 02 execution started
-state_head: b33688227fce9a4621f89cae9e48ceb6a037ad83
+state_head: 6b1ae33461b9486b97dff93c32b4a2dfe6a1576a
 progress:
   total_phases: 15
   completed_phases: 1
   total_plans: 21
-  completed_plans: 20
+  completed_plans: 21
 ---
 
 # Project State
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 
 Phase: 02 (Movement Core & Follow Camera) — EXECUTING
 Plan: 14 of 14
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-11-05 — Phase 02 execution started
 
 Progress: [█░░░░░░░░░] 7%
@@ -69,6 +69,7 @@ Progress: [█░░░░░░░░░] 7%
 | Phase 02 P11 | 9 min | 2 tasks | 10 files |
 | Phase 02 P12 | 12 min | 2 tasks | 6 files |
 | Phase 02 P13 | 15 min | 2 tasks | 7 files |
+| Phase 02 P14 | 35 min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -109,6 +110,7 @@ Recent decisions that affect current work:
 - [Phase 02]: 02-11: LongJump reads the live dash speed (no exit carry before the ground-jump hand-off) and caps it with long_jump_speed_cap
 - [Phase 02]: 02-12: TuningPanel rows are generated from MovementConfig.get_property_list (float + editor + range hint); camera controls copy rig settings, apply_settings, then save_to(settings_path); Save button editor-only (A15, T-02-16)
 - [Phase 02]: 02-13: measure tool split into a SceneTree loader (measure_movement.gd) and a RefCounted worker (movement_metrics.gd) because a -s script compiles before the autoloads exist
+- [Phase 02]: Movement gym tool split into launcher plus worker; random unique_id values stripped after pack for a reproducible scene (02-14)
 
 ### Pending Todos
 
@@ -120,6 +122,7 @@ None yet.
 - [Phase 9]: Open style decisions: second accent colour, player arm-core glow vs the turquoise rule, final hero triangle budget (~6-9k). The Meshy licence tier is unverified; check it before the final hero is produced.
 - [Phase 11]: Spike needed: `Engine.time_scale` x physics interpolation at 10 TPS before hit-stop is built.
 - [Phase 15]: Performance on the weaker laptop is unmeasured until late. A first frame-rate check is planned after the world swap in Phase 10.
+- CAM-01 success criterion 1: 144 Hz camera judder not verified (developer has only a Mac); open human-verification gap, needs a 144 Hz display
 
 ## Deferred Items
 
@@ -131,6 +134,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-05T22:28:17.119Z
-Stopped at: Completed 02-13-PLAN.md
+Last session: 2026-11-06T09:22:58.644Z
+Stopped at: Completed 02-14-PLAN.md (144 Hz item not verified; follow-ups: dash/sprint keys, long-jump arc, lightness, double jump)
 Resume file: None
