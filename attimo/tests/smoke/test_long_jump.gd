@@ -1,8 +1,9 @@
 extends RefCounted
 ## MOVE-07 / MOVE-05 / D-05 / D-06 / D-07: the ground-jump chain and the long jump. Jump 1 -> land -> Jump 2 ->
-## land -> Jump 3 (the salto, highest) inside the landing window, Dash -> Jump = a long jump that carries the dash
-## speed (bounded) and grows with the chain stage. Every expectation derives from player.config. Scenarios that need other numbers duplicate
-## the config first (the shared resource is never mutated). Presses go through the input pipeline
+## land -> Jump 3 (the salto, highest) inside the landing window. Dash -> Jump = the dash hop, a long jump at the
+## speed of its stage (set, never carried); clean repeats on landing climb the stack 1 -> 2 -> 3 and stay at 3, a miss
+## restarts at 1. Every expectation derives from player.config. Scenarios that need other numbers duplicate the config
+## first (the shared resource is never mutated). Presses go through the input pipeline
 ## (Fixtures.send_action_event), actions are released before nodes are freed and the tick rate stays at 60.
 
 const Fixtures := preload("res://tests/fixtures.gd")
@@ -29,9 +30,11 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_chain_new_after_stage_three(tree, check)
 	await _scenario_salto_then_one_air_dash(tree, check)
 	await _scenario_plain_long_jump(tree, check)
+	await _scenario_hop_stack(tree, check)
+	await _scenario_stack_misses(tree, check)
 	await _scenario_grace(tree, check)
-	await _scenario_stage_distances(tree, check)
-	await _scenario_cap(tree, check)
+	await _scenario_set_not_carried(tree, check)
+	await _scenario_chain_reset_by_dash_and_hop(tree, check)
 	await _scenario_air_dash_then_jump(tree, check)
 
 
@@ -199,7 +202,7 @@ func _scenario_chain_timeout(tree: SceneTree, check: Callable) -> void:
 	var config: MovementConfig = player.config
 	await _run_up(tree, player)
 	await _held_jump(tree, player)
-	await Fixtures.wait_physics(tree, int(ceil((config.chain_window + 0.1) * float(TPS))))
+	await Fixtures.wait_physics(tree, int(ceil((config.landing_window + 0.1) * float(TPS))))
 	check.call(_stages_are([1, 0]), "(c4) the stage resets to 0 when the landing window runs out (got %s)" % [_stages])
 	var later: Dictionary = await _held_jump(tree, player)
 	check.call(absf(later.apex - config.jump_height) < 0.1, "(c4) the jump after the timeout peaks at jump_height (%.3f vs %.2f)" % [later.apex, config.jump_height])
@@ -290,8 +293,8 @@ func _dash_jump(tree: SceneTree, player: PlayerController) -> Dictionary:
 	}
 
 
-# D-06: a jump during a plain ground dash is a stage 0 long jump that carries the dash speed and is
-# farther and flatter than a normal running jump.
+# D-06 / U5: a jump during a plain ground dash is long jump stage 1 at long_jump_speed_1 (above run speed),
+# higher and farther than a normal running jump.
 func _scenario_plain_long_jump(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
 	var config: MovementConfig = player.config
@@ -299,9 +302,9 @@ func _scenario_plain_long_jump(tree: SceneTree, check: Callable) -> void:
 	var normal_takeoff: Vector3 = player.global_position
 	var normal: Dictionary = await _held_jump(tree, player)
 	var normal_distance: float = _flat_distance(normal_takeoff, normal.land)
-	# Let the window of the normal jump run out, so the dash starts a plain chain.
-	await Fixtures.wait_physics(tree, int(ceil((config.chain_window + 0.1) * float(TPS))))
-	check.call(player.chain_stage == 0, "(l1) the chain is empty before the plain dash (stage %d)" % player.chain_stage)
+	# Let the window of the normal jump run out, so the dash starts a fresh stack.
+	await Fixtures.wait_physics(tree, int(ceil((config.landing_window + 0.1) * float(TPS))))
+	check.call(player.chain_stage == 0 and player.long_jump_stage == 0, "(l1) chain and stack are empty before the plain dash (%d, %d)" % [player.chain_stage, player.long_jump_stage])
 
 	# Dash alone first; the jump follows on the 3rd tick of the dash.
 	Fixtures.send_action_event(&"dash", true)
@@ -311,21 +314,77 @@ func _scenario_plain_long_jump(tree: SceneTree, check: Callable) -> void:
 	var longs_before: int = _longs.size()
 	Fixtures.send_action_event(&"jump", true)
 	var started: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"LongJump", 6)
-	var carried: float = player.horizontal_speed()
+	var takeoff_speed: float = player.horizontal_speed()
 	check.call(started >= 0, "(l1) a jump during a plain ground dash goes Dash -> LongJump (state %s)" % player.state_machine.current.name)
-	check.call(_longs.size() == longs_before + 1 and _longs[_longs.size() - 1].stage == 0, "(l1) long_jumped is emitted once with stage 0 (got %s)" % [_longs])
+	check.call(_longs.size() == longs_before + 1 and _longs[_longs.size() - 1].stage == 1, "(l1) long_jumped is emitted once with stage 1 (got %s)" % [_longs])
 	if _longs.is_empty():
 		await _end(player)
 		return
-	var expected_speed: float = minf(maxf(config.dash_speed, config.long_jump_speed(0)), config.long_jump_speed_cap)
-	check.call(absf(carried - expected_speed) < 0.1, "(l2) the take-off speed %.2f m/s is the carried dash speed %.2f (within 0.1)" % [carried, expected_speed])
-	check.call(player.chain_stage == 0, "(l2) the chain is consumed (stage %d)" % player.chain_stage)
+	check.call(absf(takeoff_speed - config.long_jump_speed_1) < 0.1, "(l2) the take-off speed %.2f m/s is long_jump_speed_1 %.1f (within 0.1)" % [takeoff_speed, config.long_jump_speed_1])
+	check.call(takeoff_speed > config.run_speed + 1.0, "(l2) and above the run speed %.1f m/s" % config.run_speed)
+	check.call(player.chain_stage == 0 and player.long_jump_stage == 1, "(l2) the chain is consumed and the stack is at 1 (chain %d, stack %d)" % [player.chain_stage, player.long_jump_stage])
 	var takeoff: Vector3 = _longs[_longs.size() - 1].position
 	var flight: Dictionary = await _fly(tree, player, true, takeoff.y)
 	var distance: float = _flat_distance(takeoff, flight.land)
 	check.call(distance > normal_distance + 2.0, "(l1) the long jump (%.2f m) is farther than a normal running jump (%.2f m)" % [distance, normal_distance])
-	check.call(flight.apex < normal.apex - 0.3, "(l1) and flatter: apex %.2f m vs %.2f m" % [flight.apex, normal.apex])
-	check.call(absf(flight.apex - config.long_jump_height(0)) < 0.1, "(l1) the apex %.3f m is within 0.1 of long_jump_height(0) %.2f" % [flight.apex, config.long_jump_height(0)])
+	check.call(absf(flight.apex - config.long_jump_height_1) < 0.15, "(l1) the apex %.3f m is within 0.15 of long_jump_height_1 %.2f" % [flight.apex, config.long_jump_height_1])
+	await _end(player)
+
+
+# U5: dash + jump on the landing tick of each long jump climbs the stack: stages 1, 2, 3, then 3 again. Take-off
+# speeds and apexes match the rows, distances rise over stages 1-3, no tick exceeds 22 m/s.
+func _scenario_hop_stack(tree: SceneTree, check: Callable) -> void:
+	var player: PlayerController = await _begin(tree, Vector3(0.0, 0.0, 78.0))
+	var config: MovementConfig = player.config
+	await _run_up(tree, player)
+	var hops: Array[Dictionary] = []
+	for i: int in 4:
+		hops.append(await _dash_jump(tree, player))
+	var all_started: bool = true
+	for hop: Dictionary in hops:
+		all_started = all_started and hop.started
+	check.call(all_started, "(l3) all four dash jumps became long jumps")
+	if all_started:
+		var stages: Array[int] = []
+		for hop: Dictionary in hops:
+			stages.append(int(hop.stage))
+		check.call(stages == [1, 2, 3, 3], "(l3) long_jumped stages are 1, 2, 3, 3 (got %s)" % [stages])
+		for i: int in 4:
+			var stage: int = mini(i + 1, 3)
+			var hop: Dictionary = hops[i]
+			check.call(absf(hop.first_speed - config.long_jump_speed(stage)) < 0.1, "(l3) hop %d takes off at long_jump_speed(%d) %.1f (got %.2f)" % [i + 1, stage, config.long_jump_speed(stage), hop.first_speed])
+			check.call(absf(hop.apex - config.long_jump_height(stage)) < 0.15, "(l3) hop %d apex %.3f m is within 0.15 of long_jump_height(%d) %.2f" % [i + 1, hop.apex, stage, config.long_jump_height(stage)])
+			check.call(hop.max_speed <= 22.1, "(l3) hop %d never exceeds 22 m/s (max %.2f)" % [i + 1, hop.max_speed])
+		check.call(hops[0].distance < hops[1].distance and hops[1].distance < hops[2].distance, "(l3) distances rise over stages 1-3 (%.2f < %.2f < %.2f m)" % [hops[0].distance, hops[1].distance, hops[2].distance])
+		check.call(absf(hops[3].distance - hops[2].distance) < 0.3, "(l3) the fourth hop stays at stage 3 (%.2f vs %.2f m)" % [hops[3].distance, hops[2].distance])
+	for stage: int in [1, 2, 3]:
+		check.call(config.long_jump_speed(stage) <= 22.0, "(l3) the row long_jump_speed(%d) %.1f is at most 22 m/s" % [stage, config.long_jump_speed(stage)])
+	await _end(player)
+
+
+# U5: a miss restarts the stack at stage 1: the window runs out, a normal ground jump in between, or standing still.
+func _scenario_stack_misses(tree: SceneTree, check: Callable) -> void:
+	var player: PlayerController = await _begin(tree, Vector3(0.0, 0.0, 78.0))
+	var config: MovementConfig = player.config
+	await _run_up(tree, player)
+	var first: Dictionary = await _dash_jump(tree, player)
+	var second: Dictionary = await _dash_jump(tree, player)
+	check.call(first.started and second.started and first.stage == 1 and second.stage == 2, "(l4) the stack is at 2 after two clean hops (got %s, %s)" % [first.get("stage"), second.get("stage")])
+	# (a) the window runs out while running.
+	await Fixtures.wait_physics(tree, int(ceil((config.landing_window + 0.1) * float(TPS))))
+	check.call(player.long_jump_stage == 0, "(l4) the stack is empty after the landing window ran out (stack %d)" % player.long_jump_stage)
+	var after_timeout: Dictionary = await _dash_jump(tree, player)
+	check.call(after_timeout.started and after_timeout.stage == 1, "(l4) the hop after the timeout is stage 1 (got %s)" % after_timeout.get("stage"))
+	# (b) a normal jump in between.
+	var normal: Dictionary = await _held_jump(tree, player)
+	check.call(normal.landed and player.long_jump_stage == 0, "(l4) a normal ground jump clears the stack (stack %d)" % player.long_jump_stage)
+	await Fixtures.wait_physics(tree, int(ceil((config.dash_cooldown + 0.1) * float(TPS))))
+	var after_jump: Dictionary = await _dash_jump(tree, player)
+	check.call(after_jump.started and after_jump.stage == 1, "(l4) the hop after a normal jump is stage 1 (got %s)" % after_jump.get("stage"))
+	# (c) standing still.
+	Fixtures.send_action_event(&"move_forward", false)
+	await Fixtures.wait_physics(tree, int(ceil((config.landing_window + 0.1) * float(TPS))))
+	check.call(player.long_jump_stage == 0, "(l4) standing still clears the stack (stack %d)" % player.long_jump_stage)
 	await _end(player)
 
 
@@ -345,7 +404,7 @@ func _scenario_grace(tree: SceneTree, check: Callable) -> void:
 	check.call(early >= 0 and _longs.size() == 1, "(l3) a jump early in the grace is a long jump (state %s, long_jumped %d)" % [player.state_machine.current.name, _longs.size()])
 	var flight: Dictionary = await _fly(tree, player, false)
 	check.call(flight.landed, "(l3) the early grace long jump lands")
-	await Fixtures.wait_physics(tree, int(ceil((config.chain_window + config.dash_cooldown + 0.1) * float(TPS))))
+	await Fixtures.wait_physics(tree, int(ceil((config.landing_window + config.dash_cooldown + 0.1) * float(TPS))))
 
 	# (b) late in the grace: the carried speed is below the stage row, so the row is the take-off speed.
 	await _dash_and_wait_for_end(tree, player)
@@ -355,10 +414,10 @@ func _scenario_grace(tree: SceneTree, check: Callable) -> void:
 	var late: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"LongJump", 4)
 	var late_speed: float = player.horizontal_speed()
 	check.call(late >= 0 and _longs.size() == 2, "(l4) a jump in the last tick of the grace is a long jump (state %s, long_jumped %d)" % [player.state_machine.current.name, _longs.size()])
-	check.call(carried_before < config.long_jump_speed(0), "(l4) the speed carried at the press (%.2f) is below the stage 0 row %.1f" % [carried_before, config.long_jump_speed(0)])
-	check.call(absf(late_speed - config.long_jump_speed(0)) < 0.1, "(l4) a late-grace jump takes off at long_jump_speed(0): %.2f vs %.1f" % [late_speed, config.long_jump_speed(0)])
+	check.call(carried_before < config.long_jump_speed(1), "(l4) the speed carried at the press (%.2f) is below the stage 1 row %.1f" % [carried_before, config.long_jump_speed(1)])
+	check.call(absf(late_speed - config.long_jump_speed(1)) < 0.1, "(l4) a late-grace jump takes off at long_jump_speed(1): %.2f vs %.1f" % [late_speed, config.long_jump_speed(1)])
 	await _fly(tree, player, false)
-	await Fixtures.wait_physics(tree, int(ceil((config.chain_window + config.dash_cooldown + 0.1) * float(TPS))))
+	await Fixtures.wait_physics(tree, int(ceil((config.landing_window + config.dash_cooldown + 0.1) * float(TPS))))
 
 	# (c) after the grace a jump is a normal Jump.
 	await _dash_and_wait_for_end(tree, player)
@@ -380,43 +439,37 @@ func _dash_and_wait_for_end(tree: SceneTree, player: PlayerController) -> void:
 	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name != &"Dash", 40)
 
 
-# D-05: Dash -> Jump after no jump, Jump 1 and Jump 1 + Jump 2 gives stages 0, 1, 2 and growing distances.
-func _scenario_stage_distances(tree: SceneTree, check: Callable) -> void:
-	var player: PlayerController = await _begin(tree)
-	var config: MovementConfig = player.config
-	await _run_up(tree, player)
-	var small: Dictionary = await _dash_jump(tree, player)
-	await Fixtures.wait_physics(tree, int(ceil((config.chain_window + config.dash_cooldown + 0.1) * float(TPS))))
-	await _run_up(tree, player)
-	await _held_jump(tree, player)
-	var mid: Dictionary = await _dash_jump(tree, player)
-	await Fixtures.wait_physics(tree, int(ceil((config.chain_window + config.dash_cooldown + 0.1) * float(TPS))))
-	await _run_up(tree, player)
-	await _held_jump(tree, player)
-	await _held_jump(tree, player)
-	var maximum: Dictionary = await _dash_jump(tree, player)
-	check.call(small.started and mid.started and maximum.started, "(l6) all three dash jumps became long jumps")
-	if small.started and mid.started and maximum.started:
-		check.call(small.stage == 0 and mid.stage == 1 and maximum.stage == 2, "(l6) long_jumped stages are 0, 1, 2 (got %d, %d, %d)" % [small.stage, mid.stage, maximum.stage])
-		check.call(small.distance < mid.distance and mid.distance < maximum.distance, "(l6) distances order small < mid < max (%.2f < %.2f < %.2f m)" % [small.distance, mid.distance, maximum.distance])
-		check.call(small.apex < mid.apex and mid.apex < maximum.apex, "(l6) apexes order small < mid < max (%.2f < %.2f < %.2f m)" % [small.apex, mid.apex, maximum.apex])
-		check.call(absf(maximum.apex - config.long_jump_height(2)) < 0.1, "(l6) the max long jump apex %.3f m is within 0.1 of long_jump_height(2) %.2f" % [maximum.apex, config.long_jump_height(2)])
-		check.call(player.chain_stage == 0, "(l6) the chain is consumed after the max long jump (stage %d)" % player.chain_stage)
-	await _end(player)
-
-
-# Pitfall 12: the carry is bounded. With dash_speed 30 and a cap of 24 the take-off is 24, never above.
-func _scenario_cap(tree: SceneTree, check: Callable) -> void:
+# U5 (Pitfall 12): the stage speed is set, not carried. With dash_speed 30 the take-off is still the stage 1 row.
+func _scenario_set_not_carried(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
 	player.config = player.config.duplicate() as MovementConfig
 	player.config.dash_speed = 30.0
-	player.config.long_jump_speed_cap = 24.0
 	await _run_up(tree, player)
-	var capped: Dictionary = await _dash_jump(tree, player)
-	check.call(capped.started, "(l7) the dash jump with dash_speed 30 is a long jump")
-	if capped.started:
-		check.call(absf(capped.first_speed - 24.0) < 0.1, "(l7) the take-off speed %.2f m/s equals long_jump_speed_cap 24 (within 0.1)" % capped.first_speed)
-		check.call(capped.max_speed <= 24.1, "(l7) the speed never exceeds the cap during the airtime (max %.2f m/s)" % capped.max_speed)
+	var fast: Dictionary = await _dash_jump(tree, player)
+	check.call(fast.started, "(l6) the dash jump with dash_speed 30 is a long jump")
+	if fast.started:
+		check.call(absf(fast.first_speed - player.config.long_jump_speed_1) < 0.1, "(l6) the take-off speed %.2f m/s is the stage 1 row %.1f, not the dash speed" % [fast.first_speed, player.config.long_jump_speed_1])
+		check.call(fast.max_speed <= 22.1, "(l6) the speed never exceeds 22 m/s during the airtime (max %.2f m/s)" % fast.max_speed)
+	await _end(player)
+
+
+# D-05: a ground dash breaks the ground-jump chain (chain_stage_changed 0); the long jump keeps it at 0.
+func _scenario_chain_reset_by_dash_and_hop(tree: SceneTree, check: Callable) -> void:
+	var player: PlayerController = await _begin(tree)
+	await _run_up(tree, player)
+	await _held_jump(tree, player)
+	check.call(player.chain_stage == 1, "(l7) Jump 1 leaves the chain at 1 (stage %d)" % player.chain_stage)
+	Fixtures.send_action_event(&"dash", true)
+	Fixtures.send_action_event(&"dash", false)
+	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Dash", 6)
+	check.call(player.chain_stage == 0 and _stages_are([1, 0]), "(l7) a ground dash resets the chain (stage %d, facts %s)" % [player.chain_stage, _stages])
+	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name != &"Dash", 40)
+	await Fixtures.wait_physics(tree, 1)
+	var hop_count: int = _longs.size()
+	Fixtures.send_action_event(&"jump", true)
+	await Fixtures.wait_until(tree, func() -> bool: return _longs.size() > hop_count, 6)
+	check.call(_longs.size() == hop_count + 1 and player.chain_stage == 0 and player.long_jump_stage == _longs[_longs.size() - 1].stage, "(l7) the long jump leaves the chain at 0 and the stack at its stage (chain %d, stack %d)" % [player.chain_stage, player.long_jump_stage])
+	await _fly(tree, player, false)
 	await _end(player)
 
 

@@ -28,18 +28,17 @@ Every number comes from the real Player driven headless with scripted per-tick i
 | Ground dash | 4.01 | 0.18 | 12.00 | 0.00 | 8.50 | dash_speed 22.0 for dash_time 0.18 s while running |
 | Air dash | 4.01 | 0.18 | 12.00 | 0.00 | 8.50 | one per airtime, air_dash_gravity_scale 0.00 |
 
-## Chain and long jump
+## Long jump (dash hop)
 
-A long jump is a jump during a ground dash (carrying the dash speed, bounded by long_jump_speed_cap 22.0 m/s, D-06) or within dash_jump_grace after it. The stage is the number of chain jumps before the dash: 0 none, 1 after Jump 1, 2 after Jump 1 and Jump 2. Take-off speed is the horizontal speed on the first tick of the long jump.
+The long jump is the dash hop: a jump during a ground dash or within dash_jump_grace after it. Its speed is set per stage (long_jump_speed_1/2/3), never carried from the dash. Stage 1 is the first hop; each clean repeat (a ground dash started inside the landing window after touchdown, then a jump) climbs to stage 2 and 3 and then stays at 3; a miss (window runs out, standing still, a normal jump in between) restarts at stage 1. The speeds are capped by an export maximum of 22 m/s, the envelope the camera and tunnelling tests cover. Take-off speed is the horizontal speed on the first tick of the long jump. One hop streak is measured: dash + jump on the landing tick of each hop.
 
-| Verb | Chain stage | Height (m) | Distance (m) | Take-off speed (m/s) | Airtime (s) | Note |
+| Verb | Stage | Height (m) | Distance (m) | Take-off speed (m/s) | Airtime (s) | Note |
 |---|---|---|---|---|---|---|
-| Long jump small | 0 | 1.00 | 10.63 | 22.00 | 0.47 | jump pressed on the dash tick, carries the dash speed |
-| Long jump mid | 1 | 1.20 | 11.73 | 22.00 | 0.52 | jump pressed on the dash tick, carries the dash speed |
-| Long jump max | 2 | 1.40 | 12.47 | 22.00 | 0.55 | jump pressed on the dash tick, carries the dash speed |
-| Long jump small (last grace tick) | 0 | 1.00 | 6.77 | 14.00 | 0.47 | jump in the last tick of dash_jump_grace, the stage floor 14.0 m/s applies |
-| Long jump mid (last grace tick) | 1 | 1.20 | 8.00 | 15.00 | 0.52 | jump in the last tick of dash_jump_grace, the stage floor 15.0 m/s applies |
-| Long jump max (last grace tick) | 2 | 1.40 | 9.63 | 17.00 | 0.55 | jump in the last tick of dash_jump_grace, the stage floor 17.0 m/s applies |
+| Long jump stage 1 | 1 | 2.00 | 9.57 | 14.00 | 0.67 | dash + jump on one tick from a run, long_jump_speed_1 14.0 m/s |
+| Long jump stage 2 | 2 | 2.50 | 12.00 | 16.00 | 0.73 | dash + jump on the landing tick of stage 1, long_jump_speed_2 16.0 m/s |
+| Long jump stage 3 | 3 | 3.00 | 14.70 | 18.00 | 0.80 | dash + jump on the landing tick of stage 2, long_jump_speed_3 18.0 m/s |
+| Long jump stage 3 (repeat) | 3 | 3.00 | 14.70 | 18.00 | 0.80 | a further clean hop stays at stage 3 |
+| Long jump (last grace tick) | 1 | 2.00 | 9.57 | 14.00 | 0.67 | jump in the last tick of dash_jump_grace, stage 1 row applies |
 
 ## Timing windows
 
@@ -47,7 +46,7 @@ A long jump is a jump during a ground dash (carrying the dash speed, bounded by 
 |---|---|---|
 | Coyote time | 0.100 | 6 |
 | Jump buffer | 0.120 | 7 |
-| Chain window | 0.350 | 21 |
+| Landing window | 0.350 | 21 |
 | Dash cooldown | 0.400 | 24 |
 | Dash-jump grace | 0.150 | 9 |
 | Dash duration | 0.180 | 11 |
@@ -72,10 +71,10 @@ Display, compositor and USB latency are outside the software measurement (D-22).
 
 | Action | Accumulated input on: median (ms) | on: max (ms) | off: median (ms) | off: max (ms) | Verdict |
 |---|---|---|---|---|---|
-| Latency jump 60 TPS | 13.86 | 21.05 | 13.81 | 21.50 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency jump 120 TPS | 11.19 | 14.81 | 7.81 | 12.99 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 60 TPS | 12.96 | 20.96 | 12.73 | 21.38 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 120 TPS | 6.75 | 13.74 | 6.77 | 13.50 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 60 TPS | 13.94 | 20.48 | 13.13 | 20.57 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 120 TPS | 7.00 | 15.68 | 6.45 | 7.77 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 60 TPS | 12.24 | 14.05 | 12.19 | 20.86 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 120 TPS | 6.31 | 11.78 | 6.38 | 14.40 | Target met (median <= 66 ms, max <= 100 ms) |
 
 ## Grid cross-check
 
@@ -86,9 +85,9 @@ How the numbers map onto the 1 m grid and the 4 m kit pieces. The widest gap ass
 | Run jump | 5.81 | 5 | 1.45 | 2.0 |
 | Jump 2 chain jump | 6.52 | 6 | 1.63 | 2.6 |
 | Jump 3 salto | 7.51 | 7 | 1.88 | 3.4 |
-| Long jump small gap | 10.63 | 10 | 2.66 | 1.0 |
-| Long jump mid gap | 11.73 | 11 | 2.93 | 1.2 |
-| Long jump max gap | 12.47 | 12 | 3.12 | 1.4 |
+| Long jump stage 1 gap | 9.57 | 9 | 2.39 | 2.0 |
+| Long jump stage 2 gap | 12.00 | 12 | 3.00 | 2.5 |
+| Long jump stage 3 gap | 14.70 | 14 | 3.68 | 3.0 |
 
 ## Config snapshot
 
@@ -116,19 +115,17 @@ Every MovementConfig float of res://resources/player/movement_default.tres at ge
 | `dash_speed` | 22.000 |
 | `dash_time` | 0.180 |
 | `dash_cooldown` | 0.400 |
-| `dash_carry` | 0.500 |
-| `dash_exit_cap` | 12.000 |
+| `dash_exit_speed` | 12.000 |
 | `air_dash_gravity_scale` | 0.000 |
-| `chain_window` | 0.350 |
+| `landing_window` | 0.350 |
 | `dash_jump_grace` | 0.150 |
-| `chain_reset_speed` | 0.500 |
-| `long_jump_height_small` | 1.000 |
-| `long_jump_height_mid` | 1.200 |
-| `long_jump_height_max` | 1.400 |
-| `long_jump_speed_small` | 14.000 |
-| `long_jump_speed_mid` | 15.000 |
-| `long_jump_speed_max` | 17.000 |
-| `long_jump_speed_cap` | 22.000 |
+| `combo_reset_speed` | 0.500 |
+| `long_jump_height_1` | 2.000 |
+| `long_jump_height_2` | 2.500 |
+| `long_jump_height_3` | 3.000 |
+| `long_jump_speed_1` | 14.000 |
+| `long_jump_speed_2` | 16.000 |
+| `long_jump_speed_3` | 18.000 |
 | `snap_min` | 0.300 |
 | `snap_max` | 0.500 |
 | `floor_max_angle_deg` | 50.000 |

@@ -3,8 +3,8 @@ extends SceneTree
 ## input latency at 60 and 120 TPS (LatencyProbe), then writes docs/MOVEMENT-METRICS.md.
 ## Run: bash attimo/tests/run.sh --tool res://tools/measure_movement.gd
 ## Prints "MEASURE: PASSED" and exits 0, or "MEASURE: FAILED (<reason>)" and exits 1 when a latency median exceeds
-## 66 ms, a sample exceeds 100 ms, a tap jump is not lower than a held jump, the long jumps are not ordered
-## small < mid < max, or a long-jump take-off speed exceeds long_jump_speed_cap.
+## 66 ms, a sample exceeds 100 ms, a tap jump is not lower than a held jump, the long-jump stages 1-3 are not
+## ordered by distance and apex, a take-off speed misses its stage row, or any long-jump speed exceeds 22 m/s.
 ## The work happens in tools/movement_metrics.gd, loaded at run time: this script is compiled before the autoloads
 ## exist, so it must not name a type that touches EventBus.
 

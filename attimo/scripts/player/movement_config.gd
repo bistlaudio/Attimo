@@ -51,34 +51,30 @@ extends Resource
 @export_range(0.05, 1.0, 0.01) var dash_time: float = 0.18
 ## Seconds before the next dash may start.
 @export_range(0.0, 2.0, 0.05) var dash_cooldown: float = 0.4
-## How much of the dash speed carries out of the dash (0 = run speed, 1 = dash speed).
-@export_range(0.0, 1.0, 0.05) var dash_carry: float = 0.5
-## Upper bound of the horizontal speed leaving a dash in m/s.
-@export_range(1.0, 40.0, 0.5) var dash_exit_cap: float = 12.0
+## Horizontal speed leaving a dash in m/s; never below run speed.
+@export_range(5.0, 22.0, 0.5) var dash_exit_speed: float = 12.0
 ## Gravity scale during an air dash (0 = flat dash).
 @export_range(0.0, 1.0, 0.05) var air_dash_gravity_scale: float = 0.0
 
 @export_group("Chain and long jump")
-## Seconds after landing in which the next ground jump advances the chain.
-@export_range(0.05, 1.5, 0.01) var chain_window: float = 0.35
+## Seconds after touchdown in which the next ground jump advances the chain or the next ground dash keeps the long-jump stack.
+@export_range(0.05, 1.5, 0.01) var landing_window: float = 0.35
 ## Seconds after a dash in which a jump still counts as a long jump.
 @export_range(0.0, 0.5, 0.01) var dash_jump_grace: float = 0.15
-## Ground speed under which the chain resets in m/s.
-@export_range(0.0, 5.0, 0.1) var chain_reset_speed: float = 0.5
-## Long jump height at chain stage 0 in m.
-@export_range(0.1, 6.0, 0.05) var long_jump_height_small: float = 1.0
-## Long jump height at chain stage 1 in m.
-@export_range(0.1, 6.0, 0.05) var long_jump_height_mid: float = 1.2
-## Long jump height at chain stage 2 in m.
-@export_range(0.1, 6.0, 0.05) var long_jump_height_max: float = 1.4
-## Minimum take-off speed of the stage 0 long jump in m/s.
-@export_range(1.0, 40.0, 0.5) var long_jump_speed_small: float = 14.0
-## Minimum take-off speed of the stage 1 long jump in m/s.
-@export_range(1.0, 40.0, 0.5) var long_jump_speed_mid: float = 15.0
-## Minimum take-off speed of the stage 2 long jump in m/s.
-@export_range(1.0, 40.0, 0.5) var long_jump_speed_max: float = 17.0
-## Hard upper bound of any long-jump take-off speed in m/s (D-06). The carried dash speed is clamped to it.
-@export_range(1.0, 60.0, 0.5) var long_jump_speed_cap: float = 22.0
+## Ground speed under which the chain and the long-jump stack reset in m/s.
+@export_range(0.0, 5.0, 0.1) var combo_reset_speed: float = 0.5
+## Long jump height at stage 1 (the first dash hop) in m.
+@export_range(0.5, 6.0, 0.05) var long_jump_height_1: float = 2.0
+## Long jump height at stage 2 in m.
+@export_range(0.5, 6.0, 0.05) var long_jump_height_2: float = 2.5
+## Long jump height at stage 3 (top of the stack) in m.
+@export_range(0.5, 6.0, 0.05) var long_jump_height_3: float = 3.0
+## Take-off speed of the stage 1 long jump in m/s.
+@export_range(5.0, 22.0, 0.5) var long_jump_speed_1: float = 14.0
+## Take-off speed of the stage 2 long jump in m/s.
+@export_range(5.0, 22.0, 0.5) var long_jump_speed_2: float = 16.0
+## Take-off speed of the stage 3 long jump in m/s. 22 m/s is the speed the camera and tunnelling tests cover; do not raise it without re-running them.
+@export_range(5.0, 22.0, 0.5) var long_jump_speed_3: float = 18.0
 
 @export_group("Floor and platforms")
 ## Lower bound of the speed-scaled floor snap length in m (D-13 band, A35).
@@ -117,23 +113,23 @@ func jump_height_for_stage(stage: int) -> float:
 			return jump_3_height
 
 
-## Long jump height for a chain stage 0, 1 or 2 (clamped).
+## Long jump height for stage 1, 2 or 3 (clamped).
 func long_jump_height(stage: int) -> float:
-	match clampi(stage, 0, 2):
-		0:
-			return long_jump_height_small
+	match clampi(stage, 1, 3):
 		1:
-			return long_jump_height_mid
+			return long_jump_height_1
+		2:
+			return long_jump_height_2
 		_:
-			return long_jump_height_max
+			return long_jump_height_3
 
 
-## Minimum long jump take-off speed for a chain stage 0, 1 or 2 (clamped).
+## Long jump take-off speed in m/s for stage 1, 2 or 3 (clamped).
 func long_jump_speed(stage: int) -> float:
-	match clampi(stage, 0, 2):
-		0:
-			return long_jump_speed_small
+	match clampi(stage, 1, 3):
 		1:
-			return long_jump_speed_mid
+			return long_jump_speed_1
+		2:
+			return long_jump_speed_2
 		_:
-			return long_jump_speed_max
+			return long_jump_speed_3

@@ -159,6 +159,10 @@ func _refresh() -> void:
 	else:
 		lines.append("Dash: distance %.2f m, %s, %.2f s" % [last_dash.distance, "air" if last_dash.in_air else "ground", last_dash.duration])
 	lines.append("Chain stage: %d" % chain_stage)
+	var stack_stage: int = 0 if _player == null else _player.long_jump_stage
+	var speed: float = 0.0 if _player == null else _player.horizontal_speed()
+	lines.append("Long jump stage: %d" % stack_stage)
+	lines.append("Speed: %.1f m/s" % speed)
 	lines.append(_latency_line("Latency jump", &"jump"))
 	lines.append(_latency_line("Latency dash", &"dash"))
 	var frame_text: String = "n/a" if latency_probe.last_frame_ms < 0.0 else "%.1f ms" % latency_probe.last_frame_ms

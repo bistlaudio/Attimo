@@ -28,9 +28,11 @@ var air_dash_available: bool = true
 var last_dash_direction: Vector3 = Vector3.ZERO
 ## Ground-jump chain stage: 0 none, 1 after Jump 1, 2 after Jump 2, 3 after Jump 3, the salto (D-05). Changes emit chain_stage_changed.
 var chain_stage: int = 0
-## Seconds left of the landing window in which the next ground jump advances the chain. Counts down only
-## while grounded; at 0 the chain resets (D-07).
-var chain_timer: float = 0.0
+## Long-jump stack stage: 0 none, 1..3 the stage of the last long jump (dash hop) while the stack lives (D-05).
+var long_jump_stage: int = 0
+## Seconds left of the landing window in which the next ground jump advances the chain or the next ground dash
+## keeps the long-jump stack. Counts down only while grounded and not dashing; at 0 both reset (D-07).
+var combo_timer: float = 0.0
 ## Seconds left after a ground dash ended in which a jump still is a long jump (D-06).
 var dash_jump_grace_timer: float = 0.0
 
@@ -183,34 +185,36 @@ func start_dash(direction: Vector3, in_air: bool) -> void:
 
 ## Called by Jump on enter for every ground jump (also coyote and buffered landing jumps). Returns the stage of
 ## this jump: 2 after Jump 1 and 3 after Jump 2 inside the open landing window, otherwise 1 (also after Jump 3,
-## which starts a new chain, A8). The window closes; it reopens on landing.
+## which starts a new chain, A8). The window closes; it reopens on landing. A normal jump is a miss for the
+## long-jump stack.
 func advance_chain_for_ground_jump() -> int:
-	var stage: int = chain_stage + 1 if (chain_stage == 1 or chain_stage == 2) and chain_timer > 0.0 else 1
-	chain_timer = 0.0
+	var stage: int = chain_stage + 1 if (chain_stage == 1 or chain_stage == 2) and combo_timer > 0.0 else 1
+	combo_timer = 0.0
+	long_jump_stage = 0
 	_set_chain_stage(stage)
 	return stage
 
 
-## Called by LongJump on enter. Returns the chain stage the long jump spends (0..2) and resets the chain.
-## Jump 3 counts as stage 2 here; the dash hop stack replaces this feed in a later step.
-func take_chain_for_long_jump() -> int:
-	var stage: int = mini(chain_stage, 2)
-	chain_timer = 0.0
+## Called by LongJump on enter. Returns the long-jump stage 1..3: one above the stack while it lives (a clean
+## repeat), otherwise 1. Resets the ground-jump chain and closes the landing window; it reopens on landing.
+func advance_long_jump_stage() -> int:
+	var stage: int = mini(long_jump_stage + 1, 3) if long_jump_stage > 0 else 1
+	long_jump_stage = stage
+	combo_timer = 0.0
 	_set_chain_stage(0)
 	return stage
 
 
-## A ground dash inside the open landing window keeps the stage and restarts the window (D-05).
-func refresh_chain_window() -> void:
-	if chain_stage > 0 and chain_timer > 0.0:
-		chain_timer = config.chain_window
+## A ground dash breaks the ground-jump chain and leaves the long-jump stack alone.
+func on_ground_dash_started() -> void:
+	_set_chain_stage(0)
 
 
-## A ground dash that ended on the ground keeps an open window alive at least through the long jump grace, so
-## a jump pressed late in the grace still finds its chain stage.
-func hold_chain_through_grace() -> void:
-	if chain_stage > 0 and chain_timer > 0.0:
-		chain_timer = maxf(chain_timer, config.dash_jump_grace)
+## A ground dash that ended on the ground keeps an open stack window alive at least through the long jump grace,
+## so a jump pressed late in the grace still finds its stage.
+func hold_combo_through_grace() -> void:
+	if long_jump_stage > 0 and combo_timer > 0.0:
+		combo_timer = maxf(combo_timer, config.dash_jump_grace)
 
 
 func _set_chain_stage(stage: int) -> void:
@@ -220,27 +224,33 @@ func _set_chain_stage(stage: int) -> void:
 	EventBus.chain_stage_changed.emit(stage)
 
 
-## Per-tick timers (coyote, buffer, dash cooldown, long jump grace, chain). Runs before the states, so every state
+## Per-tick timers (coyote, buffer, dash cooldown, long jump grace, landing window). Runs before the states, so every state
 ## sees the same timers. Polling just_pressed in the physics tick catches presses between two ticks.
 func _tick_timers(delta: float) -> void:
 	coyote_timer = maxf(coyote_timer - delta, 0.0)
 	jump_buffer_timer = maxf(jump_buffer_timer - delta, 0.0)
 	dash_cooldown_timer = maxf(dash_cooldown_timer - delta, 0.0)
 	dash_jump_grace_timer = maxf(dash_jump_grace_timer - delta, 0.0)
-	_tick_chain(delta)
+	_tick_combo(delta)
 	if Input.is_action_just_pressed(&"jump"):
 		jump_buffer_timer = config.jump_buffer_time
 
 
-## The chain window counts down on the ground and resets the stage at 0. Standing still on the ground (below
-## chain_reset_speed, outside a dash) resets it at once (D-07).
-func _tick_chain(delta: float) -> void:
-	if chain_stage == 0 or not is_grounded():
+## The landing window counts down on the ground, not during a dash, and resets the chain and the long-jump stack
+## at 0. Standing still on the ground (below combo_reset_speed, outside a dash) resets them at once (D-07).
+func _tick_combo(delta: float) -> void:
+	if chain_stage == 0 and long_jump_stage == 0:
+		combo_timer = 0.0
 		return
-	chain_timer = maxf(chain_timer - delta, 0.0)
-	var standing: bool = horizontal_speed() < config.chain_reset_speed and state_machine.current.name != &"Dash"
-	if chain_timer <= 0.0 or standing:
-		chain_timer = 0.0
+	if not is_grounded():
+		return
+	var dashing: bool = state_machine.current.name == &"Dash"
+	if not dashing:
+		combo_timer = maxf(combo_timer - delta, 0.0)
+	var standing: bool = horizontal_speed() < config.combo_reset_speed and not dashing
+	if combo_timer <= 0.0 or standing:
+		combo_timer = 0.0
+		long_jump_stage = 0
 		_set_chain_stage(0)
 
 
@@ -283,8 +293,8 @@ func _post_move() -> void:
 func _land(impact_speed: float) -> void:
 	air_dash_available = true
 	coyote_timer = 0.0
-	if chain_stage > 0:
-		chain_timer = config.chain_window
+	if chain_stage > 0 or long_jump_stage > 0:
+		combo_timer = config.landing_window
 	EventBus.landed.emit(global_position, impact_speed)
 
 

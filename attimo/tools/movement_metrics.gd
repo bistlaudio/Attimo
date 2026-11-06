@@ -6,7 +6,7 @@ extends RefCounted
 ## The measure_movement.gd loader loads this script at run time, like run_smoke.gd loads the tests.
 ## Run: bash attimo/tests/run.sh --tool res://tools/measure_movement.gd
 ## run(tree) returns the failure messages: empty means "MEASURE: PASSED" (latency bounds, ordering invariants and the
-## long-jump speed cap hold, success criterion 5, Pitfall 12). The doc is written either way, so a failing run still
+## 22 m/s long-jump envelope hold, success criterion 5, Pitfall 12). The doc is written either way, so a failing run still
 ## shows its numbers.
 ## Measurements run at 60 TPS on flat ground with a level take-off and landing; a distance is take-off to landing of
 ## the body origin (A32). Times have tick resolution (1/60 s). The gym markings (02-14) are the manual cross-check.
@@ -33,7 +33,9 @@ const LATENCY_TICK_RATES: Array[int] = [60, 120]
 ## Press phase offsets in seconds, so the presses land at different points of the physics tick.
 const PHASE_OFFSETS: Array[float] = [0.0, 0.0037, 0.0071, 0.0113, 0.0149, 0.0023, 0.0059, 0.0097, 0.0131, 0.0167]
 const STEP_HEIGHTS: Array[float] = [0.10, 0.15, 0.20, 0.25]
-## Slack above the cap when checking the long-jump take-off speed (the tick-sampled speed is not exact).
+## The speed the camera and tunnelling tests cover; no long jump may exceed it (T-261106-01).
+const LONG_JUMP_SPEED_LIMIT: float = 22.0
+## Slack above that limit and around a stage row when checking take-off speeds (the tick-sampled speed is not exact).
 const CAP_SLACK: float = 0.1
 
 const TAKEOFF_KINDS: Array[StringName] = [&"jumped", &"long_jumped"]
@@ -359,26 +361,18 @@ func _dash(player: PlayerController) -> Dictionary:
 
 func _measure_long_jumps() -> Dictionary:
 	var out: Dictionary = {}
-	for stage: int in 3:
-		out["press_%d" % stage] = await _long_jump(stage, false)
-		out["grace_%d" % stage] = await _long_jump(stage, true)
-	return out
-
-
-## Runs up, builds `stage` ground jumps of the chain, then a long jump: with the jump pressed on the same tick as
-## the dash (`late` false) or in the last tick of dash_jump_grace after the dash (`late` true).
-func _long_jump(stage: int, late: bool) -> Dictionary:
+	# One hop streak: dash + jump on every landing tick gives stages 1, 2, 3 and then 3 again.
 	var player: PlayerController = await _begin()
 	await _run_up(player)
-	for i: int in stage:
-		await _jump_flight(player, false)
-	var result: Dictionary = _empty_flight()
-	if late:
-		result = await _grace_jump(player)
-	else:
-		result = await _dash_jump(player)
+	for hop: int in 4:
+		out["hop_%d" % (hop + 1)] = await _dash_jump(player)
 	await _end(player)
-	return result
+	# The last tick of the grace after a dash, from a fresh run-up (stage 1).
+	player = await _begin()
+	await _run_up(player)
+	out["grace_1"] = await _grace_jump(player)
+	await _end(player)
+	return out
 
 
 ## Dash and jump pressed on the same tick (the jump stays held), then follows the long jump to its landing.
@@ -548,18 +542,30 @@ func _check_invariants(config: MovementConfig, jumps: Dictionary, longs: Diction
 		_fail("chain jump apexes are not ordered Jump 1 < Jump 2 < Jump 3 (%.2f, %.2f, %.2f m)" % [apex_1, apex_2, apex_3])
 
 	var distances: Array[float] = []
-	for stage: int in 3:
-		for prefix: String in ["press", "grace"]:
-			var entry: Dictionary = longs["%s_%d" % [prefix, stage]]
-			var first_speed: float = entry["first_speed"]
-			var max_speed: float = entry["max_speed"]
-			if bool(entry["started"]) and (first_speed > config.long_jump_speed_cap + CAP_SLACK or max_speed > config.long_jump_speed_cap + CAP_SLACK):
-				_fail("long jump %s stage %d speed %.2f m/s exceeds long_jump_speed_cap %.1f" % [prefix, stage, maxf(first_speed, max_speed), config.long_jump_speed_cap])
-		var press: Dictionary = longs["press_%d" % stage]
-		var distance: float = press["distance"]
-		distances.append(distance)
-	if not (distances[0] < distances[1] and distances[1] < distances[2]):
-		_fail("long jump distances are not ordered small < mid < max (%.2f, %.2f, %.2f m)" % [distances[0], distances[1], distances[2]])
+	var apexes: Array[float] = []
+	for hop: int in 4:
+		var entry: Dictionary = longs["hop_%d" % (hop + 1)]
+		var stage: int = mini(hop + 1, 3)
+		if not bool(entry["started"]):
+			continue
+		var first_speed: float = entry["first_speed"]
+		var max_speed: float = entry["max_speed"]
+		if int(entry["stage"]) != stage:
+			_fail("long jump hop %d has stage %d, expected %d" % [hop + 1, int(entry["stage"]), stage])
+		if absf(first_speed - config.long_jump_speed(stage)) > CAP_SLACK:
+			_fail("long jump stage %d take-off speed %.2f m/s is not the row long_jump_speed_%d %.1f" % [stage, first_speed, stage, config.long_jump_speed(stage)])
+		if first_speed > LONG_JUMP_SPEED_LIMIT + CAP_SLACK or max_speed > LONG_JUMP_SPEED_LIMIT + CAP_SLACK:
+			_fail("long jump hop %d speed %.2f m/s exceeds the %.0f m/s envelope" % [hop + 1, maxf(first_speed, max_speed), LONG_JUMP_SPEED_LIMIT])
+		if hop < 3:
+			distances.append(float(entry["distance"]))
+			apexes.append(float(entry["apex"]))
+	var grace: Dictionary = longs["grace_1"]
+	if bool(grace["started"]) and (float(grace["first_speed"]) > LONG_JUMP_SPEED_LIMIT + CAP_SLACK or float(grace["max_speed"]) > LONG_JUMP_SPEED_LIMIT + CAP_SLACK):
+		_fail("the last-grace-tick long jump exceeds the %.0f m/s envelope" % LONG_JUMP_SPEED_LIMIT)
+	if distances.size() == 3 and not (distances[0] < distances[1] and distances[1] < distances[2]):
+		_fail("long jump distances are not ordered stage 1 < 2 < 3 (%.2f, %.2f, %.2f m)" % [distances[0], distances[1], distances[2]])
+	if apexes.size() == 3 and not (apexes[0] < apexes[1] and apexes[1] < apexes[2]):
+		_fail("long jump apexes are not ordered stage 1 < 2 < 3 (%.2f, %.2f, %.2f m)" % [apexes[0], apexes[1], apexes[2]])
 
 	for tps: int in LATENCY_TICK_RATES:
 		for accumulate: bool in [true, false]:
@@ -656,17 +662,17 @@ func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, d
 	lines.append(_row(["Air dash", "%.2f" % float(air_dash["distance"]), "%.2f" % float(air_dash["duration"]), "%.2f" % float(air_dash["exit_speed"]), _signed_zero_safe(float(air_dash["altitude"])), "%.2f" % float(air_dash["entry_speed"]), "one per airtime, air_dash_gravity_scale %.2f" % config.air_dash_gravity_scale]))
 	lines.append("")
 
-	lines.append("## Chain and long jump")
+	lines.append("## Long jump (dash hop)")
 	lines.append("")
-	lines.append("A long jump is a jump during a ground dash (carrying the dash speed, bounded by long_jump_speed_cap %.1f m/s, D-06) or within dash_jump_grace after it. The stage is the number of chain jumps before the dash: 0 none, 1 after Jump 1, 2 after Jump 1 and Jump 2. Take-off speed is the horizontal speed on the first tick of the long jump." % config.long_jump_speed_cap)
+	lines.append("The long jump is the dash hop: a jump during a ground dash or within dash_jump_grace after it. Its speed is set per stage (long_jump_speed_1/2/3), never carried from the dash. Stage 1 is the first hop; each clean repeat (a ground dash started inside the landing window after touchdown, then a jump) climbs to stage 2 and 3 and then stays at 3; a miss (window runs out, standing still, a normal jump in between) restarts at stage 1. The speeds are capped by an export maximum of %.0f m/s, the envelope the camera and tunnelling tests cover. Take-off speed is the horizontal speed on the first tick of the long jump. One hop streak is measured: dash + jump on the landing tick of each hop." % LONG_JUMP_SPEED_LIMIT)
 	lines.append("")
-	lines.append("| Verb | Chain stage | Height (m) | Distance (m) | Take-off speed (m/s) | Airtime (s) | Note |")
+	lines.append("| Verb | Stage | Height (m) | Distance (m) | Take-off speed (m/s) | Airtime (s) | Note |")
 	lines.append("|---|---|---|---|---|---|---|")
-	var names: Array[String] = ["small", "mid", "max"]
-	for stage: int in 3:
-		lines.append(_long_row("Long jump %s" % names[stage], longs["press_%d" % stage], "jump pressed on the dash tick, carries the dash speed"))
-	for stage: int in 3:
-		lines.append(_long_row("Long jump %s (last grace tick)" % names[stage], longs["grace_%d" % stage], "jump in the last tick of dash_jump_grace, the stage floor %.1f m/s applies" % config.long_jump_speed(stage)))
+	lines.append(_long_row("Long jump stage 1", longs["hop_1"], "dash + jump on one tick from a run, long_jump_speed_1 %.1f m/s" % config.long_jump_speed_1))
+	lines.append(_long_row("Long jump stage 2", longs["hop_2"], "dash + jump on the landing tick of stage 1, long_jump_speed_2 %.1f m/s" % config.long_jump_speed_2))
+	lines.append(_long_row("Long jump stage 3", longs["hop_3"], "dash + jump on the landing tick of stage 2, long_jump_speed_3 %.1f m/s" % config.long_jump_speed_3))
+	lines.append(_long_row("Long jump stage 3 (repeat)", longs["hop_4"], "a further clean hop stays at stage 3"))
+	lines.append(_long_row("Long jump (last grace tick)", longs["grace_1"], "jump in the last tick of dash_jump_grace, stage 1 row applies"))
 	lines.append("")
 
 	lines.append("## Timing windows")
@@ -675,7 +681,7 @@ func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, d
 	lines.append("|---|---|---|")
 	lines.append(_row(["Coyote time", "%.3f" % config.coyote_time, _ticks(config.coyote_time)]))
 	lines.append(_row(["Jump buffer", "%.3f" % config.jump_buffer_time, _ticks(config.jump_buffer_time)]))
-	lines.append(_row(["Chain window", "%.3f" % config.chain_window, _ticks(config.chain_window)]))
+	lines.append(_row(["Landing window", "%.3f" % config.landing_window, _ticks(config.landing_window)]))
 	lines.append(_row(["Dash cooldown", "%.3f" % config.dash_cooldown, _ticks(config.dash_cooldown)]))
 	lines.append(_row(["Dash-jump grace", "%.3f" % config.dash_jump_grace, _ticks(config.dash_jump_grace)]))
 	lines.append(_row(["Dash duration", "%.3f" % config.dash_time, _ticks(config.dash_time)]))
@@ -725,8 +731,9 @@ func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, d
 	lines.append(_grid_row("Run jump", jumps["full_run"]))
 	lines.append(_grid_row("Jump 2 chain jump", jumps["jump_2"]))
 	lines.append(_grid_row("Jump 3 salto", jumps["jump_3"]))
-	for stage: int in 3:
-		lines.append(_grid_row("Long jump %s gap" % names[stage], longs["press_%d" % stage]))
+	lines.append(_grid_row("Long jump stage 1 gap", longs["hop_1"]))
+	lines.append(_grid_row("Long jump stage 2 gap", longs["hop_2"]))
+	lines.append(_grid_row("Long jump stage 3 gap", longs["hop_3"]))
 	lines.append("")
 
 	lines.append("## Config snapshot")

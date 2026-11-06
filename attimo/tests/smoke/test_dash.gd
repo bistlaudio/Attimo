@@ -95,7 +95,8 @@ func _scenario_ground_distance_and_carry(tree: SceneTree, check: Callable) -> vo
 	check.call(stats["started"], "(3) the dash press starts a dash")
 	check.call(absf(flat.length() - expected) <= tolerance, "(3) dash travel %.2f m is within %.2f of dash_speed * dash_time = %.2f" % [flat.length(), tolerance, expected])
 	var exit_speed: float = stats["exit_speed"]
-	check.call(exit_speed >= config.run_speed and exit_speed <= config.dash_exit_cap + 0.01, "(3) exit speed %.2f is between run_speed %.1f and dash_exit_cap %.1f" % [exit_speed, config.run_speed, config.dash_exit_cap])
+	var expected_exit: float = maxf(config.run_speed, config.dash_exit_speed)
+	check.call(absf(exit_speed - expected_exit) < 0.01, "(3) exit speed %.2f equals maxf(run_speed, dash_exit_speed) %.2f" % [exit_speed, expected_exit])
 	check.call(stats["exit_state"] == &"Run", "(3) the dash hands over to Run with the direction held (got %s)" % stats["exit_state"])
 	Input.action_release(&"move_forward")
 	await _end(player)
@@ -198,7 +199,8 @@ func _scenario_air_exit_and_steering(tree: SceneTree, check: Callable) -> void:
 	var stats: Dictionary = await _dash_stats(tree, player)
 	var exit_speed: float = stats["exit_speed"]
 	check.call(stats["exit_state"] == &"Fall", "(7) the air dash ends in Fall (got %s)" % stats["exit_state"])
-	check.call(exit_speed >= config.run_speed and exit_speed <= config.dash_exit_cap + 0.01, "(7) first tick after the air dash: speed %.2f between run_speed %.1f and dash_exit_cap %.1f" % [exit_speed, config.run_speed, config.dash_exit_cap])
+	var expected_exit: float = maxf(config.run_speed, config.dash_exit_speed)
+	check.call(absf(exit_speed - expected_exit) < 0.01, "(7) first tick after the air dash: speed %.2f equals maxf(run_speed, dash_exit_speed) %.2f" % [exit_speed, expected_exit])
 	Input.action_release(&"move_forward")
 	Input.action_press(&"move_right")
 	await Fixtures.wait_physics(tree, 6)
