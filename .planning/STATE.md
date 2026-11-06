@@ -5,10 +5,10 @@ current_phase: 02
 current_phase_name: Movement Core & Follow Camera
 status: verifying
 stopped_at: "Completed 02-14-PLAN.md (144 Hz item not verified; follow-ups: dash/sprint keys, long-jump arc, lightness, double jump)"
-last_updated: "2026-11-06T09:22:58.726Z"
-last_activity: 2026-11-05
+last_updated: "2026-11-06T11:30:13.185Z"
+last_activity: 2026-11-06
 last_activity_desc: Phase 02 execution started
-state_head: 6b1ae33461b9486b97dff93c32b4a2dfe6a1576a
+state_head: ba7984781cb63de0f85d38ce308c88f2e1eaaee6
 progress:
   total_phases: 15
   completed_phases: 1
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 Phase: 02 (Movement Core & Follow Camera) — EXECUTING
 Plan: 14 of 14
 Status: Phase complete — ready for verification
-Last activity: 2026-11-05 — Phase 02 execution started
+Last activity: 2026-11-06 - Completed quick task 261106-erl: Movement rework (no sprint, Shift dash, jump chain 1-2-3, dash hop stack)
 
 Progress: [█░░░░░░░░░] 7%
 
@@ -123,6 +123,12 @@ None yet.
 - [Phase 11]: Spike needed: `Engine.time_scale` x physics interpolation at 10 TPS before hit-stop is built.
 - [Phase 15]: Performance on the weaker laptop is unmeasured until late. A first frame-rate check is planned after the world swap in Phase 10.
 - CAM-01 success criterion 1: 144 Hz camera judder not verified (developer has only a Mac); open human-verification gap, needs a 144 Hz display
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 261106-erl | Movement rework: no sprint, no air jump, Shift dash, jump chain 1-2-3, dash hop stack, lighter feel | 2026-11-06 | ba79847 | [261106-erl-movement-rework-remove-sprint-and-air-do](./quick/261106-erl-movement-rework-remove-sprint-and-air-do/) |
 
 ## Deferred Items
 
