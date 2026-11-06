@@ -111,7 +111,7 @@ completed: 2026-11-06
 | 6 Camera (centered, no jitter at 60/120/10 TPS, no wall clipping, recenter, auto-follow, persistence) | pass |
 | **7 MANDATORY 144 Hz judder (CAM-01, success criterion 1)** | **144 Hz not verified.** The developer only has a Mac and cannot check it. This is an **open human-verification gap (human_needed)**. CAM-01 is not marked complete on the strength of this plan, and the phase is not signed off for success criterion 1. |
 | 8 Latency (FEEL-06) | Provisionally OK ("ja an sich"), to be re-checked by the developer later. The asserted software latency from MOVEMENT-METRICS.md stands (medians 6.5 to 14.8 ms against the 66 ms target, max 20.3 ms). Display, compositor and USB latency are unmeasured (D-22 caveat). |
-| 9 Capsule fits the Mannequin in the low-ceiling passage (A2) | **Pending, not yet checked.** The passage is west of the spawn at z -2, x -26..-10, with the low ceiling at x -20..-12. |
+| 9 Capsule fits the Mannequin in the low-ceiling passage (A2) | pass. The 2.0 m capsule fits (A2 confirmed). The passage is west of the spawn at z -2, x -26..-10, with the low ceiling at x -20..-12. |
 | 10 Nothing glows, no particles, no camera effects | pass |
 
 ## Open Decisions and Follow-ups (no code or tuning changed in this plan)
@@ -119,7 +119,6 @@ completed: 2026-11-06
 - **Dash key (A5 / item 3):** the developer wants dash on **Left Shift (tap)**. Sprint is on Shift today, so sprint would move to another hold key (proposed: Left Alt). Follow-up, to be decided. The hold-versus-tap discussion for sprint and dash is for later.
 - **Long-jump arc:** the developer wants it higher (follow-up tuning).
 - **General feel feedback:** movement feels too heavy and not light enough. The developer wants it more input-responsive (input lag or speed maybe too long or slow, to be discussed) and wants to change the double-jump logic.
-- **Capsule height (A2):** pending the passage check.
 - **144 Hz check:** still needs a 144 Hz display. Until it is recorded, CAM-01 stays open.
 - `movement_default.tres` and all gameplay code are unchanged.
 
