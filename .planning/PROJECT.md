@@ -6,7 +6,7 @@ Ein 3D-Third-Person-Platformer als Uni-Prototyp (vertikaler Slice). Die Hauptfig
 
 ## Core Value
 
-Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprint, Sprung und Dash müssen sich smooth anfühlen, und die Hand muss sich damit nahtlos verbinden. Wenn alles andere wackelt, muss das funktionieren.
+Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprungkette, Dash und Dash-Hop müssen sich smooth anfühlen, und die Hand muss sich damit nahtlos verbinden. Wenn alles andere wackelt, muss das funktionieren.
 
 ## Requirements
 

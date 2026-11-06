@@ -6,7 +6,7 @@
 
 Ein 3D-Third-Person-Platformer als Uni-Prototyp (vertikaler Slice). Die Hauptfigur ist schuld an der Apokalypse, weil in ihrem Labor etwas schiefgegangen ist, und will zurück ins Labor. Dafür muss sie durch die zerstörte, überwachsene Welt. Zentrales Werkzeug ist die Prothesen-Hand, die steampunkige Mechanismen auslöst und durch gefundene Bauteile (Module) erweitert wird.
 
-**Core Value:** Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprint, Sprung und Dash müssen sich smooth anfühlen, und die Hand muss sich damit nahtlos verbinden. Wenn alles andere wackelt, muss das funktionieren.
+**Core Value:** Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprungkette, Dash und Dash-Hop müssen sich smooth anfühlen, und die Hand muss sich damit nahtlos verbinden. Wenn alles andere wackelt, muss das funktionieren.
 
 ### Constraints
 
@@ -58,9 +58,8 @@ Ein 3D-Third-Person-Platformer als Uni-Prototyp (vertikaler Slice). Die Hauptfig
 |--------|-------------|---------------------|
 | `move_forward/back/left/right` | W/S/A/D | Left stick |
 | `look_left/right/up/down` | (mouse motion handled separately) | Right stick |
-| `jump` | Space | A/Cross |
-| `sprint` (hold) | Left Shift | L3 or trigger |
-| `dash` | Left Ctrl or Q (decide in tuning) | B/Circle |
+| `jump` | Space (on landing: chain Jump 1 -> 2 -> 3) | A/Cross |
+| `dash` | Left Shift (tap; dash + jump = dash hop) | B/Circle |
 | `aim` (hold) | Right Mouse | L2/LT |
 | `use_hand` (fire/trigger module) | Left Mouse | R2/RT |
 | `interact` | E | X/Square |
