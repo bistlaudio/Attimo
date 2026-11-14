@@ -518,20 +518,22 @@ Name `aim_shoulder_swap`, KB+M default physical key Q (`dash` is left Shift only
 | A10 | Ignoring recenter/auto-follow while aiming is acceptable | Pitfall 9 | Low |
 | A11 | CONVENTIONS says the Mannequin is about 2.2 m tall; this session the head bone sat at y 1.23 m and a skinned mesh AABB read 2.2 m (the AABB may overestimate). Not used for any number here except the hips pivot (0.39 to 0.44 m, measured) | Pattern 4 | Low |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Does the layered 1H aim stance read well over strafe right, run and idle?**
+Every question below is resolved for planning (plan revision 1, 2026-11-14). Two are resolved by deferring the judgement to the end-of-phase human gym check, because headless runs cannot judge looks.
+
+1. **Does the layered 1H aim stance read well over strafe right, run and idle?** RESOLVED (deferred to the 03-09 human gym check, item 5): 03-08 adds the upper-arm residual so the arm reaches the target under the twist clamp (A-08-1); the developer judges the look in the gym and picks a fallback from the list below if needed.
    - What we know: the solver gets the arm exactly on target, but needs 51 (idle), 60 (run), 56 (back), 114 (strafe R) and 9 (strafe L) degrees of spine/chest correction at weight 1; the clip's own stance is a side-on pistol pose.
    - What's unclear: whether that twist looks natural; nothing could be rendered headless.
    - Recommendation: plan a time-boxed gym checkpoint (`checkpoint:human-verify`, `human_verify_mode` is end-of-phase) with three fallbacks in order: raise `spine_share`/clamp the twist; arms-only filter plus shoulder swing; as the last resort reduce the strafe blend toward the forward run while aiming. The deferred `Ranged_2H_Aiming` is the CONTEXT-sanctioned alternate pose.
-2. **The deviation "pirouette and lean on the Mannequin child node, not on VisualRoot".**
+2. **The deviation "pirouette and lean on the Mannequin child node, not on VisualRoot".** RESOLVED: developer-approved on 2026-11-14 as a standalone decision (DEV-01, recorded in 03-01 "Developer Decisions" and listed as confirmed in the 03-01 checkpoint item 1); 03-06 implements it and 03-09 writes the CONVENTIONS rule.
    - What we know: required to keep every facing reader correct; intent of D-01 and D-07 is preserved.
    - Recommendation: record it in the plan and note it for the user; no discuss round needed unless they object.
-3. **Where do animation and aim tuning numbers live?**
+3. **Where do animation and aim tuning numbers live?** RESOLVED: 03-01 checkpoint item 5 (MovementConfig for aim speed, lean, pirouette and clip playback numbers; CameraRig exports with a generated F2 "Aim camera" section for the camera numbers, built in 03-04; solver numbers as AimPoseModifier exports).
    - `aim_speed_factor` must be in `MovementConfig` (D-10). Lean angles, pirouette and animation ratios fit the same resource (F2 rows free) at the cost of one `measure_movement` regeneration (Pitfall 8a). Camera aim numbers are `CameraRig` exports and need F2 rows (D-14); the panel builds camera controls by hand in `tuning_panel.tscn`, so a small generated "Aim camera" section is a plan task.
-4. **Aim run speed asymmetry:** `Walking_Backwards` natural speed is far below the strafe/run speeds. A separate backward factor (A2 suggests about 0.6) keeps the slide plausible; confirm.
-5. **Strafe blend near diagonals:** with sync mode cyclic mutable the diagonal back-left/back-right mixes a 1.067 s walk with a 0.8 s run cycle; if the legs look off, switch that node to `SYNC_MODE_CYCLIC_CONSTANT` with `cyclic_length` 0.8 (documented) or trim `Walking_Backwards` with a custom timeline.
-6. **CAM-01 (144 Hz) stays an open verification gap from Phase 2.** Aim mode must not widen it: the aim sources only add to existing per-frame values in `_process`.
+4. **Aim run speed asymmetry:** `Walking_Backwards` natural speed is far below the strafe/run speeds. A separate backward factor (A2 suggests about 0.6) keeps the slide plausible; confirm. RESOLVED: 03-01 checkpoint item 4 (`aim_back_speed_factor` 0.6 on top of `aim_speed_factor` 0.75, implemented in 03-03 Task 2).
+5. **Strafe blend near diagonals:** with sync mode cyclic mutable the diagonal back-left/back-right mixes a 1.067 s walk with a 0.8 s run cycle; if the legs look off, switch that node to `SYNC_MODE_CYCLIC_CONSTANT` with `cyclic_length` 0.8 (documented) or trim `Walking_Backwards` with a custom timeline. RESOLVED (deferred to the 03-09 human gym check, item 7): 03-07 keeps cyclic mutable (A-07-3); the two fixes named here are the fallbacks if the developer reports incoherent legs.
+6. **CAM-01 (144 Hz) stays an open verification gap from Phase 2.** Aim mode must not widen it: the aim sources only add to existing per-frame values in `_process`. RESOLVED: accepted Phase 2 gap, outside this phase's scope; 03-04 writes the aim sources only in `_process` on top of the existing per-frame values, so the gap is not widened.
 
 ## Environment Availability
 

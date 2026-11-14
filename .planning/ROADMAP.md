@@ -115,18 +115,19 @@ Plans:
   2. Every movement verb in the game is backed by a kit clip or a documented clip composition. Verbs without one, such as wall-run and ledge grab, stay out.
   3. Holding the aim button blends into an aim mode with a crosshair, a tighter FOV and a shoulder offset. In aim mode the Mannequin strafes and walks backwards using kit clips.
   4. The animation changes on the same frame as the movement state, and no clip delays control: there is no landing lock and no anticipation longer than 2 frames. The Phase 2 latency numbers still hold.
-**Plans:** 9 plans
+**Plans:** 10 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Tracer: generated BlendTree animation root (StateMachine, TimeScale, Land OneShot), animator on new paths, timing guard; decision checkpoint for the open defaults (wave 1)
-- [ ] 03-02-PLAN.md — CombatRanged copy under the 33-entry whitelist; library with aim, strafe, backward and directional dodge clips; Dodge root pinned (wave 1)
-- [ ] 03-03-PLAN.md — Aim hold in PlayerController: aim_changed fact, camera-locked facing, camera-true steering, aim speed factors (wave 2)
-- [ ] 03-04-PLAN.md — Aim camera: eased FOV and shoulder offset via additive sources, aim_shoulder_swap (Q), aim sensitivity, no recenter in aim, F2 rows (wave 3)
-- [ ] 03-05-PLAN.md — Code-drawn crosshair (dot, ring, reserved lock state) in the gym and the test scene (wave 3)
-- [ ] 03-06-PLAN.md — ProceduralPose: ground dash lean into long-jump stretch, Jump 3 / stage 3 pirouette, aim suppression, metrics label (wave 3)
-- [ ] 03-07-PLAN.md — Filtered aim layer (Ranged_1H_Aiming), strafe/back blend points, clip time scale, directional aim dashes (wave 4)
-- [ ] 03-08-PLAN.md — AimPoseModifier: right arm points at the crosshair at any pitch, torso twist clamped (wave 5)
-- [ ] 03-09-PLAN.md — docs/ANIMATION-MAP.md with drift guard, CONVENTIONS rules, Jump 3 wording sweep, full suite and gym check (wave 6)
+- [ ] 03-01-PLAN.md — Tracer: generated BlendTree animation root (StateMachine, TimeScale, Land OneShot), animator on new paths, migrated path readers; developer decisions DEV-01/DEV-02 and the checkpoint for the remaining defaults (wave 1)
+- [ ] 03-02-PLAN.md — CombatRanged copy under the 33-entry whitelist; library with aim, strafe, backward and directional dodge clips; Dodge root pinned (wave 2)
+- [ ] 03-03-PLAN.md — Aim hold in PlayerController: aim_changed fact, camera-locked facing, camera-true steering, aim speed factors (wave 4)
+- [ ] 03-04-PLAN.md — Aim camera: eased FOV and shoulder offset via additive sources, aim_shoulder_swap (Q), aim sensitivity, no recenter in aim, F2 rows (wave 5)
+- [ ] 03-05-PLAN.md — Code-drawn crosshair (dot, ring, reserved lock state) in the gym and the test scene (wave 5)
+- [ ] 03-06-PLAN.md — ProceduralPose on the Mannequin child (DEV-01): ground dash lean into long-jump stretch, Jump 3 / stage 3 pirouette, aim suppression, metrics label (wave 5)
+- [ ] 03-07-PLAN.md — Filtered aim layer (Ranged_1H_Aiming), strafe/back blend points, clip time scale, directional aim dashes keeping the air-dash hold (wave 6)
+- [ ] 03-08-PLAN.md — AimPoseModifier: right arm points at the crosshair at any pitch, torso twist clamped (wave 7)
+- [ ] 03-09-PLAN.md — docs/ANIMATION-MAP.md with drift guard, CONVENTIONS rules, Jump 3 wording sweep, phase regression, full-suite gate and gym check (wave 8)
+- [ ] 03-10-PLAN.md — Animation timing guard (same frame, no landing lock, 2-frame anticipation) and the air-dash pose hold DEV-02 (wave 3; split out of 03-01 in revision 1)
 **UI hint**: yes
 
 ### Phase 4: Fernauslöser & Mechanism Kit
