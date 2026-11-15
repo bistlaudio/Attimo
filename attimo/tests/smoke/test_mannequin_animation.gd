@@ -4,6 +4,11 @@ extends RefCounted
 
 const Fixtures := preload("res://tests/fixtures.gd")
 const POSE_CHANGE_EPSILON: float = 0.001
+const REST_BLEND_MAX: float = 0.05
+const RUN_BLEND_MIN: float = 0.8
+const RUN_BLEND_FRAMES: int = 90
+const REST_BLEND_FRAMES: int = 120
+const LAND_ACTIVE_FRAMES: int = 30
 
 
 func run(tree: SceneTree, check: Callable) -> void:
@@ -21,14 +26,16 @@ func run(tree: SceneTree, check: Callable) -> void:
 	check.call(player.visual_root.position == Vector3.ZERO, "VisualRoot sits at the Player origin")
 	check.call(player.visual_root.get_node_or_null("Mannequin") != null, "Mannequin is a child of VisualRoot")
 
-	var playback := animation_tree.get(&"parameters/playback") as AnimationNodeStateMachinePlayback
-	check.call(playback != null, "playback is reachable at parameters/playback")
+	_check_tree_shape(animation_tree, check)
+	var playback := animation_tree.get(MannequinAnimator.P_PLAYBACK) as AnimationNodeStateMachinePlayback
+	check.call(playback != null, "playback is reachable at %s" % MannequinAnimator.P_PLAYBACK)
 	if playback == null:
 		player.queue_free()
 		floor_body.queue_free()
 		return
 	check.call(playback.get_current_node() == &"Locomotion", "starts in Locomotion (got %s)" % playback.get_current_node())
-	check.call(is_zero_approx(float(animation_tree.get(&"parameters/Locomotion/blend_position"))), "blend_position is 0.0 (idle)")
+	var rest_blend: Vector2 = animation_tree.get(MannequinAnimator.P_LOCOMOTION) as Vector2
+	check.call(rest_blend.length() < REST_BLEND_MAX, "locomotion blend is near zero at rest (got %s)" % rest_blend)
 
 	# Idle clip plays and keeps looping past one clip length (Idle_A is 1.067 s).
 	var skeleton: Skeleton3D = _find_skeleton(player.visual_root)
@@ -58,30 +65,58 @@ func run(tree: SceneTree, check: Callable) -> void:
 		reached_jump = playback.get_current_node() == &"Jump"
 	check.call(reached_jump, "jump press travels the tree to Jump (got %s)" % playback.get_current_node())
 
-	# A real jump ends in Idle on the floor; the tree plays Land and returns to Locomotion (AIRBORNE_STATES path).
+	# A real jump ends in Idle on the floor; the landing fires the Land overlay (AIRBORNE_STATES path). No Land state.
 	var seen: Dictionary[StringName, bool] = {}
 	var fsm_idle_again: bool = false
-	var back_in_locomotion: bool = false
 	for i: int in 240:
 		await tree.physics_frame
-		var node: StringName = playback.get_current_node()
-		seen[node] = true
+		seen[playback.get_current_node()] = true
 		if player.state_machine.current.name == &"Idle" and seen.has(&"Jump"):
 			fsm_idle_again = true
-		if fsm_idle_again and seen.has(&"Land") and node == &"Locomotion":
-			back_in_locomotion = true
 			break
 	Input.action_release(&"jump")
 	check.call(fsm_idle_again, "FSM reports Idle again after the jump")
 	check.call(seen.has(&"Fall"), "tree passed through Fall on the way down (seen %s)" % [seen.keys()])
-	check.call(seen.has(&"Land"), "tree played Land on the way back (seen %s)" % [seen.keys()])
-	check.call(back_in_locomotion, "after the jump the tree returns to Locomotion on the landing")
-	check.call(is_zero_approx(float(animation_tree.get(&"parameters/Locomotion/blend_position"))), "Locomotion blend is back to 0.0 at rest")
+	var land_seen: int = await Fixtures.wait_until(tree, func() -> bool: return bool(animation_tree.get(MannequinAnimator.P_LAND_ACTIVE)), LAND_ACTIVE_FRAMES)
+	check.call(land_seen >= 0, "landing into Idle sets %s true" % MannequinAnimator.P_LAND_ACTIVE)
+	check.call(playback.get_current_node() == &"Locomotion", "after the jump the tree is back in Locomotion (got %s)" % playback.get_current_node())
 	check.call(absf(player.global_position.y) < 0.05 and is_zero_approx(player.global_position.x), "Player stands where it jumped from (%s)" % player.global_position)
+
+	# Idle -> Run -> Idle on the 2D blend: run weight rises while a move input is held and falls again on release.
+	Input.action_press(&"move_forward")
+	var ran: int = await Fixtures.wait_until(tree, func() -> bool: return (animation_tree.get(MannequinAnimator.P_LOCOMOTION) as Vector2).y > RUN_BLEND_MIN, RUN_BLEND_FRAMES)
+	check.call(ran >= 0, "holding move_forward lifts the run blend above %.1f within %d frames" % [RUN_BLEND_MIN, RUN_BLEND_FRAMES])
+	Input.action_release(&"move_forward")
+	var rested: int = await Fixtures.wait_until(tree, func() -> bool: return (animation_tree.get(MannequinAnimator.P_LOCOMOTION) as Vector2).length() < REST_BLEND_MAX, REST_BLEND_FRAMES)
+	check.call(rested >= 0, "releasing move_forward returns the blend below %.2f within %d frames" % [REST_BLEND_MAX, REST_BLEND_FRAMES])
 
 	player.queue_free()
 	floor_body.queue_free()
 	await tree.process_frame
+
+
+## The root is a BlendTree whose state machine has no Land state and only immediate, enabled edges between states.
+func _check_tree_shape(animation_tree: AnimationTree, check: Callable) -> void:
+	var root := animation_tree.tree_root as AnimationNodeBlendTree
+	check.call(root != null, "tree root is an AnimationNodeBlendTree")
+	if root == null:
+		return
+	var machine := root.get_node(&"StateMachine") as AnimationNodeStateMachine
+	check.call(machine != null, "BlendTree has a StateMachine node")
+	if machine == null:
+		return
+	check.call(not machine.has_node(&"Land"), "state machine has no Land state (Land is a OneShot overlay)")
+	check.call(root.has_node(&"Land") and root.get_node(&"Land") is AnimationNodeOneShot, "BlendTree has the Land OneShot")
+	var bad_edges: Array[String] = []
+	var checked: int = 0
+	for i: int in machine.get_transition_count():
+		if machine.get_transition_from(i) == &"Start":
+			continue
+		checked += 1
+		var edge: AnimationNodeStateMachineTransition = machine.get_transition(i)
+		if edge.advance_mode != AnimationNodeStateMachineTransition.ADVANCE_MODE_ENABLED or edge.switch_mode != AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE:
+			bad_edges.append("%s->%s" % [machine.get_transition_from(i), machine.get_transition_to(i)])
+	check.call(checked > 0 and bad_edges.is_empty(), "every state edge is ENABLED + SWITCH_MODE_IMMEDIATE, Jump -> Fall included (%d checked, bad: %s)" % [checked, bad_edges])
 
 
 func _find_skeleton(node: Node) -> Skeleton3D:

@@ -52,7 +52,8 @@ script = ExtResource("8_fall")
 [node name="Dash" type="Node" parent="StateMachine"]
 script = ExtResource("9_dash")
 
-[node name="MannequinAnimator" type="Node" parent="." node_paths=PackedStringArray("state_machine", "animation_tree")]
+[node name="MannequinAnimator" type="Node" parent="." node_paths=PackedStringArray("state_machine", "animation_tree", "player")]
 script = ExtResource("6_anim")
 state_machine = NodePath("../StateMachine")
 animation_tree = NodePath("../VisualRoot/Mannequin/AnimationTree")
+player = NodePath("..")
