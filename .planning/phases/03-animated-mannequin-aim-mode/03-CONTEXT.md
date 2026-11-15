@@ -2,6 +2,7 @@
 
 **Gathered:** 2026-11-12
 **Status:** Ready for planning
+**Amended:** 2026-11-15 (DEV-03, approved by the developer; see "Amendments" at the end of Decisions)
 
 <domain>
 ## Phase Boundary
@@ -23,10 +24,12 @@ Out of scope: interactable highlight and aim assist (Phase 4), shooting and arm 
 - **D-03:** No slide. The user does not want a slide verb or a slide pose; the dash lean flowing into the jump covers it. (A slide would also have no kit clip, MOVE-11.)
 - **D-04:** The long jump (dash hop) plays `Jump_Start` with a held forward stretch lean in flight (superman style), then `Jump_Land` on touchdown. The lean continues from the dash lean (D-01).
 - **D-05:** The long jump at **stack stage 3** (maximum speed) additionally plays the Jump 3 pirouette (D-07). Stages 1 and 2 only use the stretch lean.
+  - **AMENDED by DEV-03 (2026-11-15, approved by the developer):** the stage-3 pirouette follows the aim exception of DEV-03: it does not start when aim is held at takeoff, and an aim press or an air dash mid-spin finishes it cleanly within about 0.1 s (`pirouette_finish_time`). See "Amendments".
 
 ### Jump chain and landing
 - **D-06:** Jump 1 and Jump 2 use `Jump_Start` -> `Jump_Idle` -> `Jump_Land` (the current mapping).
 - **D-07:** **Jump 3 (the old "salto") becomes a pirouette:** one 360 degree rotation around the vertical axis (code rotation on `VisualRoot`), normal jump pose otherwise. The rotation takes the flight time of the jump and ends shortly before landing so `Jump_Land` starts clean. No flip, no double rotation. Reason: the user finds a flip too playful for a steampunk character. The planner updates the "salto/flip" wording in REQUIREMENTS.md (MOVE-05, MOVE-09, FEEL-02) and ROADMAP.md Phase 3 criterion 1 accordingly. — **Reversibility:** reversible — the rotation is one code parameter on `VisualRoot`.
+  - **AMENDED by DEV-03 (2026-11-15, approved by the developer):** D-07 had no aim exception; it now has one. The pirouette is suppressed when aim is held at takeoff, and if aim or an air dash is pressed mid-spin, the spin finishes cleanly within about 0.1 s (`pirouette_finish_time`) instead of snapping. See "Amendments". (The node that carries the rotation is fixed by DEV-01: the `Mannequin` child of `VisualRoot`.)
 - **D-08:** Landing is a blend without lock: `Jump_Land` plays as a short blend and is overridden at once by run or idle when the player moves. No landing lock and no anticipation longer than 2 frames (ROADMAP criterion 4); the Phase 2 latency numbers must still hold.
 
 ### Aim mode: behavior
@@ -46,6 +49,14 @@ Out of scope: interactable highlight and aim assist (Phase 4), shooting and arm 
 - Aim run-speed factor, aim sensitivity factor, exact FOV and offset values, crosshair size and colours.
 - New input action name for the shoulder swap and the exact bone filter for the upper-body layer.
 - Whether `Dodge_Left/Right/Backward` is enough for aim-mode dash (D-12) or needs a fallback.
+
+### Amendments (approved by the developer)
+
+Recorded after the discuss session, during plan revision. Each entry is a genuine developer answer, not a planner default. Plans cite them by ID; 03-01-PLAN.md "Developer Decisions" holds the full text the executor copies into 03-01-SUMMARY.md.
+
+- **DEV-03 (2026-11-15, approved by the developer, option B): pirouette exception in aim mode.** An explicit, recorded amendment of D-05 and D-07, which had no aim exception. A pirouette (Jump 3, or long jump stage 3) does not start when aim is held at takeoff. If aim is pressed, or an air dash starts, while a pirouette is running, the remaining spin finishes cleanly within about 0.1 s (`pirouette_finish_time`, a tunable) instead of snapping or being cut off. Implemented and tested by 03-06; documented by 03-09 (docs/ANIMATION-MAP.md, docs/CONVENTIONS.md, MOVE-09, ROADMAP Phase 3 criterion 1). The lean scale while aiming is not part of DEV-03; it stays a checkpoint default (03-01 item 3).
+- **DEV-01 (2026-11-14, confirmed by the developer):** lean and pirouette are written on the `Mannequin` child under `VisualRoot`, not on `VisualRoot` itself, because VisualRoot's yaw is the facing that `PlayerController.face()`, `Dash`, `LongJump` and `CameraRig.recenter()` read. Amends the letter of D-01, D-07 and the Integration Points note below ("code rotation on `VisualRoot`"); the intent (one code rotation in the visual hierarchy) is kept. Phase 11 squash/stretch uses the same Mannequin transform.
+- **DEV-02 (2026-11-14, confirmed by the developer):** the air dash holds its Dodge pose past the Dash state's exit, through Fall, until landing or `air_dash_hold_time`; presentation only, it never delays control. Refines D-02 ("held as a pose in the air") and is the one documented exception to the same-frame rule of ROADMAP Phase 3 criterion 4.
 
 </decisions>
 
@@ -85,7 +96,7 @@ Out of scope: interactable highlight and aim assist (Phase 4), shooting and arm 
 - Typed GDScript, node-based FSM, physics interpolation on, camera in `_process`.
 
 ### Integration Points
-- `VisualRoot` carries procedural lean/pirouette rotation (Phase 3) and later squash/stretch (Phase 11).
+- `VisualRoot` carries procedural lean/pirouette rotation (Phase 3) and later squash/stretch (Phase 11). **Amended by DEV-01:** both go on the `Mannequin` child of `VisualRoot`; VisualRoot's yaw stays the facing (see "Amendments").
 - Aim mode touches `PlayerController` (facing, speed factor), `CameraRig` (additive FOV/offset), the Input Map (aim exists; add shoulder swap) and a new crosshair UI in the HUD layer.
 
 </code_context>
@@ -111,3 +122,4 @@ Out of scope: interactable highlight and aim assist (Phase 4), shooting and arm 
 
 *Phase: 3-Animated Mannequin & Aim Mode*
 *Context gathered: 2026-11-12*
+*Amended: 2026-11-15 (DEV-03 approved by the developer; DEV-01 and DEV-02 of 2026-11-14 cross-referenced)*
