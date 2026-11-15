@@ -41,7 +41,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 
 func _scenario_grounded_run_dash(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = _begin(tree)
-	var playback: AnimationNodeStateMachinePlayback = _playback(player)
+	var playback: AnimationNodeStateMachinePlayback = Fixtures.playback(player)
 	Input.action_press(&"move_forward")
 	await Fixtures.wait_physics(tree, 5)
 	await Fixtures.tap_action(tree, &"dash")
@@ -382,6 +382,3 @@ func _end(player: PlayerController) -> void:
 	await player.tree_exited
 
 
-func _playback(player: PlayerController) -> AnimationNodeStateMachinePlayback:
-	var animation_tree: AnimationTree = player.get_node("VisualRoot/Mannequin/AnimationTree") as AnimationTree
-	return animation_tree.get(&"parameters/playback") as AnimationNodeStateMachinePlayback

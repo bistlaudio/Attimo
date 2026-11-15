@@ -12,6 +12,8 @@ const MANNEQUIN_SCENE: String = "res://scenes/player/mannequin.tscn"
 const SPAWN: Vector3 = Vector3(0.0, 0.0, 4.0)
 const SPAWN_TOLERANCE: float = 0.05
 const MIN_RUN_DISTANCE: float = 1.0
+const RUN_BLEND_MIN: float = 0.8
+const RUN_BLEND_FRAMES: int = 90
 ## The tree follows the FSM after its 0.1 s crossfade, so tests allow a few ticks.
 const TREE_TRAVEL_TICKS: int = 15
 const AABB_TOLERANCE: float = 0.01
@@ -145,8 +147,7 @@ func _check_walls(scene: Node, check: Callable) -> void:
 
 
 func _play_through(tree: SceneTree, scene: Node, player: PlayerController, check: Callable) -> void:
-	var animation_tree: AnimationTree = player.get_node("VisualRoot/Mannequin/AnimationTree") as AnimationTree
-	var playback: AnimationNodeStateMachinePlayback = animation_tree.get(&"parameters/playback") as AnimationNodeStateMachinePlayback
+	var playback: AnimationNodeStateMachinePlayback = Fixtures.playback(player)
 	var log_node: EventLog = null
 	for node: Node in _all_nodes(scene):
 		if node is EventLog:
@@ -170,8 +171,8 @@ func _play_through(tree: SceneTree, scene: Node, player: PlayerController, check
 	var traveled: float = (player.global_position - run_start).dot(camera_forward)
 	check.call(traveled > MIN_RUN_DISTANCE, "move_forward: the player moved %.2f m away from the camera in 30 ticks" % traveled)
 	check.call(playback.get_current_node() == &"Locomotion", "move_forward: tree is in Locomotion (got %s)" % playback.get_current_node())
-	var blend: float = animation_tree.get(&"parameters/Locomotion/blend_position") as float
-	check.call(is_equal_approx(blend, 1.0), "move_forward: Locomotion blend_position is 1.0 (got %s)" % blend)
+	var ran: int = await Fixtures.wait_until(tree, func() -> bool: return Fixtures.locomotion_blend(player).y > RUN_BLEND_MIN, RUN_BLEND_FRAMES)
+	check.call(ran >= 0, "move_forward: Locomotion blend y rises above %.1f (got %s)" % [RUN_BLEND_MIN, Fixtures.locomotion_blend(player)])
 	Input.action_release(&"move_forward")
 	var stopped: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Idle", 60)
 	check.call(stopped >= 0, "releasing move_forward returns to Idle (got %s)" % player.state_machine.current.name)

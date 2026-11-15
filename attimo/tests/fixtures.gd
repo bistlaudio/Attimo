@@ -83,6 +83,26 @@ static func send_mouse_motion(relative: Vector2) -> void:
 	Input.flush_buffered_events()
 
 
+## The Mannequin's AnimationTree under the player's VisualRoot.
+static func animation_tree(player: PlayerController) -> AnimationTree:
+	return player.get_node("VisualRoot/Mannequin/AnimationTree") as AnimationTree
+
+
+## The playback object of the tree's state machine (the Land overlay is not a state).
+static func playback(player: PlayerController) -> AnimationNodeStateMachinePlayback:
+	return animation_tree(player).get(MannequinAnimator.P_PLAYBACK) as AnimationNodeStateMachinePlayback
+
+
+## The Locomotion BlendSpace2D position: x strafe, y forward weight (idle 0 .. run 1).
+static func locomotion_blend(player: PlayerController) -> Vector2:
+	return animation_tree(player).get(MannequinAnimator.P_LOCOMOTION) as Vector2
+
+
+## True while the Land OneShot overlay plays.
+static func land_active(player: PlayerController) -> bool:
+	return bool(animation_tree(player).get(MannequinAnimator.P_LAND_ACTIVE))
+
+
 static func wait_physics(tree: SceneTree, frames: int) -> void:
 	for i: int in frames:
 		await tree.physics_frame
