@@ -1,19 +1,19 @@
 ---
 gsd_state_version: "1.0"
 milestone: v0.11.0.4
-current_phase: 3
+current_phase: 03
 current_phase_name: Animated Mannequin & Aim Mode
-status: planning
-stopped_at: Phase 3 context gathered
-last_updated: "2026-11-12T12:45:56.727Z"
-last_activity: 2026-11-06
-last_activity_desc: Phase 02 complete, transitioned to Phase 3
-state_head: 53f93de89640fdac7283c2967964134215c31d41
+status: executing
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-11-16T14:15:23.506Z"
+last_activity: 2026-11-15
+last_activity_desc: Phase 03 execution started
+state_head: d4b900cd0f98920f29c29fb47ede8c24319b0267
 progress:
   total_phases: 15
   completed_phases: 2
-  total_plans: 21
-  completed_plans: 21
+  total_plans: 31
+  completed_plans: 22
 ---
 
 # Project State
@@ -23,14 +23,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-02)
 
 **Core value:** Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprint, Sprung und Dash fühlen sich smooth an, und die Hand verbindet sich nahtlos damit.
-**Current focus:** Phase 02 — Movement Core & Follow Camera
+**Current focus:** Phase 03 — Animated Mannequin & Aim Mode
 
 ## Current Position
 
-Phase: 3 — Animated Mannequin & Aim Mode
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-11-06 — Phase 02 complete, transitioned to Phase 3
+Phase: 03 (Animated Mannequin & Aim Mode) — EXECUTING
+Plan: 2 of 10
+Status: Ready to execute
+Last activity: 2026-11-15 — Phase 03 execution started
 
 Progress: [█░░░░░░░░░] 13%
 
@@ -71,6 +71,7 @@ Progress: [█░░░░░░░░░] 13%
 | Phase 02 P12 | 12 min | 2 tasks | 6 files |
 | Phase 02 P13 | 15 min | 2 tasks | 7 files |
 | Phase 02 P14 | 35 min | 2 tasks | 6 files |
+| Phase 03 P01 | 1h | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -112,6 +113,8 @@ Recent decisions that affect current work:
 - [Phase 02]: 02-12: TuningPanel rows are generated from MovementConfig.get_property_list (float + editor + range hint); camera controls copy rig settings, apply_settings, then save_to(settings_path); Save button editor-only (A15, T-02-16)
 - [Phase 02]: 02-13: measure tool split into a SceneTree loader (measure_movement.gd) and a RefCounted worker (movement_metrics.gd) because a -s script compiles before the autoloads exist
 - [Phase 02]: Movement gym tool split into launcher plus worker; random unique_id values stripped after pack for a reproducible scene (02-14)
+- [Phase 03]: 03-01: Animation root is a generated BlendTree (StateMachine -> TimeScale -> Land OneShot); every state edge ENABLED + IMMEDIATE, Jump -> Fall included
+- [Phase 03]: 03-01 checkpoint item 2: no shoulder swap action, Q stays unbound, fixed single aim shoulder (aim_shoulder_offset 0.6); items 3-6 defaults
 
 ### Pending Todos
 
@@ -141,6 +144,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-12T12:45:56.408Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-animated-mannequin-aim-mode/03-CONTEXT.md
+Last session: 2026-11-16T14:15:23.410Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None
