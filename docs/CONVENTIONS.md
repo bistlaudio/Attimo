@@ -154,7 +154,7 @@ Listeners: the debug event log now, juice (Phases 11-12), audio (Phase 14). A ne
 - Capsule shape: radius 0.5, height 2.0, kept unchanged for Phase 2 (A2). The gym sign-off re-checks it against the Mannequin.
 - `Mannequin_Medium` is about 2.2 m tall and faces +Z.
 - Attach held items and effects to the bones `hand.r` / `hand.l`. The `handslot` bones exist only in the clip GLBs, not in the character GLB.
-- The clip `Dodge_Forward` shifts the root bone by +0.25 m. Phase 3 decides how to handle it.
+- The Dodge clips shift the root bone (Forward +0.25 m, Left/Right 0.5 m, Backward -0.65 m) and snap back. The library tool `tools/build_animation_library.gd` pins the root position of the four Dodge clips to their first key (`ROOT_PINNED`), so a dash does not slide the visual. The root rotation is untouched, because the strafe clips carry their direction in the root yaw. AnimationTree root motion is not used, because it also strips the root rotation.
 
 ## Camera
 
