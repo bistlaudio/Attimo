@@ -1,5 +1,5 @@
 extends GroundState
-## Run: accelerates toward run_speed along the camera-relative input, skids when the input reverses
+## Run: accelerates toward the ground target speed (run_speed, scaled while aiming) along the camera-relative input, skids when the input reverses
 ## and brakes to a stop when released. There is one run speed; extra speed comes from the dash.
 ## Running_A plays in place (Locomotion blend by the animator).
 
@@ -12,5 +12,5 @@ func _ground_update(delta: float) -> StringName:
 			return &"Idle"
 		return &""
 	actor.face(direction, delta)
-	actor.accelerate_ground(direction, actor.config.run_speed, actor.config.ground_accel, delta)
+	actor.accelerate_ground(direction, actor.ground_target_speed(direction), actor.config.ground_accel, delta)
 	return &""

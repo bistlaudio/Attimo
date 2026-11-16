@@ -9,5 +9,5 @@ func _ground_update(delta: float) -> StringName:
 		actor.accelerate_ground(Vector3.ZERO, 0.0, actor.config.ground_decel, delta)
 		return &""
 	actor.face(direction, delta)
-	actor.accelerate_ground(direction, actor.config.run_speed, actor.config.ground_accel, delta)
+	actor.accelerate_ground(direction, actor.ground_target_speed(direction), actor.config.ground_accel, delta)
 	return &"Run"

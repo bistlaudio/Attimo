@@ -93,6 +93,22 @@ func input_direction() -> Vector3:
 	return right * input.x - forward * input.y
 
 
+## The ground run target speed for `direction` (a world-space input direction): run_speed, or while aiming
+## run_speed * aim_speed_factor, reduced further toward aim_back_speed_factor the more `direction` points behind the
+## facing (D-10). Strafing is not slowed; a zero direction returns the aim forward speed.
+func ground_target_speed(direction: Vector3) -> float:
+	if not aiming:
+		return config.run_speed
+	var aim_speed: float = config.run_speed * config.aim_speed_factor
+	var flat_direction: Vector3 = Vector3(direction.x, 0.0, direction.z)
+	var flat_facing: Vector3 = visual_root.global_basis.z
+	flat_facing.y = 0.0
+	if flat_direction.length_squared() < 0.0001 or flat_facing.length_squared() < 0.0001:
+		return aim_speed
+	var backness: float = clampf(-flat_direction.normalized().dot(flat_facing.normalized()), 0.0, 1.0)
+	return aim_speed * lerpf(1.0, config.aim_back_speed_factor, backness)
+
+
 ## Moves move_velocity toward direction * target_speed. The rate is turn_decel when the current
 ## velocity points against the wanted one (skid), ground_decel when there is no input or the speed
 ## is above the target, otherwise `accel`.

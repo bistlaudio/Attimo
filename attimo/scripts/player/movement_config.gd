@@ -1,8 +1,8 @@
 class_name MovementConfig
 extends Resource
 ## The one tunable movement resource (MOVE-10, D-23). Every movement number lives here.
-## Eight groups, 34 live sliders in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
-## Long jump (dash hop), Timing windows, Floor and platforms. Gravity is set directly
+## Nine groups, 36 live sliders in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
+## Long jump (dash hop), Timing windows, Floor and platforms, Aim. Gravity is set directly
 ## (rise_gravity, fall_multiplier); jump speeds are derived from the heights, so editing a
 ## height never changes the fall feel. Every divisor field has a strictly positive minimum (T-02-02).
 
@@ -89,6 +89,12 @@ extends Resource
 @export_range(30.0, 60.0, 1.0) var floor_max_angle_deg: float = 50.0
 ## Share of the platform's horizontal velocity that carries over when leaving it; raise it for a bigger launch off moving platforms.
 @export_range(0.0, 1.5, 0.05) var platform_carry: float = 1.0
+
+@export_group("Aim")
+## Share of run_speed the ground run keeps while aiming (D-10); raise it for a faster aim run, lower it for a heavier aim.
+@export_range(0.1, 1.0, 0.05) var aim_speed_factor: float = 0.75
+## Extra factor on the aim run speed for input pointing behind the facing, blended by how far behind it points; raise it for a faster back-pedal.
+@export_range(0.1, 1.0, 0.05) var aim_back_speed_factor: float = 0.6
 
 
 ## Gravity while falling in m/s^2: rise_gravity * fall_multiplier.
