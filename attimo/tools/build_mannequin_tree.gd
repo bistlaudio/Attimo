@@ -1,14 +1,29 @@
 extends SceneTree
 ## Editor-time tool: builds the Mannequin AnimationTree root (an AnimationNodeBlendTree) and saves it as a text .tres.
 ## Run: bash attimo/tests/run.sh --tool res://tools/build_mannequin_tree.gd
-## Layout: StateMachine (Locomotion BlendSpace2D, Jump, Fall, Dash) -> TimeScale -> Land (OneShot, input 1 = LandClip)
-## -> output. There is no Land state: landing is an overlay that a move input fades out (D-08, no landing lock).
+## Layout: StateMachine (Locomotion BlendSpace2D, Jump, Fall, Dash, DashLeft, DashRight, DashBack) -> TimeScale ->
+## Land (OneShot, input 1 = LandClip) -> Aim (Blend2 with an upper-body bone filter, input 1 = AimClip) -> output.
+## There is no Land state: landing is an overlay that a move input fades out (D-08, no landing lock).
 
 const OUTPUT: String = "res://scenes/player/mannequin_tree.tres"
 const LIBRARY: String = "res://assets/animations/rig_medium/rig_medium_library.res"
 const XFADE_TIME: float = 0.1
-## Skeleton path prefix for bone filters (used by the aim layer in 03-07).
+## Skeleton path prefix for bone filters (the aim layer).
 const SKEL: String = "Rig_Medium/Skeleton3D:"
+
+## Bones the aim layer takes over (D-11). Never hips or root: the pelvis and the root yaw stay with locomotion so the
+## legs keep their clip and the strafe direction (research Pattern 5). The handslot bones do not exist on the
+## Mannequin; a filter entry for a missing bone matches nothing and is harmless (A-07-2: drop them if an engine
+## warning ever appears).
+const UPPER_BONES: Array[String] = [
+	"spine", "chest", "head",
+	"upperarm.l", "lowerarm.l", "wrist.l", "hand.l", "handslot.l",
+	"upperarm.r", "lowerarm.r", "wrist.r", "hand.r", "handslot.r",
+]
+## Ranged_1H_Aiming is a raise followed by a hold. The node plays only the hold (0.6 s .. 1.0 s) and never loops, so
+## the raise does not replay (Pitfall 4).
+const AIM_HOLD_START: float = 0.6
+const AIM_HOLD_LENGTH: float = 0.4
 
 ## Jump_Start is cut at the crouch bottom (0.25 s) so the jump shows at most two frames of anticipation.
 const JUMP_START_OFFSET: float = 0.25
@@ -36,12 +51,25 @@ func _initialize() -> void:
 	land_clip.stretch_time_scale = true
 	land_clip.loop_mode = Animation.LOOP_NONE
 	tree.add_node(&"LandClip", land_clip, Vector2(260, 160))
+	var aim: AnimationNodeBlend2 = AnimationNodeBlend2.new()
+	aim.filter_enabled = true
+	for bone: String in UPPER_BONES:
+		aim.set_filter_path(NodePath(SKEL + bone), true)
+	tree.add_node(&"Aim", aim, Vector2(780, 0))
+	var aim_clip: AnimationNodeAnimation = _clip(&"Ranged_1H_Aiming")
+	aim_clip.use_custom_timeline = true
+	aim_clip.start_offset = AIM_HOLD_START
+	aim_clip.timeline_length = AIM_HOLD_LENGTH
+	aim_clip.loop_mode = Animation.LOOP_NONE
+	tree.add_node(&"AimClip", aim_clip, Vector2(520, 160))
 
 	# connect_node(input_node, input_index, output_node): the node named first receives the output of the last.
 	tree.connect_node(&"TimeScale", 0, &"StateMachine")
 	tree.connect_node(&"Land", 0, &"TimeScale")
 	tree.connect_node(&"Land", 1, &"LandClip")
-	tree.connect_node(&"output", 0, &"Land")
+	tree.connect_node(&"Aim", 0, &"Land")
+	tree.connect_node(&"Aim", 1, &"AimClip")
+	tree.connect_node(&"output", 0, &"Aim")
 
 	var missing: StringName = _first_missing_clip()
 	if missing != &"":

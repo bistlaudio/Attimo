@@ -71,10 +71,10 @@ Display, compositor and USB latency are outside the software measurement (D-22).
 
 | Action | Accumulated input on: median (ms) | on: max (ms) | off: median (ms) | off: max (ms) | Verdict |
 |---|---|---|---|---|---|
-| Latency jump 60 TPS | 13.09 | 22.25 | 13.19 | 19.90 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency jump 120 TPS | 5.67 | 14.05 | 7.05 | 16.26 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 60 TPS | 19.08 | 21.58 | 18.45 | 20.71 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 120 TPS | 6.36 | 13.06 | 6.42 | 14.19 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 60 TPS | 14.46 | 21.10 | 13.33 | 21.31 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 120 TPS | 6.06 | 13.60 | 6.31 | 14.36 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 60 TPS | 19.40 | 20.99 | 19.60 | 22.01 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 120 TPS | 5.93 | 13.47 | 6.85 | 13.99 | Target met (median <= 66 ms, max <= 100 ms) |
 
 ## Grid cross-check
 
@@ -139,3 +139,8 @@ Every MovementConfig float of res://resources/player/movement_default.tres at ge
 | `pirouette_lead_time` | 0.080 |
 | `pirouette_finish_time` | 0.100 |
 | `pose_pivot_height` | 0.450 |
+| `run_anim_ref_speed` | 4.500 |
+| `run_anim_max_scale` | 2.500 |
+| `aim_layer_blend_time` | 0.150 |
+| `locomotion_blend_rate` | 10.000 |
+| `air_dash_hold_time` | 0.350 |

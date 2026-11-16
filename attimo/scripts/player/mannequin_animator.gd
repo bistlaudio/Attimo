@@ -18,13 +18,7 @@ const P_LOCOMOTION: StringName = &"parameters/StateMachine/Locomotion/blend_posi
 const P_TIME_SCALE: StringName = &"parameters/TimeScale/scale"
 const P_LAND_REQUEST: StringName = &"parameters/Land/request"
 const P_LAND_ACTIVE: StringName = &"parameters/Land/active"
-
-## Locomotion blend speed in blend units per second (idle 0 .. run 1). Moves into MovementConfig in 03-07.
-const LOCO_BLEND_RATE: float = 10.0
-
-## Seconds the Dodge pose is held after an air dash ends (DEV-02): the clip's remaining 0.22 s plus a short hold of
-## its end pose. Moves into MovementConfig as air_dash_hold_time in 03-07.
-const AIR_DASH_HOLD_TIME: float = 0.35
+const P_AIM: StringName = &"parameters/Aim/blend_amount"
 
 const STATE_TO_ANIM: Dictionary[StringName, StringName] = {
 	&"Idle": &"Locomotion",
@@ -47,6 +41,8 @@ var last_travel: StringName = &""
 var last_travel_frame: int = -1
 ## True while the Dodge pose of an air dash is held past the Dash state's exit (read-only for others).
 var air_dash_holding: bool = false
+## Weight of the upper-body aim layer, 0 (locomotion only) to 1 (aim pose), eased over aim_layer_blend_time.
+var aim_weight: float = 0.0
 
 var _playback: AnimationNodeStateMachinePlayback
 var _loco_blend: Vector2 = Vector2.ZERO
@@ -72,17 +68,20 @@ func _physics_process(delta: float) -> void:
 		_travel_to(&"Fall")
 
 
-## The hold length in seconds. A function so a later plan can read it from MovementConfig without changing callers.
+## The hold length in seconds (MovementConfig.air_dash_hold_time, live-tunable).
 func air_dash_hold_time() -> float:
-	return AIR_DASH_HOLD_TIME
+	return player.config.air_dash_hold_time
 
 
 func _process(delta: float) -> void:
 	if last_travel == &"Locomotion":
 		_loco_target = _locomotion_target()
-	_loco_blend = _loco_blend.move_toward(_loco_target, LOCO_BLEND_RATE * delta)
+	_loco_blend = _loco_blend.move_toward(_loco_target, player.config.locomotion_blend_rate * delta)
 	animation_tree.set(P_LOCOMOTION, _loco_blend)
 	animation_tree.set(P_TIME_SCALE, 1.0)
+	var blend_time: float = maxf(player.config.aim_layer_blend_time, 0.001)
+	aim_weight = move_toward(aim_weight, 1.0 if player.aiming else 0.0, delta / blend_time)
+	animation_tree.set(P_AIM, aim_weight)
 
 
 func _on_state_changed(from_state: StringName, to_state: StringName) -> void:
@@ -104,7 +103,7 @@ func _on_state_changed(from_state: StringName, to_state: StringName) -> void:
 	# Step the blend once on the same call so an Idle -> Run change shows a non-zero run weight on this frame.
 	if node == &"Locomotion":
 		_loco_target = _locomotion_target()
-	var step: float = LOCO_BLEND_RATE / float(Engine.physics_ticks_per_second)
+	var step: float = player.config.locomotion_blend_rate / float(Engine.physics_ticks_per_second)
 	_loco_blend = _loco_blend.move_toward(_loco_target, step)
 	animation_tree.set(P_LOCOMOTION, _loco_blend)
 

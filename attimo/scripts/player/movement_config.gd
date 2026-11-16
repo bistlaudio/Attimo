@@ -1,8 +1,8 @@
 class_name MovementConfig
 extends Resource
 ## The one tunable movement resource (MOVE-10, D-23). Every movement number lives here.
-## Ten groups, 44 live sliders in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
-## Long jump (dash hop), Timing windows, Floor and platforms, Aim, Pose. Gravity is set directly
+## Eleven groups, 49 live sliders in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
+## Long jump (dash hop), Timing windows, Floor and platforms, Aim, Pose, Clip playback. Gravity is set directly
 ## (rise_gravity, fall_multiplier); jump speeds are derived from the heights, so editing a
 ## height never changes the fall feel. Every divisor field has a strictly positive minimum (T-02-02).
 
@@ -113,6 +113,18 @@ extends Resource
 @export_range(0.01, 0.5, 0.01) var pirouette_finish_time: float = 0.1
 ## Height in m of the point the body leans and spins about (about the hips); raise it to pivot higher up.
 @export_range(0.0, 1.5, 0.05) var pose_pivot_height: float = 0.45
+
+@export_group("Clip playback")
+## Ground speed in m/s at which Running_A plays at 1x; lower it for a faster-playing run clip, raise it for a slower one.
+@export_range(0.5, 20.0, 0.1) var run_anim_ref_speed: float = 4.5
+## Cap on the Running_A playback speed (1 = never faster than the clip); raise it for a faster-playing run at full speed.
+@export_range(1.0, 4.0, 0.05) var run_anim_max_scale: float = 2.5
+## Seconds the upper body takes to blend into the aim pose and back out; raise it for a slower aim blend.
+@export_range(0.01, 1.0, 0.01) var aim_layer_blend_time: float = 0.15
+## Speed in 1/s at which the locomotion blend follows the movement (idle 0 .. run 1); raise it for a snappier blend.
+@export_range(1.0, 40.0, 0.5) var locomotion_blend_rate: float = 10.0
+## Seconds the Dodge pose is held after an air dash ends before the Fall clip takes over (landing ends it earlier, DEV-02); raise it for a longer hold.
+@export_range(0.0, 2.0, 0.05) var air_dash_hold_time: float = 0.35
 
 
 ## Gravity while falling in m/s^2: rise_gravity * fall_multiplier.
