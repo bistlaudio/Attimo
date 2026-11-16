@@ -15,9 +15,10 @@ const ACTIONS: Array[String] = [
 const FOLDERS: Array[String] = [
 	"autoload/", "scenes/", "scripts/", "assets/", "tests/", "tools/",
 	"scripts/camera/", "scenes/camera/", "scripts/gym/", "resources/",
+	"scripts/ui/", "scenes/ui/",
 ]
-## Phase 2 contracts the doc must name.
-const DOC_TERMS: Array[String] = ["MovementConfig", "CameraRig", "user://settings.cfg"]
+## Phase 2 and 3 contracts the doc must name.
+const DOC_TERMS: Array[String] = ["MovementConfig", "CameraRig", "user://settings.cfg", "ANIMATION-MAP.md", "ProceduralPose"]
 ## Fixed read-only path, relative to the project root (attimo/).
 const DOC_RELATIVE_PATH: String = "../docs/CONVENTIONS.md"
 

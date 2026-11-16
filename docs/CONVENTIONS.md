@@ -22,9 +22,11 @@ The Godot project root is `attimo/` (D-01). `KayKit/` and the other raw asset pa
 | `scenes/proto/` | Wrapper scenes for the Prototype Bits pieces (with collision). Phase 2 adds `moving_platform.tscn` and the Slope and Beam wrappers. |
 | `scenes/test/` | Test scenes. `test_scene.tscn` is the Phase 1 main scene; `movement_gym.tscn` becomes the Phase 2 main scene. |
 | `scenes/debug/` | Debug overlays such as the event log, the metrics overlay and the tuning panel. |
+| `scenes/ui/` | Player-facing UI scenes (Phase 3: `crosshair.tscn`). |
 | `scripts/core/` | Generic building blocks: `State`, `StateMachine`, `PhysicsLayers`. |
 | `scripts/player/` | PlayerController, the animator, and `states/` (one script per movement state). |
 | `scripts/camera/` | `CameraRig` and `CameraSettings` (camera tuning persisted in `user://settings.cfg`). |
+| `scripts/ui/` | Player-facing UI scripts (Phase 3: `Crosshair`). |
 | `scripts/gym/` | Gym-only helpers (`MovingPlatform`, `FallReset`). Phase 4 builds the real mechanisms. |
 | `scripts/debug/` | Debug-only scripts. Strip or ignore in a release build. |
 | `resources/` | Shared `Resource` instances. `resources/player/movement_default.tres` is the one `MovementConfig` that holds every movement number. |
@@ -144,7 +146,9 @@ Listeners: the debug event log now, juice (Phases 11-12), audio (Phase 14). A ne
 
 ## Player scene
 
-- Structure: `Player` (CharacterBody3D) > `VisualRoot` (Node3D, pivot at the feet) > Mannequin wrapper scene (D-06). Rotate or scale only `VisualRoot`, inside the physics tick. Later phases reuse it for flip and lean (Phase 3), the final hero (Phase 9) and squash and stretch (Phase 11).
+- Structure: `Player` (CharacterBody3D) > `VisualRoot` (Node3D, pivot at the feet) > Mannequin wrapper scene (D-06). `VisualRoot`'s yaw is the facing: `PlayerController` owns it (camera-locked while aiming), and `face()`, `Dash`, `LongJump` and `CameraRig.recenter()` read it. The final hero (Phase 9) replaces the Mannequin under this node.
+- Pose rule (Phase 3, DEV-01, the developer's approved deviation from the letter of D-01 and D-07, 2026-11-14): procedural lean and the Jump 3 pirouette are written by `ProceduralPose` on the Mannequin child of `VisualRoot`, inside the physics tick, pivoting at hip height. Never write lean, pitch or spin on `VisualRoot` itself. No pirouette starts when aim is held at takeoff, and an aim press or an air dash mid-spin finishes it within `pirouette_finish_time` (DEV-03, approved by the developer on 2026-11-15). Phase 11 squash and stretch is composed into the same Mannequin transform.
+- Animation: the verb to state to clip map is `docs/ANIMATION-MAP.md` (MOVE-11, guarded by `test_animation_map`). A new verb lands with a kit clip or a composition row there, in the same change as its state.
 - The state machine is the source of truth for movement (D-08). The animator listens to the local `StateMachine.state_changed` signal and never decides state.
 - Movement rules (Phase 2): the controller owns `move_velocity` (horizontal) and `vertical_speed`, applies gravity in half steps, and calls `move_and_slide()` exactly once per tick in `_physics_process`. It never stores the returned velocity as state. States only write `move_velocity`, `vertical_speed` and `gravity_scale`.
 - All movement numbers live in `MovementConfig` (`resources/player/movement_default.tres`). Scripts never hold tuning literals.
