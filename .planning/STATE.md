@@ -4,16 +4,16 @@ milestone: v0.11.0.4
 current_phase: 03
 current_phase_name: Animated Mannequin & Aim Mode
 status: executing
-stopped_at: Completed 03-04-PLAN.md
-last_updated: "2026-11-16T14:55:21.774Z"
+stopped_at: Completed 03-05-PLAN.md
+last_updated: "2026-11-16T15:03:14.751Z"
 last_activity: 2026-11-15
 last_activity_desc: Phase 03 execution started
-state_head: 79e89cefb3dc6125aeaa1145359d80ef365cdb2b
+state_head: ac68e30e322b93426e1992dad64894051018a7f4
 progress:
   total_phases: 15
   completed_phases: 2
   total_plans: 31
-  completed_plans: 26
+  completed_plans: 27
 ---
 
 # Project State
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 03 (Animated Mannequin & Aim Mode) — EXECUTING
-Plan: 6 of 10
+Plan: 7 of 10
 Status: Ready to execute
 Last activity: 2026-11-15 — Phase 03 execution started
 
@@ -76,6 +76,7 @@ Progress: [█░░░░░░░░░] 13%
 | Phase 03 P10 | 25 min | 2 tasks | 2 files |
 | Phase 03 P03 | 35 min | 2 tasks | 9 files |
 | Phase 03 P04 | 40min | 3 tasks | 6 files |
+| Phase 03 P05 | 7 min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -123,6 +124,7 @@ Recent decisions that affect current work:
 - [Phase 03]: 03-10: air-dash pose hold lives in MannequinAnimator behind air_dash_hold_time() (start 0.35 s); a ground dash that ends airborne never holds
 - [Phase 03]: 03-03: aim facing is pinned to rig.yaw in PlayerController._tick_aim before the states; face()/face_now() no-op while aiming; aim ground speed via ground_target_speed (0.75, back 0.6)
 - [Phase 03]: 03-04: aim camera uses one fixed right shoulder; recenter and auto-follow gated on held aim intent; aim rows generated from CameraRig aim_* range floats and never persisted
+- [Phase 03]: 03-05: Crosshair is a CanvasLayer (layer 10) with a full-rect Reticle Control drawing dot and ring via its draw signal; set_locked() is the reserved Phase 4 lock hook
 
 ### Pending Todos
 
@@ -152,6 +154,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-16T14:55:21.624Z
-Stopped at: Completed 03-04-PLAN.md
+Last session: 2026-11-16T15:03:14.560Z
+Stopped at: Completed 03-05-PLAN.md
 Resume file: None
