@@ -28,7 +28,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	bus.emit_signal(&"chain_stage_changed", 3)
 	check.call(listener.puffs_spawned == 2 and listener.last_stage == 3, "(3) chain stage 3 spawns a second puff (spawned %d)" % listener.puffs_spawned)
 	var big: CPUParticles3D = listener.get_child(1) as CPUParticles3D
-	check.call(big != null and small != null and big.scale.x > small.scale.x, "(3) the salto puff is bigger than the Jump 2 puff")
+	check.call(big != null and small != null and big.scale.x > small.scale.x, "(3) the Jump 3 puff is bigger than the Jump 2 puff")
 
 	var before: int = listener.puffs_spawned
 	var sizes: Array[float] = []

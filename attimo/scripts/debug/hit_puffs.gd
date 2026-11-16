@@ -3,7 +3,7 @@ extends Node
 ## Debug-only placeholder feedback: a small puff of particles at the player's feet when a timing is hit, so the
 ## tester can see it. It listens to EventBus facts only and never touches gameplay code. Exception to the
 ## no-feedback rule, recorded in docs/CONVENTIONS.md; real juice stays Phase 3+.
-##   chain_stage_changed 2 and 3: a puff for Jump 2 and the bigger one for Jump 3 (the salto). Stage 1 and the
+##   chain_stage_changed 2 and 3: a puff for Jump 2 and the bigger one for Jump 3 (the pirouette jump). Stage 1 and the
 ##   reset to 0 give nothing.
 ##   long_jumped 1, 2, 3: one puff per dash-hop stack stage, bigger and a different colour per stage.
 ## A missed window emits no hit fact, so it gives no puff. Strip with the other debug scripts (REL-03).

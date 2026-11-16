@@ -1,6 +1,6 @@
 extends RefCounted
 ## MOVE-07 / MOVE-05 / D-05 / D-06 / D-07: the ground-jump chain and the long jump. Jump 1 -> land -> Jump 2 ->
-## land -> Jump 3 (the salto, highest) inside the landing window. Dash -> Jump = the dash hop, a long jump at the
+## land -> Jump 3 (the pirouette jump, highest) inside the landing window. Dash -> Jump = the dash hop, a long jump at the
 ## speed of its stage (set, never carried); clean repeats on landing climb the stack 1 -> 2 -> 3, the combo ends after 3 and the next hop restarts at 1, a miss
 ## restarts at 1. Every expectation derives from player.config. Scenarios that need other numbers duplicate the config
 ## first (the shared resource is never mutated). Presses go through the input pipeline
@@ -28,7 +28,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_chain_timeout(tree, check)
 	await _scenario_chain_standing(tree, check)
 	await _scenario_chain_new_after_stage_three(tree, check)
-	await _scenario_salto_then_one_air_dash(tree, check)
+	await _scenario_jump3_then_one_air_dash(tree, check)
 	await _scenario_plain_long_jump(tree, check)
 	await _scenario_no_air_dash_after_long_jump(tree, check)
 	await _scenario_hop_stack(tree, check)
@@ -138,7 +138,7 @@ func _held_jump(tree: SceneTree, player: PlayerController) -> Dictionary:
 
 # --- Task 1: the chain ------------------------------------------------------------------------------------
 
-# D-05 / U4: Jump 1 -> land -> Jump 2 -> land -> Jump 3 (salto), all held: apexes match jump_height,
+# D-05 / U4: Jump 1 -> land -> Jump 2 -> land -> Jump 3 (the pirouette jump), all held: apexes match jump_height,
 # jump_2_height, jump_3_height and rise strictly; stages 1, 2, 3.
 func _scenario_chain_held(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
@@ -220,7 +220,7 @@ func _scenario_chain_standing(tree: SceneTree, check: Callable) -> void:
 	await _end(player)
 
 
-# A8 / U4: a fourth ground jump inside the window, after the salto, starts a new chain at Jump 1.
+# A8 / U4: a fourth ground jump inside the window, after Jump 3, starts a new chain at Jump 1.
 func _scenario_chain_new_after_stage_three(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
 	var config: MovementConfig = player.config
@@ -234,8 +234,8 @@ func _scenario_chain_new_after_stage_three(tree: SceneTree, check: Callable) -> 
 	await _end(player)
 
 
-# U2 / U4: after the Jump 3 salto exactly one air dash fires, and a second press in the same airtime is refused.
-func _scenario_salto_then_one_air_dash(tree: SceneTree, check: Callable) -> void:
+# U2 / U4: after the Jump 3 pirouette jump exactly one air dash fires, and a second press in the same airtime is refused.
+func _scenario_jump3_then_one_air_dash(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
 	# Cooldown 0 so only the per-airtime flag can refuse the second dash.
 	player.config = player.config.duplicate() as MovementConfig
@@ -245,12 +245,12 @@ func _scenario_salto_then_one_air_dash(tree: SceneTree, check: Callable) -> void
 	await _held_jump(tree, player)
 	Fixtures.send_action_event(&"jump", true)
 	await Fixtures.wait_until(tree, func() -> bool: return not player.is_grounded() and player.vertical_speed <= 0.0, 120)
-	check.call(_stages_are([1, 2, 3]), "(c7) the third jump is the salto (got %s)" % [_stages])
+	check.call(_stages_are([1, 2, 3]), "(c7) the third jump is Jump 3, the pirouette jump (got %s)" % [_stages])
 	Fixtures.send_action_event(&"jump", false)
 	Fixtures.send_action_event(&"dash", true)
 	Fixtures.send_action_event(&"dash", false)
 	await Fixtures.wait_physics(tree, 3)
-	check.call(_air_dashes == 1, "(c7) the first dash after the salto is an air dash (air dashes %d)" % _air_dashes)
+	check.call(_air_dashes == 1, "(c7) the first dash after Jump 3 is an air dash (air dashes %d)" % _air_dashes)
 	await Fixtures.wait_physics(tree, int(ceil((player.config.dash_time + 0.07) * float(TPS))))
 	var airborne: bool = not player.is_grounded()
 	Fixtures.send_action_event(&"dash", true)

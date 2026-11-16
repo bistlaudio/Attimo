@@ -71,7 +71,7 @@ Plans:
 - [x] 01-03-PLAN.md — Demo verbs played in place on timers (D-09: no movement physics): Run, Fall/`landed`, Dash/`dash_started` on the Mannequin (wave 3)
 - [x] 01-06-PLAN.md — F3 event log overlay and the FEEL-01 feedback guard (wave 3)
 - [x] 01-07-PLAN.md — Prototype Bits test scene as main scene, asset-hygiene guard, end-of-phase play-through (wave 4)
-**Notes**: Re-verify Godot 4.7.x and addon compatibility. The Mannequin sits under a VisualRoot node with its pivot at the feet. The procedural flip and lean (Phase 3), the final hero (Phase 9) and squash/stretch (Phase 11) all reuse this node. The fact bus is the only feedback hook built in Group A (FEEL-01). It is laid now so that the juice and audio phases need no edits to gameplay code. The cue catalogue itself (FEEL-08) waits for Phase 11. No Meshy work happens here.
+**Notes**: Re-verify Godot 4.7.x and addon compatibility. The Mannequin sits under a VisualRoot node with its pivot at the feet. VisualRoot's yaw is the facing. The final hero (Phase 9) replaces the Mannequin under this node. The procedural pirouette and lean (Phase 3) and squash/stretch (Phase 11) are written on the Mannequin child of VisualRoot, not on VisualRoot itself (DEV-01, Phase 3). The fact bus is the only feedback hook built in Group A (FEEL-01). It is laid now so that the juice and audio phases need no edits to gameplay code. The cue catalogue itself (FEEL-08) waits for Phase 11. No Meshy work happens here.
 
 ### Phase 2: Movement Core & Follow Camera
 **Group:** A (Prototyp)
@@ -81,7 +81,7 @@ Plans:
 **Requirements**: MOVE-01, MOVE-02, MOVE-03, MOVE-04, MOVE-05, MOVE-06, MOVE-07, MOVE-08, MOVE-10, CAM-01, CAM-03, FEEL-06
 **Success Criteria** (what must be TRUE):
   1. In a movement gym built from Prototype Bits, the player steers the Mannequin relative to a third-person mouse-look follow camera centered behind the character (shoulder offset only in aim mode, Phase 3), with smooth acceleration and deceleration, at one tunable run speed. The camera follows without jitter at 10 TPS and at 144 Hz, and never clips through walls. Mouse sensitivity and invert-Y can be changed.
-  2. Tapping jump gives a lower jump than holding it, and the fall is heavier than the rise. A jump pressed just after leaving a ledge, or just before landing, still fires. Ground jumps chain Jump 1 -> Jump 2 -> Jump 3 (the highest, a salto) inside a landing window, and there is no air jump.
+  2. Tapping jump gives a lower jump than holding it, and the fall is heavier than the rise. A jump pressed just after leaving a ledge, or just before landing, still fires. Ground jumps chain Jump 1 -> Jump 2 -> Jump 3 (the highest, a pirouette) inside a landing window, and there is no air jump.
   3. The player can dash on the ground and once in the air. The air dash refills on landing, a dash can flow straight into a jump (a long jump whose speed stacks over three stages on clean repeats), and a dash never tunnels through walls.
   4. Moving platforms and conveyors carry the player, and the player keeps their momentum when leaving them. Gym slopes and stairs never make the player stick or launch.
   5. All movement values are live-tunable in one resource. A movement-metrics table (jump height/distance, dash distance) is recorded, and the measured jump and dash input latency meets the 66 ms target (hard limit 100 ms). Movement is signed off without any juice.
@@ -111,10 +111,10 @@ Plans:
 **Depends on**: Phase 2
 **Requirements**: MOVE-09, MOVE-11, CAM-02
 **Success Criteria** (what must be TRUE):
-  1. The Mannequin's animation follows every movement state, using only Rig_Medium clips, cuts, blends and procedural rotation/scale. This covers idle, run, jump start/air/land, the Jump 3 salto flip, the long jump, the ground dash and the held air-dash pose.
+  1. The Mannequin's animation follows every movement state, using only Rig_Medium clips, cuts, blends and procedural rotation/scale. This covers idle, run, jump start/air/land, the Jump 3 pirouette (not started while aiming, DEV-03), the long jump, the ground dash and the held air-dash pose.
   2. Every movement verb in the game is backed by a kit clip or a documented clip composition. Verbs without one, such as wall-run and ledge grab, stay out.
   3. Holding the aim button blends into an aim mode with a crosshair, a tighter FOV and a shoulder offset. In aim mode the Mannequin strafes and walks backwards using kit clips.
-  4. The animation changes on the same frame as the movement state, and no clip delays control: there is no landing lock and no anticipation longer than 2 frames. The Phase 2 latency numbers still hold.
+  4. The animation changes on the same frame as the movement state, and no clip delays control: there is no landing lock and no anticipation longer than 2 frames. The one exception to the same-frame rule is the presentation-only air-dash pose hold (DEV-02): after an air dash the Dodge pose stays through the fall until landing or until air_dash_hold_time, and it never delays control. The Phase 2 latency numbers still hold.
 **Plans:** 9/10 plans executed
 
 Plans:
@@ -244,12 +244,12 @@ Plans:
 **Requirements**: FEEL-02, FEEL-04, FEEL-05, FEEL-08
 **Success Criteria** (what must be TRUE):
   1. Feedback cues live as data, one per action, each with an empty SFX slot. They react to the gameplay facts from Phase 1, with no changes to gameplay code.
-  2. Jump, landing (scaled by fall speed), the Jump 3 salto, dash and long jump each show visible feedback in cream or amber, never turquoise. The feedback is squash/stretch, dust, a steam ring or a lean, as fits the move.
+  2. Jump, landing (scaled by fall speed), the Jump 3 pirouette, dash and long jump each show visible feedback in cream or amber, never turquoise. The feedback is squash/stretch, dust, a steam ring or a lean, as fits the move.
   3. Dashes, long jumps and hard landings produce FOV kicks and bounded camera shake without roll, and these hold up in the level's tight rooms. Damage taken and hits on enemies and the boss trigger a short hit-stop that freezes the world without stutter.
   4. Juice runs at one fixed, strong level, tuned per cue. There are no juice presets, sliders or toggles. No feedback delays control or changes movement timing.
   5. No effect causes a hitch or jitter, even the first time it fires, at 10 TPS and at 144 Hz.
 **Plans**: TBD
-**Notes**: Run a 30-minute spike on `Engine.time_scale` x physics interpolation at 10 TPS before building hit-stop. Squash/stretch runs on the VisualRoot from Phase 1. Starting values are in GAME-FEEL.md Section 4. Ignore the presets and per-channel toggles described there (user decision). Pool and pre-warm particles.
+**Notes**: Run a 30-minute spike on `Engine.time_scale` x physics interpolation at 10 TPS before building hit-stop. Squash/stretch is composed into the transform of the Mannequin child of VisualRoot, the node ProceduralPose writes since Phase 3 (DEV-01); VisualRoot's yaw stays the facing. Starting values are in GAME-FEEL.md Section 4. Ignore the presets and per-channel toggles described there (user decision). Pool and pre-warm particles.
 
 ### Phase 12: Hand & Combat Juice + Polish
 **Group:** B (Produktion)
