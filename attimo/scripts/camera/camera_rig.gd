@@ -66,6 +66,18 @@ enum InputDevice { KEYBOARD_MOUSE, JOYPAD }
 ## Seconds a recenter (camera_recenter, D-17) takes to turn the camera behind the character.
 @export var recenter_time: float = 0.15
 
+@export_group("Aim")
+## Degrees the field of view narrows at full aim weight (D-14).
+@export_range(0.0, 30.0, 0.5) var aim_fov_delta: float = 12.0
+## Metres the camera arm moves to the right shoulder at full aim weight, along Pitch-local X (D-13). There is one
+## fixed shoulder: no swap.
+@export_range(0.0, 1.5, 0.05) var aim_shoulder_offset: float = 0.6
+## Seconds a full aim blend takes, in and out (D-14). The 0.01 minimum keeps the blend rate finite.
+@export_range(0.01, 1.0, 0.01) var aim_blend_time: float = 0.18
+## Factor on the look sensitivity while aiming, scaled in with the aim weight (D-15).
+@export_range(0.1, 1.5, 0.05) var aim_sensitivity_factor: float = 0.8
+@export_group("")
+
 ## Yaw in rad, rotation about Y.
 var yaw: float = 0.0
 ## Pitch in rad, rotation about X (negative lifts the camera above the target).
@@ -75,6 +87,16 @@ var pitch: float = -0.3
 var time_since_look: float = 0.0
 ## The device family of the last input event (A41).
 var last_input_device: InputDevice = InputDevice.KEYBOARD_MOUSE
+
+## Eased aim blend, 0 (no aim) to 1 (full aim). Read-only for other code; driven by EventBus.aim_changed.
+var aim_weight: float = 0.0
+
+## Aim blend goal: 1.0 while aim is held, else 0.0.
+var _aim_target: float = 0.0
+## Linear blend progress before smoothstep.
+var _aim_linear: float = 0.0
+## True while the &"aim" FOV and offset sources are registered by this rig.
+var _aim_sources_written: bool = false
 
 ## Rotation added by auto-follow since steering was last re-based (A40).
 var _auto_offset: float = 0.0
@@ -118,6 +140,7 @@ func _ready() -> void:
 	spring_arm.collision_mask = 0
 	settings = CameraSettings.load_from()
 	snap_to_target()
+	EventBus.aim_changed.connect(_on_aim_changed)
 	if require_mouse_capture and DisplayServer.get_name() != "headless":
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -183,9 +206,29 @@ func _process(delta: float) -> void:
 	pitch = clampf(pitch, pitch_min, pitch_max)
 	rotation.y = yaw
 	pitch_node.rotation.x = pitch
+	_update_aim(delta)
 	spring_arm.position = _offset_total()
 	camera.fov = get_fov_total()
 	_update_arm(delta)
+
+
+## Eases aim_weight toward the aim goal and writes it through the additive &"aim" sources (D-14), so a camera
+## kick still stacks on top. While aim was never active the sources are left alone (tests set them by hand).
+func _update_aim(delta: float) -> void:
+	_aim_linear = move_toward(_aim_linear, _aim_target, delta / maxf(aim_blend_time, 0.01))
+	aim_weight = smoothstep(0.0, 1.0, _aim_linear)
+	if aim_weight > 0.0:
+		set_fov_offset(&"aim", -aim_fov_delta * aim_weight)
+		set_offset(&"aim", Vector3(aim_shoulder_offset * aim_weight, 0.0, 0.0))
+		_aim_sources_written = true
+	elif _aim_sources_written:
+		clear_fov_offset(&"aim")
+		clear_offset(&"aim")
+		_aim_sources_written = false
+
+
+func _on_aim_changed(active: bool) -> void:
+	_aim_target = 1.0 if active else 0.0
 
 
 ## The World mask the arm casts against. The SpringArm3D node's own mask is 0 because the rig casts.

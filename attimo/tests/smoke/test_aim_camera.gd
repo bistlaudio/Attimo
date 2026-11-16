@@ -1,0 +1,102 @@
+extends RefCounted
+## CAM-02 / D-13 / D-14 / D-15: the aim camera. aim_changed eases the CameraRig to a tighter FOV and a fixed
+## right-shoulder arm offset through the additive &"aim" sources (a camera kick stacks on top), and eases back and clears
+## them. While aiming, mouse look is scaled by aim_sensitivity_factor, camera_recenter and auto-follow are ignored and
+## the steering offset is zeroed, so steering_yaw() equals yaw. No shoulder swap action exists and Q stays unbound.
+## Blend timing is tick-count based (Pitfall 12): the rig is stepped by hand with a fixed delta, never wall-clock.
+## Actions are released and nodes freed at the end of each scenario.
+
+const Fixtures := preload("res://tests/fixtures.gd")
+const STEP: float = 1.0 / 60.0
+const FOV_TOLERANCE: float = 0.01
+const OFFSET_TOLERANCE: float = 0.001
+const YAW_TOLERANCE: float = 0.00001
+const RELEASE_BUDGET: int = 120
+## SceneTree.physics_frame fires before the tick's _physics_process, so one full tick needs two awaited frames.
+const TICK_FRAMES: int = 2
+
+var _floor: StaticBody3D
+var _player: PlayerController
+var _rig: CameraRig
+
+
+func run(tree: SceneTree, check: Callable) -> void:
+	await tree.process_frame
+	await _scenario_blend(tree, check)
+	await _scenario_no_swap(tree, check)
+
+
+# (a) the blend: timing by tick count, full-weight FOV and offset, stacking with a kick, and the way back.
+func _scenario_blend(tree: SceneTree, check: Callable) -> void:
+	await _begin(tree)
+	var steps_full: int = ceili(_rig.aim_blend_time * 60.0)
+	check.call(_rig.aim_weight == 0.0, "(a) aim_weight is 0 before the hold")
+	# The rig stops processing before the hold, so only the hand-counted steps below move the blend.
+	_rig.set_process(false)
+	Fixtures.send_action_event(&"aim", true)
+	await Fixtures.wait_physics(tree, TICK_FRAMES)
+	check.call(_player.aiming, "(a) the player is aiming (the emitter of aim_changed)")
+	for i: int in steps_full - 2:
+		_rig._process(STEP)
+	check.call(_rig.aim_weight > 0.0 and _rig.aim_weight < 1.0,
+		"(a) after n - 2 = %d steps the weight is strictly between 0 and 1 (%.3f)" % [steps_full - 2, _rig.aim_weight])
+	for i: int in 3:
+		_rig._process(STEP)
+	check.call(_rig.aim_weight == 1.0, "(a) after n + 1 steps the weight is 1 (%.3f)" % _rig.aim_weight)
+	check.call(absf(_rig.camera.fov - (_rig.base_fov - _rig.aim_fov_delta)) < FOV_TOLERANCE,
+		"(a) at full weight the fov is base_fov - aim_fov_delta (%.3f)" % _rig.camera.fov)
+	check.call(absf(_rig.spring_arm.position.x - _rig.aim_shoulder_offset) < OFFSET_TOLERANCE,
+		"(a) at full weight the arm sits aim_shoulder_offset to the right (%.4f)" % _rig.spring_arm.position.x)
+	check.call(absf(_rig.spring_arm.position.y) < OFFSET_TOLERANCE and absf(_rig.spring_arm.position.z) < OFFSET_TOLERANCE,
+		"(a) the shoulder offset is sideways only (%s)" % _rig.spring_arm.position)
+
+	_rig.set_fov_offset(&"kick", -2.0)
+	_rig._process(STEP)
+	check.call(absf(_rig.camera.fov - (_rig.base_fov - _rig.aim_fov_delta - 2.0)) < FOV_TOLERANCE,
+		"(a) a kick source stacks on the aim fov (%.3f)" % _rig.camera.fov)
+	_rig.clear_fov_offset(&"kick")
+	_rig.set_process(true)
+
+	Fixtures.send_action_event(&"aim", false)
+	var waited: int = await Fixtures.wait_until(tree, func() -> bool: return _rig.aim_weight == 0.0, RELEASE_BUDGET)
+	check.call(waited >= 0, "(a) the weight returns to 0 after release (waited %d)" % waited)
+	await Fixtures.wait_process(tree, 2)
+	check.call(absf(_rig.camera.fov - _rig.base_fov) < FOV_TOLERANCE, "(a) the fov is back at base_fov (%.3f)" % _rig.camera.fov)
+	check.call(_rig.spring_arm.position == Vector3.ZERO, "(a) the arm is back at the pivot (%s)" % _rig.spring_arm.position)
+	check.call(absf(_rig.get_fov_total() - _rig.base_fov) < FOV_TOLERANCE, "(a) get_fov_total is base_fov, the aim source is cleared")
+	await _end(tree)
+
+
+# (d) no shoulder swap: no aim_shoulder_swap action exists and Q stays unbound (03-01 checkpoint item 2).
+func _scenario_no_swap(_tree: SceneTree, check: Callable) -> void:
+	check.call(not InputMap.has_action(&"aim_shoulder_swap"), "(d) no aim_shoulder_swap action exists")
+	var q_bound: bool = false
+	for action: StringName in InputMap.get_actions():
+		if String(action).begins_with("ui_"):
+			continue
+		for event: InputEvent in InputMap.action_get_events(action):
+			var key := event as InputEventKey
+			if key != null and (key.physical_keycode == KEY_Q or key.keycode == KEY_Q):
+				q_bound = true
+	check.call(not q_bound, "(d) Q is bound to no game action")
+
+
+func _begin(tree: SceneTree) -> void:
+	_floor = Fixtures.spawn_floor(tree.root)
+	_player = Fixtures.spawn_player(tree.root, Vector3(0.0, 0.5, 0.0))
+	_rig = Fixtures.spawn_camera_rig(tree.root, _player)
+	await Fixtures.wait_physics(tree, 5)
+	await Fixtures.wait_process(tree, 2)
+
+
+func _end(tree: SceneTree) -> void:
+	Fixtures.send_action_event(&"aim", false)
+	for action: StringName in [&"move_left", &"move_right", &"move_forward", &"move_back", &"dash", &"jump"]:
+		Input.action_release(action)
+	await Fixtures.wait_physics(tree, 2)
+	if is_instance_valid(_rig):
+		_rig.set_process(true)
+		_rig.queue_free()
+	_player.queue_free()
+	_floor.queue_free()
+	await Fixtures.wait_physics(tree, 2)
