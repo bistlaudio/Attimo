@@ -1,7 +1,7 @@
 extends AirState
 ## Jump: launches with the speed of config.jump_height_for_stage(stage) and emits the jumped fact on enter.
-## The stage comes from the ground chain (D-05): Jump 1, Jump 2 and Jump 3, the salto. The salto is physics
-## only (the highest ground jump); its flip animation is Phase 3 (MOVE-09).
+## The stage comes from the ground chain (D-05): Jump 1, Jump 2 and Jump 3, the pirouette jump (the highest ground
+## jump). The jump itself is physics only; ProceduralPose spins the Mannequin once during Jump 3 (D-07, MOVE-09).
 ## A released button cuts the rise (variable height); hands over to Fall at the apex.
 ## Gravity and the heavier fall come from the controller.
 

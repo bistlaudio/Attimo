@@ -1,15 +1,32 @@
 class_name ProceduralPose
 extends Node
-## Code-driven body motion the animation kit has no clip for (MOVE-09): the forward lean of a ground dash (D-01) and,
-## later in this file, the long-jump stretch and the Jump 3 pirouette. It is presentation only: it reads the FSM and the
-## player, writes nothing back and never delays any input.
+## Code-driven body motion the animation kit has no clip for (MOVE-09): the forward lean of a ground dash that flows
+## into the held stretch of a long jump (D-01, D-04), and the single pirouette of Jump 3 and of long jump stage 3
+## (D-05, D-07). An air dash adds no lean (D-02). It is presentation only: it reads the FSM and the player, writes
+## nothing back and never delays any input.
 ##
 ## The pose is written on the Mannequin child of VisualRoot, not on VisualRoot itself (DEV-01, confirmed by the
 ## developer on 2026-11-14). PlayerController.face(), Dash, LongJump and CameraRig.recenter() read VisualRoot's yaw as
 ## the facing, so a lean or a spin there would corrupt them. The Mannequin transform is a rotation about the pivot
-## p = (0, pose_pivot_height, 0), so the body tilts about its hips and not about its feet. It is written in
+## p = (0, pose_pivot_height, 0), so the body tilts and turns about its hips and not about its feet. It is written in
 ## _physics_process only (the Player is interpolated, so a write in _process would jitter or be ignored).
 ## Easing is hand-written with move_toward.
+##
+## Lean: the angle eases toward a target per state (ground dash: dash_lean_deg, long jump and the flight that follows it
+## until landing: stretch_lean_deg, otherwise 0) at stretch_lean_deg per lean_in_time when it grows and per
+## lean_out_time when it shrinks. It always eases from where it is, so Dash into LongJump has no dip (D-04). The lean
+## target is scaled by aim_lean_scale while aiming (03-01 checkpoint item 3).
+##
+## Pirouette: a spin of one full turn about the vertical axis. A closed-loop rate (the remaining angle over the
+## predicted time to touchdown minus pirouette_lead_time) finishes it just before landing, also after a released
+## (cut) jump. DEV-03 (approved by the developer on 2026-11-15, an amendment of D-05 and D-07): no pirouette starts
+## when aim is held at take-off, and an aim press, an air dash or the landing during a running pirouette puts the
+## spin into finish mode: the remaining angle is completed in pirouette_finish_time, forward, never snapped back.
+
+## A spin this close to a full turn in radians counts as complete (about one degree).
+const SPIN_DONE_EPSILON: float = 0.02
+## Smallest divisor of the spin rate in seconds (T-03-10: the closed loop never divides by a vanishing time).
+const MIN_SPIN_TIME: float = 0.05
 
 @export var player: PlayerController
 @export var mannequin: Node3D
@@ -30,14 +47,32 @@ var spinning: bool = false
 
 var _machine: StateMachine
 var _written_identity: bool = true
+var _stretch: bool = false
+var _takeoff_y: float = 0.0
+var _finishing: bool = false
+var _finish_rate: float = 0.0
 
 
 func _ready() -> void:
 	# The Player's own state_machine reference is set after its children are ready, so find the node.
 	_machine = player.get_node(^"StateMachine") as StateMachine
+	_machine.state_changed.connect(_on_state_changed)
 
 
-## Eases the lean toward the target of the current state and writes the Mannequin transform.
+## Starts the pirouette of Jump 3 and of long jump stage 3 unless aim is held (DEV-03). The stage was set by the
+## state's enter, which runs before the signal.
+func _on_state_changed(_from_state: StringName, to_state: StringName) -> void:
+	if to_state == &"LongJump":
+		_stretch = true
+	var pirouette_jump: bool = (to_state == &"Jump" and player.chain_stage == 3) or (to_state == &"LongJump" and player.long_jump_stage == 3)
+	if pirouette_jump and not player.aiming:
+		spinning = true
+		spin_angle = 0.0
+		_finishing = false
+		_takeoff_y = player.global_position.y
+
+
+## Eases the lean, runs the spin and writes the Mannequin transform.
 func _physics_process(delta: float) -> void:
 	var config: MovementConfig = player.config
 	var target: float = deg_to_rad(_lean_target_deg(config))
@@ -47,6 +82,7 @@ func _physics_process(delta: float) -> void:
 	var time: float = config.lean_in_time if target > lean_angle else config.lean_out_time
 	lean_angle = move_toward(lean_angle, target, full / time * delta)
 	_update_axis()
+	_tick_spin(delta, config)
 	if not is_finite(lean_angle) or not is_finite(spin_angle):
 		lean_angle = 0.0
 		spin_angle = 0.0
@@ -54,16 +90,36 @@ func _physics_process(delta: float) -> void:
 	_write(config)
 
 
-## Lean target in degrees for the current state: a ground dash leans, everything else is upright.
+## The Mannequin rotation for the current lean and spin: the spin about the vertical axis, nested inside the lean (a
+## corkscrew about the body axis) or around it (a tilted top), see spin_about_body_axis.
+func pose_basis() -> Basis:
+	var lean: Basis = Basis(lean_axis, lean_angle)
+	var turn_sign: float = -1.0 if pirouette_clockwise else 1.0
+	var spin: Basis = Basis(Vector3.UP, turn_sign * spin_angle)
+	if spin_about_body_axis:
+		return lean * spin
+	return spin * lean
+
+
+## Lean target in degrees for the current state: a ground dash leans, a long jump and the flight after it stretch until
+## landing, an air dash and everything else are upright (D-02).
 func _lean_target_deg(config: MovementConfig) -> float:
-	if _machine.current.name == &"Dash" and not _dash_in_air():
+	var state_name: StringName = _machine.current.name
+	if state_name == &"Dash":
+		if bool(_machine.current.get(&"in_air")):
+			_stretch = false
+			return 0.0
 		return config.dash_lean_deg
-	return 0.0
+	if state_name == &"LongJump":
+		_stretch = true
+	elif _stretch and player.is_grounded():
+		_stretch = false
+	return config.stretch_lean_deg if _stretch else 0.0
 
 
-## True while the running Dash started in the air.
-func _dash_in_air() -> bool:
-	return bool(_machine.current.get(&"in_air"))
+## True while the running state is a Dash that started in the air.
+func _air_dash_running() -> bool:
+	return _machine.current.name == &"Dash" and bool(_machine.current.get(&"in_air"))
 
 
 ## Keeps lean_axis on up x travel direction, expressed in VisualRoot space. With no direction the last axis is kept
@@ -88,6 +144,51 @@ func _update_axis() -> void:
 		lean_axis = local_axis.normalized()
 
 
+## Advances a running pirouette by one tick: the closed-loop rate in flight, the fixed finish rate in finish mode.
+func _tick_spin(delta: float, config: MovementConfig) -> void:
+	if not spinning:
+		return
+	var remaining: float = TAU - spin_angle
+	if not _finishing and (player.is_grounded() or player.aiming or _air_dash_running()):
+		_begin_finish(remaining, config)
+	var rate: float = _finish_rate
+	if not _finishing:
+		var time_left: float = _time_to_touchdown(config)
+		if is_finite(time_left):
+			rate = remaining / maxf(time_left - config.pirouette_lead_time, MIN_SPIN_TIME)
+		else:
+			_begin_finish(remaining, config)
+			rate = _finish_rate
+	spin_angle += rate * delta
+	if spin_angle >= TAU - SPIN_DONE_EPSILON:
+		spinning = false
+		spin_angle = 0.0
+		_finishing = false
+
+
+## Finish mode (DEV-03): the remaining angle is completed at a fixed rate over pirouette_finish_time.
+func _begin_finish(remaining: float, config: MovementConfig) -> void:
+	_finishing = true
+	_finish_rate = remaining / config.pirouette_finish_time
+
+
+## Seconds until the body is back at the take-off height, from the vertical speed, the height above take-off (not
+## below 0) and the gravities. NAN when the prediction is not usable.
+func _time_to_touchdown(config: MovementConfig) -> float:
+	var height: float = maxf(player.global_position.y - _takeoff_y, 0.0)
+	var speed: float = player.vertical_speed
+	var fall_gravity: float = config.fall_gravity()
+	if fall_gravity <= 0.0:
+		return NAN
+	if speed > 0.0:
+		var rise_gravity: float = config.rise_gravity * player.gravity_scale
+		if rise_gravity <= 0.0:
+			return NAN
+		var apex: float = height + speed * speed / (2.0 * rise_gravity)
+		return speed / rise_gravity + sqrt(2.0 * apex / fall_gravity)
+	return (-absf(speed) + sqrt(speed * speed + 2.0 * fall_gravity * height)) / fall_gravity
+
+
 ## Writes the Mannequin transform: exactly identity when upright, otherwise a rotation about the pivot point.
 func _write(config: MovementConfig) -> void:
 	if lean_angle == 0.0 and not spinning:
@@ -95,7 +196,7 @@ func _write(config: MovementConfig) -> void:
 			mannequin.transform = Transform3D.IDENTITY
 			_written_identity = true
 		return
-	var pose: Basis = Basis(lean_axis, lean_angle)
+	var pose: Basis = pose_basis()
 	var pivot: Vector3 = Vector3(0.0, config.pose_pivot_height, 0.0)
 	mannequin.transform = Transform3D(pose, pivot - pose * pivot)
 	_written_identity = false
