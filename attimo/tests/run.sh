@@ -46,6 +46,7 @@ if [ "${1:-}" != "--tool" ]; then
 		"$CHARACTER_ROOT/Animations/gltf/Rig_Medium/Rig_Medium_General.glb"
 		"$CHARACTER_ROOT/Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb"
 		"$CHARACTER_ROOT/Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb"
+		"$CHARACTER_ROOT/Animations/gltf/Rig_Medium/Rig_Medium_CombatRanged.glb"
 		"$PROTOTYPE_GLTF/Primitive_Floor.gltf"
 		"$PROTOTYPE_GLTF/Primitive_Wall.gltf"
 		"$PROTOTYPE_GLTF/Primitive_Cube_Small.gltf"

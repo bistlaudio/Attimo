@@ -1,15 +1,16 @@
 extends SceneTree
 ## Editor-time tool: merges the wanted KayKit Rig_Medium clips into one AnimationLibrary and sets loop modes.
 ## Run: bash attimo/tests/run.sh --tool res://tools/build_animation_library.gd
-## Later phases extend SOURCES / WANTED (CombatRanged etc.) and re-run; the output is regenerated deterministically.
+## Later phases extend SOURCES / WANTED and re-run; the output is regenerated deterministically.
 
 const SOURCES: Array[String] = [
 	"res://assets/animations/rig_medium/Rig_Medium_General.glb",
 	"res://assets/animations/rig_medium/Rig_Medium_MovementBasic.glb",
 	"res://assets/animations/rig_medium/Rig_Medium_MovementAdvanced.glb",
+	"res://assets/animations/rig_medium/Rig_Medium_CombatRanged.glb",
 ]
 const OUTPUT: String = "res://assets/animations/rig_medium/rig_medium_library.res"
-const WANTED: Array[StringName] = [&"Idle_A", &"Running_A", &"Jump_Start", &"Jump_Idle", &"Jump_Land", &"Dodge_Forward"]
+const WANTED: Array[StringName] = [&"Idle_A", &"Running_A", &"Jump_Start", &"Jump_Idle", &"Jump_Land", &"Dodge_Forward", &"Ranged_1H_Aiming"]
 ## KayKit clips import as non-looping (Pitfall 2), so the looping set is declared here.
 const LOOPING: Array[StringName] = [&"Idle_A", &"Running_A", &"Jump_Idle"]
 

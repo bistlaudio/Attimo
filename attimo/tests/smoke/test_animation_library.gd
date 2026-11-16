@@ -13,7 +13,7 @@ func run(_tree: SceneTree, check: Callable) -> void:
 	if library == null:
 		return
 
-	var expected: Array[StringName] = [&"Idle_A", &"Running_A", &"Jump_Start", &"Jump_Idle", &"Jump_Land", &"Dodge_Forward"]
+	var expected: Array[StringName] = [&"Idle_A", &"Running_A", &"Jump_Start", &"Jump_Idle", &"Jump_Land", &"Dodge_Forward", &"Ranged_1H_Aiming"]
 	var names: Array[StringName] = library.get_animation_list()
 	check.call(names.size() == expected.size(), "library holds exactly %d clips (got %d)" % [expected.size(), names.size()])
 	for clip: StringName in expected:
@@ -22,11 +22,11 @@ func run(_tree: SceneTree, check: Callable) -> void:
 
 	for clip: StringName in [&"Idle_A", &"Running_A", &"Jump_Idle"]:
 		check.call(library.has_animation(clip) and library.get_animation(clip).loop_mode == Animation.LOOP_LINEAR, "%s loops" % clip)
-	for clip: StringName in [&"Jump_Start", &"Jump_Land", &"Dodge_Forward"]:
+	for clip: StringName in [&"Jump_Start", &"Jump_Land", &"Dodge_Forward", &"Ranged_1H_Aiming"]:
 		check.call(library.has_animation(clip) and library.get_animation(clip).loop_mode == Animation.LOOP_NONE, "%s does not loop" % clip)
 
 	var lengths: Dictionary[StringName, float] = {
-		&"Jump_Start": 0.6, &"Dodge_Forward": 0.4, &"Idle_A": 1.067, &"Running_A": 0.8, &"Jump_Land": 0.667,
+		&"Jump_Start": 0.6, &"Dodge_Forward": 0.4, &"Idle_A": 1.067, &"Running_A": 0.8, &"Jump_Land": 0.667, &"Ranged_1H_Aiming": 1.067,
 	}
 	for clip: StringName in lengths:
 		if library.has_animation(clip):
