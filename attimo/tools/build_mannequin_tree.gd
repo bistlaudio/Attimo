@@ -91,10 +91,12 @@ func _build_machine() -> AnimationNodeStateMachine:
 	locomotion.sync_mode = AnimationNodeBlendSpace2D.SYNC_MODE_CYCLIC_MUTABLE
 	locomotion.add_blend_point(_clip(&"Idle_A"), Vector2(0.0, 0.0), -1, &"idle")
 	locomotion.add_blend_point(_clip(&"Running_A"), Vector2(0.0, 1.0), -1, &"run")
-	# A BlendSpace2D needs a triangle to output anything: two collinear points play no clip at all (measured on
-	# 4.7.2). This third point is scaffolding. It sits at x = 1, which the animator never writes outside aim mode.
-	# 03-07 replaces it with the strafe and back points.
-	locomotion.add_blend_point(_clip(&"Running_A"), Vector2(1.0, 0.0), -1, &"triangle_anchor")
+	# x = strafe (left -1, right +1), y = forward (back -1, run +1). Outside aim the animator only writes x = 0. The
+	# BlendSpace2D needs triangles to output anything (two collinear points play no clip, measured on 4.7.2); the
+	# four outer points around idle give it a full triangulation.
+	locomotion.add_blend_point(_clip(&"Running_Strafe_Left"), Vector2(-1.0, 0.0), -1, &"strafe_l")
+	locomotion.add_blend_point(_clip(&"Running_Strafe_Right"), Vector2(1.0, 0.0), -1, &"strafe_r")
+	locomotion.add_blend_point(_clip(&"Walking_Backwards"), Vector2(0.0, -1.0), -1, &"back")
 
 	var jump: AnimationNodeAnimation = _clip(&"Jump_Start")
 	jump.use_custom_timeline = true

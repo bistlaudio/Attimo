@@ -20,6 +20,9 @@ const P_LAND_REQUEST: StringName = &"parameters/Land/request"
 const P_LAND_ACTIVE: StringName = &"parameters/Land/active"
 const P_AIM: StringName = &"parameters/Aim/blend_amount"
 
+## The clip the dash node plays; its length is stretched to dash_time.
+const DODGE_CLIP: StringName = &"Dodge_Forward"
+
 const STATE_TO_ANIM: Dictionary[StringName, StringName] = {
 	&"Idle": &"Locomotion",
 	&"Run": &"Locomotion",
@@ -49,12 +52,17 @@ var _loco_blend: Vector2 = Vector2.ZERO
 var _loco_target: Vector2 = Vector2.ZERO
 var _hold_left: float = 0.0
 var _dash_state: Node
+## Length in seconds of the Dodge_Forward clip, read once; the dash clip is stretched to dash_time (Pitfall 6).
+var _dodge_length: float = 0.4
 
 
 func _ready() -> void:
 	_playback = animation_tree.get(P_PLAYBACK) as AnimationNodeStateMachinePlayback
 	last_travel = &"Locomotion"
 	_dash_state = state_machine.get_node_or_null(^"Dash")
+	var clip_player: AnimationPlayer = animation_tree.get_node_or_null(animation_tree.anim_player) as AnimationPlayer
+	if clip_player != null and clip_player.has_animation(DODGE_CLIP):
+		_dodge_length = clip_player.get_animation(DODGE_CLIP).length
 	state_machine.state_changed.connect(_on_state_changed)
 
 
@@ -78,7 +86,7 @@ func _process(delta: float) -> void:
 		_loco_target = _locomotion_target()
 	_loco_blend = _loco_blend.move_toward(_loco_target, player.config.locomotion_blend_rate * delta)
 	animation_tree.set(P_LOCOMOTION, _loco_blend)
-	animation_tree.set(P_TIME_SCALE, 1.0)
+	animation_tree.set(P_TIME_SCALE, clip_scale())
 	var blend_time: float = maxf(player.config.aim_layer_blend_time, 0.001)
 	aim_weight = move_toward(aim_weight, 1.0 if player.aiming else 0.0, delta / blend_time)
 	animation_tree.set(P_AIM, aim_weight)
@@ -106,6 +114,8 @@ func _on_state_changed(from_state: StringName, to_state: StringName) -> void:
 	var step: float = player.config.locomotion_blend_rate / float(Engine.physics_ticks_per_second)
 	_loco_blend = _loco_blend.move_toward(_loco_target, step)
 	animation_tree.set(P_LOCOMOTION, _loco_blend)
+	# The clip speed changes with the node, so it is written on this same call as well.
+	animation_tree.set(P_TIME_SCALE, clip_scale())
 
 
 ## Travels the state machine to `node` and records it with the physics frame of the request.
@@ -126,6 +136,34 @@ func _update_land(from_state: StringName, to_state: StringName) -> void:
 		animation_tree.set(P_LAND_REQUEST, AnimationNodeOneShot.ONE_SHOT_REQUEST_FADE_OUT)
 
 
+## The Locomotion BlendSpace2D target. Outside aim x is forced to 0 and y is the speed share of run_speed, so the facing
+## lagging the input during a turn never shows strafe clips (D-09). While aiming the facing is the camera, so the
+## velocity in the facing frame picks the clip: x strafe (left -1, right +1), y forward (back -1, forward +1). The
+## divisor is the ground target speed of the current direction, so the aim run, which is slower than run_speed, still
+## reaches the full run clip, and the slower back-pedal reaches the full backward clip.
 func _locomotion_target() -> Vector2:
-	var run_speed: float = maxf(player.config.run_speed, 0.001)
-	return Vector2(0.0, clampf(player.horizontal_speed() / run_speed, 0.0, 1.0))
+	if not player.aiming:
+		var run_speed: float = maxf(player.config.run_speed, 0.001)
+		return Vector2(0.0, clampf(player.horizontal_speed() / run_speed, 0.0, 1.0))
+	var flat: Vector3 = Vector3(player.move_velocity.x, 0.0, player.move_velocity.z)
+	var local: Vector3 = player.visual_root.global_basis.inverse() * flat
+	# The Mannequin faces +Z and its left is +X, so a left strafe has positive local x and negative blend x.
+	var divisor: float = maxf(player.ground_target_speed(flat.normalized()), 0.01)
+	var target: Vector2 = Vector2(-local.x, local.z) / divisor
+	return Vector2(clampf(target.x, -1.0, 1.0), clampf(target.y, -1.0, 1.0))
+
+
+## Playback speed of the whole state machine. A ground dash plays its Dodge clip in exactly dash_time; an air dash
+## plays it at 1x, also during the DEV-02 pose hold (the node is still the dash node and in_air still true then), so
+## the held pose never speeds up (D-02). In Locomotion the run clip plays faster with ground speed, between 1x and
+## run_anim_max_scale. Everything else plays at 1x. A non-finite result falls back to 1.0 (T-03-11).
+func clip_scale() -> float:
+	var config: MovementConfig = player.config
+	var result: float = 1.0
+	if last_travel == &"Dash":
+		var in_air: bool = _dash_state != null and bool(_dash_state.get(&"in_air"))
+		if not in_air:
+			result = _dodge_length / maxf(config.dash_time, 0.001)
+	elif last_travel == &"Locomotion":
+		result = clampf(player.horizontal_speed() / maxf(config.run_anim_ref_speed, 0.001), 1.0, maxf(config.run_anim_max_scale, 1.0))
+	return result if is_finite(result) else 1.0
