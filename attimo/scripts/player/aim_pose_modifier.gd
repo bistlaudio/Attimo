@@ -92,9 +92,12 @@ func _process_modification_with_delta(_delta: float) -> void:
 	_rotate(skeleton, chest, chest_rot)
 	last_twist_deg = rad_to_deg(spine_rot.get_angle() + chest_rot.get_angle())
 
+	# Residual: the upper arm turns about the shoulder, so the shoulder-to-hand direction reaches the target even
+	# when the torso budget ran out (A-08-1). The shoulder stays where it is, so the target direction stays valid.
 	want = _want(skeleton, upper_arm, point)
 	if want == Vector3.ZERO:
 		return
+	_rotate(skeleton, upper_arm, rotation_between(_arm(skeleton, upper_arm, hand), want))
 	last_error_deg = rad_to_deg(_arm(skeleton, upper_arm, hand).angle_to(want))
 
 
