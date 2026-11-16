@@ -3,6 +3,14 @@ extends Node
 ## Presents FSM state on the Mannequin: maps the LOCAL StateMachine.state_changed signal to AnimationTree travel,
 ## the Locomotion blend and the Land overlay. Animation shows state; it is not feedback in the D-10 sense.
 ## The tree root is a BlendTree (tools/build_mannequin_tree.gd): StateMachine -> TimeScale -> Land OneShot -> output.
+##
+## Air-dash pose hold (DEV-02, D-02 "Dodge held as a pose in the air"): when the FSM leaves a Dash that started in
+## the air into Fall, the animator keeps the dash node. The Dodge clip plays on at 1x and holds its last frame,
+## because it does not loop. The hold ends at the first of two things. Landing, or any other state change out of
+## Fall, travels on that same call. Otherwise the animator travels to Fall itself once air_dash_hold_time() has
+## passed since the Dash exit. A ground dash that ends in the air (ran off a ledge) does not hold. The hold is
+## presentation only: it reads the Dash node's in_air, writes only AnimationTree parameters and never delays the
+## FSM, steering, landing or any input.
 
 ## Parameter paths of the generated tree. Tests and later layers read them through these constants.
 const P_PLAYBACK: StringName = &"parameters/StateMachine/playback"
@@ -13,6 +21,10 @@ const P_LAND_ACTIVE: StringName = &"parameters/Land/active"
 
 ## Locomotion blend speed in blend units per second (idle 0 .. run 1). Moves into MovementConfig in 03-07.
 const LOCO_BLEND_RATE: float = 10.0
+
+## Seconds the Dodge pose is held after an air dash ends (DEV-02): the clip's remaining 0.22 s plus a short hold of
+## its end pose. Moves into MovementConfig as air_dash_hold_time in 03-07.
+const AIR_DASH_HOLD_TIME: float = 0.35
 
 const STATE_TO_ANIM: Dictionary[StringName, StringName] = {
 	&"Idle": &"Locomotion",
@@ -33,16 +45,36 @@ const AIRBORNE_STATES: Array[StringName] = [&"Jump", &"Fall", &"LongJump"]
 ## The animation node of the last travel and the physics frame it was requested on (read by the timing guard).
 var last_travel: StringName = &""
 var last_travel_frame: int = -1
+## True while the Dodge pose of an air dash is held past the Dash state's exit (read-only for others).
+var air_dash_holding: bool = false
 
 var _playback: AnimationNodeStateMachinePlayback
 var _loco_blend: Vector2 = Vector2.ZERO
 var _loco_target: Vector2 = Vector2.ZERO
+var _hold_left: float = 0.0
+var _dash_state: Node
 
 
 func _ready() -> void:
 	_playback = animation_tree.get(P_PLAYBACK) as AnimationNodeStateMachinePlayback
 	last_travel = &"Locomotion"
+	_dash_state = state_machine.get_node_or_null(^"Dash")
 	state_machine.state_changed.connect(_on_state_changed)
+
+
+## Counts the air-dash hold down and hands over to the Fall loop when it runs out.
+func _physics_process(delta: float) -> void:
+	if not air_dash_holding:
+		return
+	_hold_left -= delta
+	if _hold_left <= 0.0:
+		air_dash_holding = false
+		_travel_to(&"Fall")
+
+
+## The hold length in seconds. A function so a later plan can read it from MovementConfig without changing callers.
+func air_dash_hold_time() -> float:
+	return AIR_DASH_HOLD_TIME
 
 
 func _process(delta: float) -> void:
@@ -55,10 +87,19 @@ func _process(delta: float) -> void:
 
 func _on_state_changed(from_state: StringName, to_state: StringName) -> void:
 	var node: StringName = STATE_TO_ANIM.get(to_state, &"Locomotion")
-	if node != last_travel:
-		_playback.travel(node)
-		last_travel = node
-		last_travel_frame = Engine.get_physics_frames()
+	if from_state == &"Dash" and to_state == &"Fall" and _dash_state != null and bool(_dash_state.get(&"in_air")):
+		# Keep the dash node: the Dodge clip plays on and holds its last frame (DEV-02).
+		air_dash_holding = true
+		_hold_left = air_dash_hold_time()
+	else:
+		var was_holding: bool = air_dash_holding
+		air_dash_holding = false
+		if node != last_travel:
+			_travel_to(node)
+		elif was_holding:
+			# The held node is the new target (cannot happen with the shipped FSM): play it again from frame 0.
+			_playback.start(node, true)
+			last_travel_frame = Engine.get_physics_frames()
 	_update_land(from_state, to_state)
 	# Step the blend once on the same call so an Idle -> Run change shows a non-zero run weight on this frame.
 	if node == &"Locomotion":
@@ -66,6 +107,13 @@ func _on_state_changed(from_state: StringName, to_state: StringName) -> void:
 	var step: float = LOCO_BLEND_RATE / float(Engine.physics_ticks_per_second)
 	_loco_blend = _loco_blend.move_toward(_loco_target, step)
 	animation_tree.set(P_LOCOMOTION, _loco_blend)
+
+
+## Travels the state machine to `node` and records it with the physics frame of the request.
+func _travel_to(node: StringName) -> void:
+	_playback.travel(node)
+	last_travel = node
+	last_travel_frame = Engine.get_physics_frames()
 
 
 ## Landing into Idle fires the overlay. Any other change fades it, but only while it is running or about to run,
