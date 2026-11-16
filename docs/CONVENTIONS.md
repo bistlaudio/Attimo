@@ -166,6 +166,7 @@ Listeners: the debug event log now, juice (Phases 11-12), audio (Phase 14). A ne
 - Framing is centered behind the character. The shoulder offset arrives only in aim mode (D-14, Phase 3).
 - Other systems change FOV and offset only through the additive per-source API on the rig (`set_fov_offset`, `set_offset` and their `clear_*` counterparts), so aim mode (Phase 3) and camera kick (Phase 11) never fight over the camera.
 - `camera_recenter` (middle mouse button) turns the camera behind the character.
+- Aim camera (Phase 3, D-13 to D-15): on `EventBus.aim_changed` the rig eases `aim_weight` within `aim_blend_time` and writes it through the `&"aim"` FOV source (`-aim_fov_delta`) and the `&"aim"` offset source (`aim_shoulder_offset` along Pitch-local X, one fixed right shoulder). The rig clears both once the weight is back at 0 and never touches them while aim was never held. While aiming, look sensitivity is scaled by `aim_sensitivity_factor`, `camera_recenter` and auto-follow are ignored, and the steering offset is zeroed on aim enter, so `steering_yaw()` equals `yaw`. Q is intentionally unbound: there is no shoulder swap action. The four aim camera numbers are `CameraRig` exports shown in the F2 panel and are never persisted.
 
 ## Settings and debug
 

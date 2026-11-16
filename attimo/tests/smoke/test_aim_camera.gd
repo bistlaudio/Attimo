@@ -23,6 +23,8 @@ var _rig: CameraRig
 func run(tree: SceneTree, check: Callable) -> void:
 	await tree.process_frame
 	await _scenario_blend(tree, check)
+	await _scenario_sensitivity(tree, check)
+	await _scenario_recenter_and_follow(tree, check)
 	await _scenario_no_swap(tree, check)
 
 
@@ -64,6 +66,69 @@ func _scenario_blend(tree: SceneTree, check: Callable) -> void:
 	check.call(absf(_rig.camera.fov - _rig.base_fov) < FOV_TOLERANCE, "(a) the fov is back at base_fov (%.3f)" % _rig.camera.fov)
 	check.call(_rig.spring_arm.position == Vector3.ZERO, "(a) the arm is back at the pivot (%s)" % _rig.spring_arm.position)
 	check.call(absf(_rig.get_fov_total() - _rig.base_fov) < FOV_TOLERANCE, "(a) get_fov_total is base_fov, the aim source is cleared")
+	await _end(tree)
+
+
+# (b) while aiming, a mouse motion turns the yaw by the scale including aim_sensitivity_factor.
+func _scenario_sensitivity(tree: SceneTree, check: Callable) -> void:
+	await _begin(tree)
+	var plain_before: float = _rig.yaw
+	Fixtures.send_mouse_motion(Vector2(100.0, 0.0))
+	var plain: float = plain_before - _rig.yaw
+	check.call(absf(plain - 100.0 * _rig.base_sensitivity * _rig.settings.sensitivity) < YAW_TOLERANCE,
+		"(b) without aim 100 px turn the yaw by the plain scale (%.6f)" % plain)
+	Fixtures.send_action_event(&"aim", true)
+	await Fixtures.wait_physics(tree, TICK_FRAMES)
+	_rig.set_process(false)
+	for i: int in ceili(_rig.aim_blend_time * 60.0) + 2:
+		_rig._process(STEP)
+	check.call(_rig.aim_weight == 1.0, "(b) the aim weight is 1 before the motion")
+	var before: float = _rig.yaw
+	Fixtures.send_mouse_motion(Vector2(100.0, 0.0))
+	var turned: float = before - _rig.yaw
+	var expected: float = 100.0 * _rig.base_sensitivity * _rig.settings.sensitivity * _rig.aim_sensitivity_factor
+	check.call(absf(turned - expected) < YAW_TOLERANCE,
+		"(b) 100 px while aiming turn the yaw by the scaled amount (%.6f, expected %.6f)" % [turned, expected])
+	_rig.set_process(true)
+	await _end(tree)
+
+
+# (c) recenter and auto-follow are off while aiming, and the steering offset is zeroed on enter.
+func _scenario_recenter_and_follow(tree: SceneTree, check: Callable) -> void:
+	await _begin(tree)
+	_rig.yaw = 1.0
+	_rig._auto_offset = 0.4
+	check.call(not is_equal_approx(_rig.steering_yaw(), _rig.yaw), "(c) the steering offset is non-zero before aim")
+	Fixtures.send_action_event(&"aim", true)
+	await Fixtures.wait_physics(tree, TICK_FRAMES)
+	await Fixtures.wait_process(tree, 1)
+	check.call(is_equal_approx(_rig.steering_yaw(), _rig.yaw),
+		"(c) right after aim enter steering_yaw equals yaw (%.4f vs %.4f)" % [_rig.steering_yaw(), _rig.yaw])
+	var yaw_before: float = _rig.yaw
+	Fixtures.send_action_event(&"camera_recenter", true)
+	Fixtures.send_action_event(&"camera_recenter", false)
+	await Fixtures.wait_process(tree, 20)
+	check.call(is_equal_approx(_rig.yaw, yaw_before), "(c) camera_recenter while aiming leaves the yaw unchanged (%.4f)" % _rig.yaw)
+	_rig.recenter()
+	await Fixtures.wait_process(tree, 20)
+	check.call(is_equal_approx(_rig.yaw, yaw_before), "(c) recenter() while aiming does nothing (%.4f)" % _rig.yaw)
+
+	# Auto-follow forced on: running sideways would swing a free camera, but not an aiming one.
+	var follow_settings: CameraSettings = CameraSettings.new()
+	follow_settings.auto_follow_mode = "on"
+	_rig.apply_settings(follow_settings)
+	check.call(_rig.auto_follow_active(), "(c) auto-follow is configured on")
+	_rig.time_since_look = 10.0
+	Input.action_press(&"move_right")
+	var followed: bool = false
+	for i: int in 120:
+		await Fixtures.wait_process(tree, 1)
+		_rig.time_since_look = 10.0
+		if not is_equal_approx(_rig.yaw, yaw_before):
+			followed = true
+	Input.action_release(&"move_right")
+	check.call(not followed, "(c) auto-follow does not turn the camera over 120 frames of strafing while aiming (yaw %.4f)" % _rig.yaw)
+	check.call(is_equal_approx(_rig.steering_yaw(), _rig.yaw), "(c) steering_yaw still equals yaw after the strafe")
 	await _end(tree)
 
 

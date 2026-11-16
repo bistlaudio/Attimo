@@ -169,14 +169,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		if motion.relative != Vector2.ZERO:
 			notify_look_activity()
-		var scale: float = base_sensitivity * settings.sensitivity
+		var scale: float = base_sensitivity * settings.sensitivity * lerpf(1.0, aim_sensitivity_factor, aim_weight)
 		var vertical: float = motion.relative.y * scale
 		if settings.invert_y:
 			vertical = -vertical
 		yaw -= motion.relative.x * scale
 		pitch = clampf(pitch - vertical, pitch_min, pitch_max)
 		return
-	if event.is_action_pressed(&"camera_recenter") and (not require_mouse_capture or Input.mouse_mode == Input.MOUSE_MODE_CAPTURED):
+	if event.is_action_pressed(&"camera_recenter") and _aim_target <= 0.0 and (not require_mouse_capture or Input.mouse_mode == Input.MOUSE_MODE_CAPTURED):
 		recenter()
 		return
 	if event.is_action_pressed(&"pause") and require_mouse_capture:
@@ -227,8 +227,12 @@ func _update_aim(delta: float) -> void:
 		_aim_sources_written = false
 
 
+## On aim enter the steering offset is dropped and a running recenter stops, so steering_yaw() equals yaw (Pitfall 9).
 func _on_aim_changed(active: bool) -> void:
 	_aim_target = 1.0 if active else 0.0
+	if active:
+		_auto_offset = 0.0
+		_recentering = false
 
 
 ## The World mask the arm casts against. The SpringArm3D node's own mask is 0 because the rig casts.
@@ -350,7 +354,7 @@ func notify_look_activity() -> void:
 ## Turns the camera behind the character's facing within recenter_time (D-17, A29). The rotation is added to the
 ## steering offset like auto-follow's, so a held direction keeps its heading. Mouse look cancels it.
 func recenter() -> void:
-	if target == null:
+	if target == null or _aim_target > 0.0:
 		return
 	var facing: Vector2 = Vector2.ZERO
 	var visual: Node3D = target.get(&"visual_root") as Node3D
@@ -417,7 +421,7 @@ func _target_heading(delta: float) -> Vector2:
 ## added to the yaw and to _auto_offset, so the held key keeps its world heading and the error converges to 0.
 func _apply_auto_follow(delta: float) -> void:
 	var heading: Vector2 = _target_heading(delta)
-	if _recentering or not auto_follow_active() or time_since_look <= auto_follow_delay:
+	if _aim_target > 0.0 or _recentering or not auto_follow_active() or time_since_look <= auto_follow_delay:
 		return
 	if heading.length() <= auto_follow_min_speed:
 		return
