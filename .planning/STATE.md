@@ -4,16 +4,16 @@ milestone: v0.11.0.4
 current_phase: 03
 current_phase_name: Animated Mannequin & Aim Mode
 status: executing
-stopped_at: Completed 03-05-PLAN.md
-last_updated: "2026-11-16T15:03:14.751Z"
+stopped_at: Completed 03-06-PLAN.md
+last_updated: "2026-11-16T17:55:01.551Z"
 last_activity: 2026-11-15
 last_activity_desc: Phase 03 execution started
-state_head: ac68e30e322b93426e1992dad64894051018a7f4
+state_head: 483510ef1686b39cec075480622e3ce71b01abe3
 progress:
   total_phases: 15
   completed_phases: 2
   total_plans: 31
-  completed_plans: 27
+  completed_plans: 28
 ---
 
 # Project State
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 03 (Animated Mannequin & Aim Mode) — EXECUTING
-Plan: 7 of 10
+Plan: 8 of 10
 Status: Ready to execute
 Last activity: 2026-11-15 — Phase 03 execution started
 
@@ -77,6 +77,7 @@ Progress: [█░░░░░░░░░] 13%
 | Phase 03 P03 | 35 min | 2 tasks | 9 files |
 | Phase 03 P04 | 40min | 3 tasks | 6 files |
 | Phase 03 P05 | 7 min | 2 tasks | 9 files |
+| Phase 03 P06 | 35min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -125,6 +126,7 @@ Recent decisions that affect current work:
 - [Phase 03]: 03-03: aim facing is pinned to rig.yaw in PlayerController._tick_aim before the states; face()/face_now() no-op while aiming; aim ground speed via ground_target_speed (0.75, back 0.6)
 - [Phase 03]: 03-04: aim camera uses one fixed right shoulder; recenter and auto-follow gated on held aim intent; aim rows generated from CameraRig aim_* range floats and never persisted
 - [Phase 03]: 03-05: Crosshair is a CanvasLayer (layer 10) with a full-rect Reticle Control drawing dot and ring via its draw signal; set_locked() is the reserved Phase 4 lock hook
+- [Phase 03]: 03-06: ProceduralPose finds the StateMachine via get_node (Player @onready is set after children ready) and exposes pose_basis() for the nesting switch test
 
 ### Pending Todos
 
@@ -154,6 +156,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-16T15:03:14.560Z
-Stopped at: Completed 03-05-PLAN.md
+Last session: 2026-11-16T17:55:01.406Z
+Stopped at: Completed 03-06-PLAN.md
 Resume file: None
