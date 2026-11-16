@@ -115,12 +115,12 @@ Plans:
   2. Every movement verb in the game is backed by a kit clip or a documented clip composition. Verbs without one, such as wall-run and ledge grab, stay out.
   3. Holding the aim button blends into an aim mode with a crosshair, a tighter FOV and a shoulder offset. In aim mode the Mannequin strafes and walks backwards using kit clips.
   4. The animation changes on the same frame as the movement state, and no clip delays control: there is no landing lock and no anticipation longer than 2 frames. The Phase 2 latency numbers still hold.
-**Plans:** 3/10 plans executed
+**Plans:** 4/10 plans executed
 
 Plans:
 - [x] 03-01-PLAN.md — Tracer: generated BlendTree animation root (StateMachine, TimeScale, Land OneShot), animator on new paths, migrated path readers; developer decisions DEV-01/DEV-02/DEV-03 and the checkpoint for the remaining defaults (wave 1)
 - [x] 03-02-PLAN.md — CombatRanged copy under the 33-entry whitelist; library with aim, strafe, backward and directional dodge clips; Dodge root pinned (wave 2)
-- [ ] 03-03-PLAN.md — Aim hold in PlayerController: aim_changed fact, camera-locked facing, camera-true steering, aim speed factors (wave 4)
+- [x] 03-03-PLAN.md — Aim hold in PlayerController: aim_changed fact, camera-locked facing, camera-true steering, aim speed factors (wave 4)
 - [ ] 03-04-PLAN.md — Aim camera: eased FOV and fixed right-shoulder offset via additive sources, aim sensitivity, no recenter in aim, F2 rows (wave 5)
 - [ ] 03-05-PLAN.md — Code-drawn crosshair (dot, ring, reserved lock state) in the gym and the test scene (wave 5)
 - [ ] 03-06-PLAN.md — ProceduralPose on the Mannequin child (DEV-01): ground dash lean into long-jump stretch, Jump 3 / stage 3 pirouette, aim gate and finish cut (DEV-03), metrics label (wave 5)
@@ -315,7 +315,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 (en
 |-------|----------------|--------|-----------|
 | 1. Foundation & Prototype Character | 7/7 | Complete    | 2026-11-04 |
 | 2. Movement Core & Follow Camera | 14/14 | Complete    | 2026-11-06 |
-| 3. Animated Mannequin & Aim Mode | 3/10 | In Progress | - |
+| 3. Animated Mannequin & Aim Mode | 4/10 | In Progress | - |
 | 4. Fernauslöser & Mechanism Kit | 0/TBD | Not started | - |
 | 5. Pull/Push & Module Unlocks | 0/TBD | Not started | - |
 | 6. Shooting, Enemies & Recovery | 0/TBD | Not started | - |

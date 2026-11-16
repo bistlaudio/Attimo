@@ -4,16 +4,16 @@ milestone: v0.11.0.4
 current_phase: 03
 current_phase_name: Animated Mannequin & Aim Mode
 status: executing
-stopped_at: Completed 03-10-PLAN.md
-last_updated: "2026-11-16T14:33:22.997Z"
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-11-16T14:44:54.636Z"
 last_activity: 2026-11-15
 last_activity_desc: Phase 03 execution started
-state_head: 46cc14ac9b2edc738422803bef3cd381ae4d8a07
+state_head: b654f675026381b8e116f91f4add0ca80b9744a6
 progress:
   total_phases: 15
   completed_phases: 2
   total_plans: 31
-  completed_plans: 24
+  completed_plans: 25
 ---
 
 # Project State
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 03 (Animated Mannequin & Aim Mode) — EXECUTING
-Plan: 4 of 10
+Plan: 5 of 10
 Status: Ready to execute
 Last activity: 2026-11-15 — Phase 03 execution started
 
@@ -74,6 +74,7 @@ Progress: [█░░░░░░░░░] 13%
 | Phase 03 P01 | 1h | 3 tasks | 12 files |
 | Phase 03 P02 | 15 min | 2 tasks | 8 files |
 | Phase 03 P10 | 25 min | 2 tasks | 2 files |
+| Phase 03 P03 | 35 min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -119,6 +120,7 @@ Recent decisions that affect current work:
 - [Phase 03]: 03-01 checkpoint item 2: no shoulder swap action, Q stays unbound, fixed single aim shoulder (aim_shoulder_offset 0.6); items 3-6 defaults
 - [Phase 03]: 03-02: Dodge root position pinned to key 0 by build_animation_library.gd (ROOT_PINNED); root rotation kept for strafe yaw; AnimationTree root motion not used
 - [Phase 03]: 03-10: air-dash pose hold lives in MannequinAnimator behind air_dash_hold_time() (start 0.35 s); a ground dash that ends airborne never holds
+- [Phase 03]: 03-03: aim facing is pinned to rig.yaw in PlayerController._tick_aim before the states; face()/face_now() no-op while aiming; aim ground speed via ground_target_speed (0.75, back 0.6)
 
 ### Pending Todos
 
@@ -148,6 +150,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-16T14:33:22.854Z
-Stopped at: Completed 03-10-PLAN.md
+Last session: 2026-11-16T14:44:54.488Z
+Stopped at: Completed 03-03-PLAN.md
 Resume file: None
