@@ -132,12 +132,13 @@ Exception: placeholder hit puffs in `scripts/debug` + `scenes/debug/hit_puff.tsc
 
 | Signal | Payload | Emitted by |
 |---|---|---|
-| `jumped` | `position: Vector3` | `Jump.enter`, for ground jumps (Jump 1, Jump 2 and Jump 3, the salto). There is no air jump. |
+| `jumped` | `position: Vector3` | `Jump.enter`, for ground jumps (Jump 1, Jump 2 and Jump 3, the pirouette jump). There is no air jump. |
 | `long_jumped` | `position: Vector3, stage: int` | `LongJump.enter`; stage 1 first dash hop, then 2 and 3 on clean repeats on landing; the combo ends after 3 and the next hop restarts at 1 |
 | `chain_stage_changed` | `stage: int` | `PlayerController` when the ground-jump chain stage changes (1, 2, 3 for Jump 1, 2, 3; 0 on reset) |
 | `landed` | `position: Vector3, impact_speed: float` | `PlayerController._land` on floor contact; `impact_speed` is the downward speed at touchdown |
 | `dash_started` | `position: Vector3, direction: Vector3, in_air: bool` | `Dash.enter` |
 | `movement_state_changed` | `from_state: StringName, to_state: StringName` | `StateMachine` on every transition |
+| `aim_changed` | `active: bool` | `PlayerController._tick_aim` when the aim hold starts (true) and ends (false), once per change; consumers `CameraRig`, `Crosshair`, `MannequinAnimator` |
 
 Listeners: the debug event log now, juice (Phases 11-12), audio (Phase 14). A new fact is a new typed signal added in the phase that needs it. The bus holds no state and no logic.
 
@@ -148,6 +149,7 @@ Listeners: the debug event log now, juice (Phases 11-12), audio (Phase 14). A ne
 - Movement rules (Phase 2): the controller owns `move_velocity` (horizontal) and `vertical_speed`, applies gravity in half steps, and calls `move_and_slide()` exactly once per tick in `_physics_process`. It never stores the returned velocity as state. States only write `move_velocity`, `vertical_speed` and `gravity_scale`.
 - All movement numbers live in `MovementConfig` (`resources/player/movement_default.tres`). Scripts never hold tuning literals.
 - `platform_on_leave` is `DO_NOTHING`; the controller carries the horizontal platform velocity manually. `floor_max_angle` is 50 degrees and the floor snap length scales with speed.
+- Aim (Phase 3, D-09, D-10): while `PlayerController.aiming` is true the controller owns the facing. `VisualRoot`'s yaw follows the camera's flat forward on every physics tick with no smoothing, `face()` and `face_now()` do nothing (Dash and LongJump keep the crosshair facing), and movement steers by the rig's true `yaw` instead of `steering_yaw()`, so W runs along the crosshair and A and D strafe. Aim never blocks jump or dash.
 - Teleports go through `teleport()`, which calls `reset_physics_interpolation()`.
 - Stairs policy: risers up to 0.15 m are climbed without a jump, 0.18 m is the theoretical limit, taller ledges need a jump.
 - The Mannequin wrapper scene wraps the imported GLB. The GLB is never edited in place (D-07).

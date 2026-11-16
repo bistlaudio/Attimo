@@ -26,7 +26,7 @@ var dash_cooldown_timer: float = 0.0
 var air_dash_available: bool = true
 ## Direction of the last dash started, flattened and normalized.
 var last_dash_direction: Vector3 = Vector3.ZERO
-## Ground-jump chain stage: 0 none, 1 after Jump 1, 2 after Jump 2, 3 after Jump 3, the salto (D-05). Changes emit chain_stage_changed.
+## Ground-jump chain stage: 0 none, 1 after Jump 1, 2 after Jump 2, 3 after Jump 3, the pirouette jump (D-05). Changes emit chain_stage_changed.
 var chain_stage: int = 0
 ## Long-jump stack stage: 0 none, 1..3 the stage of the last long jump (dash hop) while the stack lives (D-05).
 var long_jump_stage: int = 0
@@ -35,6 +35,9 @@ var long_jump_stage: int = 0
 var combo_timer: float = 0.0
 ## Seconds left after a ground dash ended in which a jump still is a long jump (D-06).
 var dash_jump_grace_timer: float = 0.0
+## True while the aim button is held (CAM-02, D-09). While true this controller owns the facing: VisualRoot's yaw follows
+## the camera every physics tick and face() and face_now() do nothing. Changes emit aim_changed.
+var aiming: bool = false
 
 var _was_on_floor: bool = true
 var _last_platform_velocity: Vector3 = Vector3.ZERO
@@ -55,6 +58,7 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_tick_timers(delta)
+	_tick_aim()
 	state_machine.physics_update(delta)
 	_integrate(delta)
 
@@ -70,8 +74,8 @@ func horizontal_speed() -> float:
 
 
 ## Movement input in world space, flattened, keeping the analog magnitude (<= 1).
-## Camera-relative: a camera under a CameraRig steers through the rig's steering_yaw() (A40), any
-## other current camera through its own yaw. Without a camera it falls back to world axes (W = -Z).
+## Camera-relative: a camera under a CameraRig steers through the rig's steering_yaw() (A40), or its true yaw
+## while aiming, any other current camera through its own yaw. Without a camera it falls back to world axes (W = -Z).
 func input_direction() -> Vector3:
 	var input: Vector2 = Input.get_vector(&"move_left", &"move_right", &"move_forward", &"move_back")
 	if input == Vector2.ZERO:
@@ -115,16 +119,18 @@ func accelerate_air(direction: Vector3, delta: float) -> void:
 
 ## Turns VisualRoot toward `direction` (the Mannequin faces +Z).
 ## Called from state physics_update so the rotation happens inside the physics tick.
+## Does nothing while aiming: the camera owns the facing then (D-09).
 func face(direction: Vector3, delta: float) -> void:
-	if direction.length_squared() < 0.0001:
+	if aiming or direction.length_squared() < 0.0001:
 		return
 	var target_yaw: float = atan2(direction.x, direction.z)
 	visual_root.rotation.y = lerp_angle(visual_root.rotation.y, target_yaw, minf(config.turn_rate * delta, 1.0))
 
 
-## Snaps the VisualRoot yaw toward `direction` without turning.
+## Snaps the VisualRoot yaw toward `direction` without turning. Does nothing while aiming (Dash and LongJump keep the
+## crosshair facing).
 func face_now(direction: Vector3) -> void:
-	if direction.length_squared() < 0.0001:
+	if aiming or direction.length_squared() < 0.0001:
 		return
 	visual_root.rotation.y = atan2(direction.x, direction.z)
 
@@ -253,6 +259,35 @@ func _tick_combo(delta: float) -> void:
 		combo_timer = 0.0
 		long_jump_stage = 0
 		_set_chain_stage(0)
+
+
+## Reads the aim hold (CAM-02). A change sets `aiming` on this tick and announces it once; while aiming the facing is
+## pinned to the camera before the states run, so their direction fallbacks read the crosshair facing.
+func _tick_aim() -> void:
+	var held: bool = Input.is_action_pressed(&"aim")
+	if held != aiming:
+		aiming = held
+		EventBus.aim_changed.emit(aiming)
+	if aiming:
+		_apply_aim_facing()
+
+
+## Sets VisualRoot's yaw to the camera's flat forward with no smoothing (D-09). Without a camera it changes nothing.
+## No reset_physics_interpolation: that would pop the visual position while moving (A-03-2).
+func _apply_aim_facing() -> void:
+	var camera: Camera3D = get_viewport().get_camera_3d()
+	if camera == null:
+		return
+	var forward: Vector3
+	var rig: CameraRig = _find_rig(camera)
+	if rig != null:
+		forward = Vector3(-sin(rig.yaw), 0.0, -cos(rig.yaw))
+	else:
+		forward = -camera.global_basis.z
+		forward.y = 0.0
+	if forward.length_squared() < 0.0001:
+		return
+	visual_root.rotation.y = atan2(forward.x, forward.z)
 
 
 func _integrate(delta: float) -> void:
