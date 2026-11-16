@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://scenes/camera/camera_rig.tscn" id="7_rig"]
 [ext_resource type="PackedScene" path="res://scenes/debug/metrics_overlay.tscn" id="8_metrics"]
 [ext_resource type="PackedScene" path="res://scenes/debug/tuning_panel.tscn" id="9_tuning"]
+[ext_resource type="PackedScene" path="res://scenes/ui/crosshair.tscn" id="10_crosshair"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 
@@ -184,3 +185,5 @@ target = NodePath("../Player")
 [node name="MetricsOverlay" parent="." instance=ExtResource("8_metrics")]
 
 [node name="TuningPanel" parent="." instance=ExtResource("9_tuning")]
+
+[node name="Crosshair" parent="." instance=ExtResource("10_crosshair")]

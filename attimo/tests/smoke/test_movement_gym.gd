@@ -11,7 +11,7 @@ const MANNEQUIN_SCENE: String = "res://scenes/player/mannequin.tscn"
 const CONTRACT_NODES: Array[String] = [
 	"WorldEnvironment", "Sun", "Hall", "Spawn", "Player", "CameraRig",
 	"Zone_MeasurementStrip", "Zone_RampsStairs", "Zone_Gaps", "Zone_MovingPlatforms", "Zone_Conveyors",
-	"Zone_CameraTests", "FallResetHall", "EventLog", "MetricsOverlay", "TuningPanel",
+	"Zone_CameraTests", "FallResetHall", "EventLog", "MetricsOverlay", "TuningPanel", "Crosshair",
 ]
 const RISER_COUNT: int = 6
 const RISER_STEP: float = 0.15
@@ -191,6 +191,8 @@ func _check_overlays(gym: Node, check: Callable) -> void:
 	check.call(event_log != null and not event_log.visible, "the EventLog is present and hidden")
 	check.call(metrics != null and not metrics.visible, "the MetricsOverlay is present and hidden")
 	check.call(tuning != null and not tuning.visible, "the TuningPanel is present and hidden")
+	var crosshair: Crosshair = gym.get_node_or_null("Crosshair") as Crosshair
+	check.call(crosshair != null and not crosshair.visible, "the Crosshair is present and hidden")
 
 
 func _play_through(tree: SceneTree, gym: Node, player: PlayerController, check: Callable) -> void:
