@@ -2,7 +2,8 @@ class_name MannequinAnimator
 extends Node
 ## Presents FSM state on the Mannequin: maps the LOCAL StateMachine.state_changed signal to AnimationTree travel,
 ## the Locomotion blend and the Land overlay. Animation shows state; it is not feedback in the D-10 sense.
-## The tree root is a BlendTree (tools/build_mannequin_tree.gd): StateMachine -> TimeScale -> Land OneShot -> output.
+## The tree root is a BlendTree (tools/build_mannequin_tree.gd): StateMachine -> TimeScale -> Land OneShot -> Aim
+## (upper-body layer) -> output. The state machine has one dash node per Dodge clip; dash_node_for() picks it (D-12).
 ##
 ## Air-dash pose hold (DEV-02, D-02 "Dodge held as a pose in the air"): when the FSM leaves a Dash that started in
 ## the air into Fall, the animator keeps the dash node. The Dodge clip plays on at 1x and holds its last frame,
@@ -20,8 +21,14 @@ const P_LAND_REQUEST: StringName = &"parameters/Land/request"
 const P_LAND_ACTIVE: StringName = &"parameters/Land/active"
 const P_AIM: StringName = &"parameters/Aim/blend_amount"
 
-## The clip the dash node plays; its length is stretched to dash_time.
-const DODGE_CLIP: StringName = &"Dodge_Forward"
+## The dash nodes of the state machine and the Dodge clip each plays; the clip length is stretched to dash_time.
+## Dash is the unaimed (and aimed forward) dash, the others are the aimed dashes (D-12).
+const DASH_CLIPS: Dictionary[StringName, StringName] = {
+	&"Dash": &"Dodge_Forward",
+	&"DashLeft": &"Dodge_Left",
+	&"DashRight": &"Dodge_Right",
+	&"DashBack": &"Dodge_Backward",
+}
 
 const STATE_TO_ANIM: Dictionary[StringName, StringName] = {
 	&"Idle": &"Locomotion",
@@ -52,8 +59,8 @@ var _loco_blend: Vector2 = Vector2.ZERO
 var _loco_target: Vector2 = Vector2.ZERO
 var _hold_left: float = 0.0
 var _dash_state: Node
-## Length in seconds of the Dodge_Forward clip, read once; the dash clip is stretched to dash_time (Pitfall 6).
-var _dodge_length: float = 0.4
+## Length in seconds of each dash node's Dodge clip, read once in _ready (Pitfall 6).
+var _dash_lengths: Dictionary[StringName, float] = {}
 
 
 func _ready() -> void:
@@ -61,8 +68,10 @@ func _ready() -> void:
 	last_travel = &"Locomotion"
 	_dash_state = state_machine.get_node_or_null(^"Dash")
 	var clip_player: AnimationPlayer = animation_tree.get_node_or_null(animation_tree.anim_player) as AnimationPlayer
-	if clip_player != null and clip_player.has_animation(DODGE_CLIP):
-		_dodge_length = clip_player.get_animation(DODGE_CLIP).length
+	for dash_node: StringName in DASH_CLIPS:
+		var clip: StringName = DASH_CLIPS[dash_node]
+		if clip_player != null and clip_player.has_animation(clip):
+			_dash_lengths[dash_node] = clip_player.get_animation(clip).length
 	state_machine.state_changed.connect(_on_state_changed)
 
 
@@ -94,6 +103,8 @@ func _process(delta: float) -> void:
 
 func _on_state_changed(from_state: StringName, to_state: StringName) -> void:
 	var node: StringName = STATE_TO_ANIM.get(to_state, &"Locomotion")
+	if node == &"Dash":
+		node = dash_node_for(player.last_dash_direction)
 	if from_state == &"Dash" and to_state == &"Fall" and _dash_state != null and bool(_dash_state.get(&"in_air")):
 		# Keep the dash node: the Dodge clip plays on and holds its last frame (DEV-02).
 		air_dash_holding = true
@@ -153,6 +164,19 @@ func _locomotion_target() -> Vector2:
 	return Vector2(clampf(target.x, -1.0, 1.0), clampf(target.y, -1.0, 1.0))
 
 
+## The dash node for a dash in world-space `direction` (D-12). Outside aim, and for a near-zero direction, every dash
+## is Dash (Dodge_Forward). While aiming the facing is the camera, so the dominant axis of the direction in the facing
+## frame picks the clip: +Z Dash, -Z DashBack, +X DashLeft (the Mannequin's left is +X), -X DashRight.
+func dash_node_for(direction: Vector3) -> StringName:
+	var flat: Vector3 = Vector3(direction.x, 0.0, direction.z)
+	if not player.aiming or flat.length_squared() < 0.0001:
+		return &"Dash"
+	var local: Vector3 = player.visual_root.global_basis.inverse() * flat
+	if absf(local.x) > absf(local.z):
+		return &"DashLeft" if local.x > 0.0 else &"DashRight"
+	return &"Dash" if local.z >= 0.0 else &"DashBack"
+
+
 ## Playback speed of the whole state machine. A ground dash plays its Dodge clip in exactly dash_time; an air dash
 ## plays it at 1x, also during the DEV-02 pose hold (the node is still the dash node and in_air still true then), so
 ## the held pose never speeds up (D-02). In Locomotion the run clip plays faster with ground speed, between 1x and
@@ -160,10 +184,10 @@ func _locomotion_target() -> Vector2:
 func clip_scale() -> float:
 	var config: MovementConfig = player.config
 	var result: float = 1.0
-	if last_travel == &"Dash":
+	if DASH_CLIPS.has(last_travel):
 		var in_air: bool = _dash_state != null and bool(_dash_state.get(&"in_air"))
 		if not in_air:
-			result = _dodge_length / maxf(config.dash_time, 0.001)
+			result = float(_dash_lengths.get(last_travel, 0.4)) / maxf(config.dash_time, 0.001)
 	elif last_travel == &"Locomotion":
 		result = clampf(player.horizontal_speed() / maxf(config.run_anim_ref_speed, 0.001), 1.0, maxf(config.run_anim_max_scale, 1.0))
 	return result if is_finite(result) else 1.0

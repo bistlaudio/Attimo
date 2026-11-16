@@ -109,13 +109,17 @@ func _build_machine() -> AnimationNodeStateMachine:
 	machine.add_node(&"Jump", jump, Vector2(560, 0))
 	machine.add_node(&"Fall", _clip(&"Jump_Idle"), Vector2(560, 200))
 	machine.add_node(&"Dash", _clip(&"Dodge_Forward"), Vector2(40, 200))
+	# The aimed dashes (D-12): the animator picks the node by the dash direction relative to the facing.
+	machine.add_node(&"DashLeft", _clip(&"Dodge_Left"), Vector2(40, 320))
+	machine.add_node(&"DashRight", _clip(&"Dodge_Right"), Vector2(300, 320))
+	machine.add_node(&"DashBack", _clip(&"Dodge_Backward"), Vector2(560, 320))
 
 	# AUTO alone fires on the first frame, so the entry edge is the only auto edge. No at-end edge out of Jump:
 	# travel() honours an at-end switch and would hold the jump pose after the FSM already says Fall (A-01-2).
 	machine.add_transition(&"Start", &"Locomotion", _auto_edge())
 
 	# One direct immediate edge per ordered pair (the engine allows only one), so travel() never plays intermediates.
-	var states: Array[StringName] = [&"Locomotion", &"Jump", &"Fall", &"Dash"]
+	var states: Array[StringName] = [&"Locomotion", &"Jump", &"Fall", &"Dash", &"DashLeft", &"DashRight", &"DashBack"]
 	for from_state: StringName in states:
 		for to_state: StringName in states:
 			if from_state != to_state:
