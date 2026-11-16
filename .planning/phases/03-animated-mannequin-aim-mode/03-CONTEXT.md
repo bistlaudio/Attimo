@@ -39,7 +39,7 @@ Out of scope: interactable highlight and aim assist (Phase 4), shooting and arm 
 - **D-12:** Dash in aim mode: the figure keeps facing the crosshair, so the dash uses the directional kit clips `Dodge_Left`, `Dodge_Right`, `Dodge_Backward` (and `Dodge_Forward`) chosen by dash direction relative to facing. Outside aim mode the dash keeps D-10 of Phase 2 (turn, then `Dodge_Forward`). The planner may adjust this if the clips look wrong in the gym; flag it in the plan. — **Reversibility:** reversible — a clip choice per direction.
 
 ### Aim mode: camera and crosshair
-- **D-13:** The aim camera sits over the **right shoulder** (the prosthesis is the right arm), with a swap key to the left shoulder. This adds a new Input Map action (name to be chosen by the planner, e.g. `aim_shoulder_swap`, KB+M default and gamepad reserved) documented in `docs/CONVENTIONS.md`. — **Reversibility:** costly — action names are referenced from code (Phase 1 D-15).
+- **D-13:** The aim camera sits over the **right shoulder** (the prosthesis is the right arm), fixed, **no shoulder swap**. AMENDED by the developer at the 03-01 checkpoint (2026-11-16): no swap action is added, Q stays unbound, aim-lock is out of scope.
 - **D-14:** FOV becomes slightly tighter in aim (about 10 to 15 degrees) with a fast blend (about 0.15 to 0.2 s). Both are tunable in the F2 panel. The blend uses the additive FOV/offset sources of `CameraRig` (Phase 2 D-18), so Phase 11 camera kick still stacks on top.
 - **D-15:** The crosshair is a small dot with a thin ring. The ring is reserved for Phase 4 states (it glows turquoise when a target is locked). It is shown only while aiming. Mouse sensitivity in aim follows the CAM-03 settings; a separate aim sensitivity factor is Claude's discretion.
 

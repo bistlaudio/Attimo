@@ -121,7 +121,7 @@ Plans:
 - [x] 03-01-PLAN.md — Tracer: generated BlendTree animation root (StateMachine, TimeScale, Land OneShot), animator on new paths, migrated path readers; developer decisions DEV-01/DEV-02/DEV-03 and the checkpoint for the remaining defaults (wave 1)
 - [ ] 03-02-PLAN.md — CombatRanged copy under the 33-entry whitelist; library with aim, strafe, backward and directional dodge clips; Dodge root pinned (wave 2)
 - [ ] 03-03-PLAN.md — Aim hold in PlayerController: aim_changed fact, camera-locked facing, camera-true steering, aim speed factors (wave 4)
-- [ ] 03-04-PLAN.md — Aim camera: eased FOV and shoulder offset via additive sources, aim_shoulder_swap (Q), aim sensitivity, no recenter in aim, F2 rows (wave 5)
+- [ ] 03-04-PLAN.md — Aim camera: eased FOV and fixed right-shoulder offset via additive sources, aim sensitivity, no recenter in aim, F2 rows (wave 5)
 - [ ] 03-05-PLAN.md — Code-drawn crosshair (dot, ring, reserved lock state) in the gym and the test scene (wave 5)
 - [ ] 03-06-PLAN.md — ProceduralPose on the Mannequin child (DEV-01): ground dash lean into long-jump stretch, Jump 3 / stage 3 pirouette, aim gate and finish cut (DEV-03), metrics label (wave 5)
 - [ ] 03-07-PLAN.md — Filtered aim layer (Ranged_1H_Aiming), strafe/back blend points, clip time scale, directional aim dashes keeping the air-dash hold (wave 6)

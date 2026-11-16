@@ -75,7 +75,7 @@ Filled at planning time (plan revision 1, 2026-11-14; rows 03-01-03, 03-04-03, 0
 - [ ] `attimo/tests/fixtures.gd` — helpers `animation_tree(player)`, `playback(player)`, `locomotion_blend(player)`, `land_active(player)`; migrate `test_mannequin_animation`, `test_movement_facts`, `test_dash`, `test_scene_run` (03-01)
 - [ ] `attimo/tests/smoke/test_aim_mode.gd` (03-03), `test_aim_camera.gd` (03-04), `test_crosshair.gd` (03-05), `test_procedural_pose.gd` (03-06), `test_aim_layer.gd` (03-07), `test_aim_pose.gd` (03-08), `test_animation_map.gd` (03-09) — new
 - [ ] `test_animation_library.gd` — expected clip list, loop flags, lengths for new clips (03-02)
-- [ ] `test_asset_hygiene.gd` whitelist 31 to 33, `tests/run.sh` `ORIGINALS` (03-02), `test_input_map.gd` and `test_conventions.gd` action lists (03-04)
+- [ ] `test_asset_hygiene.gd` whitelist 31 to 33, `tests/run.sh` `ORIGINALS` (03-02)
 - [ ] Same-tick animation response, landing-lock, anticipation and air-dash hold test `test_animation_timing.gd` (03-10)
 - [ ] Regenerate `docs/MOVEMENT-METRICS.md` after `MovementConfig` additions (03-03, 03-06, 03-07)
 
