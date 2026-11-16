@@ -4,16 +4,16 @@ milestone: v0.11.0.4
 current_phase: 03
 current_phase_name: Animated Mannequin & Aim Mode
 status: executing
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-11-16T14:15:23.506Z"
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-11-16T14:21:59.189Z"
 last_activity: 2026-11-15
 last_activity_desc: Phase 03 execution started
-state_head: d4b900cd0f98920f29c29fb47ede8c24319b0267
+state_head: 1438cd02f785359b1928a454abef9816d706532b
 progress:
   total_phases: 15
   completed_phases: 2
   total_plans: 31
-  completed_plans: 22
+  completed_plans: 23
 ---
 
 # Project State
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 03 (Animated Mannequin & Aim Mode) — EXECUTING
-Plan: 2 of 10
+Plan: 3 of 10
 Status: Ready to execute
 Last activity: 2026-11-15 — Phase 03 execution started
 
@@ -72,6 +72,7 @@ Progress: [█░░░░░░░░░] 13%
 | Phase 02 P13 | 15 min | 2 tasks | 7 files |
 | Phase 02 P14 | 35 min | 2 tasks | 6 files |
 | Phase 03 P01 | 1h | 3 tasks | 12 files |
+| Phase 03 P02 | 15 min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -115,6 +116,7 @@ Recent decisions that affect current work:
 - [Phase 02]: Movement gym tool split into launcher plus worker; random unique_id values stripped after pack for a reproducible scene (02-14)
 - [Phase 03]: 03-01: Animation root is a generated BlendTree (StateMachine -> TimeScale -> Land OneShot); every state edge ENABLED + IMMEDIATE, Jump -> Fall included
 - [Phase 03]: 03-01 checkpoint item 2: no shoulder swap action, Q stays unbound, fixed single aim shoulder (aim_shoulder_offset 0.6); items 3-6 defaults
+- [Phase 03]: 03-02: Dodge root position pinned to key 0 by build_animation_library.gd (ROOT_PINNED); root rotation kept for strafe yaw; AnimationTree root motion not used
 
 ### Pending Todos
 
@@ -144,6 +146,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-16T14:15:23.410Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-11-16T14:21:59.045Z
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None
