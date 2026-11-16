@@ -4,16 +4,16 @@ milestone: v0.11.0.4
 current_phase: 03
 current_phase_name: Animated Mannequin & Aim Mode
 status: executing
-stopped_at: Completed 03-07-PLAN.md
-last_updated: "2026-11-16T18:06:31.325Z"
+stopped_at: Completed 03-08-PLAN.md
+last_updated: "2026-11-16T18:14:14.298Z"
 last_activity: 2026-11-15
 last_activity_desc: Phase 03 execution started
-state_head: 4d70e8bb6a9e9978f746d4155f48b37e2b5c4200
+state_head: d7d518a50e98240d05d7fc8aa13882b69f01f2d5
 progress:
   total_phases: 15
   completed_phases: 2
   total_plans: 31
-  completed_plans: 29
+  completed_plans: 30
 ---
 
 # Project State
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 03 (Animated Mannequin & Aim Mode) — EXECUTING
-Plan: 9 of 10
+Plan: 10 of 10
 Status: Ready to execute
 Last activity: 2026-11-15 — Phase 03 execution started
 
@@ -79,6 +79,7 @@ Progress: [█░░░░░░░░░] 13%
 | Phase 03 P05 | 7 min | 2 tasks | 9 files |
 | Phase 03 P06 | 35min | 3 tasks | 10 files |
 | Phase 03 P07 | 40min | 3 tasks | 7 files |
+| Phase 03 P08 | 25 min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -129,6 +130,7 @@ Recent decisions that affect current work:
 - [Phase 03]: 03-05: Crosshair is a CanvasLayer (layer 10) with a full-rect Reticle Control drawing dot and ring via its draw signal; set_locked() is the reserved Phase 4 lock hook
 - [Phase 03]: 03-06: ProceduralPose finds the StateMachine via get_node (Player @onready is set after children ready) and exposes pose_basis() for the nesting switch test
 - [Phase 03]: 03-07: dash clip lengths read per dash node (DASH_CLIPS); strafe blend divisor is ground_target_speed of the velocity direction
+- [Phase 03]: 03-08: AimPoseModifier closes the arm error with the upper arm after the torso budget (spine_share 0.4, max_twist_deg 70); measured error 0.000 deg in every locomotion case and at both pitch limits
 
 ### Pending Todos
 
@@ -158,6 +160,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-16T18:06:31.179Z
-Stopped at: Completed 03-07-PLAN.md
+Last session: 2026-11-16T18:14:14.151Z
+Stopped at: Completed 03-08-PLAN.md
 Resume file: None
