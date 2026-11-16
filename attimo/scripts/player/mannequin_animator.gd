@@ -20,6 +20,8 @@ const P_TIME_SCALE: StringName = &"parameters/TimeScale/scale"
 const P_LAND_REQUEST: StringName = &"parameters/Land/request"
 const P_LAND_ACTIVE: StringName = &"parameters/Land/active"
 const P_AIM: StringName = &"parameters/Aim/blend_amount"
+## The AimPoseModifier node, relative to the Mannequin node (the AnimationTree's parent).
+const AIM_MODIFIER_PATH: NodePath = ^"Rig_Medium/Skeleton3D/AimPoseModifier"
 
 ## The dash nodes of the state machine and the Dodge clip each plays; the clip length is stretched to dash_time.
 ## Dash is the unaimed (and aimed forward) dash, the others are the aimed dashes (D-12).
@@ -55,6 +57,8 @@ var air_dash_holding: bool = false
 var aim_weight: float = 0.0
 
 var _playback: AnimationNodeStateMachinePlayback
+## The arm-direction solver under the Mannequin skeleton; null when the scene has none (the feed is then off).
+var _aim_modifier: AimPoseModifier
 var _loco_blend: Vector2 = Vector2.ZERO
 var _loco_target: Vector2 = Vector2.ZERO
 var _hold_left: float = 0.0
@@ -72,6 +76,9 @@ func _ready() -> void:
 		var clip: StringName = DASH_CLIPS[dash_node]
 		if clip_player != null and clip_player.has_animation(clip):
 			_dash_lengths[dash_node] = clip_player.get_animation(clip).length
+	var mannequin: Node = animation_tree.get_parent()
+	if mannequin != null:
+		_aim_modifier = mannequin.get_node_or_null(AIM_MODIFIER_PATH) as AimPoseModifier
 	state_machine.state_changed.connect(_on_state_changed)
 
 
@@ -99,6 +106,20 @@ func _process(delta: float) -> void:
 	var blend_time: float = maxf(player.config.aim_layer_blend_time, 0.001)
 	aim_weight = move_toward(aim_weight, 1.0 if player.aiming else 0.0, delta / blend_time)
 	animation_tree.set(P_AIM, aim_weight)
+	_feed_aim_modifier()
+
+
+## Fades the arm solver with the aim weight and points it at the camera convergence point (D-11). The camera origin
+## plus forward times the distance accounts for the shoulder-to-crosshair parallax.
+func _feed_aim_modifier() -> void:
+	if _aim_modifier == null:
+		return
+	_aim_modifier.influence = aim_weight
+	if aim_weight <= 0.0:
+		return
+	var camera: Camera3D = get_viewport().get_camera_3d()
+	if camera != null:
+		_aim_modifier.set_aim_point(camera.global_position - camera.global_basis.z * _aim_modifier.converge_distance)
 
 
 func _on_state_changed(from_state: StringName, to_state: StringName) -> void:

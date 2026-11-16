@@ -3,6 +3,7 @@
 [ext_resource type="PackedScene" path="res://assets/characters/mannequin/Mannequin_Medium.glb" id="1_glb"]
 [ext_resource type="AnimationLibrary" path="res://assets/animations/rig_medium/rig_medium_library.res" id="2_lib"]
 [ext_resource type="AnimationNodeBlendTree" path="res://scenes/player/mannequin_tree.tres" id="3_tree"]
+[ext_resource type="Script" path="res://scripts/player/aim_pose_modifier.gd" id="4_aim"]
 
 [node name="Mannequin" instance=ExtResource("1_glb")]
 
@@ -15,3 +16,7 @@ libraries = {
 tree_root = ExtResource("3_tree")
 anim_player = NodePath("../AnimationPlayer")
 active = true
+
+[node name="AimPoseModifier" type="SkeletonModifier3D" parent="Rig_Medium/Skeleton3D" index="0"]
+script = ExtResource("4_aim")
+influence = 0.0
