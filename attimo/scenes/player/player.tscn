@@ -11,6 +11,7 @@
 [ext_resource type="Script" path="res://scripts/player/states/dash.gd" id="9_dash"]
 [ext_resource type="Resource" path="res://resources/player/movement_default.tres" id="10_cfg"]
 [ext_resource type="Script" path="res://scripts/player/states/long_jump.gd" id="13_long_jump"]
+[ext_resource type="Script" path="res://scripts/player/procedural_pose.gd" id="14_pose"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.5
@@ -57,3 +58,8 @@ script = ExtResource("6_anim")
 state_machine = NodePath("../StateMachine")
 animation_tree = NodePath("../VisualRoot/Mannequin/AnimationTree")
 player = NodePath("..")
+
+[node name="ProceduralPose" type="Node" parent="." node_paths=PackedStringArray("player", "mannequin")]
+script = ExtResource("14_pose")
+player = NodePath("..")
+mannequin = NodePath("../VisualRoot/Mannequin")

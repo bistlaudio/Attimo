@@ -71,10 +71,10 @@ Display, compositor and USB latency are outside the software measurement (D-22).
 
 | Action | Accumulated input on: median (ms) | on: max (ms) | off: median (ms) | off: max (ms) | Verdict |
 |---|---|---|---|---|---|
-| Latency jump 60 TPS | 13.20 | 20.47 | 12.72 | 21.49 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency jump 120 TPS | 6.72 | 7.24 | 6.80 | 13.72 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 60 TPS | 16.60 | 20.70 | 13.67 | 20.52 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 120 TPS | 6.70 | 13.29 | 6.78 | 13.72 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 60 TPS | 12.98 | 21.16 | 13.31 | 20.27 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 120 TPS | 6.40 | 13.42 | 6.31 | 13.31 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 60 TPS | 20.05 | 21.39 | 13.14 | 20.79 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 120 TPS | 6.62 | 13.22 | 6.37 | 13.43 | Target met (median <= 66 ms, max <= 100 ms) |
 
 ## Grid cross-check
 
@@ -131,3 +131,11 @@ Every MovementConfig float of res://resources/player/movement_default.tres at ge
 | `platform_carry` | 1.000 |
 | `aim_speed_factor` | 0.750 |
 | `aim_back_speed_factor` | 0.600 |
+| `dash_lean_deg` | 20.000 |
+| `stretch_lean_deg` | 60.000 |
+| `aim_lean_scale` | 0.500 |
+| `lean_in_time` | 0.050 |
+| `lean_out_time` | 0.120 |
+| `pirouette_lead_time` | 0.080 |
+| `pirouette_finish_time` | 0.100 |
+| `pose_pivot_height` | 0.450 |

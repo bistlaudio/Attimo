@@ -1,8 +1,8 @@
 class_name MovementConfig
 extends Resource
 ## The one tunable movement resource (MOVE-10, D-23). Every movement number lives here.
-## Nine groups, 36 live sliders in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
-## Long jump (dash hop), Timing windows, Floor and platforms, Aim. Gravity is set directly
+## Ten groups, 44 live sliders in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
+## Long jump (dash hop), Timing windows, Floor and platforms, Aim, Pose. Gravity is set directly
 ## (rise_gravity, fall_multiplier); jump speeds are derived from the heights, so editing a
 ## height never changes the fall feel. Every divisor field has a strictly positive minimum (T-02-02).
 
@@ -95,6 +95,24 @@ extends Resource
 @export_range(0.1, 1.0, 0.05) var aim_speed_factor: float = 0.75
 ## Extra factor on the aim run speed for input pointing behind the facing, blended by how far behind it points; raise it for a faster back-pedal.
 @export_range(0.1, 1.0, 0.05) var aim_back_speed_factor: float = 0.6
+
+@export_group("Pose")
+## Forward lean of the body during a ground dash in degrees (D-01); raise it for a harder lean into the dash.
+@export_range(0.0, 45.0, 0.5) var dash_lean_deg: float = 20.0
+## Held lean of the body through a long jump in degrees (D-04); raise it for a longer stretch.
+@export_range(0.0, 85.0, 0.5) var stretch_lean_deg: float = 60.0
+## Share of the lean kept while aiming (03-01 checkpoint item 3); raise it for a stronger lean in aim mode.
+@export_range(0.0, 1.0, 0.05) var aim_lean_scale: float = 0.5
+## Seconds the lean takes to build up from upright to the stretch lean; lower it for a snappier lean.
+@export_range(0.01, 0.5, 0.01) var lean_in_time: float = 0.05
+## Seconds the lean takes to ease out from the stretch lean to upright; raise it for a slower recovery.
+@export_range(0.01, 0.5, 0.01) var lean_out_time: float = 0.12
+## Seconds before the predicted touchdown at which the Jump 3 pirouette is finished; raise it for an earlier finish.
+@export_range(0.0, 0.3, 0.01) var pirouette_lead_time: float = 0.08
+## Seconds the remaining spin takes when an aim press, an air dash or the landing cuts a pirouette short (DEV-03); raise it for a softer finish.
+@export_range(0.01, 0.5, 0.01) var pirouette_finish_time: float = 0.1
+## Height in m of the point the body leans and spins about (about the hips); raise it to pivot higher up.
+@export_range(0.0, 1.5, 0.05) var pose_pivot_height: float = 0.45
 
 
 ## Gravity while falling in m/s^2: rise_gravity * fall_multiplier.
