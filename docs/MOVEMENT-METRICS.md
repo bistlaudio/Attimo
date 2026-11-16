@@ -19,7 +19,7 @@ Every number comes from the real Player driven headless with scripted per-tick i
 | Full jump (standing) | 2.00 | 0.00 | 0.63 | 0.33 | 0.00 | held to the apex |
 | Full jump (run) | 2.00 | 5.52 | 0.63 | 0.33 | 8.50 | held to the apex, at run speed |
 | Jump 2 (chain) | 2.60 | 6.37 | 0.73 | 0.37 | 8.50 | pressed on the landing tick of Jump 1 (Jump 1 for comparison: 2.00 m, 5.52 m) |
-| Jump 3 (salto) | 3.40 | 7.23 | 0.83 | 0.43 | 8.50 | pressed on the landing tick of Jump 2, the highest ground jump; a fourth jump inside the window is Jump 1 again |
+| Jump 3 (pirouette) | 3.40 | 7.23 | 0.83 | 0.43 | 8.50 | pressed on the landing tick of Jump 2, the highest ground jump; a fourth jump inside the window is Jump 1 again |
 
 ## Air options and dash
 
@@ -71,10 +71,10 @@ Display, compositor and USB latency are outside the software measurement (D-22).
 
 | Action | Accumulated input on: median (ms) | on: max (ms) | off: median (ms) | off: max (ms) | Verdict |
 |---|---|---|---|---|---|
-| Latency jump 60 TPS | 12.98 | 21.16 | 13.31 | 20.27 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency jump 120 TPS | 6.40 | 13.42 | 6.31 | 13.31 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 60 TPS | 20.05 | 21.39 | 13.14 | 20.79 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 120 TPS | 6.62 | 13.22 | 6.37 | 13.43 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 60 TPS | 13.09 | 22.25 | 13.19 | 19.90 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 120 TPS | 5.67 | 14.05 | 7.05 | 16.26 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 60 TPS | 19.08 | 21.58 | 18.45 | 20.71 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 120 TPS | 6.36 | 13.06 | 6.42 | 14.19 | Target met (median <= 66 ms, max <= 100 ms) |
 
 ## Grid cross-check
 
@@ -84,7 +84,7 @@ How the numbers map onto the 1 m grid and the 4 m kit pieces. The widest gap ass
 |---|---|---|---|---|
 | Run jump | 5.52 | 5 | 1.38 | 2.0 |
 | Jump 2 chain jump | 6.37 | 6 | 1.59 | 2.6 |
-| Jump 3 salto | 7.23 | 7 | 1.81 | 3.4 |
+| Jump 3 pirouette | 7.23 | 7 | 1.81 | 3.4 |
 | Long jump stage 1 gap | 9.10 | 9 | 2.28 | 2.0 |
 | Long jump stage 2 gap | 11.73 | 11 | 2.93 | 2.5 |
 | Long jump stage 3 gap | 14.40 | 14 | 3.60 | 3.0 |

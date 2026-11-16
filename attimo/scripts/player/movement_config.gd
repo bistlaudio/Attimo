@@ -37,7 +37,7 @@ extends Resource
 @export_range(0.5, 6.0, 0.05) var jump_height: float = 2.0
 ## Full-hold height of Jump 2 of the ground chain in m; raise it for a bigger second hop.
 @export_range(0.5, 6.0, 0.05) var jump_2_height: float = 2.6
-## Full-hold height of Jump 3 (the salto, the highest ground jump) in m; raise it for a taller salto.
+## Full-hold height of Jump 3 (the pirouette jump, the highest ground jump) in m; raise it for a taller Jump 3.
 @export_range(0.5, 6.0, 0.05) var jump_3_height: float = 3.4
 ## Tap height in m (release cuts the rise to this height); raise it for jumps that cut less.
 @export_range(0.1, 3.0, 0.05) var jump_min_height: float = 0.8

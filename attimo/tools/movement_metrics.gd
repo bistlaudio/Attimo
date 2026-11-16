@@ -298,7 +298,7 @@ func _measure_jumps() -> Dictionary:
 	out["full_run"] = await _jump_flight(player, false)
 	await _end(player)
 
-	# Jump 1, 2 and 3 (salto) held, each pressed on the landing tick of the one before inside the landing window.
+	# Jump 1, 2 and 3 (pirouette) held, each pressed on the landing tick of the one before inside the landing window.
 	player = await _begin()
 	await _run_up(player)
 	out["jump_1"] = await _jump_flight(player, false)
@@ -649,7 +649,7 @@ func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, d
 	lines.append(_jump_row("Full jump (standing)", jumps["full_standing"], "held to the apex"))
 	lines.append(_jump_row("Full jump (run)", jumps["full_run"], "held to the apex, at run speed"))
 	lines.append(_jump_row("Jump 2 (chain)", jumps["jump_2"], "pressed on the landing tick of Jump 1 (Jump 1 for comparison: %.2f m, %.2f m)" % [float(jumps["jump_1"]["apex"]), float(jumps["jump_1"]["distance"])]))
-	lines.append(_jump_row("Jump 3 (salto)", jumps["jump_3"], "pressed on the landing tick of Jump 2, the highest ground jump; a fourth jump inside the window is Jump 1 again"))
+	lines.append(_jump_row("Jump 3 (pirouette)", jumps["jump_3"], "pressed on the landing tick of Jump 2, the highest ground jump; a fourth jump inside the window is Jump 1 again"))
 	lines.append("")
 
 	lines.append("## Air options and dash")
@@ -730,7 +730,7 @@ func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, d
 	lines.append("|---|---|---|---|---|")
 	lines.append(_grid_row("Run jump", jumps["full_run"]))
 	lines.append(_grid_row("Jump 2 chain jump", jumps["jump_2"]))
-	lines.append(_grid_row("Jump 3 salto", jumps["jump_3"]))
+	lines.append(_grid_row("Jump 3 pirouette", jumps["jump_3"]))
 	lines.append(_grid_row("Long jump stage 1 gap", longs["hop_1"]))
 	lines.append(_grid_row("Long jump stage 2 gap", longs["hop_2"]))
 	lines.append(_grid_row("Long jump stage 3 gap", longs["hop_3"]))
