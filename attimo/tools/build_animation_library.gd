@@ -71,6 +71,9 @@ const UAL_DROPPED: Array[StringName] = [
 	&"UAL_Spell_Simple_Idle_Loop",
 	&"UAL_Spell_Simple_Shoot",
 	&"UAL_Spell_Simple_Exit",
+	## Tried as the Jump 2 take (the KayKit Jump_Full_Short takeoff differs from Jump_Start by at most 5.4 degrees):
+	## S4 hips drop to 49 % of rest (limit 60 %), the same deep crouch as UAL Jump_Land. Jump 2 stays on Jump_Full_Short.
+	&"UAL_Jump_Start",
 ]
 
 

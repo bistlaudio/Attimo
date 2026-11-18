@@ -22,7 +22,7 @@ const ROWS: Array[Dictionary] = [
 	},
 	# Quaternius Universal Animation Library (CC0), one conformed scene per clip (quick 261118-qi3). The library key carries
 	# the UAL_ prefix because Jump_Start, Jump_Land and Interact collide with KayKit clips. UAL Push_Loop, Jump_Land,
-	# Interact, Roll and the four Spell_Simple clips are not listed: they were dropped (tools/build_animation_library.gd
+	# Interact, Roll, Jump_Start and the four Spell_Simple clips are not listed: they were dropped (tools/build_animation_library.gd
 	# UAL_DROPPED carries the reasons).
 	{"raw": UAL_RAW, "output": "res://assets/animations/external/ual/idle_loop.scn", "clip": &"UAL_Idle_Loop", "source_clip": "Idle_Loop"},
 	{"raw": UAL_RAW, "output": "res://assets/animations/external/ual/sprint_loop.scn", "clip": &"UAL_Sprint_Loop", "source_clip": "Sprint_Loop"},

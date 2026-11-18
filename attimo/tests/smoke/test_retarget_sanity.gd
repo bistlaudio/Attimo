@@ -18,6 +18,8 @@ const MANNEQUIN_GLB: String = "res://assets/characters/mannequin/Mannequin_Mediu
 const LIBRARY_PATH: String = "res://assets/animations/rig_medium/rig_medium_library.res"
 const TRACK_PREFIX: String = "Rig_Medium/Skeleton3D:"
 const UAL_PREFIX: String = "UAL_"
+## UAL clips of quick 261118-qi3 (13 planned plus Jump_Start as the Jump 2 take), library plus dropped.
+const UAL_CLIP_COUNT: int = 14
 const SAMPLE_STEP: float = 1.0 / 30.0
 const STRETCH_SHARE: float = 0.02
 const STRETCH_ABSOLUTE: float = 0.01
@@ -89,7 +91,7 @@ func run(_tree: SceneTree, check: Callable) -> void:
 			check.call(float(metrics["hips_drift"]) <= LOOP_HIPS_DRIFT, "S6 %s: hips drift %.3f m horizontally (at most %.2f)" % [clip, metrics["hips_drift"], LOOP_HIPS_DRIFT])
 			var seam: float = _seam_degrees(animation)
 			check.call(seam <= LOOP_SEAM_DEG, "S6 %s: first and last pose differ by %.2f degrees (at most %.0f)" % [clip, seam, LOOP_SEAM_DEG])
-	check.call(gated + dropped.size() == 13, "the library holds %d UAL clips and %d are dropped: 13 in total" % [gated, dropped.size()])
+	check.call(gated + dropped.size() == UAL_CLIP_COUNT, "the library holds %d UAL clips and %d are dropped: 14 in total" % [gated, dropped.size()])
 	mannequin.free()
 
 

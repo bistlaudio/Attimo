@@ -129,6 +129,15 @@ extends Resource
 @export_range(1.0, 30.0, 0.1) var idle_break_delay_min: float = 5.0
 ## Longest still time in Idle in seconds before an idle break clip plays; the delay is rolled between min and max.
 @export_range(1.0, 30.0, 0.1) var idle_break_delay_max: float = 8.0
+## Horizontal speed in m/s at which Sprint_Loop fully replaces Running_A in the run blend (dash and dash-hop momentum
+## above run_speed); there is no sprint input. Raise it for a later sprint look.
+@export_range(9.0, 22.0, 0.1) var sprint_anim_full_speed: float = 12.0
+## Vertical impact speed in m/s from which a landing shows the hard landing. Measured fall gravity about 55 m/s^2: the
+## 4.0 m Jump 3 lands at about 21 m/s, so 24 means a drop of about 5 m or more; raise it for rarer hard landings.
+@export_range(5.0, 40.0, 0.5) var hard_landing_speed: float = 24.0
+## Horizontal speed in m/s at touchdown from which a landing shows the roll (presentation only, D-08); raise it for rarer
+## rolls.
+@export_range(9.0, 22.0, 0.1) var roll_landing_speed: float = 13.0
 
 
 ## Gravity while falling in m/s^2: rise_gravity * fall_multiplier.

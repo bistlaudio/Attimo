@@ -1,9 +1,10 @@
 extends SceneTree
 ## Editor-time tool: builds the Mannequin AnimationTree root (an AnimationNodeBlendTree) and saves it as a text .tres.
 ## Run: bash attimo/tests/run.sh --tool res://tools/build_mannequin_tree.gd
-## Layout: StateMachine (Locomotion BlendSpace2D, Jump, Fall, Dash, DashLeft, DashRight, DashBack, Slide) -> TimeScale ->
+## Layout: StateMachine (Locomotion BlendSpace2D, Jump, Jump2, LongJump, Fall, Dash, DashLeft, DashRight, DashBack, Slide)
+## -> TimeScale ->
 ## IdleBreak (OneShot, input 1 = IdleBreakPick, a Transition over the idle break clips) ->
-## Land (OneShot, input 1 = LandClip) -> Aim (Blend2 with an upper-body bone filter, input 1 = Shoot) -> output.
+## Land (OneShot, input 1 = LandPick, a Transition over soft LandClip, hard LandHard, roll LandRoll) -> Aim (Blend2 with an upper-body bone filter, input 1 = Shoot) -> output.
 ## Shoot is a OneShot: input 0 = AimMachine (Enter, Hold, Exit of the UAL Spell hand clips), input 1 = ShootClip.
 ## There is no Land state: landing is an overlay that a move input fades out (D-08, no landing lock).
 
@@ -53,6 +54,22 @@ const FALLBACK: Dictionary[StringName, StringName] = {
 ## Jump_Start is cut at the crouch bottom (0.25 s) so the jump shows at most two frames of anticipation.
 const JUMP_START_OFFSET: float = 0.25
 const JUMP_START_LENGTH: float = 0.35
+## Jump 2 take (quick 261118-qi3): Jump_Full_Short from the crouch bottom to the apex pose before its landing crouch.
+## Measured hips height (tools probe, 1/30 s): crouch bottom 0.274 m at 0.267 s, the apex pose 0.506 m from 0.400 s to
+## 0.500 s, the landing crouch starts at 0.533 s. Note: its takeoff differs from Jump_Start by at most 5.4 degrees on
+## any bone (measured), so it reads close to Jump 1; UAL Jump_Start was tried and dropped (S4).
+const JUMP2_START: float = 0.25
+const JUMP2_LENGTH: float = 0.25
+## Long jump take: Jump_Full_Long from the crouch bottom to the end of its airborne part. Measured: crouch bottom 0.274 m
+## at 0.267 s, airborne with a leg tuck (up to 30 degrees from Jump_Idle on the lower legs) until 1.667 s (0.506 m),
+## the landing crouch starts at 1.700 s.
+const LONG_JUMP_START: float = 0.25
+const LONG_JUMP_LENGTH: float = 1.4167
+## Landing variants (LandPick inputs). Hard and roll play their UAL clip when the library has it, else FALLBACK.
+const LAND_HARD_LENGTH: float = 0.5
+const LAND_ROLL_LENGTH: float = 0.6
+## Sprint point of the Locomotion blend space (y = 2), present only when the library has UAL_Sprint_Loop.
+const SPRINT_CLIP: StringName = &"UAL_Sprint_Loop"
 const LAND_FADE_IN: float = 0.05
 const LAND_FADE_OUT: float = 0.1
 const LAND_LENGTH: float = 0.3
@@ -113,6 +130,15 @@ func _initialize() -> void:
 	land_clip.stretch_time_scale = true
 	land_clip.loop_mode = Animation.LOOP_NONE
 	tree.add_node(&"LandClip", land_clip, Vector2(260, 160))
+	tree.add_node(&"LandHard", _land_variant(&"UAL_Jump_Land", LAND_HARD_LENGTH), Vector2(260, 280))
+	tree.add_node(&"LandRoll", _land_variant(&"UAL_Roll", LAND_ROLL_LENGTH), Vector2(260, 400))
+	var land_pick: AnimationNodeTransition = AnimationNodeTransition.new()
+	land_pick.xfade_time = 0.0
+	land_pick.input_count = 3
+	land_pick.set_input_name(0, "soft")
+	land_pick.set_input_name(1, "hard")
+	land_pick.set_input_name(2, "roll")
+	tree.add_node(&"LandPick", land_pick, Vector2(520, 160))
 	var aim: AnimationNodeBlend2 = AnimationNodeBlend2.new()
 	aim.filter_enabled = true
 	# sync: the spell hand machine keeps running at layer weight 0, so Enter starts on the press frame, not on the first
@@ -135,7 +161,10 @@ func _initialize() -> void:
 	for i: int in break_clips.size():
 		tree.connect_node(&"IdleBreakPick", i, StringName("IdleBreak_%s" % break_clips[i]))
 	tree.connect_node(&"Land", 0, &"IdleBreak")
-	tree.connect_node(&"Land", 1, &"LandClip")
+	tree.connect_node(&"LandPick", 0, &"LandClip")
+	tree.connect_node(&"LandPick", 1, &"LandHard")
+	tree.connect_node(&"LandPick", 2, &"LandRoll")
+	tree.connect_node(&"Land", 1, &"LandPick")
 	tree.connect_node(&"Aim", 0, &"Land")
 	tree.connect_node(&"Shoot", 0, &"AimMachine")
 	tree.connect_node(&"Shoot", 1, &"ShootClip")
@@ -188,6 +217,31 @@ func _spell_clip(ual_clip: StringName, fallback_start: float, fallback_length: f
 	return node
 
 
+## A landing variant: the UAL clip stretched to `length` when the library has it, else its KayKit FALLBACK clip.
+func _land_variant(ual_clip: StringName, length: float) -> AnimationNodeAnimation:
+	var clip_name: StringName = ual_clip
+	if not _library.has_animation(ual_clip):
+		clip_name = FALLBACK[ual_clip]
+		print("TREE: fallback %s -> %s" % [ual_clip, clip_name])
+	var node: AnimationNodeAnimation = _clip(clip_name)
+	node.use_custom_timeline = true
+	node.timeline_length = length
+	node.stretch_time_scale = true
+	node.loop_mode = Animation.LOOP_NONE
+	return node
+
+
+## A non-looping window of `clip_name` from `start` for `length` seconds, never stretched.
+func _window(clip_name: StringName, start: float, length: float) -> AnimationNodeAnimation:
+	var node: AnimationNodeAnimation = _clip(clip_name)
+	node.use_custom_timeline = true
+	node.start_offset = start
+	node.timeline_length = length
+	node.stretch_time_scale = false
+	node.loop_mode = Animation.LOOP_NONE
+	return node
+
+
 ## The idle break clips the library has (a dropped UAL clip leaves only the KayKit ones).
 func _idle_break_clips() -> Array[StringName]:
 	var result: Array[StringName] = []
@@ -215,10 +269,16 @@ func _build_machine() -> AnimationNodeStateMachine:
 
 	var locomotion: AnimationNodeBlendSpace2D = AnimationNodeBlendSpace2D.new()
 	locomotion.min_space = Vector2(-1.0, -1.0)
-	locomotion.max_space = Vector2(1.0, 1.0)
+	var has_sprint: bool = _library.has_animation(SPRINT_CLIP)
+	# y above 1 is the sprint range (dash and dash-hop momentum, quick 261118-qi3); without the clip it stays 1.
+	locomotion.max_space = Vector2(1.0, 2.0 if has_sprint else 1.0)
 	locomotion.sync_mode = AnimationNodeBlendSpace2D.SYNC_MODE_CYCLIC_MUTABLE
 	locomotion.add_blend_point(_clip(&"Idle_A"), Vector2(0.0, 0.0), -1, &"idle")
 	locomotion.add_blend_point(_clip(&"Running_A"), Vector2(0.0, 1.0), -1, &"run")
+	if has_sprint:
+		locomotion.add_blend_point(_clip(SPRINT_CLIP), Vector2(0.0, 2.0), -1, &"sprint")
+	else:
+		print("TREE: %s missing, no sprint point" % SPRINT_CLIP)
 	# x = strafe (left -1, right +1), y = forward (back -1, run +1). Outside aim the animator only writes x = 0. The
 	# BlendSpace2D needs triangles to output anything (two collinear points play no clip, measured on 4.7.2); the
 	# four outer points around idle give it a full triangulation.
@@ -235,6 +295,8 @@ func _build_machine() -> AnimationNodeStateMachine:
 
 	machine.add_node(&"Locomotion", locomotion, Vector2(300, 100))
 	machine.add_node(&"Jump", jump, Vector2(560, 0))
+	machine.add_node(&"Jump2", _window(&"Jump_Full_Short", JUMP2_START, JUMP2_LENGTH), Vector2(820, 0))
+	machine.add_node(&"LongJump", _window(&"Jump_Full_Long", LONG_JUMP_START, LONG_JUMP_LENGTH), Vector2(820, 120))
 	machine.add_node(&"Fall", _clip(&"Jump_Idle"), Vector2(560, 200))
 	machine.add_node(&"Dash", _clip(&"Dodge_Forward"), Vector2(40, 200))
 	# The aimed dashes (D-12): the animator picks the node by the dash direction relative to the facing.
@@ -256,7 +318,7 @@ func _build_machine() -> AnimationNodeStateMachine:
 	machine.add_transition(&"Start", &"Locomotion", _auto_edge())
 
 	# One direct immediate edge per ordered pair (the engine allows only one), so travel() never plays intermediates.
-	var states: Array[StringName] = [&"Locomotion", &"Jump", &"Fall", &"Dash", &"DashLeft", &"DashRight", &"DashBack", &"Slide"]
+	var states: Array[StringName] = [&"Locomotion", &"Jump", &"Jump2", &"LongJump", &"Fall", &"Dash", &"DashLeft", &"DashRight", &"DashBack", &"Slide"]
 	for from_state: StringName in states:
 		for to_state: StringName in states:
 			if from_state != to_state:

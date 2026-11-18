@@ -217,12 +217,13 @@ func _scenario_jump_nodes(tree: SceneTree, check: Callable) -> void:
 	var recorder: Callable = func(_from: StringName, to_state: StringName) -> void:
 		calls.append({"to": to_state, "stage": player.chain_stage, "travel": animator.last_travel, "frame": animator.last_travel_frame, "now": Engine.get_physics_frames()})
 	_player.state_machine.state_changed.connect(recorder)
+	# The chain needs ground speed (combo_reset_speed), so the figure runs through it.
+	Input.action_press(&"move_forward")
+	await Fixtures.wait_physics(tree, 30)
 	for jump: int in 3:
 		await Fixtures.tap_action(tree, &"jump", 12)
 		await _wait_grounded(tree)
 	await Fixtures.wait_physics(tree, 40)
-	Input.action_press(&"move_forward")
-	await Fixtures.wait_physics(tree, 30)
 	await Fixtures.tap_action(tree, &"dash")
 	await Fixtures.tap_action(tree, &"jump")
 	await _wait_grounded(tree)

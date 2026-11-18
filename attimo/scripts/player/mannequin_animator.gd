@@ -25,6 +25,9 @@ const P_LOCOMOTION: StringName = &"parameters/StateMachine/Locomotion/blend_posi
 const P_TIME_SCALE: StringName = &"parameters/TimeScale/scale"
 const P_LAND_REQUEST: StringName = &"parameters/Land/request"
 const P_LAND_ACTIVE: StringName = &"parameters/Land/active"
+## The landing variant of the Land overlay (inputs soft, hard, roll) and the input it shows.
+const P_LAND_PICK: StringName = &"parameters/LandPick/transition_request"
+const P_LAND_PICK_STATE: StringName = &"parameters/LandPick/current_state"
 const P_AIM: StringName = &"parameters/Aim/blend_amount"
 const P_AIM_PLAYBACK: StringName = &"parameters/AimMachine/playback"
 const P_SHOOT_REQUEST: StringName = &"parameters/Shoot/request"
@@ -57,7 +60,7 @@ const STATE_TO_ANIM: Dictionary[StringName, StringName] = {
 	&"Idle": &"Locomotion",
 	&"Run": &"Locomotion",
 	&"Jump": &"Jump",
-	&"LongJump": &"Jump",
+	&"LongJump": &"LongJump",
 	&"Fall": &"Fall",
 	&"Dash": &"Dash",
 }
@@ -93,6 +96,10 @@ var layer_weight: float = 0.0
 var last_idle_break: StringName = &""
 var last_idle_break_frame: int = -1
 var idle_break_cancel_frame: int = -1
+## The kind of the last landing overlay (&"soft", &"hard", &"roll") and the landing it was chosen from (read-only).
+var last_land_kind: StringName = &""
+var last_impact_speed: float = 0.0
+var last_landing_horizontal_speed: float = 0.0
 
 var _playback: AnimationNodeStateMachinePlayback
 ## The spell hand state machine (Enter, Hold, Exit) inside the Aim layer; null when the tree has none.
@@ -106,6 +113,10 @@ var _picker: VariantPicker
 var _pools: Dictionary[StringName, Array] = {}
 var _fsm_state: StringName = &""
 var _has_idle_break: bool = false
+var _has_jump2: bool = false
+var _has_sprint: bool = false
+## The facts of the EventBus.landed of this player, consumed by the next landing state change.
+var _landed_pending: bool = false
 var _idle_still: float = 0.0
 ## The rolled delay of the next idle break; negative until rolled (rolled on the first still tick, so a live config
 ## change applies to the next break).
@@ -154,6 +165,13 @@ func _ready() -> void:
 	if mannequin != null:
 		_aim_modifier = mannequin.get_node_or_null(AIM_MODIFIER_PATH) as AimPoseModifier
 	state_machine.state_changed.connect(_on_state_changed)
+	EventBus.landed.connect(_on_landed)
+	var tree_root: AnimationNodeBlendTree = animation_tree.tree_root as AnimationNodeBlendTree
+	if tree_root != null and tree_root.has_node(&"StateMachine"):
+		var machine: AnimationNodeStateMachine = tree_root.get_node(&"StateMachine") as AnimationNodeStateMachine
+		_has_jump2 = machine.has_node(&"Jump2")
+		var locomotion: AnimationNodeBlendSpace2D = machine.get_node(&"Locomotion") as AnimationNodeBlendSpace2D
+		_has_sprint = locomotion != null and locomotion.max_space.y > 1.0
 
 
 ## timeline_length of the tree's Slide node in seconds, 0 when the tree has none.
@@ -276,6 +294,9 @@ func _on_state_changed(from_state: StringName, to_state: StringName) -> void:
 	_fsm_state = to_state
 	_cancel_idle_break()
 	var node: StringName = STATE_TO_ANIM.get(to_state, &"Locomotion")
+	if node == &"Jump" and player.chain_stage == 2 and _has_jump2:
+		# Jump 2 of the ground chain has its own take (chain_stage is set before state_changed fires).
+		node = &"Jump2"
 	if node == &"Dash":
 		var slide: bool = _dash_state != null and bool(_dash_state.get(&"slide"))
 		node = dash_node_for(player.last_dash_direction, slide)
@@ -316,12 +337,39 @@ func _travel_to(node: StringName) -> void:
 	last_travel_frame = Engine.get_physics_frames()
 
 
-## Landing into Idle fires the overlay. Any other change fades it, but only while it is running or about to run,
-## so a move, jump or dash input never waits for the crouch. Landing into Run fires nothing.
+## Remembers the impact and the horizontal speed of this player's touchdown (EventBus.landed fires one tick before the
+## air state hands over to Idle or Run).
+func _on_landed(_position: Vector3, impact_speed: float) -> void:
+	last_impact_speed = impact_speed
+	last_landing_horizontal_speed = player.horizontal_speed()
+	_landed_pending = true
+
+
+## The landing overlay kind: &"roll" from roll_landing_speed horizontally, else &"hard" from hard_landing_speed impact,
+## else &"soft" into Idle, else &"" (no overlay). Presentation only (D-08): the overlay never locks control.
+func landing_kind(impact_speed: float, horizontal_speed: float, to_state: StringName) -> StringName:
+	var config: MovementConfig = player.config
+	var branches: Array[Dictionary] = [
+		{"when": horizontal_speed >= config.roll_landing_speed, "options": [&"roll"] as Array[StringName]},
+		{"when": impact_speed >= config.hard_landing_speed, "options": [&"hard"] as Array[StringName]},
+		{"when": to_state == &"Idle", "options": [&"soft"] as Array[StringName]},
+	]
+	return _picker.pick_first(&"landing", branches)
+
+
+## A landing (airborne state to Idle or Run) with a kind fires the overlay with that LandPick input. Any other change
+## fades it, but only while it is running or about to run, so a move, jump or dash input never waits for it (D-08).
 func _update_land(from_state: StringName, to_state: StringName) -> void:
-	if to_state == &"Idle" and AIRBORNE_STATES.has(from_state):
-		animation_tree.set(P_LAND_REQUEST, AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
-		return
+	if AIRBORNE_STATES.has(from_state) and (to_state == &"Idle" or to_state == &"Run"):
+		var impact: float = last_impact_speed if _landed_pending else 0.0
+		var horizontal: float = last_landing_horizontal_speed if _landed_pending else player.horizontal_speed()
+		_landed_pending = false
+		var kind: StringName = landing_kind(impact, horizontal, to_state)
+		if kind != &"":
+			last_land_kind = kind
+			animation_tree.set(P_LAND_PICK, String(kind))
+			animation_tree.set(P_LAND_REQUEST, AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+			return
 	var pending: bool = int(animation_tree.get(P_LAND_REQUEST)) == AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE
 	if bool(animation_tree.get(P_LAND_ACTIVE)) or pending:
 		animation_tree.set(P_LAND_REQUEST, AnimationNodeOneShot.ONE_SHOT_REQUEST_FADE_OUT)
@@ -334,14 +382,25 @@ func _update_land(from_state: StringName, to_state: StringName) -> void:
 ## reaches the full run clip, and the slower back-pedal reaches the full backward clip.
 func _locomotion_target() -> Vector2:
 	if not player.aiming:
-		var run_speed: float = maxf(player.config.run_speed, 0.001)
-		return Vector2(0.0, clampf(player.horizontal_speed() / run_speed, 0.0, 1.0))
+		return Vector2(0.0, locomotion_y_for(player.horizontal_speed()))
 	var flat: Vector3 = Vector3(player.move_velocity.x, 0.0, player.move_velocity.z)
-	var local: Vector3 = player.visual_root.global_basis.inverse() * flat
+	var local: Vector3 = player.visual_root.global_basis.orthonormalized().inverse() * flat
 	# The Mannequin faces +Z and its left is +X, so a left strafe has positive local x and negative blend x.
 	var divisor: float = maxf(player.ground_target_speed(flat.normalized()), 0.01)
 	var target: Vector2 = Vector2(-local.x, local.z) / divisor
 	return Vector2(clampf(target.x, -1.0, 1.0), clampf(target.y, -1.0, 1.0))
+
+
+## The unaimed Locomotion blend y for a horizontal speed: speed / run_speed up to 1 (Running_A), then rising toward 2
+## (UAL Sprint_Loop) between run_speed and sprint_anim_full_speed. The sprint range exists only when the tree has the
+## sprint point. There is no sprint input and no sprint state: only dash and dash-hop momentum get there.
+func locomotion_y_for(speed: float) -> float:
+	var config: MovementConfig = player.config
+	var run_speed: float = maxf(config.run_speed, 0.001)
+	if speed <= run_speed or not _has_sprint:
+		return clampf(speed / run_speed, 0.0, 1.0)
+	var span: float = maxf(config.sprint_anim_full_speed - run_speed, 0.001)
+	return 1.0 + clampf((speed - run_speed) / span, 0.0, 1.0)
 
 
 ## The dash node for a dash in world-space `direction` (D-12). `slide` is Dash.slide: the unaimed ground dash is Slide
@@ -362,7 +421,8 @@ func dash_node_for(direction: Vector3, slide: bool = false) -> StringName:
 ## Playback speed of the whole state machine. A ground dash plays its Dodge clip in exactly dash_time; an air dash
 ## plays it at 1x, also during the DEV-02 pose hold (the node is still the dash node and in_air still true then), so
 ## the held pose never speeds up (D-02). In Locomotion the run clip plays faster with ground speed, between 1x and
-## run_anim_max_scale. Everything else plays at 1x. A non-finite result falls back to 1.0 (T-03-11).
+## run_anim_max_scale, with the speed capped at run_speed (above it the Sprint_Loop blend carries the extra speed).
+## Everything else plays at 1x. A non-finite result falls back to 1.0 (T-03-11).
 func clip_scale() -> float:
 	var config: MovementConfig = player.config
 	var result: float = 1.0
@@ -373,7 +433,8 @@ func clip_scale() -> float:
 		if not in_air:
 			result = float(_dash_lengths.get(last_travel, 0.4)) / maxf(config.dash_time, 0.001)
 	elif last_travel == &"Locomotion":
-		result = clampf(player.horizontal_speed() / maxf(config.run_anim_ref_speed, 0.001), 1.0, maxf(config.run_anim_max_scale, 1.0))
+		var speed: float = minf(player.horizontal_speed(), config.run_speed)
+		result = clampf(speed / maxf(config.run_anim_ref_speed, 0.001), 1.0, maxf(config.run_anim_max_scale, 1.0))
 	return result if is_finite(result) else 1.0
 
 

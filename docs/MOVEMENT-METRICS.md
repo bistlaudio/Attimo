@@ -71,10 +71,10 @@ Display, compositor and USB latency are outside the software measurement (D-22).
 
 | Action | Accumulated input on: median (ms) | on: max (ms) | off: median (ms) | off: max (ms) | Verdict |
 |---|---|---|---|---|---|
-| Latency jump 60 TPS | 13.35 | 20.30 | 13.34 | 20.20 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency jump 120 TPS | 6.31 | 6.54 | 6.34 | 13.42 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 60 TPS | 16.72 | 20.36 | 13.47 | 20.38 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 120 TPS | 6.71 | 13.24 | 6.38 | 6.88 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 60 TPS | 16.87 | 20.38 | 13.32 | 20.25 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 120 TPS | 6.54 | 13.40 | 6.46 | 6.91 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 60 TPS | 13.25 | 20.32 | 13.28 | 20.34 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 120 TPS | 6.55 | 13.50 | 6.56 | 13.35 | Target met (median <= 66 ms, max <= 100 ms) |
 
 ## Grid cross-check
 
@@ -145,3 +145,6 @@ Every MovementConfig float of res://resources/player/movement_default.tres at ge
 | `air_dash_hold_time` | 0.350 |
 | `idle_break_delay_min` | 5.000 |
 | `idle_break_delay_max` | 8.000 |
+| `sprint_anim_full_speed` | 12.000 |
+| `hard_landing_speed` | 24.000 |
+| `roll_landing_speed` | 13.000 |

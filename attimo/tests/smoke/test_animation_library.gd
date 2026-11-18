@@ -16,12 +16,12 @@ const SLIDE_CLIP: StringName = &"Running_Slide"
 const SLIDE_END_MAX_SHARE: float = 0.8
 const SLIDE_SCALE_MAX: float = 4.0
 const SLIDE_START_MIN_SHARE: float = 0.95
-## The 13 UAL clips of quick 261118-qi3 (library key UAL_<clip>) and their lengths in seconds. The clips in UAL_DROPPED are
+## The 14 UAL clips of quick 261118-qi3 (Jump_Start added as the Jump 2 take) (library key UAL_<clip>) and their lengths in seconds. The clips in UAL_DROPPED are
 ## absent from the library on purpose (docs/ANIMATION-MAP.md, Retarget quality rule).
 const UAL_LENGTHS: Dictionary[StringName, float] = {
 	&"UAL_Spell_Simple_Enter": 0.533, &"UAL_Spell_Simple_Idle_Loop": 2.1, &"UAL_Spell_Simple_Shoot": 0.5, &"UAL_Spell_Simple_Exit": 0.433,
 	&"UAL_Push_Loop": 2.667, &"UAL_Idle_Loop": 2.5, &"UAL_Sprint_Loop": 0.667, &"UAL_Jump_Land": 1.267, &"UAL_Roll": 1.467,
-	&"UAL_Hit_Chest": 0.333, &"UAL_Hit_Head": 0.433, &"UAL_Death01": 2.4, &"UAL_Interact": 2.0,
+	&"UAL_Hit_Chest": 0.333, &"UAL_Hit_Head": 0.433, &"UAL_Death01": 2.4, &"UAL_Interact": 2.0, &"UAL_Jump_Start": 1.333,
 }
 const UAL_LOOPING: Array[StringName] = [&"UAL_Spell_Simple_Idle_Loop", &"UAL_Idle_Loop", &"UAL_Sprint_Loop", &"UAL_Push_Loop"]
 ## KayKit clips added by quick 261118-qi3 (idle break, reserved reaction pools, Jump 2 and long jump takes), with lengths.
