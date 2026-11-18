@@ -5,10 +5,10 @@ current_phase: 03
 current_phase_name: Animated Mannequin & Aim Mode
 status: executing
 stopped_at: 03-09 tasks 1-3 done, awaiting developer gym check
-last_updated: "2026-11-16T18:23:38.299Z"
+last_updated: "2026-11-18T16:52:24.741Z"
 last_activity: 2026-11-15
 last_activity_desc: Phase 03 execution started
-state_head: 3d2a2d464a7b76722893d338caff6c7af09ef5fe
+state_head: 5c00a93858902a8d015d626451dce6e367ceda87
 progress:
   total_phases: 15
   completed_phases: 2
@@ -150,6 +150,7 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 261106-erl | Movement rework: no sprint, no air jump, Shift dash, jump chain 1-2-3, dash hop stack, lighter feel | 2026-11-06 | ba79847 | [261106-erl-movement-rework-remove-sprint-and-air-do](./quick/261106-erl-movement-rework-remove-sprint-and-air-do/) |
+| 261118-okz | Remove long-jump stretch lean: dash lean 20 deg then upright on dash hop | 2026-11-18 | 5c00a93 | [261118-okz-remove-long-jump-stretch-lean-dash-lean-](./quick/261118-okz-remove-long-jump-stretch-lean-dash-lean-/) |
 
 ## Deferred Items
 
