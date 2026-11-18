@@ -100,7 +100,8 @@ func _physics_process(delta: float) -> void:
 ## corkscrew about the body axis) or around it (a tilted top), see spin_about_body_axis.
 func pose_basis() -> Basis:
 	var lean: Basis = Basis(lean_axis, lean_angle)
-	var turn_sign: float = -1.0 if pirouette_clockwise else 1.0
+	# Sign checked in the game by the developer on 2026-11-18: +1 is the turn that reads as clockwise on screen.
+	var turn_sign: float = 1.0 if pirouette_clockwise else -1.0
 	var spin: Basis = Basis(Vector3.UP, turn_sign * spin_angle)
 	if spin_about_body_axis:
 		return lean * spin
