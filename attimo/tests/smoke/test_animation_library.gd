@@ -1,7 +1,8 @@
 extends RefCounted
 ## FOUND-05: the merged Rig_Medium library holds the KayKit clips plus the retargeted Running_Slide (quick 261118-qbt,
-## DEV-04) with correct loop modes, and every clip binds to the Mannequin skeleton (the kit clips natively, the
-## external clip through tools/clip_retargeter.gd).
+## DEV-04) and the retargeted UAL_ clips (quick 261118-qi3, minus tools/build_animation_library.gd UAL_DROPPED) with
+## correct loop modes, and every clip binds to the Mannequin skeleton (the kit clips natively, the external clips
+## through tools/clip_retargeter.gd).
 
 const LIBRARY_PATH: String = "res://assets/animations/rig_medium/rig_medium_library.res"
 const ClipRetargeter := preload("res://tools/clip_retargeter.gd")
@@ -15,6 +16,19 @@ const SLIDE_CLIP: StringName = &"Running_Slide"
 const SLIDE_END_MAX_SHARE: float = 0.8
 const SLIDE_SCALE_MAX: float = 4.0
 const SLIDE_START_MIN_SHARE: float = 0.95
+## The 13 UAL clips of quick 261118-qi3 (library key UAL_<clip>) and their lengths in seconds. The clips in UAL_DROPPED are
+## absent from the library on purpose (docs/ANIMATION-MAP.md, Retarget quality rule).
+const UAL_LENGTHS: Dictionary[StringName, float] = {
+	&"UAL_Spell_Simple_Enter": 0.533, &"UAL_Spell_Simple_Idle_Loop": 2.1, &"UAL_Spell_Simple_Shoot": 0.5, &"UAL_Spell_Simple_Exit": 0.433,
+	&"UAL_Push_Loop": 2.667, &"UAL_Idle_Loop": 2.5, &"UAL_Sprint_Loop": 0.667, &"UAL_Jump_Land": 1.267, &"UAL_Roll": 1.467,
+	&"UAL_Hit_Chest": 0.333, &"UAL_Hit_Head": 0.433, &"UAL_Death01": 2.4, &"UAL_Interact": 2.0,
+}
+const UAL_LOOPING: Array[StringName] = [&"UAL_Spell_Simple_Idle_Loop", &"UAL_Idle_Loop", &"UAL_Sprint_Loop", &"UAL_Push_Loop"]
+## KayKit clips added by quick 261118-qi3 (idle break, reserved reaction pools, Jump 2 and long jump takes), with lengths.
+const KAYKIT_ADDED_LENGTHS: Dictionary[StringName, float] = {
+	&"Idle_B": 2.133, &"Hit_A": 0.667, &"Hit_B": 0.867, &"Death_A": 0.8, &"Death_B": 2.633, &"Interact": 1.3,
+	&"Jump_Full_Short": 1.167, &"Jump_Full_Long": 2.333,
+}
 
 
 func run(_tree: SceneTree, check: Callable) -> void:
@@ -25,22 +39,40 @@ func run(_tree: SceneTree, check: Callable) -> void:
 
 	var expected: Array[StringName] = [&"Idle_A", &"Running_A", &"Jump_Start", &"Jump_Idle", &"Jump_Land", &"Dodge_Forward", &"Ranged_1H_Aiming",
 		&"Running_Strafe_Left", &"Running_Strafe_Right", &"Walking_Backwards", &"Dodge_Left", &"Dodge_Right", &"Dodge_Backward", &"Running_Slide"]
+	var dropped: Array[StringName] = _dropped_list()
+	for clip: StringName in KAYKIT_ADDED_LENGTHS:
+		expected.append(clip)
+	for clip: StringName in UAL_LENGTHS:
+		if not dropped.has(clip):
+			expected.append(clip)
 	var names: Array[StringName] = library.get_animation_list()
 	check.call(names.size() == expected.size(), "library holds exactly %d clips (got %d)" % [expected.size(), names.size()])
 	for clip: StringName in expected:
 		check.call(library.has_animation(clip), "library has clip %s" % clip)
 	check.call(not library.has_animation(&"T-Pose"), "library has no T-Pose")
+	for clip: StringName in dropped:
+		check.call(not library.has_animation(clip), "dropped clip %s is not in the library" % clip)
 
 	for clip: StringName in [&"Idle_A", &"Running_A", &"Jump_Idle", &"Running_Strafe_Left", &"Running_Strafe_Right", &"Walking_Backwards"]:
 		check.call(library.has_animation(clip) and library.get_animation(clip).loop_mode == Animation.LOOP_LINEAR, "%s loops" % clip)
 	for clip: StringName in [&"Jump_Start", &"Jump_Land", &"Dodge_Forward", &"Ranged_1H_Aiming", &"Dodge_Left", &"Dodge_Right", &"Dodge_Backward", &"Running_Slide"]:
 		check.call(library.has_animation(clip) and library.get_animation(clip).loop_mode == Animation.LOOP_NONE, "%s does not loop" % clip)
+	for clip: StringName in KAYKIT_ADDED_LENGTHS:
+		check.call(library.has_animation(clip) and library.get_animation(clip).loop_mode == Animation.LOOP_NONE, "%s does not loop" % clip)
+	for clip: StringName in UAL_LENGTHS:
+		if library.has_animation(clip):
+			var wants_loop: bool = UAL_LOOPING.has(clip)
+			check.call(library.get_animation(clip).loop_mode == (Animation.LOOP_LINEAR if wants_loop else Animation.LOOP_NONE), "%s %s" % [clip, "loops" if wants_loop else "does not loop"])
 
 	var lengths: Dictionary[StringName, float] = {
 		&"Jump_Start": 0.6, &"Dodge_Forward": 0.4, &"Idle_A": 1.067, &"Running_A": 0.8, &"Jump_Land": 0.667, &"Ranged_1H_Aiming": 1.067,
 		&"Running_Strafe_Left": 0.8, &"Running_Strafe_Right": 0.8, &"Walking_Backwards": 1.067,
 		&"Dodge_Left": 0.4, &"Dodge_Right": 0.4, &"Dodge_Backward": 0.4,
 	}
+	lengths.merge(KAYKIT_ADDED_LENGTHS)
+	for clip: StringName in UAL_LENGTHS:
+		if library.has_animation(clip):
+			lengths[clip] = UAL_LENGTHS[clip]
 	for clip: StringName in lengths:
 		if library.has_animation(clip):
 			var length: float = library.get_animation(clip).length
@@ -63,6 +95,14 @@ func run(_tree: SceneTree, check: Callable) -> void:
 		check.call(slide_bound, "every Running_Slide track path begins with Rig_Medium/Skeleton3D: (retargeted onto Rig_Medium)")
 		check.call(absf(slide.length - 1.533) <= LENGTH_TOLERANCE, "Running_Slide length %.3f is 1.533 +- %.2f" % [slide.length, LENGTH_TOLERANCE])
 		_check_slide_window(slide, check)
+	for clip: StringName in UAL_LENGTHS:
+		if library.has_animation(clip):
+			var external: Animation = library.get_animation(clip)
+			var external_bound: bool = external.get_track_count() > 0
+			for i: int in external.get_track_count():
+				if not str(external.track_get_path(i)).begins_with("Rig_Medium/Skeleton3D:"):
+					external_bound = false
+			check.call(external_bound, "every %s track path begins with Rig_Medium/Skeleton3D: (retargeted onto Rig_Medium)" % clip)
 	for clip: StringName in PINNED_CLIPS:
 		_check_root_pinned(library, clip, check)
 	_check_strafe_yaw(library, &"Running_Strafe_Right", check)
@@ -81,6 +121,15 @@ func run(_tree: SceneTree, check: Callable) -> void:
 		check.call(skeleton.find_bone("hand.l") != -1, "bone hand.l exists")
 		check.call(skeleton.find_bone("handslot.r") == -1, "handslot.r is absent (use BoneAttachment3D on hand.r)")
 	mannequin.free()
+
+
+## The documented drop list of tools/build_animation_library.gd (read from the script constants; the tool is not run).
+func _dropped_list() -> Array[StringName]:
+	var script: GDScript = load("res://tools/build_animation_library.gd") as GDScript
+	var result: Array[StringName] = []
+	for entry: Variant in script.get_script_constant_map().get("UAL_DROPPED", []):
+		result.append(StringName(entry))
+	return result
 
 
 ## The Slide node of the tree plays a window of Running_Slide that starts at the top of the drop, ends in the low slide

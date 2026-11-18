@@ -8,6 +8,8 @@ extends SceneTree
 ## A later clip needs one row in ROWS, then both tools are re-run (docs/ANIMATION-MAP.md, External clips).
 ## Paths are fixed constants, never arguments (T-qbt-02).
 
+const UAL_RAW: String = "KayKit/Universal Animation Library[Standard]/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb"
+
 ## Row: raw source relative to the repository root, output scene, clip name inside the output, source clip name
 ## ("" = the single clip that is not RESET).
 const ROWS: Array[Dictionary] = [
@@ -18,6 +20,15 @@ const ROWS: Array[Dictionary] = [
 		# The FBX importer also yields an empty "Take 001" (0 tracks, 3.33 s); the Mixamo take is mixamo_com.
 		"source_clip": "mixamo_com",
 	},
+	# Quaternius Universal Animation Library (CC0), one conformed scene per clip (quick 261118-qi3). The library key carries
+	# the UAL_ prefix because Jump_Start, Jump_Land and Interact collide with KayKit clips. UAL Push_Loop, Jump_Land,
+	# Interact, Roll and the four Spell_Simple clips are not listed: they were dropped (tools/build_animation_library.gd
+	# UAL_DROPPED carries the reasons).
+	{"raw": UAL_RAW, "output": "res://assets/animations/external/ual/idle_loop.scn", "clip": &"UAL_Idle_Loop", "source_clip": "Idle_Loop"},
+	{"raw": UAL_RAW, "output": "res://assets/animations/external/ual/sprint_loop.scn", "clip": &"UAL_Sprint_Loop", "source_clip": "Sprint_Loop"},
+	{"raw": UAL_RAW, "output": "res://assets/animations/external/ual/hit_chest.scn", "clip": &"UAL_Hit_Chest", "source_clip": "Hit_Chest"},
+	{"raw": UAL_RAW, "output": "res://assets/animations/external/ual/hit_head.scn", "clip": &"UAL_Hit_Head", "source_clip": "Hit_Head"},
+	{"raw": UAL_RAW, "output": "res://assets/animations/external/ual/death01.scn", "clip": &"UAL_Death01", "source_clip": "Death01"},
 ]
 const MIN_BONES: int = 15
 

@@ -54,6 +54,7 @@ if [ "${1:-}" != "--tool" ]; then
 		"$PROTOTYPE_GLTF/Primitive_Slope.gltf"
 		"$PROTOTYPE_GLTF/Primitive_Beam.gltf"
 		"$PROTOTYPE_GLTF/prototypebits_texture.png"
+		"KayKit/Universal Animation Library[Standard]/Universal Animation Library[Standard]/Unreal-Godot/UAL1_Standard.glb"
 	)
 	for original in "${ORIGINALS[@]}"; do
 		if ! git -C "$REPO_ROOT" ls-files --error-unmatch -- "$original" >/dev/null 2>&1; then

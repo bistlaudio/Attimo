@@ -4,6 +4,9 @@ extends Node
 ## the Locomotion blend and the Land overlay. Animation shows state; it is not feedback in the D-10 sense.
 ## The tree root is a BlendTree (tools/build_mannequin_tree.gd): StateMachine -> TimeScale -> Land OneShot -> Aim
 ## (upper-body layer) -> output. The state machine has one dash node per Dodge clip; dash_node_for() picks it (D-12).
+## The aim layer is the spell hand (quick 261118-qi3): an aim press starts the AimMachine at Enter on the same physics
+## frame, Hold loops while aim is held, use_hand while aiming fires the Shoot OneShot, a release travels to Exit and the
+## layer fades out after the Exit clip.
 ##
 ## Air-dash pose hold (DEV-02, D-02 "Dodge held as a pose in the air"): when the FSM leaves a Dash that started in
 ## the air into Fall, the animator keeps the dash node. The Dodge clip plays on at 1x and holds its last frame,
@@ -20,6 +23,8 @@ const P_TIME_SCALE: StringName = &"parameters/TimeScale/scale"
 const P_LAND_REQUEST: StringName = &"parameters/Land/request"
 const P_LAND_ACTIVE: StringName = &"parameters/Land/active"
 const P_AIM: StringName = &"parameters/Aim/blend_amount"
+const P_AIM_PLAYBACK: StringName = &"parameters/AimMachine/playback"
+const P_SHOOT_REQUEST: StringName = &"parameters/Shoot/request"
 ## The AimPoseModifier node, relative to the Mannequin node (the AnimationTree's parent).
 const AIM_MODIFIER_PATH: NodePath = ^"Rig_Medium/Skeleton3D/AimPoseModifier"
 
@@ -55,15 +60,35 @@ var last_travel: StringName = &""
 var last_travel_frame: int = -1
 ## True while the Dodge pose of an air dash is held past the Dash state's exit (read-only for others).
 var air_dash_holding: bool = false
+## True while the Slide pose is held past the end of the ground dash (read-only for others). Like DEV-02 this is
+## presentation only: the FSM is already in Run or Idle and steering, jump and dash respond at once; any state change
+## other than the dash ending into Run or Idle ends the hold on the same call.
+var slide_holding: bool = false
+
+## Seconds the Slide pose stays after the 0.18 s ground dash, so the slide reads (developer 2026-11-18: "too short").
+const SLIDE_HOLD_TIME: float = 0.3
+## The Slide window plays at this fixed speed: the 0.233 s drop reaches the floor in about 0.15 s, inside the 0.18 s
+## dash (developer 2026-11-18: 1.85x was rushed, 1.0x took too long to reach the floor), then the low pose holds.
+const SLIDE_PLAYBACK_SCALE: float = 1.6
 ## Weight of the upper-body aim layer, 0 (locomotion only) to 1 (aim pose), eased over aim_layer_blend_time.
 var aim_weight: float = 0.0
+## Weight of the Aim layer in the tree (P_AIM, read-only for others): 1 while aiming and while the Exit clip lowers the
+## hand, eased at the aim_weight rate. aim_weight is the solver influence, this is the pose layer.
+var layer_weight: float = 0.0
 
 var _playback: AnimationNodeStateMachinePlayback
+## The spell hand state machine (Enter, Hold, Exit) inside the Aim layer; null when the tree has none.
+var _aim_machine: AnimationNodeStateMachinePlayback
+var _was_aiming: bool = false
+## Seconds of the Exit clip still to play after an aim release; the layer stays at weight 1 until it has run out.
+var _exit_left: float = 0.0
+var _exit_length: float = 0.0
 ## The arm-direction solver under the Mannequin skeleton; null when the scene has none (the feed is then off).
 var _aim_modifier: AimPoseModifier
 var _loco_blend: Vector2 = Vector2.ZERO
 var _loco_target: Vector2 = Vector2.ZERO
 var _hold_left: float = 0.0
+var _slide_hold_left: float = 0.0
 var _dash_state: Node
 ## Length in seconds of each dash node's Dodge clip, read once in _ready (Pitfall 6).
 var _dash_lengths: Dictionary[StringName, float] = {}
@@ -82,6 +107,8 @@ func _ready() -> void:
 	var slide_length: float = _slide_window_length()
 	if slide_length > 0.0:
 		_dash_lengths[&"Slide"] = slide_length
+	_aim_machine = animation_tree.get(P_AIM_PLAYBACK) as AnimationNodeStateMachinePlayback
+	_exit_length = _aim_exit_length(clip_player)
 	var mannequin: Node = animation_tree.get_parent()
 	if mannequin != null:
 		_aim_modifier = mannequin.get_node_or_null(AIM_MODIFIER_PATH) as AimPoseModifier
@@ -99,17 +126,70 @@ func _slide_window_length() -> float:
 	var node: AnimationNodeAnimation = machine.get_node(&"Slide") as AnimationNodeAnimation
 	if node == null or not node.use_custom_timeline:
 		return 0.0
-	return node.timeline_length
+	# Only the drop into the low pose is stretched to dash_time (metadata from the tree tool); the window rest holds it.
+	return float(node.get_meta(&"drop_length", node.timeline_length))
 
 
-## Counts the air-dash hold down and hands over to the Fall loop when it runs out.
+## Length in seconds of the tree's Exit node (the whole clip, or its window), 0 when the tree has none.
+func _aim_exit_length(clip_player: AnimationPlayer) -> float:
+	var root: AnimationNodeBlendTree = animation_tree.tree_root as AnimationNodeBlendTree
+	if root == null or not root.has_node(&"AimMachine"):
+		return 0.0
+	var machine: AnimationNodeStateMachine = root.get_node(&"AimMachine") as AnimationNodeStateMachine
+	if machine == null or not machine.has_node(&"Exit"):
+		return 0.0
+	var node: AnimationNodeAnimation = machine.get_node(&"Exit") as AnimationNodeAnimation
+	if node == null:
+		return 0.0
+	if node.use_custom_timeline:
+		return node.timeline_length
+	if clip_player != null and clip_player.has_animation(node.animation):
+		return clip_player.get_animation(node.animation).length
+	return 0.0
+
+
+## Counts the air-dash hold down and hands over to the Fall loop when it runs out. The aim edge and the hand shot run
+## first so they never depend on the hold.
 func _physics_process(delta: float) -> void:
+	_update_aim_edge(delta)
+	if Input.is_action_just_pressed(&"use_hand"):
+		play_hand_shot()
+	if slide_holding:
+		_slide_hold_left -= delta
+		if _slide_hold_left <= 0.0:
+			slide_holding = false
+			_travel_to(&"Locomotion")
 	if not air_dash_holding:
 		return
 	_hold_left -= delta
 	if _hold_left <= 0.0:
 		air_dash_holding = false
 		_travel_to(&"Fall")
+
+
+## The aim press starts the spell hand at Enter on the physics frame the FSM's aiming flag turns true, the release travels
+## to Exit and starts the exit countdown that keeps the layer up until the lowering has played.
+func _update_aim_edge(delta: float) -> void:
+	var aiming: bool = player.aiming
+	if aiming and not _was_aiming:
+		_exit_left = 0.0
+		if _aim_machine != null:
+			_aim_machine.start(&"Enter", true)
+	elif not aiming and _was_aiming:
+		_exit_left = _exit_length
+		if _aim_machine != null:
+			_aim_machine.travel(&"Exit")
+	elif _exit_left > 0.0:
+		_exit_left = maxf(_exit_left - delta, 0.0)
+	_was_aiming = aiming
+
+
+## Fires the Shoot OneShot of the spell hand. Only while aiming: outside aim the layer weight is 0 and hip-fire
+## presentation is Phase 4. Stand-in until Phase 4 emits a hand fact (the hand does not exist yet): it is called from the
+## use_hand poll in _physics_process.
+func play_hand_shot() -> void:
+	if player.aiming:
+		animation_tree.set(P_SHOOT_REQUEST, AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
 
 
 ## The hold length in seconds (MovementConfig.air_dash_hold_time, live-tunable).
@@ -125,7 +205,9 @@ func _process(delta: float) -> void:
 	animation_tree.set(P_TIME_SCALE, clip_scale())
 	var blend_time: float = maxf(player.config.aim_layer_blend_time, 0.001)
 	aim_weight = move_toward(aim_weight, 1.0 if player.aiming else 0.0, delta / blend_time)
-	animation_tree.set(P_AIM, aim_weight)
+	var layer_target: float = 1.0 if (player.aiming or _exit_left > 0.0) else 0.0
+	layer_weight = move_toward(layer_weight, layer_target, delta / blend_time)
+	animation_tree.set(P_AIM, layer_weight)
 	_feed_aim_modifier()
 
 
@@ -153,13 +235,19 @@ func _on_state_changed(from_state: StringName, to_state: StringName) -> void:
 	if node == &"Dash":
 		var slide: bool = _dash_state != null and bool(_dash_state.get(&"slide"))
 		node = dash_node_for(player.last_dash_direction, slide)
-	if from_state == &"Dash" and to_state == &"Fall" and _dash_state != null and bool(_dash_state.get(&"in_air")):
+	if from_state == &"Dash" and last_travel == &"Slide" and (to_state == &"Run" or to_state == &"Idle"):
+		# Keep the Slide node: the slide pose stays SLIDE_HOLD_TIME past the dash end (presentation only).
+		slide_holding = true
+		_slide_hold_left = SLIDE_HOLD_TIME
+		air_dash_holding = false
+	elif from_state == &"Dash" and to_state == &"Fall" and _dash_state != null and bool(_dash_state.get(&"in_air")):
 		# Keep the dash node: the Dodge clip plays on and holds its last frame (DEV-02).
 		air_dash_holding = true
 		_hold_left = air_dash_hold_time()
 	else:
 		var was_holding: bool = air_dash_holding
 		air_dash_holding = false
+		slide_holding = false
 		if node != last_travel:
 			_travel_to(node)
 		elif was_holding:
@@ -234,7 +322,9 @@ func dash_node_for(direction: Vector3, slide: bool = false) -> StringName:
 func clip_scale() -> float:
 	var config: MovementConfig = player.config
 	var result: float = 1.0
-	if DASH_CLIPS.has(last_travel):
+	if last_travel == &"Slide":
+		result = SLIDE_PLAYBACK_SCALE
+	elif DASH_CLIPS.has(last_travel):
 		var in_air: bool = _dash_state != null and bool(_dash_state.get(&"in_air"))
 		if not in_air:
 			result = float(_dash_lengths.get(last_travel, 0.4)) / maxf(config.dash_time, 0.001)

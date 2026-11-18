@@ -1,6 +1,6 @@
 extends RefCounted
 ## FOUND-04 (D-01..D-05): only the whitelisted KayKit files live under res://assets, no raw pack sits inside
-## the project, and the D-05 folder layout exists. The whitelist is fixed at planning time (2026-11-04); extended to 31 entries in Phase 2 plan 02-03 (Primitive_Slope, Primitive_Beam), then to 33 entries in Phase 3 plan 03-02 (CombatRanged), then to 34 entries in quick 261118-qbt (the conformed, mesh-free running_slide.scn: conformed external sources are deliberate entries, the raw FBX stays outside the project). Do not
+## the project, and the D-05 folder layout exists. The whitelist is fixed at planning time (2026-11-04); extended to 31 entries in Phase 2 plan 02-03 (Primitive_Slope, Primitive_Beam), then to 33 entries in Phase 3 plan 03-02 (CombatRanged), then to 34 entries in quick 261118-qbt (the conformed, mesh-free running_slide.scn: conformed external sources are deliberate entries, the raw FBX stays outside the project), then to 39 entries in quick 261118-qi3 (five conformed UAL clips under animations/external/ual/; four UAL clips were dropped by the bone-sanity gate and the four Spell clips by the presentation review). Do not
 ## derive it from the disk: a new asset is a deliberate edit of this list, in the same change as the asset.
 ## The "raw packs stay tracked at the repo root" and "no Git LFS" checks live in tests/run.sh (they need git).
 
@@ -22,6 +22,11 @@ const WHITELIST: PackedStringArray = [
 	"animations/rig_medium/Rig_Medium_CombatRanged.glb.import",
 	"animations/rig_medium/rig_medium_library.res",
 	"animations/external/mixamo/running_slide.scn",
+	"animations/external/ual/idle_loop.scn",
+	"animations/external/ual/sprint_loop.scn",
+	"animations/external/ual/hit_chest.scn",
+	"animations/external/ual/hit_head.scn",
+	"animations/external/ual/death01.scn",
 	"prototype_bits/prototypebits_texture.png",
 	"prototype_bits/prototypebits_texture.png.import",
 	"prototype_bits/Primitive_Floor.gltf",
@@ -58,7 +63,7 @@ const FORBIDDEN_EXTENSIONS: PackedStringArray = ["fbx", "obj"]
 
 
 func run(_tree: SceneTree, check: Callable) -> void:
-	check.call(WHITELIST.size() == 34, "the whitelist holds exactly 34 entries (got %d)" % WHITELIST.size())
+	check.call(WHITELIST.size() == 39, "the whitelist holds exactly 39 entries (got %d)" % WHITELIST.size())
 
 	var found: PackedStringArray = PackedStringArray()
 	_collect_files(ASSETS_DIR, found)

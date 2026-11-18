@@ -15,7 +15,9 @@ const SOURCES: Array[String] = [
 ]
 const OUTPUT: String = "res://assets/animations/rig_medium/rig_medium_library.res"
 const WANTED: Array[StringName] = [&"Idle_A", &"Running_A", &"Jump_Start", &"Jump_Idle", &"Jump_Land", &"Dodge_Forward", &"Ranged_1H_Aiming",
-	&"Running_Strafe_Left", &"Running_Strafe_Right", &"Walking_Backwards", &"Dodge_Left", &"Dodge_Right", &"Dodge_Backward"]
+	&"Running_Strafe_Left", &"Running_Strafe_Right", &"Walking_Backwards", &"Dodge_Left", &"Dodge_Right", &"Dodge_Backward",
+	# Clip variations (quick 261118-qi3): idle break, reserved reaction pools, the Jump 2 and long jump takes.
+	&"Idle_B", &"Hit_A", &"Hit_B", &"Death_A", &"Death_B", &"Interact", &"Jump_Full_Short", &"Jump_Full_Long"]
 ## KayKit clips import as non-looping (Pitfall 2), so the looping set is declared here.
 const LOOPING: Array[StringName] = [&"Idle_A", &"Running_A", &"Jump_Idle", &"Running_Strafe_Left", &"Running_Strafe_Right", &"Walking_Backwards"]
 ## The Dodge clips drift the root bone (Forward +0.25 m, Left/Right 0.5 m, Backward -0.65 m) and snap back. The dash moves the body
@@ -35,6 +37,40 @@ const RETARGETED: Array[Dictionary] = [
 		"loop": false,
 		"pin_horizontal": true,
 	},
+	# Quaternius UAL clips (CC0, quick 261118-qi3). The library key carries the UAL_ prefix (name collisions with KayKit).
+	{"clip": &"UAL_Idle_Loop", "source": "res://assets/animations/external/ual/idle_loop.scn", "family": &"ual", "loop": true, "pin_horizontal": true},
+	{"clip": &"UAL_Sprint_Loop", "source": "res://assets/animations/external/ual/sprint_loop.scn", "family": &"ual", "loop": true, "pin_horizontal": true},
+	{"clip": &"UAL_Hit_Chest", "source": "res://assets/animations/external/ual/hit_chest.scn", "family": &"ual", "loop": false, "pin_horizontal": true},
+	{"clip": &"UAL_Hit_Head", "source": "res://assets/animations/external/ual/hit_head.scn", "family": &"ual", "loop": false, "pin_horizontal": true},
+	{"clip": &"UAL_Death01", "source": "res://assets/animations/external/ual/death01.scn", "family": &"ual", "loop": false, "pin_horizontal": true},
+]
+## UAL clips that failed the bone-sanity gate (tests/smoke/test_retarget_sanity.gd, docs/ANIMATION-MAP.md "Retarget quality
+## rule") and were dropped: their conform row, RETARGETED row and .scn are removed and the tree builds the KayKit fallback
+## (tools/build_mannequin_tree.gd FALLBACK). Every entry carries a ## comment with the failing check. Tests read this list.
+const UAL_DROPPED: Array[StringName] = [
+	## S3 arm clearance 0.241 m, below the limit 0.266 m (native minimum 0.316 m minus 0.05 m): the hands pass too close to the
+	## torso of the chibi Mannequin. Reserved for Phase 5 only, so no fallback clip exists; re-check when Phase 5 wires it.
+	&"UAL_Push_Loop",
+	## S4 hips drop to 41 % of rest (limit 60 %): a deep crouch that the short Mannequin legs turn into a collapse. The
+	## KayKit Jump_Land stays the landing clip; the tree builds the hard landing from it too (FALLBACK).
+	&"UAL_Jump_Land",
+	## S3 arm clearance 0.263 m, below the limit 0.266 m by 3 mm: the forearm touches the torso on the reach. The KayKit
+	## Interact stays the only interact clip.
+	&"UAL_Interact",
+	## S7 the head sinks 0.27 m and the hips 0.09 m below the floor at 0.70-0.80 s: the retarget floor rule only knows the
+	## feet, so the inverted body of the roll is pushed through the floor (and floats at 1.36 times the hips rest height
+	## before). The roll landing builds from the KayKit Jump_Land (FALLBACK).
+	&"UAL_Roll",
+	## Presentation review (developer gym feedback "the aim pose looks weird", measured by a headless probe): the four
+	## Spell_Simple clips are a LEFT-handed cast in the UAL source itself (hand_l leads 0.72 m in front of spine_03) and
+	## twist the chest 57 degrees away from the right arm (Ranged_1H_Aiming: 36 degrees towards it). The prosthetic is
+	## the right hand and AimPoseModifier points the right arm, so the layer fought the solver (test_aim_pose (z) torso
+	## twist 0.079). Mirroring would need a retargeter change (out of scope). The tree builds the KayKit
+	## Ranged_1H_Aiming fallback for all four (FALLBACK): raise, hold, the raise played backwards, hold.
+	&"UAL_Spell_Simple_Enter",
+	&"UAL_Spell_Simple_Idle_Loop",
+	&"UAL_Spell_Simple_Shoot",
+	&"UAL_Spell_Simple_Exit",
 ]
 
 

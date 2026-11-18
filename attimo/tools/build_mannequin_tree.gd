@@ -2,7 +2,8 @@ extends SceneTree
 ## Editor-time tool: builds the Mannequin AnimationTree root (an AnimationNodeBlendTree) and saves it as a text .tres.
 ## Run: bash attimo/tests/run.sh --tool res://tools/build_mannequin_tree.gd
 ## Layout: StateMachine (Locomotion BlendSpace2D, Jump, Fall, Dash, DashLeft, DashRight, DashBack, Slide) -> TimeScale ->
-## Land (OneShot, input 1 = LandClip) -> Aim (Blend2 with an upper-body bone filter, input 1 = AimClip) -> output.
+## Land (OneShot, input 1 = LandClip) -> Aim (Blend2 with an upper-body bone filter, input 1 = Shoot) -> output.
+## Shoot is a OneShot: input 0 = AimMachine (Enter, Hold, Exit of the UAL Spell hand clips), input 1 = ShootClip.
 ## There is no Land state: landing is an overlay that a move input fades out (D-08, no landing lock).
 
 const OUTPUT: String = "res://scenes/player/mannequin_tree.tres"
@@ -20,10 +21,28 @@ const UPPER_BONES: Array[String] = [
 	"upperarm.l", "lowerarm.l", "wrist.l", "hand.l", "handslot.l",
 	"upperarm.r", "lowerarm.r", "wrist.r", "hand.r", "handslot.r",
 ]
-## Ranged_1H_Aiming is a raise followed by a hold. The node plays only the hold (0.6 s .. 1.0 s) and never loops, so
-## the raise does not replay (Pitfall 4).
+## Ranged_1H_Aiming is a raise (0.0 s .. 0.6 s) followed by a hold. It is the KayKit fallback of the UAL Spell set (the
+## quick 261118-qi3 spell hand; the UAL Spell clips are dropped, see UAL_DROPPED): Enter plays the raise, Hold and Shoot
+## play the hold window (Pitfall 4: the raise does not replay), Exit plays AIM_EXIT_FALLBACK_LENGTH of the hold and the
+## layer fade lowers the arm.
+const AIM_RAISE_LENGTH: float = 0.6
 const AIM_HOLD_START: float = 0.6
 const AIM_HOLD_LENGTH: float = 0.4
+const AIM_EXIT_FALLBACK_LENGTH: float = 0.1
+const SHOOT_FADE_IN: float = 0.05
+const SHOOT_FADE_OUT: float = 0.1
+## UAL clip (library key UAL_<clip>) to the KayKit clip its node plays when the library lacks the UAL clip (dropped by the
+## bone-sanity gate, tools/build_animation_library.gd UAL_DROPPED). The tool prints every fallback it used.
+const FALLBACK: Dictionary[StringName, StringName] = {
+	&"UAL_Spell_Simple_Enter": &"Ranged_1H_Aiming",
+	&"UAL_Spell_Simple_Idle_Loop": &"Ranged_1H_Aiming",
+	&"UAL_Spell_Simple_Shoot": &"Ranged_1H_Aiming",
+	&"UAL_Spell_Simple_Exit": &"Ranged_1H_Aiming",
+	&"UAL_Sprint_Loop": &"Running_A",
+	&"UAL_Jump_Land": &"Jump_Land",
+	&"UAL_Roll": &"Jump_Land",
+	&"UAL_Idle_Loop": &"Idle_A",
+}
 
 ## Jump_Start is cut at the crouch bottom (0.25 s) so the jump shows at most two frames of anticipation.
 const JUMP_START_OFFSET: float = 0.25
@@ -41,11 +60,25 @@ const LAND_LENGTH: float = 0.3
 ## steps or the get-up.
 const SLIDE_START: float = 0.0667
 const SLIDE_LENGTH: float = 0.3333
+## Only the drop (SLIDE_START to the hips minimum at 0.300 s) is stretched to dash_time, about 1.3x instead of the
+## whole window at 1.85x (developer 2026-11-18: "too fast"). The rest of the window holds the low pose. Stored as
+## metadata "drop_length" on the Slide node; MannequinAnimator reads it.
+const SLIDE_DROP_LENGTH: float = 0.2333
+## Crossfades of the Slide edges (developer 2026-11-18: the slide popped in and out). Presentation only: the travel
+## still happens on the state change frame.
+const SLIDE_XFADE_IN: float = 0.1
+const SLIDE_XFADE_OUT: float = 0.15
 
 var _used_clips: Array[StringName] = []
+var _library: AnimationLibrary
 
 
 func _initialize() -> void:
+	_library = load(LIBRARY) as AnimationLibrary
+	if _library == null:
+		print("TREE: FAILED (library %s not loadable)" % LIBRARY)
+		quit(1)
+		return
 	var machine: AnimationNodeStateMachine = _build_machine()
 
 	var tree: AnimationNodeBlendTree = AnimationNodeBlendTree.new()
@@ -63,22 +96,27 @@ func _initialize() -> void:
 	tree.add_node(&"LandClip", land_clip, Vector2(260, 160))
 	var aim: AnimationNodeBlend2 = AnimationNodeBlend2.new()
 	aim.filter_enabled = true
+	# sync: the spell hand machine keeps running at layer weight 0, so Enter starts on the press frame, not on the first
+	# frame with a non-zero weight.
+	aim.sync = true
 	for bone: String in UPPER_BONES:
 		aim.set_filter_path(NodePath(SKEL + bone), true)
 	tree.add_node(&"Aim", aim, Vector2(780, 0))
-	var aim_clip: AnimationNodeAnimation = _clip(&"Ranged_1H_Aiming")
-	aim_clip.use_custom_timeline = true
-	aim_clip.start_offset = AIM_HOLD_START
-	aim_clip.timeline_length = AIM_HOLD_LENGTH
-	aim_clip.loop_mode = Animation.LOOP_NONE
-	tree.add_node(&"AimClip", aim_clip, Vector2(520, 160))
+	var shoot: AnimationNodeOneShot = AnimationNodeOneShot.new()
+	shoot.fadein_time = SHOOT_FADE_IN
+	shoot.fadeout_time = SHOOT_FADE_OUT
+	tree.add_node(&"Shoot", shoot, Vector2(780, 160))
+	tree.add_node(&"AimMachine", _build_aim_machine(), Vector2(520, 160))
+	tree.add_node(&"ShootClip", _spell_clip(&"UAL_Spell_Simple_Shoot", AIM_HOLD_START, AIM_HOLD_LENGTH), Vector2(520, 320))
 
 	# connect_node(input_node, input_index, output_node): the node named first receives the output of the last.
 	tree.connect_node(&"TimeScale", 0, &"StateMachine")
 	tree.connect_node(&"Land", 0, &"TimeScale")
 	tree.connect_node(&"Land", 1, &"LandClip")
 	tree.connect_node(&"Aim", 0, &"Land")
-	tree.connect_node(&"Aim", 1, &"AimClip")
+	tree.connect_node(&"Shoot", 0, &"AimMachine")
+	tree.connect_node(&"Shoot", 1, &"ShootClip")
+	tree.connect_node(&"Aim", 1, &"Shoot")
 	tree.connect_node(&"output", 0, &"Aim")
 
 	var missing: StringName = _first_missing_clip()
@@ -90,6 +128,41 @@ func _initialize() -> void:
 	var err: Error = ResourceSaver.save(tree, OUTPUT)
 	print("TREE: SAVED %s err=%d" % [OUTPUT, err])
 	quit(0 if err == OK else 1)
+
+
+## The spell hand: Enter (raise), Hold (loop), Exit (lower). The animator starts the machine at Enter on the aim press and
+## travels to Exit on the release. An at-end edge is intended inside this sub-machine: Enter hands over to Hold.
+func _build_aim_machine() -> AnimationNodeStateMachine:
+	var machine: AnimationNodeStateMachine = AnimationNodeStateMachine.new()
+	machine.add_node(&"Enter", _spell_clip(&"UAL_Spell_Simple_Enter", 0.0, AIM_RAISE_LENGTH), Vector2(300, 0))
+	machine.add_node(&"Hold", _spell_clip(&"UAL_Spell_Simple_Idle_Loop", AIM_HOLD_START, AIM_HOLD_LENGTH, true), Vector2(560, 0))
+	# The Exit fallback is a short hold: the lowering is the layer fade (PLAY_MODE_BACKWARD with a custom timeline froze
+	# at the window end on 4.7.2, measured, so the raise cannot simply be reversed).
+	machine.add_node(&"Exit", _spell_clip(&"UAL_Spell_Simple_Exit", AIM_HOLD_START, AIM_EXIT_FALLBACK_LENGTH), Vector2(300, 160))
+	machine.add_transition(&"Start", &"Hold", _auto_edge())
+	var at_end: AnimationNodeStateMachineTransition = _auto_edge()
+	at_end.switch_mode = AnimationNodeStateMachineTransition.SWITCH_MODE_AT_END
+	machine.add_transition(&"Enter", &"Hold", at_end)
+	machine.add_transition(&"Enter", &"Exit", _manual_edge())
+	machine.add_transition(&"Hold", &"Exit", _manual_edge())
+	machine.add_transition(&"Exit", &"Enter", _manual_edge())
+	return machine
+
+
+## An animation node for a UAL clip. When the library lacks it, the KayKit FALLBACK clip plays its window
+## (fallback_start, fallback_length) instead and the tool says so.
+func _spell_clip(ual_clip: StringName, fallback_start: float, fallback_length: float, loop: bool = false) -> AnimationNodeAnimation:
+	if _library.has_animation(ual_clip):
+		return _clip(ual_clip)
+	var kaykit: StringName = FALLBACK[ual_clip]
+	print("TREE: fallback %s -> %s" % [ual_clip, kaykit])
+	var node: AnimationNodeAnimation = _clip(kaykit)
+	node.use_custom_timeline = true
+	node.start_offset = fallback_start
+	node.timeline_length = fallback_length
+	node.stretch_time_scale = false
+	node.loop_mode = Animation.LOOP_LINEAR if loop else Animation.LOOP_NONE
+	return node
 
 
 func _build_machine() -> AnimationNodeStateMachine:
@@ -130,6 +203,7 @@ func _build_machine() -> AnimationNodeStateMachine:
 	slide.timeline_length = SLIDE_LENGTH
 	slide.stretch_time_scale = false
 	slide.loop_mode = Animation.LOOP_NONE
+	slide.set_meta(&"drop_length", SLIDE_DROP_LENGTH)
 	machine.add_node(&"Slide", slide, Vector2(300, 440))
 
 	# AUTO alone fires on the first frame, so the entry edge is the only auto edge. No at-end edge out of Jump:
@@ -141,7 +215,12 @@ func _build_machine() -> AnimationNodeStateMachine:
 	for from_state: StringName in states:
 		for to_state: StringName in states:
 			if from_state != to_state:
-				machine.add_transition(from_state, to_state, _manual_edge())
+				var edge: AnimationNodeStateMachineTransition = _manual_edge()
+				if to_state == &"Slide":
+					edge.xfade_time = SLIDE_XFADE_IN
+				elif from_state == &"Slide":
+					edge.xfade_time = SLIDE_XFADE_OUT
+				machine.add_transition(from_state, to_state, edge)
 	return machine
 
 
@@ -154,11 +233,8 @@ func _clip(clip_name: StringName) -> AnimationNodeAnimation:
 
 
 func _first_missing_clip() -> StringName:
-	var library: AnimationLibrary = load(LIBRARY) as AnimationLibrary
-	if library == null:
-		return &"<library %s not loadable>" % LIBRARY
 	for clip_name: StringName in _used_clips:
-		if not library.has_animation(clip_name):
+		if not _library.has_animation(clip_name):
 			return clip_name
 	return &""
 
