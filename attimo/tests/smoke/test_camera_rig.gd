@@ -274,7 +274,12 @@ func _scenario_framing(tree: SceneTree, check: Callable) -> void:
 	check.call(head_ndc <= 0.3 and head_ndc > 0.0, "(k) the head top projects to vertical ndc %.2f (0 .. 0.3)" % head_ndc)
 	check.call(feet_ndc >= -0.9 and feet_ndc < shoulder_ndc, "(k) the feet project to vertical ndc %.2f (at least -0.9)" % feet_ndc)
 	check.call((head_ndc + feet_ndc) * 0.5 < 0.0, "(k) the standing character sits in the lower part of the screen (centre ndc %.2f)" % ((head_ndc + feet_ndc) * 0.5))
-	check.call(rig.spring_arm.spring_length <= 4.0, "(k) the arm is at most 4 m (%.2f)" % rig.spring_arm.spring_length)
+	check.call(rig.spring_arm.spring_length <= 5.0, "(k) the start arm is at most 5 m (%.2f)" % rig.spring_arm.spring_length)
+	# Mouse-wheel zoom (2026-11-18): the chosen distance clamps to zoom_min .. zoom_max.
+	rig.zoom_by(-100.0)
+	check.call(is_equal_approx(rig.zoom_distance, rig.zoom_min), "(k) zooming far in clamps to zoom_min (%.2f)" % rig.zoom_distance)
+	rig.zoom_by(100.0)
+	check.call(is_equal_approx(rig.zoom_distance, rig.zoom_max), "(k) zooming far out clamps to zoom_max (%.2f)" % rig.zoom_distance)
 	check.call(rig.pivot_height >= shoulder + 0.05 and rig.pivot_height <= shoulder + 0.4, "(k) pivot_height %.2f lies 0.05 .. 0.4 above the shoulder %.2f" % [rig.pivot_height, shoulder])
 	check.call(rig.base_fov >= 76.0 and rig.base_fov <= 82.0, "(k) the field of view is a little wider than 75 (%.1f)" % rig.base_fov)
 	check.call(rig.pitch_max >= 0.7, "(k) the upward pitch range is larger than before (%.2f)" % rig.pitch_max)

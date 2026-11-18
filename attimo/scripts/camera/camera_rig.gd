@@ -40,14 +40,26 @@ extends Node3D
 ## the point the view centre looks at. Measured 2026-11-18; the plan rule (shoulder + 0.2 m) gives 1.3 m, 1.4 m keeps
 ## the standing character in the lower part of the screen.
 @export var pivot_height: float = 1.4
-## Horizontal follow rate in 1/s (exponential damping). Tight, so the lag stays small at run speed (0.39 m at 8.5 m/s).
-@export var follow_rate: float = 22.0
+## Horizontal follow rate in 1/s (exponential damping). Softened 2026-11-18 (developer: the hard lock felt odd).
+@export var follow_rate: float = 16.0
 ## Vertical follow rate in 1/s (exponential damping of the vertical lock, max_vertical_lag clamps what is left).
-@export var vertical_follow_rate: float = 12.0
-## Most the rig may trail the anchor horizontally in m (dashes and long jumps run at 14-22 m/s). Inactive at run speed.
-@export var max_follow_lag: float = 0.6
+@export var vertical_follow_rate: float = 8.0
+## Most the rig may trail the anchor horizontally in m (dashes and long jumps run at 14-22 m/s). A loose clamp, so the
+## damping does the work and the clamp only catches dashes.
+@export var max_follow_lag: float = 1.0
 ## Most the rig may differ from the anchor height in m, so a jump keeps head and feet inside the vertical view.
-@export var max_vertical_lag: float = 0.35
+@export var max_vertical_lag: float = 0.6
+
+@export_group("Zoom")
+## Closest and farthest arm length in m the mouse wheel can choose (outside aim; in aim the wheel stays free for the
+## Phase 4 module switch). The scene's SpringArm3D spring_length is the start distance.
+@export var zoom_min: float = 2.5
+@export var zoom_max: float = 7.0
+## Metres per wheel notch.
+@export var zoom_step: float = 0.5
+## Rate in 1/s at which the arm eases to the chosen zoom distance.
+@export var zoom_rate: float = 12.0
+@export_group("")
 ## Radians of rotation per pixel of mouse motion (no delta scaling, no smoothing).
 @export var base_sensitivity: float = 0.0022
 ## Lowest pitch in rad (negative looks down from above).
@@ -145,8 +157,10 @@ var _last_target_origin: Vector3 = Vector3.ZERO
 var _fov_sources: Dictionary[StringName, float] = {}
 ## Arm origin contributions in Pitch-local space by source name.
 var _offset_sources: Dictionary[StringName, Vector3] = {}
-## Longest arm in m, the SpringArm3D spring_length of the scene.
-var _max_arm_length: float = 3.6
+## The arm length in m the player chose with the mouse wheel (starts at the scene's spring_length).
+var zoom_distance: float = 4.5
+## Longest arm in m before the wall cast: eases toward zoom_distance.
+var _max_arm_length: float = 4.5
 ## Arm length in m after the last wall cast.
 var _arm_length: float = 3.6
 ## World mask the arm casts against. The SpringArm3D node's own mask is zeroed (see _ready).
@@ -164,6 +178,7 @@ func _ready() -> void:
 	# SpringArm3D only casts on physics ticks, so at low tick rates the lens clips walls (A3, measured at
 	# 10 TPS). The rig casts every frame itself and sets the node's own mask to 0 so the two never disagree.
 	_max_arm_length = spring_arm.spring_length
+	zoom_distance = _max_arm_length
 	_arm_length = _max_arm_length
 	_arm_mask = spring_arm.collision_mask
 	spring_arm.collision_mask = 0
@@ -212,6 +227,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		return
 	var button := event as InputEventMouseButton
+	if button != null and button.pressed and _aim_target <= 0.0 and (button.button_index == MOUSE_BUTTON_WHEEL_UP or button.button_index == MOUSE_BUTTON_WHEEL_DOWN):
+		zoom_by(-zoom_step if button.button_index == MOUSE_BUTTON_WHEEL_UP else zoom_step)
+		return
 	if button != null and button.pressed and require_mouse_capture and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		if DisplayServer.get_name() != "headless":
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -243,9 +261,15 @@ func _process(delta: float) -> void:
 	rotation.y = yaw
 	pitch_node.rotation.x = pitch
 	_update_aim(delta)
+	_max_arm_length = lerpf(_max_arm_length, zoom_distance, 1.0 - exp(-zoom_rate * delta))
 	spring_arm.position = _offset_total()
 	camera.fov = get_fov_total()
 	_update_arm(delta)
+
+
+## Moves the chosen zoom distance by `amount` m (negative is closer), clamped to zoom_min .. zoom_max.
+func zoom_by(amount: float) -> void:
+	zoom_distance = clampf(zoom_distance + amount, zoom_min, zoom_max)
 
 
 ## Eases aim_weight toward the aim goal and writes it through the additive &"aim" sources (D-14), so a camera

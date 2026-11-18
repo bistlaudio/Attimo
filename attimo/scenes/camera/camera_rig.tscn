@@ -12,7 +12,7 @@ script = ExtResource("1_rig")
 
 [node name="SpringArm3D" type="SpringArm3D" parent="Pitch"]
 shape = SubResource("SphereShape3D_arm")
-spring_length = 3.6
+spring_length = 4.5
 margin = 0.1
 collision_mask = 1
 
