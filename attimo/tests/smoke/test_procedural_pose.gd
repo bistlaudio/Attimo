@@ -16,7 +16,8 @@ const LEAN_TOLERANCE_DEG: float = 1.0
 const PIVOT_TOLERANCE: float = 0.001
 const LEAN_IN_TICKS: int = 6
 const OUT_EXTRA_TICKS: int = 3
-const UP_TILT_MIN: float = 0.2
+## Share of sin(lean) the up vector must tilt toward the dash direction (scales with dash_lean_deg).
+const UP_TILT_MIN: float = 0.8
 const LIMIT_TICKS: int = 360
 const SPIN_SEEN_MIN: float = 5.5
 const STEP_EPSILON: float = 1e-4
@@ -129,7 +130,7 @@ func _scenario_rest_and_dash_lean(tree: SceneTree, check: Callable) -> void:
 	check.call(moved.distance_to(pivot) < PIVOT_TOLERANCE, "(p3) the pivot point maps to itself under the Mannequin transform (off by %.4f m)" % moved.distance_to(pivot))
 	var tilt: Vector3 = player.visual_root.global_basis * (mannequin.transform.basis * Vector3.UP)
 	var dash_direction: Vector3 = Vector3(0.0, 0.0, -1.0)
-	check.call(tilt.dot(dash_direction) > UP_TILT_MIN * config.aim_lean_scale, "(p3) the leaning body tilts its up vector toward the dash direction (dot %.2f)" % tilt.dot(dash_direction))
+	check.call(tilt.dot(dash_direction) > UP_TILT_MIN * sin(deg_to_rad(target_deg)), "(p3) the leaning body tilts its up vector toward the dash direction (dot %.2f)" % tilt.dot(dash_direction))
 	var yaw_clean: bool = true
 	for i: int in 8:
 		await tree.physics_frame

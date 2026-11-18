@@ -38,7 +38,7 @@ extends Resource
 ## Full-hold height of Jump 2 of the ground chain in m; raise it for a bigger second hop.
 @export_range(0.5, 6.0, 0.05) var jump_2_height: float = 2.6
 ## Full-hold height of Jump 3 (the pirouette jump, the highest ground jump) in m; raise it for a taller Jump 3.
-@export_range(0.5, 6.0, 0.05) var jump_3_height: float = 3.4
+@export_range(0.5, 6.0, 0.05) var jump_3_height: float = 4.0
 ## Tap height in m (release cuts the rise to this height); raise it for jumps that cut less.
 @export_range(0.1, 3.0, 0.05) var jump_min_height: float = 0.8
 
@@ -60,7 +60,7 @@ extends Resource
 ## Long jump height at stage 2 in m; raise it for a higher second hop.
 @export_range(0.5, 6.0, 0.05) var long_jump_height_2: float = 2.5
 ## Long jump height at stage 3 (last hop of the combo) in m; raise it for a higher third hop.
-@export_range(0.5, 6.0, 0.05) var long_jump_height_3: float = 3.0
+@export_range(0.5, 6.0, 0.05) var long_jump_height_3: float = 3.6
 ## Take-off speed of the stage 1 long jump in m/s; raise it for a longer first hop.
 @export_range(5.0, 22.0, 0.5) var long_jump_speed_1: float = 14.0
 ## Take-off speed of the stage 2 long jump in m/s; raise it for a longer second hop.
@@ -98,7 +98,7 @@ extends Resource
 
 @export_group("Pose")
 ## Forward lean of the body during a ground dash in degrees (D-01); raise it for a harder lean into the dash.
-@export_range(0.0, 45.0, 0.5) var dash_lean_deg: float = 20.0
+@export_range(0.0, 45.0, 0.5) var dash_lean_deg: float = 10.0
 ## Share of the lean kept while aiming (03-01 checkpoint item 3); raise it for a stronger lean in aim mode.
 @export_range(0.0, 1.0, 0.05) var aim_lean_scale: float = 0.5
 ## Seconds the lean takes to build up from upright to the dash lean; lower it for a snappier lean.
@@ -123,6 +123,12 @@ extends Resource
 @export_range(1.0, 40.0, 0.5) var locomotion_blend_rate: float = 10.0
 ## Seconds the Dodge pose is held after an air dash ends before the Fall clip takes over (landing ends it earlier, DEV-02); raise it for a longer hold.
 @export_range(0.0, 2.0, 0.05) var air_dash_hold_time: float = 0.35
+
+@export_group("Clip variants")
+## Shortest still time in Idle in seconds before an idle break clip plays (quick 261118-qi3); raise it for rarer breaks.
+@export_range(1.0, 30.0, 0.1) var idle_break_delay_min: float = 5.0
+## Longest still time in Idle in seconds before an idle break clip plays; the delay is rolled between min and max.
+@export_range(1.0, 30.0, 0.1) var idle_break_delay_max: float = 8.0
 
 
 ## Gravity while falling in m/s^2: rise_gravity * fall_multiplier.
