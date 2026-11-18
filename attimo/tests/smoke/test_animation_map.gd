@@ -10,7 +10,7 @@ const LIBRARY_PATH: String = "res://assets/animations/rig_medium/rig_medium_libr
 const DOC_RELATIVE_PATH: String = "../docs/ANIMATION-MAP.md"
 const CLIP_LINE_PREFIX: String = "animation = &\""
 const LEFT_OUT_TERMS: Array[String] = ["MOVE-12", "MOVE-13", "D-03"]
-const RULE_TERMS: Array[String] = ["DEV-01", "DEV-02", "DEV-03", "air_dash_hold_time", "pirouette_finish_time"]
+const RULE_TERMS: Array[String] = ["DEV-01", "DEV-02", "DEV-03", "DEV-04", "air_dash_hold_time", "pirouette_finish_time", "Retarget quality rule"]
 
 
 func run(_tree: SceneTree, check: Callable) -> void:
@@ -36,6 +36,19 @@ func run(_tree: SceneTree, check: Callable) -> void:
 	if library != null:
 		for clip_name: String in clips:
 			check.call(library.has_animation(StringName(clip_name)), "library has the referenced clip %s" % clip_name)
+		# M1 (quick 261118-qi3): the map is the whitelist of the library, every library clip is backticked in it.
+		var library_clips: Array[String] = []
+		for clip_name: StringName in library.get_animation_list():
+			library_clips.append(String(clip_name))
+		var missing_library: Array[String] = _missing(doc, library_clips)
+		for clip_name: String in library_clips:
+			check.call(not missing_library.has(clip_name), "M1 map names library clip `%s`" % clip_name)
+		# The synthetic doc backticks every library clip except the first.
+		var synthetic_doc: String = ""
+		for i: int in range(1, library_clips.size()):
+			synthetic_doc += "`%s` " % library_clips[i]
+		synthetic_doc += library_clips[0] if not library_clips.is_empty() else ""
+		check.call(_missing(synthetic_doc, library_clips) == ([library_clips[0]] as Array[String]), "M1 self-check: a doc without one library clip reports exactly that clip")
 
 	for term: String in LEFT_OUT_TERMS:
 		check.call(doc.contains(term), "map documents %s (verbs left out)" % term)
