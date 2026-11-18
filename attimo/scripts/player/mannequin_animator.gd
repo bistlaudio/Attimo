@@ -7,6 +7,9 @@ extends Node
 ## The aim layer is the spell hand (quick 261118-qi3): an aim press starts the AimMachine at Enter on the same physics
 ## frame, Hold loops while aim is held, use_hand while aiming fires the Shoot OneShot, a release travels to Exit and the
 ## layer fades out after the Exit clip.
+## Idle breaks (quick 261118-qi3): standing still in Idle for a rolled delay (MovementConfig idle_break_delay_min/max)
+## fires the IdleBreak OneShot with a clip picked by a VariantPicker (never the same one twice in a row). Any gameplay
+## action, aim or state change fades it out on that same physics frame; the FSM never waits for it.
 ##
 ## Air-dash pose hold (DEV-02, D-02 "Dodge held as a pose in the air"): when the FSM leaves a Dash that started in
 ## the air into Fall, the animator keeps the dash node. The Dodge clip plays on at 1x and holds its last frame,
@@ -25,6 +28,17 @@ const P_LAND_ACTIVE: StringName = &"parameters/Land/active"
 const P_AIM: StringName = &"parameters/Aim/blend_amount"
 const P_AIM_PLAYBACK: StringName = &"parameters/AimMachine/playback"
 const P_SHOOT_REQUEST: StringName = &"parameters/Shoot/request"
+const P_IDLE_BREAK_REQUEST: StringName = &"parameters/IdleBreak/request"
+const P_IDLE_BREAK_ACTIVE: StringName = &"parameters/IdleBreak/active"
+const P_IDLE_BREAK_PICK: StringName = &"parameters/IdleBreakPick/transition_request"
+## Variant pools (quick 261118-qi3). _ready filters each to the clips the library has, so a dropped clip vanishes.
+const IDLE_BREAK_CLIPS: Array[StringName] = [&"Idle_B", &"UAL_Idle_Loop"]
+## Reserved pools: library and picker only, no tree node plays them yet (Phase 4 hit and death, Phase 6 interact).
+const HIT_CLIPS: Array[StringName] = [&"Hit_A", &"Hit_B", &"UAL_Hit_Chest", &"UAL_Hit_Head"]
+const DEATH_CLIPS: Array[StringName] = [&"Death_A", &"Death_B", &"UAL_Death01"]
+const INTERACT_CLIPS: Array[StringName] = [&"Interact", &"UAL_Interact"]
+## Actions that cancel an idle break (camera look does not).
+const IDLE_CANCEL_ACTIONS: Array[StringName] = [&"move_forward", &"move_back", &"move_left", &"move_right", &"jump", &"dash", &"aim", &"use_hand", &"interact"]
 ## The AimPoseModifier node, relative to the Mannequin node (the AnimationTree's parent).
 const AIM_MODIFIER_PATH: NodePath = ^"Rig_Medium/Skeleton3D/AimPoseModifier"
 
@@ -75,6 +89,10 @@ var aim_weight: float = 0.0
 ## Weight of the Aim layer in the tree (P_AIM, read-only for others): 1 while aiming and while the Exit clip lowers the
 ## hand, eased at the aim_weight rate. aim_weight is the solver influence, this is the pose layer.
 var layer_weight: float = 0.0
+## The clip of the last idle break and the physics frame it fired on; the frame of the last break cancel (read-only).
+var last_idle_break: StringName = &""
+var last_idle_break_frame: int = -1
+var idle_break_cancel_frame: int = -1
 
 var _playback: AnimationNodeStateMachinePlayback
 ## The spell hand state machine (Enter, Hold, Exit) inside the Aim layer; null when the tree has none.
@@ -83,6 +101,17 @@ var _was_aiming: bool = false
 ## Seconds of the Exit clip still to play after an aim release; the layer stays at weight 1 until it has run out.
 var _exit_left: float = 0.0
 var _exit_length: float = 0.0
+var _picker: VariantPicker
+## Pool name to the clips of that pool the library has.
+var _pools: Dictionary[StringName, Array] = {}
+var _fsm_state: StringName = &""
+var _has_idle_break: bool = false
+var _idle_still: float = 0.0
+## The rolled delay of the next idle break; negative until rolled (rolled on the first still tick, so a live config
+## change applies to the next break).
+var _idle_delay: float = -1.0
+## True from a fade-out request until the OneShot reports inactive (it stays active while it fades).
+var _idle_break_fading: bool = false
 ## The arm-direction solver under the Mannequin skeleton; null when the scene has none (the feed is then off).
 var _aim_modifier: AimPoseModifier
 var _loco_blend: Vector2 = Vector2.ZERO
@@ -109,6 +138,18 @@ func _ready() -> void:
 		_dash_lengths[&"Slide"] = slide_length
 	_aim_machine = animation_tree.get(P_AIM_PLAYBACK) as AnimationNodeStateMachinePlayback
 	_exit_length = _aim_exit_length(clip_player)
+	_picker = VariantPicker.new()
+	var pool_sources: Dictionary[StringName, Array] = {&"idle_break": IDLE_BREAK_CLIPS, &"hit": HIT_CLIPS, &"death": DEATH_CLIPS, &"interact": INTERACT_CLIPS}
+	for pool_name: StringName in pool_sources:
+		var available: Array[StringName] = []
+		for clip: StringName in pool_sources[pool_name]:
+			if clip_player != null and clip_player.has_animation(clip):
+				available.append(clip)
+		_pools[pool_name] = available
+	var root: AnimationNodeBlendTree = animation_tree.tree_root as AnimationNodeBlendTree
+	_has_idle_break = root != null and root.has_node(&"IdleBreak") and root.has_node(&"IdleBreakPick")
+	if state_machine.current != null:
+		_fsm_state = state_machine.current.name
 	var mannequin: Node = animation_tree.get_parent()
 	if mannequin != null:
 		_aim_modifier = mannequin.get_node_or_null(AIM_MODIFIER_PATH) as AimPoseModifier
@@ -154,6 +195,7 @@ func _physics_process(delta: float) -> void:
 	_update_aim_edge(delta)
 	if Input.is_action_just_pressed(&"use_hand"):
 		play_hand_shot()
+	_update_idle_break(delta)
 	if slide_holding:
 		_slide_hold_left -= delta
 		if _slide_hold_left <= 0.0:
@@ -231,6 +273,8 @@ func _feed_aim_modifier() -> void:
 
 
 func _on_state_changed(from_state: StringName, to_state: StringName) -> void:
+	_fsm_state = to_state
+	_cancel_idle_break()
 	var node: StringName = STATE_TO_ANIM.get(to_state, &"Locomotion")
 	if node == &"Dash":
 		var slide: bool = _dash_state != null and bool(_dash_state.get(&"slide"))
@@ -331,3 +375,74 @@ func clip_scale() -> float:
 	elif last_travel == &"Locomotion":
 		result = clampf(player.horizontal_speed() / maxf(config.run_anim_ref_speed, 0.001), 1.0, maxf(config.run_anim_max_scale, 1.0))
 	return result if is_finite(result) else 1.0
+
+
+## The idle break clips this animator can play (the pool filtered to the library).
+func idle_break_pool() -> Array[StringName]:
+	var result: Array[StringName] = []
+	result.assign(_pools.get(&"idle_break", []))
+	return result
+
+
+## A clip of the reserved reaction pool `kind` (&"hit", &"death", &"interact"), random without an immediate repeat;
+## &"" for an unknown kind or an empty pool. No tree node plays these yet: Phase 4 and 6 add the states.
+func pick_reaction(kind: StringName) -> StringName:
+	if kind == &"idle_break" or not _pools.has(kind):
+		return &""
+	var options: Array[StringName] = []
+	options.assign(_pools[kind])
+	return _picker.pick(kind, options)
+
+
+## Counts still time in Idle and fires an idle break at the rolled delay. Not counting while a break plays; any action,
+## aim or a non-Idle state cancels on this same call.
+func _update_idle_break(delta: float) -> void:
+	if not _has_idle_break:
+		return
+	if _idle_break_fading and not bool(animation_tree.get(P_IDLE_BREAK_ACTIVE)):
+		_idle_break_fading = false
+	var pool: Array[StringName] = idle_break_pool()
+	if pool.is_empty():
+		return
+	if _fsm_state != &"Idle" or player.aiming or _cancel_action_pressed():
+		_cancel_idle_break()
+		return
+	if _idle_break_running():
+		return
+	if _idle_delay < 0.0:
+		_idle_delay = _picker.delay(player.config.idle_break_delay_min, player.config.idle_break_delay_max)
+	_idle_still += delta
+	if _idle_still < _idle_delay:
+		return
+	var clip: StringName = _picker.pick(&"idle_break", pool)
+	animation_tree.set(P_IDLE_BREAK_PICK, String(clip))
+	animation_tree.set(P_IDLE_BREAK_REQUEST, AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+	_idle_break_fading = false
+	last_idle_break = clip
+	last_idle_break_frame = Engine.get_physics_frames()
+	_idle_still = 0.0
+	_idle_delay = -1.0
+
+
+## Resets the still count and fades a running or requested break out.
+func _cancel_idle_break() -> void:
+	_idle_still = 0.0
+	_idle_delay = -1.0
+	if _has_idle_break and _idle_break_running():
+		animation_tree.set(P_IDLE_BREAK_REQUEST, AnimationNodeOneShot.ONE_SHOT_REQUEST_FADE_OUT)
+		_idle_break_fading = true
+		idle_break_cancel_frame = Engine.get_physics_frames()
+
+
+## True while the IdleBreak OneShot plays or a fire request is pending (not while it already fades out).
+func _idle_break_running() -> bool:
+	if int(animation_tree.get(P_IDLE_BREAK_REQUEST)) == AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE:
+		return true
+	return not _idle_break_fading and bool(animation_tree.get(P_IDLE_BREAK_ACTIVE))
+
+
+func _cancel_action_pressed() -> bool:
+	for action: StringName in IDLE_CANCEL_ACTIONS:
+		if Input.is_action_pressed(action):
+			return true
+	return false

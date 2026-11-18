@@ -2,6 +2,7 @@ extends SceneTree
 ## Editor-time tool: builds the Mannequin AnimationTree root (an AnimationNodeBlendTree) and saves it as a text .tres.
 ## Run: bash attimo/tests/run.sh --tool res://tools/build_mannequin_tree.gd
 ## Layout: StateMachine (Locomotion BlendSpace2D, Jump, Fall, Dash, DashLeft, DashRight, DashBack, Slide) -> TimeScale ->
+## IdleBreak (OneShot, input 1 = IdleBreakPick, a Transition over the idle break clips) ->
 ## Land (OneShot, input 1 = LandClip) -> Aim (Blend2 with an upper-body bone filter, input 1 = Shoot) -> output.
 ## Shoot is a OneShot: input 0 = AimMachine (Enter, Hold, Exit of the UAL Spell hand clips), input 1 = ShootClip.
 ## There is no Land state: landing is an overlay that a move input fades out (D-08, no landing lock).
@@ -30,6 +31,11 @@ const AIM_HOLD_START: float = 0.6
 const AIM_HOLD_LENGTH: float = 0.4
 const AIM_EXIT_FALLBACK_LENGTH: float = 0.1
 const SHOOT_FADE_IN: float = 0.05
+## Idle breaks (quick 261118-qi3): a OneShot over the whole body while the figure stands in Idle. The animator picks the
+## clip through IdleBreakPick (inputs named after the clips) and fades the break out on any action.
+const IDLE_BREAK_CLIPS: Array[StringName] = [&"Idle_B", &"UAL_Idle_Loop"]
+const IDLE_BREAK_FADE_IN: float = 0.2
+const IDLE_BREAK_FADE_OUT: float = 0.1
 const SHOOT_FADE_OUT: float = 0.1
 ## UAL clip (library key UAL_<clip>) to the KayKit clip its node plays when the library lacks the UAL clip (dropped by the
 ## bone-sanity gate, tools/build_animation_library.gd UAL_DROPPED). The tool prints every fallback it used.
@@ -84,6 +90,19 @@ func _initialize() -> void:
 	var tree: AnimationNodeBlendTree = AnimationNodeBlendTree.new()
 	tree.add_node(&"StateMachine", machine, Vector2(0, 0))
 	tree.add_node(&"TimeScale", AnimationNodeTimeScale.new(), Vector2(260, 0))
+	var idle_break: AnimationNodeOneShot = AnimationNodeOneShot.new()
+	idle_break.fadein_time = IDLE_BREAK_FADE_IN
+	idle_break.fadeout_time = IDLE_BREAK_FADE_OUT
+	tree.add_node(&"IdleBreak", idle_break, Vector2(390, 0))
+	var break_clips: Array[StringName] = _idle_break_clips()
+	var pick: AnimationNodeTransition = AnimationNodeTransition.new()
+	pick.xfade_time = 0.0
+	pick.input_count = break_clips.size()
+	for i: int in break_clips.size():
+		pick.set_input_name(i, String(break_clips[i]))
+	tree.add_node(&"IdleBreakPick", pick, Vector2(390, 160))
+	for i: int in break_clips.size():
+		tree.add_node(StringName("IdleBreak_%s" % break_clips[i]), _single_cycle(break_clips[i]), Vector2(130, 160 + 120 * i))
 	var land: AnimationNodeOneShot = AnimationNodeOneShot.new()
 	land.fadein_time = LAND_FADE_IN
 	land.fadeout_time = LAND_FADE_OUT
@@ -111,7 +130,11 @@ func _initialize() -> void:
 
 	# connect_node(input_node, input_index, output_node): the node named first receives the output of the last.
 	tree.connect_node(&"TimeScale", 0, &"StateMachine")
-	tree.connect_node(&"Land", 0, &"TimeScale")
+	tree.connect_node(&"IdleBreak", 0, &"TimeScale")
+	tree.connect_node(&"IdleBreak", 1, &"IdleBreakPick")
+	for i: int in break_clips.size():
+		tree.connect_node(&"IdleBreakPick", i, StringName("IdleBreak_%s" % break_clips[i]))
+	tree.connect_node(&"Land", 0, &"IdleBreak")
 	tree.connect_node(&"Land", 1, &"LandClip")
 	tree.connect_node(&"Aim", 0, &"Land")
 	tree.connect_node(&"Shoot", 0, &"AimMachine")
@@ -162,6 +185,28 @@ func _spell_clip(ual_clip: StringName, fallback_start: float, fallback_length: f
 	node.timeline_length = fallback_length
 	node.stretch_time_scale = false
 	node.loop_mode = Animation.LOOP_LINEAR if loop else Animation.LOOP_NONE
+	return node
+
+
+## The idle break clips the library has (a dropped UAL clip leaves only the KayKit ones).
+func _idle_break_clips() -> Array[StringName]:
+	var result: Array[StringName] = []
+	for clip: StringName in IDLE_BREAK_CLIPS:
+		if _library.has_animation(clip):
+			result.append(clip)
+		else:
+			print("TREE: idle break %s missing, skipped" % clip)
+	return result
+
+
+## A node that plays `clip_name` exactly once, also when the clip loops (a loop plays one cycle as a break).
+func _single_cycle(clip_name: StringName) -> AnimationNodeAnimation:
+	var node: AnimationNodeAnimation = _clip(clip_name)
+	node.use_custom_timeline = true
+	node.start_offset = 0.0
+	node.timeline_length = _library.get_animation(clip_name).length
+	node.stretch_time_scale = false
+	node.loop_mode = Animation.LOOP_NONE
 	return node
 
 

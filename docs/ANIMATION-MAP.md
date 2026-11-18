@@ -15,6 +15,7 @@ Which movement verb is shown by which Mannequin clip. Guarded by `attimo/tests/s
 | Verb | FSM state | Animation node(s) | Clip(s) | Composition notes |
 |---|---|---|---|---|
 | Idle | `Idle` | `Locomotion` (BlendSpace2D, idle point) | `Idle_A` | Blend position (0, 0). |
+| Idle break | `Idle`, standing still, aim not held | `IdleBreak` (AnimationNodeOneShot, fade in 0.2 s, out 0.1 s) over the whole body, clip chosen by `IdleBreakPick` (AnimationNodeTransition) | `Idle_B`, `UAL_Idle_Loop` (one cycle) | After a random still time between `idle_break_delay_min` and `idle_break_delay_max` (5 to 8 s) a `VariantPicker` picks a clip, never the same one twice in a row. Any gameplay action (`move_*`, `jump`, `dash`, `aim`, `use_hand`, `interact`) and any FSM state change fade it out on that same physics frame; camera look does not. The FSM never waits for it. |
 | Run | `Run` | `Locomotion` (BlendSpace2D, run point) | `Running_A` | Blend position (0, speed / run_speed). The whole state machine is time-scaled by `TimeScale`: speed / `run_anim_ref_speed`, clamped to 1 .. `run_anim_max_scale`. There is one run speed and no sprint. |
 | Jump 1 and Jump 2 | `Jump` (chain stage 1 and 2) | `Jump`, then `Fall`, then the `Land` overlay | `Jump_Start`, `Jump_Idle`, `Jump_Land` | `Jump_Start` is cut from 0.25 s to the crouch bottom (0.35 s timeline), so there is no visible wind-up. The FSM's `Fall` at the apex switches to `Jump_Idle` on the same frame. `Jump_Land` plays as the `Land` overlay. |
 | Jump 3 | `Jump` (chain stage 3, the pirouette jump) | `Jump`, `Fall`, `Land` | `Jump_Start`, `Jump_Idle`, `Jump_Land` | Same clips as Jump 1 and 2 plus the `ProceduralPose` pirouette: one 360 degree turn about the vertical axis on the Mannequin child, finished shortly before touchdown (D-07). DEV-03 aim rule: no pirouette starts when aim is held at takeoff; an aim press or an air dash mid-spin finishes the turn cleanly within `pirouette_finish_time` (0.1 s), no snap. |
@@ -40,9 +41,9 @@ FSM states under `Player/StateMachine`: `Idle`, `Jump`, `LongJump`, `Run`, `Fall
 
 Animation state machine nodes: `Locomotion`, `Jump`, `Fall`, `Dash`, `DashLeft`, `DashRight`, `DashBack`, `Slide`.
 
-Kit clips in use (all in the library): `Idle_A`, `Running_A`, `Running_Strafe_Left`, `Running_Strafe_Right`, `Walking_Backwards`, `Jump_Start`, `Jump_Idle`, `Jump_Land`, `Dodge_Forward`, `Dodge_Left`, `Dodge_Right`, `Dodge_Backward`, `Ranged_1H_Aiming` (the Spell fallback).
+Kit clips in use (all in the library): `Idle_A`, `Idle_B`, `Running_A`, `Running_Strafe_Left`, `Running_Strafe_Right`, `Walking_Backwards`, `Jump_Start`, `Jump_Idle`, `Jump_Land`, `Dodge_Forward`, `Dodge_Left`, `Dodge_Right`, `Dodge_Backward`, `Ranged_1H_Aiming` (the Spell fallback).
 
-Retargeted external clips in the tree (also in the library): `Running_Slide` (dormant `Slide` node).
+Retargeted external clips in the tree (also in the library): `Running_Slide` (dormant `Slide` node), `UAL_Idle_Loop`.
 
 ## External clips
 
