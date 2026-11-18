@@ -39,7 +39,7 @@ extends Node3D
 ## Height of the follow pivot above the target origin in m: slightly above the shoulder joint (1.107 m on the Mannequin),
 ## the point the view centre looks at. Measured 2026-11-18; the plan rule (shoulder + 0.2 m) gives 1.3 m, 1.4 m keeps
 ## the standing character in the lower part of the screen.
-@export var pivot_height: float = 1.4
+@export var pivot_height: float = 1.2
 ## Horizontal follow rate in 1/s (exponential damping). Softened 2026-11-18 (developer: the hard lock felt odd).
 @export var follow_rate: float = 16.0
 ## Vertical follow rate in 1/s (exponential damping of the vertical lock, max_vertical_lag clamps what is left).

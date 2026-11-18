@@ -108,7 +108,7 @@ func _scenario_direction(tree: SceneTree, check: Callable) -> void:
 # the camera forward by the parallax and the solver still reaches it.
 func _scenario_wiring(tree: SceneTree, check: Callable) -> void:
 	await _begin(tree)
-	var wall: StaticBody3D = Fixtures.spawn_box(_floor.get_parent(), Vector3(20.0, 10.0, 1.0), Vector3(0.0, 5.0, -6.5))
+	var wall: StaticBody3D = Fixtures.spawn_box(_floor.get_parent(), Vector3(20.0, 10.0, 1.0), Vector3(0.0, 5.0, -4.0))
 	await Fixtures.wait_physics(tree, 2)
 	var modifier: AimPoseModifier = _player.get_node(MODIFIER_PATH) as AimPoseModifier
 	check.call(modifier != null, "(t5) the AimPoseModifier exists under the Mannequin skeleton")
