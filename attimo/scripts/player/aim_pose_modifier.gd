@@ -2,9 +2,9 @@ class_name AimPoseModifier
 extends SkeletonModifier3D
 ## Arm-direction solver for aim mode (D-11, CAM-02): after the AnimationMixer has posed the skeleton, rotates the
 ## spine, the chest and (for any remainder) the right upper arm so the shoulder-to-hand direction points at the aim
-## point. The aim point is set from outside (MannequinAnimator: camera origin + camera forward * converge_distance,
-## which accounts for the shoulder-to-crosshair parallax; Phase 4 can replace it with a ray hit through
-## set_aim_point). The Skeleton3D blends the result by `influence`, which the animator sets to the aim weight, so the
+## point. The aim point is set from outside (MannequinAnimator feeds CameraRig.aim_target_point(), the world point under
+## the screen-centre crosshair; converge_distance is only the fallback without a rig, camera origin + camera forward *
+## converge_distance). The arm aims from the shoulder, so the parallax to the camera is corrected. The Skeleton3D blends the result by `influence`, which the animator sets to the aim weight, so the
 ## correction fades in and out with the aim layer and the clip pose is untouched at influence 0.
 ##
 ## The torso (spine share first, chest second, together at most max_twist_deg) takes the correction; whatever is left
@@ -37,6 +37,11 @@ var last_target_dir: Vector3 = Vector3(0.0, 0.0, 1.0)
 
 var _aim_point: Vector3 = Vector3.ZERO
 var _has_aim_point: bool = false
+
+
+## The last world-space point received through set_aim_point (read-only for the wiring check).
+func aim_point() -> Vector3:
+	return _aim_point
 
 
 ## Sets the world-space point the right arm points at.

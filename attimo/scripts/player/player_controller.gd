@@ -161,6 +161,15 @@ func teleport(new_position: Vector3) -> void:
 	reset_physics_interpolation()
 
 
+## The CameraRig of the viewport's current camera, or null without one. The lookup for the hand and the Phase 4 beam:
+## rig.aim_target_point() is the world point under the crosshair.
+func camera_rig() -> CameraRig:
+	var camera: Camera3D = get_viewport().get_camera_3d()
+	if camera == null:
+		return null
+	return _find_rig(camera)
+
+
 ## The nearest CameraRig above `node`, or null.
 func _find_rig(node: Node) -> CameraRig:
 	var current: Node = node.get_parent()

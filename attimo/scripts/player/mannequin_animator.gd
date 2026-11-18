@@ -129,13 +129,19 @@ func _process(delta: float) -> void:
 	_feed_aim_modifier()
 
 
-## Fades the arm solver with the aim weight and points it at the camera convergence point (D-11). The camera origin
-## plus forward times the distance accounts for the shoulder-to-crosshair parallax.
+## Fades the arm solver with the aim weight and points it at the crosshair target point (D-11): the world point under
+## the screen centre (CameraRig.aim_target_point()). The solver aims from the shoulder, so the hand lies on the
+## shoulder-to-point line and the camera-to-character parallax is corrected. Without a rig the fallback is the camera
+## origin plus forward times converge_distance.
 func _feed_aim_modifier() -> void:
 	if _aim_modifier == null:
 		return
 	_aim_modifier.influence = aim_weight
 	if aim_weight <= 0.0:
+		return
+	var rig: CameraRig = player.camera_rig()
+	if rig != null:
+		_aim_modifier.set_aim_point(rig.aim_target_point())
 		return
 	var camera: Camera3D = get_viewport().get_camera_3d()
 	if camera != null:

@@ -23,6 +23,12 @@ extends Node3D
 ## turns by more than steer_rebase_angle. Mouse look changes yaw only, so it turns the steering with it.
 ## Straight runs (e about 0) and runs toward the camera (|e| above auto_follow_max_angle) are left alone.
 ##
+## Aim target (quick 261118-qbt): aim_target_point() is the world point under the screen-centre crosshair. A perspective
+## Camera3D without h/v offset has its centre ray at the camera position along the camera -Z, so no viewport query is
+## needed. The ray starts level with the character (aim_ray_start), so geometry between the lens and the character is
+## never the target, hits crosshair_ray_mask and falls back to the point at crosshair_ray_length. The arm solver
+## (AimPoseModifier through MannequinAnimator) and the Phase 4 beam read it (aim_direction_from).
+##
 ## Auto-follow mode (A41, CameraSettings.auto_follow_mode): "on" always follows, "off" never, "auto" only while
 ## the last input event came from a joypad. `_input` records the device and never consumes the event.
 
@@ -88,6 +94,14 @@ enum InputDevice { KEYBOARD_MOUSE, JOYPAD }
 @export_range(0.1, 1.5, 0.05) var aim_sensitivity_factor: float = 0.8
 @export_group("")
 
+@export_group("Crosshair ray")
+## Length in m of the ray from the camera through the screen-centre crosshair; the end point is the aim target when
+## nothing is hit.
+@export var crosshair_ray_length: float = 100.0
+## Physics layers the crosshair ray hits: World now, Phase 4 may add the Interactable and Enemy bits.
+@export_flags_3d_physics var crosshair_ray_mask: int = PhysicsLayers.WORLD
+@export_group("")
+
 ## Yaw in rad, rotation about Y.
 var yaw: float = 0.0
 ## Pitch in rad, rotation about X (negative lifts the camera above the target).
@@ -97,6 +111,13 @@ var pitch: float = -0.22
 var time_since_look: float = 0.0
 ## The device family of the last input event (A41).
 var last_input_device: InputDevice = InputDevice.KEYBOARD_MOUSE
+
+## Whether the last aim_target_point() query hit something (false: the point is the ray end). Read-only for others.
+var last_aim_hit: bool = false
+## The collider of the last hit, null without a hit.
+var last_aim_collider: Object = null
+## The point the last aim_target_point() query returned.
+var last_aim_point: Vector3 = Vector3.ZERO
 
 ## Eased aim blend, 0 (no aim) to 1 (full aim). Read-only for other code; driven by EventBus.aim_changed.
 var aim_weight: float = 0.0
@@ -248,6 +269,44 @@ func _on_aim_changed(active: bool) -> void:
 	if active:
 		_auto_offset = 0.0
 		_recentering = false
+
+
+## Where the crosshair ray starts: the camera `origin` pushed along `forward` to the plane through `pivot` (level with
+## the character), never behind the lens. A pivot behind the lens gives `origin`.
+static func aim_ray_start(origin: Vector3, forward: Vector3, pivot: Vector3) -> Vector3:
+	return origin + forward * maxf((pivot - origin).dot(forward), 0.0)
+
+
+## The world point under the screen-centre crosshair: the first hit of the centre ray on crosshair_ray_mask, else the ray
+## end (camera position + camera forward * crosshair_ray_length). Updates last_aim_hit, last_aim_collider and
+## last_aim_point. Queries the physics space on demand, one ray per call.
+func aim_target_point() -> Vector3:
+	var origin: Vector3 = camera.global_position
+	var forward: Vector3 = -camera.global_basis.z.normalized()
+	var end: Vector3 = origin + forward * crosshair_ray_length
+	var point: Vector3 = end
+	last_aim_hit = false
+	last_aim_collider = null
+	if is_inside_tree():
+		var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(aim_ray_start(origin, forward, global_position), end, crosshair_ray_mask)
+		var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
+		if not hit.is_empty() and (hit["position"] as Vector3).is_finite():
+			point = hit["position"] as Vector3
+			last_aim_hit = true
+			last_aim_collider = hit["collider"] as Object
+	if not point.is_finite():
+		point = end
+	last_aim_point = point
+	return point
+
+
+## Unit direction from `origin` (the hand, the shoulder) to the aim target point; the camera forward when the target is
+## closer than 1 mm. The Phase 4 beam fires along this from the hand.
+func aim_direction_from(origin: Vector3) -> Vector3:
+	var offset: Vector3 = aim_target_point() - origin
+	if offset.length() < 0.001:
+		return -camera.global_basis.z.normalized()
+	return offset.normalized()
 
 
 ## The World mask the arm casts against. The SpringArm3D node's own mask is 0 because the rig casts.
