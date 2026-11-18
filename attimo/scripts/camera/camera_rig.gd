@@ -7,6 +7,13 @@ extends Node3D
 ## any tick rate. FOV and arm-origin offsets are additive per-source channels (D-18): later phases
 ## (aim, camera kick) register a source by name and the rig sums them.
 ##
+## Framing (quick 261118-qbt, DEV-05): the view is centered behind the character and looks at a pivot slightly above the
+## shoulders, 3.6 m out, so the standing character reads in the lower part of the screen. The follow is tight and the rig
+## locks onto the player: after the exponential damping the rig is clamped to max_follow_lag horizontally and
+## max_vertical_lag vertically from the anchor, so running, dashing, jumping and long jumping never let the character
+## drift out of frame. This replaces the Phase 2 D-15 airborne hold band ("no fixed hard lock") at the developer request
+## of 2026-11-18; the damping still smooths the small lags below the clamps.
+##
 ## Auto-follow (D-16) converges instead of circling (A40). Movement input is camera-relative, so a camera that
 ## rotated with a held A/D key would rotate the key's world direction too and never settle. The follow term is
 ## therefore the angle e from camera forward to the player's heading, and steering_yaw() (read by
@@ -23,25 +30,28 @@ extends Node3D
 @export var target: Node3D
 ## Tests set this to false: a headless run cannot capture the mouse.
 @export var require_mouse_capture: bool = true
-## Height of the follow pivot above the target origin in m.
-@export var pivot_height: float = 1.6
-## Horizontal follow rate in 1/s (exponential damping).
-@export var follow_rate: float = 14.0
-## Vertical follow rate in 1/s (slower, so jumps do not bob the camera).
-@export var vertical_follow_rate: float = 6.0
+## Height of the follow pivot above the target origin in m: slightly above the shoulder joint (1.107 m on the Mannequin),
+## the point the view centre looks at. Measured 2026-11-18; the plan rule (shoulder + 0.2 m) gives 1.3 m, 1.4 m keeps
+## the standing character in the lower part of the screen.
+@export var pivot_height: float = 1.4
+## Horizontal follow rate in 1/s (exponential damping). Tight, so the lag stays small at run speed (0.39 m at 8.5 m/s).
+@export var follow_rate: float = 22.0
+## Vertical follow rate in 1/s (exponential damping of the vertical lock, max_vertical_lag clamps what is left).
+@export var vertical_follow_rate: float = 12.0
+## Most the rig may trail the anchor horizontally in m (dashes and long jumps run at 14-22 m/s). Inactive at run speed.
+@export var max_follow_lag: float = 0.6
+## Most the rig may differ from the anchor height in m, so a jump keeps head and feet inside the vertical view.
+@export var max_vertical_lag: float = 0.35
 ## Radians of rotation per pixel of mouse motion (no delta scaling, no smoothing).
 @export var base_sensitivity: float = 0.0022
 ## Lowest pitch in rad (negative looks down from above).
 @export var pitch_min: float = -1.2
-## Highest pitch in rad.
-@export var pitch_max: float = 0.6
+## Highest pitch in rad (looking up at high platforms).
+@export var pitch_max: float = 0.75
 ## Field of view in degrees with no FOV source registered.
-@export var base_fov: float = 75.0
+@export var base_fov: float = 78.0
 ## Rate in 1/s at which the arm lengthens again after a wall pull-in. Pulling in is instant.
 @export var arm_extend_rate: float = 8.0
-## Airborne vertical band in m (D-15): the camera holds the last grounded height until the target
-## rises more than this above it.
-@export var air_rise_band: float = 2.5
 
 ## Player camera settings (sensitivity, invert-Y, auto-follow mode). Loaded from user://settings.cfg in _ready.
 var settings: CameraSettings
@@ -81,7 +91,7 @@ enum InputDevice { KEYBOARD_MOUSE, JOYPAD }
 ## Yaw in rad, rotation about Y.
 var yaw: float = 0.0
 ## Pitch in rad, rotation about X (negative lifts the camera above the target).
-var pitch: float = -0.3
+var pitch: float = -0.22
 
 ## Seconds since the last look input (mouse motion; gamepad stick in Phase 13).
 var time_since_look: float = 0.0
@@ -114,12 +124,10 @@ var _last_target_origin: Vector3 = Vector3.ZERO
 var _fov_sources: Dictionary[StringName, float] = {}
 ## Arm origin contributions in Pitch-local space by source name.
 var _offset_sources: Dictionary[StringName, Vector3] = {}
-## Anchor height (target origin y + pivot_height) at the last grounded moment.
-var _grounded_height: float = 0.0
 ## Longest arm in m, the SpringArm3D spring_length of the scene.
-var _max_arm_length: float = 5.0
+var _max_arm_length: float = 3.6
 ## Arm length in m after the last wall cast.
-var _arm_length: float = 5.0
+var _arm_length: float = 3.6
 ## World mask the arm casts against. The SpringArm3D node's own mask is zeroed (see _ready).
 var _arm_mask: int = 0
 var _arm_query: PhysicsShapeQueryParameters3D
@@ -201,7 +209,14 @@ func _process(delta: float) -> void:
 	var current: Vector3 = global_position
 	current.x = lerpf(current.x, anchor.x, horizontal_weight)
 	current.z = lerpf(current.z, anchor.z, horizontal_weight)
-	current.y = lerpf(current.y, _vertical_goal(anchor.y), vertical_weight)
+	current.y = lerpf(current.y, anchor.y, vertical_weight)
+	# The lock: whatever the damping leaves is clamped, so the player stays framed through dashes and jumps.
+	var lag: Vector2 = Vector2(current.x - anchor.x, current.z - anchor.z)
+	if lag.length() > max_follow_lag:
+		lag = lag.normalized() * max_follow_lag
+		current.x = anchor.x + lag.x
+		current.z = anchor.z + lag.y
+	current.y = clampf(current.y, anchor.y - max_vertical_lag, anchor.y + max_vertical_lag)
 	global_position = current
 	pitch = clampf(pitch, pitch_min, pitch_max)
 	rotation.y = yaw
@@ -262,27 +277,6 @@ func _update_arm(delta: float) -> void:
 	camera.position = Vector3(0.0, 0.0, _arm_length)
 
 
-## The height the rig approaches (D-15). Grounded: the target itself. Airborne: the last grounded height,
-## unless the target rose more than air_rise_band above it (then it trails by the band) or fell below it
-## (then falls are followed).
-func _vertical_goal(anchor_y: float) -> float:
-	if _target_grounded():
-		_grounded_height = anchor_y
-		return anchor_y
-	if anchor_y - _grounded_height > air_rise_band:
-		return anchor_y - air_rise_band
-	if anchor_y < _grounded_height:
-		return anchor_y
-	return _grounded_height
-
-
-## Targets without is_grounded() count as always grounded.
-func _target_grounded() -> bool:
-	if not target.has_method(&"is_grounded"):
-		return true
-	return bool(target.call(&"is_grounded"))
-
-
 ## Replaces the camera settings (the F2 panel and tests call this). null falls back to defaults.
 func apply_settings(new_settings: CameraSettings) -> void:
 	settings = new_settings if new_settings != null else CameraSettings.new()
@@ -292,7 +286,6 @@ func apply_settings(new_settings: CameraSettings) -> void:
 func snap_to_target() -> void:
 	if target != null:
 		global_position = target.get_global_transform_interpolated().origin + Vector3.UP * pivot_height
-		_grounded_height = global_position.y
 		_last_target_origin = target.get_global_transform_interpolated().origin
 	rotation.y = yaw
 	if pitch_node != null:
