@@ -5,6 +5,8 @@ extends RefCounted
 ## Player runs camera-relative, jumps for real and dashes from Input Map actions while the facts reach the event log.
 
 const Fixtures := preload("res://tests/fixtures.gd")
+## The animation node of the unaimed ground dash: Slide only while Dash.SLIDE_PRESENTATION is on (off since 2026-11-18).
+const UNAIMED_DASH: StringName = &"Slide" if preload("res://scripts/player/states/dash.gd").SLIDE_PRESENTATION else &"Dash"
 
 const TEST_SCENE: String = "res://scenes/test/test_scene.tscn"
 const PROTO_PREFIX: String = "res://scenes/proto/"
@@ -189,8 +191,8 @@ func _play_through(tree: SceneTree, scene: Node, player: PlayerController, check
 
 	# Dash: the tree travels to Slide (unaimed ground dash) within 3 frames and one dash_started is recorded.
 	await Fixtures.tap_action(tree, &"dash")
-	var reached_dash: int = await Fixtures.wait_until(tree, func() -> bool: return playback.get_current_node() == &"Slide", TREE_TRAVEL_TICKS)
-	check.call(reached_dash >= 0, "dash: tree travels to Slide (unaimed ground dash, DEV-04) within %d ticks (got %s)" % [TREE_TRAVEL_TICKS, playback.get_current_node()])
+	var reached_dash: int = await Fixtures.wait_until(tree, func() -> bool: return playback.get_current_node() == UNAIMED_DASH, TREE_TRAVEL_TICKS)
+	check.call(reached_dash >= 0, "dash: tree travels to the unaimed ground dash node within %d ticks (got %s)" % [TREE_TRAVEL_TICKS, playback.get_current_node()])
 	check.call(_dashes.size() == 1, "dash: exactly one dash_started (got %d)" % _dashes.size())
 	await Fixtures.wait_physics(tree, 40)
 

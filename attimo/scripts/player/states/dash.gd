@@ -19,6 +19,11 @@ var in_air: bool = false
 ## never reads it.
 var slide: bool = false
 
+## Off since 2026-11-18 (developer): the Mixamo Running_Slide is a long baseball slide with a hand on the floor and a slow
+## get-up, which does not fit the 0.18 s dash. The unaimed ground dash shows Dodge_Forward with the lean again. The clip,
+## the Slide node and the hold logic stay for a later real slide move; set true to bring the slide back.
+const SLIDE_PRESENTATION: bool = false
+
 var _timer: float = 0.0
 
 
@@ -32,7 +37,7 @@ func enter(_previous: StringName) -> void:
 	# A dodge snaps its facing instead of turning toward it.
 	actor.face_now(direction)
 	in_air = not actor.is_grounded()
-	slide = not in_air and not actor.aiming
+	slide = SLIDE_PRESENTATION and not in_air and not actor.aiming
 	actor.start_dash(direction, in_air)
 	if not in_air:
 		actor.on_ground_dash_started()

@@ -8,6 +8,8 @@ extends RefCounted
 ## animation time run the tree in manual mode and advance it once per physics frame).
 
 const Fixtures := preload("res://tests/fixtures.gd")
+## The animation node of the unaimed ground dash: Slide only while Dash.SLIDE_PRESENTATION is on (off since 2026-11-18).
+const UNAIMED_DASH: StringName = &"Slide" if preload("res://scripts/player/states/dash.gd").SLIDE_PRESENTATION else &"Dash"
 const SHIPPED_TPS: int = 60
 const LIBRARY_PATH: String = "res://assets/animations/rig_medium/rig_medium_library.res"
 const TREE_PATH: String = "res://scenes/player/mannequin_tree.tres"
@@ -62,10 +64,10 @@ func _scenario_same_frame(tree: SceneTree, check: Callable) -> void:
 	var dash_call: int = _find(&"Run", &"Dash")
 	check.call(dash_call >= 0, "(2) Run -> Dash was recorded (calls %s)" % [_names()])
 	if dash_call >= 0:
-		_check_same_frame(check, "(2) Run -> Dash", _calls[dash_call], &"Slide")
+		_check_same_frame(check, "(2) Run -> Dash", _calls[dash_call], UNAIMED_DASH)
 		await Fixtures.wait_process(tree, 2)
 		var dash_node: StringName = Fixtures.playback(_player).get_current_node()
-		check.call(dash_node == &"Slide", "(2) the visible node follows Slide (the unaimed ground dash, DEV-04) within 2 process frames (got %s)" % dash_node)
+		check.call(dash_node == UNAIMED_DASH, "(2) the visible node follows the unaimed ground dash node within 2 process frames (got %s)" % dash_node)
 	await _end(tree)
 
 

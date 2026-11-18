@@ -9,6 +9,8 @@ extends RefCounted
 ## released and the tick rate stays at 60 before nodes are freed.
 
 const Fixtures := preload("res://tests/fixtures.gd")
+## The animation node of the unaimed ground dash: Slide only while Dash.SLIDE_PRESENTATION is on (off since 2026-11-18).
+const UNAIMED_DASH: StringName = &"Slide" if preload("res://scripts/player/states/dash.gd").SLIDE_PRESENTATION else &"Dash"
 const TPS: int = 60
 const LEAN_TOLERANCE_DEG: float = 1.0
 const PIVOT_TOLERANCE: float = 0.001
@@ -88,7 +90,8 @@ func _scenario_rest_and_dash_lean(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.tap_action(tree, &"dash")
 	var slide_in_dash: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Dash", 6)
 	check.call(slide_in_dash >= 0, "(p2) the dash press enters Dash (got %s)" % player.state_machine.current.name)
-	check.call(bool(player.state_machine.current.get(&"slide")), "(p2) an unaimed ground dash is marked slide")
+	var is_slide: bool = UNAIMED_DASH == &"Slide"
+	check.call(bool(player.state_machine.current.get(&"slide")) == is_slide, "(p2) an unaimed ground dash is marked slide only while the slide presentation is on")
 	var slide_lean: float = 0.0
 	var slide_identity: bool = true
 	var slide_ticks: int = 0
@@ -98,7 +101,10 @@ func _scenario_rest_and_dash_lean(tree: SceneTree, check: Callable) -> void:
 		await tree.physics_frame
 		slide_ticks += 1
 	check.call(slide_ticks > 3, "(p2) the slide dash ran (%d ticks)" % slide_ticks)
-	check.call(slide_lean == 0.0 and slide_identity, "(p2) the unaimed ground dash keeps the lean at 0 and the Mannequin transform identity (biggest lean %.2f deg)" % rad_to_deg(slide_lean))
+	if is_slide:
+		check.call(slide_lean == 0.0 and slide_identity, "(p2) the unaimed ground dash keeps the lean at 0 and the Mannequin transform identity (biggest lean %.2f deg)" % rad_to_deg(slide_lean))
+	else:
+		check.call(rad_to_deg(slide_lean) > config.dash_lean_deg * 0.5, "(p2) the unaimed ground dash leans forward (D-01, biggest lean %.2f deg)" % rad_to_deg(slide_lean))
 	await _end(player)
 
 	# The aimed ground dash keeps the D-01 lean, scaled by aim_lean_scale.
@@ -267,7 +273,7 @@ func _scenario_hop_upright(tree: SceneTree, check: Callable, aimed: bool) -> voi
 	var config: MovementConfig = player.config
 	var pose: ProceduralPose = _pose(player)
 	var tag: String = "(s1a)" if aimed else "(s1)"
-	var lean_cap_deg: float = config.dash_lean_deg * (config.aim_lean_scale if aimed else 0.0)
+	var lean_cap_deg: float = config.dash_lean_deg * (config.aim_lean_scale if aimed else (0.0 if UNAIMED_DASH == &"Slide" else 1.0))
 	if aimed:
 		Input.action_press(&"aim")
 		await Fixtures.wait_physics(tree, 12)
@@ -283,7 +289,7 @@ func _scenario_hop_upright(tree: SceneTree, check: Callable, aimed: bool) -> voi
 	check.call(entry >= 0, tag + " the dash plus jump became a long jump")
 	var peak: float = _max_of(rows, "lean")
 	check.call(rad_to_deg(peak) <= lean_cap_deg + LEAN_TOLERANCE_DEG, tag + " the lean never exceeds %.1f deg (peak %.2f deg)" % [lean_cap_deg, rad_to_deg(peak)])
-	if not aimed:
+	if not aimed and UNAIMED_DASH == &"Slide":
 		check.call(peak == 0.0, tag + " the unaimed dash hop has lean 0 on every row (the slide, DEV-04)")
 	if entry >= 0:
 		var grew: bool = false

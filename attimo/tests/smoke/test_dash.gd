@@ -6,6 +6,8 @@ extends RefCounted
 ## rate is restored to 60 before nodes are freed.
 
 const Fixtures := preload("res://tests/fixtures.gd")
+## The animation node of the unaimed ground dash: Slide only while Dash.SLIDE_PRESENTATION is on (off since 2026-11-18).
+const UNAIMED_DASH: StringName = &"Slide" if preload("res://scripts/player/states/dash.gd").SLIDE_PRESENTATION else &"Dash"
 const TREE_TRAVEL_TICKS: int = 15
 const SLOPE_SCENE: String = "res://scenes/proto/primitive_slope.tscn"
 const SHIPPED_TPS: int = 60
@@ -47,8 +49,8 @@ func _scenario_grounded_run_dash(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.tap_action(tree, &"dash")
 	check.call(player.state_machine.current.name == &"Dash", "(1) dash press enters Dash (got %s)" % player.state_machine.current.name)
 	# The tree follows the FSM after its 0.1 s crossfade, so allow a few ticks (the FSM state is the truth).
-	var reached_dash: int = await Fixtures.wait_until(tree, func() -> bool: return playback.get_current_node() == &"Slide", TREE_TRAVEL_TICKS)
-	check.call(reached_dash >= 0, "(1) tree travels to Slide (the unaimed ground dash, DEV-04) within %d ticks (got %s)" % [TREE_TRAVEL_TICKS, playback.get_current_node()])
+	var reached_dash: int = await Fixtures.wait_until(tree, func() -> bool: return playback.get_current_node() == UNAIMED_DASH, TREE_TRAVEL_TICKS)
+	check.call(reached_dash >= 0, "(1) tree travels to the unaimed ground dash node within %d ticks (got %s)" % [TREE_TRAVEL_TICKS, playback.get_current_node()])
 	check.call(_dashes.size() == 1, "(1) exactly one dash_started (got %d)" % _dashes.size())
 	if _dashes.size() == 1:
 		check.call(_dashes[0][1].dot(Vector3(0, 0, -1)) > 0.95, "(1) direction points to -Z (got %s)" % _dashes[0][1])
