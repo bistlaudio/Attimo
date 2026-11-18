@@ -5,10 +5,10 @@ current_phase: 03
 current_phase_name: Animated Mannequin & Aim Mode
 status: executing
 stopped_at: 03-09 tasks 1-3 done, awaiting developer gym check
-last_updated: "2026-11-18T18:46:09.926Z"
-last_activity: 2026-11-15
+last_updated: "2026-11-18T20:44:55.953Z"
+last_activity: 2026-11-18
 last_activity_desc: Phase 03 execution started
-state_head: 0624af231f8b2454226058c4d2e3c44f5dba1328
+state_head: f051bba9bdc8ba09123fc8a4f4e61ce1922c040c
 progress:
   total_phases: 15
   completed_phases: 2
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 Phase: 03 (Animated Mannequin & Aim Mode) — EXECUTING
 Plan: 10 of 10
 Status: Ready to execute
-Last activity: 2026-11-18 - Completed quick task 261118-qbt: slide animation, camera retune, crosshair aim target
+Last activity: 2026-11-18 - Completed quick task 261118-qi3: animation variations; plus camera zoom, aim torso, dash, tuning and character scale fixes
 
 Progress: [█░░░░░░░░░] 13%
 
@@ -152,6 +152,7 @@ None yet.
 | 261106-erl | Movement rework: no sprint, no air jump, Shift dash, jump chain 1-2-3, dash hop stack, lighter feel | 2026-11-06 | ba79847 | [261106-erl-movement-rework-remove-sprint-and-air-do](./quick/261106-erl-movement-rework-remove-sprint-and-air-do/) |
 | 261118-okz | Remove long-jump stretch lean: dash lean 20 deg then upright on dash hop | 2026-11-18 | 5c00a93 | [261118-okz-remove-long-jump-stretch-lean-dash-lean-](./quick/261118-okz-remove-long-jump-stretch-lean-dash-lean-/) |
 | 261118-qbt | Retargeted Mixamo Running_Slide on the unaimed ground dash (generic Mixamo/UAL retarget pipeline), closer lower-third camera with vertical jump lock, crosshair ray aim target | 2026-11-18 | 0624af2 | [261118-qbt-slide-animation-from-running-slide-fbx-c](./quick/261118-qbt-slide-animation-from-running-slide-fbx-c/) |
+| 261118-qi3 | Animation variations (idle breaks, sprint blend, Jump 2/long jump takes, landing variants, VariantPicker) and UAL clips via retarget gate; Spell clips dropped, aim keeps Ranged_1H_Aiming | 2026-11-18 | f051bba | [261118-qi3-animation-variations-mario-style-and-spe](./quick/261118-qi3-animation-variations-mario-style-and-spe/) |
 
 ## Deferred Items
 
