@@ -8,7 +8,7 @@ extends CanvasLayer
 ## Radius of the centre dot in pixels.
 @export var dot_radius: float = 2.0
 ## Radius of the thin ring in pixels.
-@export var ring_radius: float = 14.0
+@export var ring_radius: float = 8.0
 ## Line width of the ring in pixels.
 @export var ring_width: float = 1.5
 ## Normal colour (cream, the UI accent colour).
