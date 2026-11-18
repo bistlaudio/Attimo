@@ -1,7 +1,7 @@
 extends SceneTree
 ## Editor-time tool: builds the Mannequin AnimationTree root (an AnimationNodeBlendTree) and saves it as a text .tres.
 ## Run: bash attimo/tests/run.sh --tool res://tools/build_mannequin_tree.gd
-## Layout: StateMachine (Locomotion BlendSpace2D, Jump, Fall, Dash, DashLeft, DashRight, DashBack) -> TimeScale ->
+## Layout: StateMachine (Locomotion BlendSpace2D, Jump, Fall, Dash, DashLeft, DashRight, DashBack, Slide) -> TimeScale ->
 ## Land (OneShot, input 1 = LandClip) -> Aim (Blend2 with an upper-body bone filter, input 1 = AimClip) -> output.
 ## There is no Land state: landing is an overlay that a move input fades out (D-08, no landing lock).
 
@@ -31,6 +31,16 @@ const JUMP_START_LENGTH: float = 0.35
 const LAND_FADE_IN: float = 0.05
 const LAND_FADE_OUT: float = 0.1
 const LAND_LENGTH: float = 0.3
+
+## Running_Slide (retargeted Mixamo clip, quick 261118-qbt) is a run-in, the drop, a long low slide and a get-up. The node
+## plays only the drop and the start of the low pose. Measured on the baked clip (tools/build_animation_library.gd prints
+## the hips height share of rest per key): the last key with the hips at or above 95 % of rest before the drop is
+## 0.0667 s (1.019); the minimum is 0.300 s (0.480, a drop of 0.54); the first key within 10 % of the drop of the
+## minimum is 0.300 s; plus 0.1 s of the low hold ends the window at 0.400 s (0.596 of rest, below 80 %). The window of
+## 0.3333 s is stretched to dash_time (0.18 s) by the animator, a playback scale of 1.85 (at most 4). Never the run-in
+## steps or the get-up.
+const SLIDE_START: float = 0.0667
+const SLIDE_LENGTH: float = 0.3333
 
 var _used_clips: Array[StringName] = []
 
@@ -113,13 +123,21 @@ func _build_machine() -> AnimationNodeStateMachine:
 	machine.add_node(&"DashLeft", _clip(&"Dodge_Left"), Vector2(40, 320))
 	machine.add_node(&"DashRight", _clip(&"Dodge_Right"), Vector2(300, 320))
 	machine.add_node(&"DashBack", _clip(&"Dodge_Backward"), Vector2(560, 320))
+	# The unaimed ground dash (DEV-04): the animator picks it through Dash.slide.
+	var slide: AnimationNodeAnimation = _clip(&"Running_Slide")
+	slide.use_custom_timeline = true
+	slide.start_offset = SLIDE_START
+	slide.timeline_length = SLIDE_LENGTH
+	slide.stretch_time_scale = false
+	slide.loop_mode = Animation.LOOP_NONE
+	machine.add_node(&"Slide", slide, Vector2(300, 440))
 
 	# AUTO alone fires on the first frame, so the entry edge is the only auto edge. No at-end edge out of Jump:
 	# travel() honours an at-end switch and would hold the jump pose after the FSM already says Fall (A-01-2).
 	machine.add_transition(&"Start", &"Locomotion", _auto_edge())
 
 	# One direct immediate edge per ordered pair (the engine allows only one), so travel() never plays intermediates.
-	var states: Array[StringName] = [&"Locomotion", &"Jump", &"Fall", &"Dash", &"DashLeft", &"DashRight", &"DashBack"]
+	var states: Array[StringName] = [&"Locomotion", &"Jump", &"Fall", &"Dash", &"DashLeft", &"DashRight", &"DashBack", &"Slide"]
 	for from_state: StringName in states:
 		for to_state: StringName in states:
 			if from_state != to_state:

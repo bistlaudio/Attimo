@@ -24,12 +24,14 @@ const P_AIM: StringName = &"parameters/Aim/blend_amount"
 const AIM_MODIFIER_PATH: NodePath = ^"Rig_Medium/Skeleton3D/AimPoseModifier"
 
 ## The dash nodes of the state machine and the Dodge clip each plays; the clip length is stretched to dash_time.
-## Dash is the unaimed (and aimed forward) dash, the others are the aimed dashes (D-12).
+## Dash is the air dash and the aimed forward dash, the others are the aimed dashes (D-12). Slide is the unaimed ground
+## dash (DEV-04): the retargeted Running_Slide, picked through Dash.slide.
 const DASH_CLIPS: Dictionary[StringName, StringName] = {
 	&"Dash": &"Dodge_Forward",
 	&"DashLeft": &"Dodge_Left",
 	&"DashRight": &"Dodge_Right",
 	&"DashBack": &"Dodge_Backward",
+	&"Slide": &"Running_Slide",
 }
 
 const STATE_TO_ANIM: Dictionary[StringName, StringName] = {
@@ -76,10 +78,28 @@ func _ready() -> void:
 		var clip: StringName = DASH_CLIPS[dash_node]
 		if clip_player != null and clip_player.has_animation(clip):
 			_dash_lengths[dash_node] = clip_player.get_animation(clip).length
+	# The Slide node plays a window of its clip, so the playback scale uses the window length.
+	var slide_length: float = _slide_window_length()
+	if slide_length > 0.0:
+		_dash_lengths[&"Slide"] = slide_length
 	var mannequin: Node = animation_tree.get_parent()
 	if mannequin != null:
 		_aim_modifier = mannequin.get_node_or_null(AIM_MODIFIER_PATH) as AimPoseModifier
 	state_machine.state_changed.connect(_on_state_changed)
+
+
+## timeline_length of the tree's Slide node in seconds, 0 when the tree has none.
+func _slide_window_length() -> float:
+	var root: AnimationNodeBlendTree = animation_tree.tree_root as AnimationNodeBlendTree
+	if root == null or not root.has_node(&"StateMachine"):
+		return 0.0
+	var machine: AnimationNodeStateMachine = root.get_node(&"StateMachine") as AnimationNodeStateMachine
+	if machine == null or not machine.has_node(&"Slide"):
+		return 0.0
+	var node: AnimationNodeAnimation = machine.get_node(&"Slide") as AnimationNodeAnimation
+	if node == null or not node.use_custom_timeline:
+		return 0.0
+	return node.timeline_length
 
 
 ## Counts the air-dash hold down and hands over to the Fall loop when it runs out.
@@ -125,7 +145,8 @@ func _feed_aim_modifier() -> void:
 func _on_state_changed(from_state: StringName, to_state: StringName) -> void:
 	var node: StringName = STATE_TO_ANIM.get(to_state, &"Locomotion")
 	if node == &"Dash":
-		node = dash_node_for(player.last_dash_direction)
+		var slide: bool = _dash_state != null and bool(_dash_state.get(&"slide"))
+		node = dash_node_for(player.last_dash_direction, slide)
 	if from_state == &"Dash" and to_state == &"Fall" and _dash_state != null and bool(_dash_state.get(&"in_air")):
 		# Keep the dash node: the Dodge clip plays on and holds its last frame (DEV-02).
 		air_dash_holding = true
@@ -185,10 +206,12 @@ func _locomotion_target() -> Vector2:
 	return Vector2(clampf(target.x, -1.0, 1.0), clampf(target.y, -1.0, 1.0))
 
 
-## The dash node for a dash in world-space `direction` (D-12). Outside aim, and for a near-zero direction, every dash
-## is Dash (Dodge_Forward). While aiming the facing is the camera, so the dominant axis of the direction in the facing
+## The dash node for a dash in world-space `direction` (D-12). `slide` is Dash.slide: the unaimed ground dash is Slide
+## (Running_Slide, DEV-04). Otherwise, outside aim, and for a near-zero direction, every dash is Dash (Dodge_Forward). While aiming the facing is the camera, so the dominant axis of the direction in the facing
 ## frame picks the clip: +Z Dash, -Z DashBack, +X DashLeft (the Mannequin's left is +X), -X DashRight.
-func dash_node_for(direction: Vector3) -> StringName:
+func dash_node_for(direction: Vector3, slide: bool = false) -> StringName:
+	if slide and not player.aiming:
+		return &"Slide"
 	var flat: Vector3 = Vector3(direction.x, 0.0, direction.z)
 	if not player.aiming or flat.length_squared() < 0.0001:
 		return &"Dash"

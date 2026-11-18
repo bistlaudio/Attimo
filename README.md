@@ -57,3 +57,5 @@ Phase work happens on the `dev` branch. Merge into `main` only after the phase h
 ## Credits
 
 Character, animation and prototype geometry packs by Kay Lousberg (KayKit, www.kaylousberg.com), licensed CC0 (Creative Commons Zero). The licence files are inside each pack under `KayKit/`. Crediting is not mandatory but appreciated.
+
+The Running Slide animation comes from Adobe Mixamo (mixamo.com) and is used under the Mixamo terms: it may be embedded in a game, standalone redistribution of the clip is not allowed. The repository therefore carries only the conformed, mesh-free `attimo/assets/animations/external/mixamo/running_slide.scn` (skeleton and clip, retargeted onto the Mannequin at build time), not the raw download. The raw FBX contains the Mixamo "Beta" character mesh; keep it local in `KayKit/Mixamo/` (ignored by git).

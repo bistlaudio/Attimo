@@ -1,13 +1,20 @@
 extends RefCounted
-## FOUND-05: the merged Rig_Medium library holds exactly the six demo clips with correct loop modes,
-## and the clips bind to the Mannequin skeleton without retargeting.
+## FOUND-05: the merged Rig_Medium library holds the KayKit clips plus the retargeted Running_Slide (quick 261118-qbt,
+## DEV-04) with correct loop modes, and every clip binds to the Mannequin skeleton (the kit clips natively, the
+## external clip through tools/clip_retargeter.gd).
 
 const LIBRARY_PATH: String = "res://assets/animations/rig_medium/rig_medium_library.res"
+const ClipRetargeter := preload("res://tools/clip_retargeter.gd")
 const MANNEQUIN_GLB: String = "res://assets/characters/mannequin/Mannequin_Medium.glb"
 const LENGTH_TOLERANCE: float = 0.02
 const ROOT_TRACK: NodePath = ^"Rig_Medium/Skeleton3D:root"
 const PINNED_CLIPS: Array[StringName] = [&"Dodge_Forward", &"Dodge_Left", &"Dodge_Right", &"Dodge_Backward"]
 const PIN_TOLERANCE: float = 0.001
+const TREE_PATH: String = "res://scenes/player/mannequin_tree.tres"
+const SLIDE_CLIP: StringName = &"Running_Slide"
+const SLIDE_END_MAX_SHARE: float = 0.8
+const SLIDE_SCALE_MAX: float = 4.0
+const SLIDE_START_MIN_SHARE: float = 0.95
 
 
 func run(_tree: SceneTree, check: Callable) -> void:
@@ -17,7 +24,7 @@ func run(_tree: SceneTree, check: Callable) -> void:
 		return
 
 	var expected: Array[StringName] = [&"Idle_A", &"Running_A", &"Jump_Start", &"Jump_Idle", &"Jump_Land", &"Dodge_Forward", &"Ranged_1H_Aiming",
-		&"Running_Strafe_Left", &"Running_Strafe_Right", &"Walking_Backwards", &"Dodge_Left", &"Dodge_Right", &"Dodge_Backward"]
+		&"Running_Strafe_Left", &"Running_Strafe_Right", &"Walking_Backwards", &"Dodge_Left", &"Dodge_Right", &"Dodge_Backward", &"Running_Slide"]
 	var names: Array[StringName] = library.get_animation_list()
 	check.call(names.size() == expected.size(), "library holds exactly %d clips (got %d)" % [expected.size(), names.size()])
 	for clip: StringName in expected:
@@ -26,7 +33,7 @@ func run(_tree: SceneTree, check: Callable) -> void:
 
 	for clip: StringName in [&"Idle_A", &"Running_A", &"Jump_Idle", &"Running_Strafe_Left", &"Running_Strafe_Right", &"Walking_Backwards"]:
 		check.call(library.has_animation(clip) and library.get_animation(clip).loop_mode == Animation.LOOP_LINEAR, "%s loops" % clip)
-	for clip: StringName in [&"Jump_Start", &"Jump_Land", &"Dodge_Forward", &"Ranged_1H_Aiming", &"Dodge_Left", &"Dodge_Right", &"Dodge_Backward"]:
+	for clip: StringName in [&"Jump_Start", &"Jump_Land", &"Dodge_Forward", &"Ranged_1H_Aiming", &"Dodge_Left", &"Dodge_Right", &"Dodge_Backward", &"Running_Slide"]:
 		check.call(library.has_animation(clip) and library.get_animation(clip).loop_mode == Animation.LOOP_NONE, "%s does not loop" % clip)
 
 	var lengths: Dictionary[StringName, float] = {
@@ -47,6 +54,15 @@ func run(_tree: SceneTree, check: Callable) -> void:
 				all_bound = false
 		check.call(all_bound, "every Idle_A track path begins with Rig_Medium/Skeleton3D: (no retargeting)")
 
+	if library.has_animation(SLIDE_CLIP):
+		var slide: Animation = library.get_animation(SLIDE_CLIP)
+		var slide_bound: bool = slide.get_track_count() > 0
+		for i: int in slide.get_track_count():
+			if not str(slide.track_get_path(i)).begins_with("Rig_Medium/Skeleton3D:"):
+				slide_bound = false
+		check.call(slide_bound, "every Running_Slide track path begins with Rig_Medium/Skeleton3D: (retargeted onto Rig_Medium)")
+		check.call(absf(slide.length - 1.533) <= LENGTH_TOLERANCE, "Running_Slide length %.3f is 1.533 +- %.2f" % [slide.length, LENGTH_TOLERANCE])
+		_check_slide_window(slide, check)
 	for clip: StringName in PINNED_CLIPS:
 		_check_root_pinned(library, clip, check)
 	_check_strafe_yaw(library, &"Running_Strafe_Right", check)
@@ -64,6 +80,34 @@ func run(_tree: SceneTree, check: Callable) -> void:
 		check.call(skeleton.find_bone("hand.r") != -1, "bone hand.r exists")
 		check.call(skeleton.find_bone("hand.l") != -1, "bone hand.l exists")
 		check.call(skeleton.find_bone("handslot.r") == -1, "handslot.r is absent (use BoneAttachment3D on hand.r)")
+	mannequin.free()
+
+
+## The Slide node of the tree plays a window of Running_Slide that starts at the top of the drop, ends in the low slide
+## pose (hips at most 80 % of rest at the window end) and is stretched to dash_time by at most 4x.
+func _check_slide_window(slide: Animation, check: Callable) -> void:
+	var tree_root: AnimationNodeBlendTree = load(TREE_PATH) as AnimationNodeBlendTree
+	check.call(tree_root != null and tree_root.has_node(&"StateMachine"), "the Mannequin tree loads")
+	if tree_root == null or not tree_root.has_node(&"StateMachine"):
+		return
+	var machine: AnimationNodeStateMachine = tree_root.get_node(&"StateMachine") as AnimationNodeStateMachine
+	check.call(machine.has_node(&"Slide"), "the tree state machine has a Slide node")
+	if not machine.has_node(&"Slide"):
+		return
+	var node: AnimationNodeAnimation = machine.get_node(&"Slide") as AnimationNodeAnimation
+	check.call(node.animation == SLIDE_CLIP and node.use_custom_timeline and node.loop_mode == Animation.LOOP_NONE, "the Slide node plays a non-looping window of Running_Slide")
+	var mannequin: Node = (load(MANNEQUIN_GLB) as PackedScene).instantiate()
+	var skeleton: Skeleton3D = _find_skeleton(mannequin)
+	var to_character: Transform3D = ClipRetargeter.to_character_space(skeleton, mannequin)
+	var hips: int = skeleton.find_bone("hips")
+	var rest_height: float = ClipRetargeter.sample_globals(skeleton, to_character, null, 0.0)[hips].origin.y
+	var start_height: float = ClipRetargeter.sample_globals(skeleton, to_character, slide, node.start_offset)[hips].origin.y
+	var end_height: float = ClipRetargeter.sample_globals(skeleton, to_character, slide, node.start_offset + node.timeline_length)[hips].origin.y
+	check.call(start_height >= rest_height * SLIDE_START_MIN_SHARE, "the Slide window starts with the hips at %.0f %% of rest (at least %.0f %%)" % [start_height / rest_height * 100.0, SLIDE_START_MIN_SHARE * 100.0])
+	check.call(end_height <= rest_height * SLIDE_END_MAX_SHARE, "the Slide window ends in the low pose: hips at %.0f %% of rest (at most %.0f %%)" % [end_height / rest_height * 100.0, SLIDE_END_MAX_SHARE * 100.0])
+	var dash_time: float = MovementConfig.new().dash_time
+	check.call(node.timeline_length / dash_time <= SLIDE_SCALE_MAX, "the Slide window plays at %.2fx in dash_time (at most %.0fx)" % [node.timeline_length / dash_time, SLIDE_SCALE_MAX])
+	check.call(node.timeline_length > 0.0 and node.start_offset + node.timeline_length <= slide.length, "the Slide window lies inside the clip")
 	mannequin.free()
 
 

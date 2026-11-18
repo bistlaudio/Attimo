@@ -1,7 +1,9 @@
 extends RefCounted
 ## MOVE-09 / D-01 / D-04 / D-05 / D-07: ProceduralPose writes a lean and a spin onto the Mannequin child of VisualRoot
-## inside the physics tick (DEV-01). A ground dash leans the body toward the dash direction about the hip pivot and the
-## lean eases back to upright when the dash hands over to a long jump (no stretch lean); an air dash does not lean; Jump 3 and long jump stage 3
+## inside the physics tick (DEV-01). An aimed ground dash leans the body toward the dash direction about the hip pivot
+## (dash_lean_deg * aim_lean_scale) and the lean eases back to upright when the dash hands over to a long jump (no
+## stretch lean); the unaimed ground dash is the retargeted Running_Slide (DEV-04) and the body stays exactly upright;
+## an air dash does not lean either; Jump 3 and long jump stage 3
 ## spin once and finish before touchdown; with aim held at take-off no pirouette starts, and an aim press or an air
 ## dash during a pirouette finishes it cleanly (DEV-03). Every expectation derives from player.config. Actions are
 ## released and the tick rate stays at 60 before nodes are freed.
@@ -27,7 +29,8 @@ var _scratch: Dictionary = {}
 func run(tree: SceneTree, check: Callable) -> void:
 	Engine.physics_ticks_per_second = TPS
 	await _scenario_rest_and_dash_lean(tree, check)
-	await _scenario_hop_upright(tree, check)
+	await _scenario_hop_upright(tree, check, false)
+	await _scenario_hop_upright(tree, check, true)
 	await _scenario_air_dash_upright(tree, check)
 	await _scenario_jump_chain_spin(tree, check)
 	await _scenario_cut_jump_3(tree, check)
@@ -64,8 +67,9 @@ func _mannequin(player: PlayerController) -> Node3D:
 	return player.get_node("VisualRoot/Mannequin") as Node3D
 
 
-# D-01: at rest the Mannequin transform is identity; a ground dash leans it toward the dash direction on its first
-# tick, about the hip pivot, without touching VisualRoot; the lean eases out after the dash.
+# D-01 / DEV-04: at rest the Mannequin transform is identity. The unaimed ground dash is the Slide: lean 0 and an exactly
+# identity transform through the dash. An aimed ground dash leans it toward the dash direction on its first tick, about
+# the hip pivot, scaled by aim_lean_scale, without touching VisualRoot; the lean eases out after the dash.
 func _scenario_rest_and_dash_lean(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
 	var config: MovementConfig = player.config
@@ -78,21 +82,48 @@ func _scenario_rest_and_dash_lean(tree: SceneTree, check: Callable) -> void:
 	check.call(mannequin.transform == Transform3D.IDENTITY, "(p1) at rest the Mannequin transform is exactly identity")
 	check.call(is_zero_approx(player.visual_root.rotation.x) and is_zero_approx(player.visual_root.rotation.z), "(p1) VisualRoot is upright at rest")
 
+	# The unaimed ground dash is the Slide (DEV-04): no lean, identity transform.
 	Input.action_press(&"move_forward")
 	await Fixtures.wait_until(tree, func() -> bool: return absf(player.horizontal_speed() - config.run_speed) < 0.05, 120)
 	await Fixtures.tap_action(tree, &"dash")
+	var slide_in_dash: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Dash", 6)
+	check.call(slide_in_dash >= 0, "(p2) the dash press enters Dash (got %s)" % player.state_machine.current.name)
+	check.call(bool(player.state_machine.current.get(&"slide")), "(p2) an unaimed ground dash is marked slide")
+	var slide_lean: float = 0.0
+	var slide_identity: bool = true
+	var slide_ticks: int = 0
+	while player.state_machine.current.name == &"Dash" and slide_ticks < 40:
+		slide_lean = maxf(slide_lean, pose.lean_angle)
+		slide_identity = slide_identity and mannequin.transform == Transform3D.IDENTITY
+		await tree.physics_frame
+		slide_ticks += 1
+	check.call(slide_ticks > 3, "(p2) the slide dash ran (%d ticks)" % slide_ticks)
+	check.call(slide_lean == 0.0 and slide_identity, "(p2) the unaimed ground dash keeps the lean at 0 and the Mannequin transform identity (biggest lean %.2f deg)" % rad_to_deg(slide_lean))
+	await _end(player)
+
+	# The aimed ground dash keeps the D-01 lean, scaled by aim_lean_scale.
+	player = await _begin(tree)
+	pose = _pose(player)
+	mannequin = _mannequin(player)
+	Input.action_press(&"aim")
+	await Fixtures.wait_physics(tree, 12)
+	Input.action_press(&"move_forward")
+	await Fixtures.wait_physics(tree, 30)
+	await Fixtures.tap_action(tree, &"dash")
 	var in_dash: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Dash", 6)
-	check.call(in_dash >= 0, "(p2) the dash press enters Dash (got %s)" % player.state_machine.current.name)
-	check.call(pose.lean_angle > 0.0, "(p2) the lean is above 0 on the first tick of the dash (got %.2f deg)" % rad_to_deg(pose.lean_angle))
-	var reached: int = await Fixtures.wait_until(tree, func() -> bool: return absf(rad_to_deg(pose.lean_angle) - config.dash_lean_deg) < LEAN_TOLERANCE_DEG, LEAN_IN_TICKS)
-	check.call(reached >= 0, "(p2) the lean reaches dash_lean_deg %.1f within %d ticks (got %.2f deg)" % [config.dash_lean_deg, LEAN_IN_TICKS, rad_to_deg(pose.lean_angle)])
+	check.call(in_dash >= 0, "(p2a) the aimed dash press enters Dash (got %s)" % player.state_machine.current.name)
+	check.call(not bool(player.state_machine.current.get(&"slide")), "(p2a) an aimed ground dash is not a slide")
+	var target_deg: float = config.dash_lean_deg * config.aim_lean_scale
+	check.call(pose.lean_angle > 0.0, "(p2a) the lean is above 0 on the first tick of the aimed dash (got %.2f deg)" % rad_to_deg(pose.lean_angle))
+	var reached: int = await Fixtures.wait_until(tree, func() -> bool: return absf(rad_to_deg(pose.lean_angle) - target_deg) < LEAN_TOLERANCE_DEG, LEAN_IN_TICKS)
+	check.call(reached >= 0, "(p2a) the lean reaches dash_lean_deg * aim_lean_scale %.1f within %d ticks (got %.2f deg)" % [target_deg, LEAN_IN_TICKS, rad_to_deg(pose.lean_angle)])
 
 	var pivot: Vector3 = Vector3(0.0, config.pose_pivot_height, 0.0)
 	var moved: Vector3 = mannequin.transform * pivot
 	check.call(moved.distance_to(pivot) < PIVOT_TOLERANCE, "(p3) the pivot point maps to itself under the Mannequin transform (off by %.4f m)" % moved.distance_to(pivot))
 	var tilt: Vector3 = player.visual_root.global_basis * (mannequin.transform.basis * Vector3.UP)
 	var dash_direction: Vector3 = Vector3(0.0, 0.0, -1.0)
-	check.call(tilt.dot(dash_direction) > UP_TILT_MIN, "(p3) the leaning body tilts its up vector toward the dash direction (dot %.2f)" % tilt.dot(dash_direction))
+	check.call(tilt.dot(dash_direction) > UP_TILT_MIN * config.aim_lean_scale, "(p3) the leaning body tilts its up vector toward the dash direction (dot %.2f)" % tilt.dot(dash_direction))
 	var yaw_clean: bool = true
 	for i: int in 8:
 		await tree.physics_frame
@@ -228,43 +259,54 @@ func _spin_never_snaps_back(rows: Array[Dictionary], from: int) -> bool:
 
 
 # Quick task 261118-okz: Dash -> long jump eases the dash lean back to upright (no held stretch lean). The lean never
-# grows past dash_lean_deg, never grows again once the long jump started, is 0 within lean_out_time plus a few ticks
-# after the hand-over and stays 0 through the flight and Fall until landing.
-func _scenario_hop_upright(tree: SceneTree, check: Callable) -> void:
+# grows past the dash lean, never grows again once the long jump started, is 0 within lean_out_time plus a few ticks
+# after the hand-over and stays 0 through the flight and Fall until landing. Unaimed (the slide, DEV-04) the lean is 0
+# on every row; aimed the lean target is dash_lean_deg * aim_lean_scale.
+func _scenario_hop_upright(tree: SceneTree, check: Callable, aimed: bool) -> void:
 	var player: PlayerController = await _begin(tree)
 	var config: MovementConfig = player.config
 	var pose: ProceduralPose = _pose(player)
-	await _run_up(tree, player)
+	var tag: String = "(s1a)" if aimed else "(s1)"
+	var lean_cap_deg: float = config.dash_lean_deg * (config.aim_lean_scale if aimed else 0.0)
+	if aimed:
+		Input.action_press(&"aim")
+		await Fixtures.wait_physics(tree, 12)
+		Input.action_press(&"move_forward")
+		await Fixtures.wait_physics(tree, 30)
+	else:
+		await _run_up(tree, player)
 	Fixtures.send_action_event(&"dash", true)
 	Fixtures.send_action_event(&"jump", true)
 	Fixtures.send_action_event(&"dash", false)
 	var rows: Array[Dictionary] = await _flight(tree, player, true)
 	var entry: int = _first_state(rows, &"LongJump")
-	check.call(entry >= 0, "(s1) the dash plus jump became a long jump")
+	check.call(entry >= 0, tag + " the dash plus jump became a long jump")
 	var peak: float = _max_of(rows, "lean")
-	check.call(rad_to_deg(peak) <= config.dash_lean_deg + LEAN_TOLERANCE_DEG, "(s1) the lean never exceeds dash_lean_deg %.1f (peak %.2f deg)" % [config.dash_lean_deg, rad_to_deg(peak)])
+	check.call(rad_to_deg(peak) <= lean_cap_deg + LEAN_TOLERANCE_DEG, tag + " the lean never exceeds %.1f deg (peak %.2f deg)" % [lean_cap_deg, rad_to_deg(peak)])
+	if not aimed:
+		check.call(peak == 0.0, tag + " the unaimed dash hop has lean 0 on every row (the slide, DEV-04)")
 	if entry >= 0:
 		var grew: bool = false
 		for i: int in range(entry + 1, rows.size()):
 			grew = grew or float(rows[i].lean) > float(rows[i - 1].lean) + STEP_EPSILON
-		check.call(not grew, "(s1) the lean only eases out once the long jump started")
+		check.call(not grew, tag + " the lean only eases out once the long jump started")
 		var out_budget: int = int(ceil(config.lean_out_time * float(TPS))) + OUT_EXTRA_TICKS
 		var upright_row: int = -1
 		for i: int in range(entry, rows.size()):
 			if float(rows[i].lean) == 0.0:
 				upright_row = i
 				break
-		check.call(upright_row >= 0 and upright_row - entry <= out_budget, "(s1) the lean is 0 within lean_out_time plus %d ticks after the hand-over (row %d of budget %d)" % [OUT_EXTRA_TICKS, upright_row - entry, out_budget])
+		check.call(upright_row >= 0 and upright_row - entry <= out_budget, tag + " the lean is 0 within lean_out_time plus %d ticks after the hand-over (row %d of budget %d)" % [OUT_EXTRA_TICKS, upright_row - entry, out_budget])
 		var stays_upright: bool = upright_row >= 0
 		var airborne_upright_rows: int = 0
 		for i: int in range(maxi(upright_row, 0), rows.size()):
 			stays_upright = stays_upright and float(rows[i].lean) == 0.0
 			if not bool(rows[i].grounded):
 				airborne_upright_rows += 1
-		check.call(stays_upright and airborne_upright_rows > 0, "(s1) the body stays upright through the rest of the flight and Fall (%d airborne rows)" % airborne_upright_rows)
-	check.call(pose.lean_angle == 0.0, "(s1) the lean is 0 at landing (got %.2f deg)" % rad_to_deg(pose.lean_angle))
-	check.call(not _any_spinning(rows), "(s1) long jump stage 1 does not spin (D-05)")
-	check.call(_all_finite(rows), "(s1) every written Mannequin basis is finite")
+		check.call(stays_upright and airborne_upright_rows > 0, tag + " the body stays upright through the rest of the flight and Fall (%d airborne rows)" % airborne_upright_rows)
+	check.call(pose.lean_angle == 0.0, tag + " the lean is 0 at landing (got %.2f deg)" % rad_to_deg(pose.lean_angle))
+	check.call(not _any_spinning(rows), tag + " long jump stage 1 does not spin (D-05)")
+	check.call(_all_finite(rows), tag + " every written Mannequin basis is finite")
 	await _end(player)
 
 

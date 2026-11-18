@@ -8,12 +8,16 @@ extends State
 ## A jump press during a ground dash leaves it into the LongJump (D-06; the hop sets its own speed per stage).
 ## During an air dash a jump press only stays in the buffer: there is no air jump (MOVE-05). A ground dash that
 ## ended on the ground opens the config.dash_jump_grace window in which a jump is still a long jump (GroundState).
-## Emits the dash_started fact once on enter.
+## Emits the dash_started fact once on enter. A ground dash started without aim is shown as the retargeted Running_Slide
+## (DEV-04, quick 261118-qbt); that is presentation only, see `slide`.
 
 ## Direction of this dash (flattened, normalized). Read by the long jump of a later plan.
 var direction: Vector3 = Vector3.ZERO
 ## True when the dash started off the floor.
 var in_air: bool = false
+## Presentation hint read by MannequinAnimator and ProceduralPose: true for a ground dash started without aim. Movement
+## never reads it.
+var slide: bool = false
 
 var _timer: float = 0.0
 
@@ -28,6 +32,7 @@ func enter(_previous: StringName) -> void:
 	# A dodge snaps its facing instead of turning toward it.
 	actor.face_now(direction)
 	in_air = not actor.is_grounded()
+	slide = not in_air and not actor.aiming
 	actor.start_dash(direction, in_air)
 	if not in_air:
 		actor.on_ground_dash_started()

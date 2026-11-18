@@ -47,8 +47,8 @@ func _scenario_grounded_run_dash(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.tap_action(tree, &"dash")
 	check.call(player.state_machine.current.name == &"Dash", "(1) dash press enters Dash (got %s)" % player.state_machine.current.name)
 	# The tree follows the FSM after its 0.1 s crossfade, so allow a few ticks (the FSM state is the truth).
-	var reached_dash: int = await Fixtures.wait_until(tree, func() -> bool: return playback.get_current_node() == &"Dash", TREE_TRAVEL_TICKS)
-	check.call(reached_dash >= 0, "(1) tree travels to Dash within %d ticks (got %s)" % [TREE_TRAVEL_TICKS, playback.get_current_node()])
+	var reached_dash: int = await Fixtures.wait_until(tree, func() -> bool: return playback.get_current_node() == &"Slide", TREE_TRAVEL_TICKS)
+	check.call(reached_dash >= 0, "(1) tree travels to Slide (the unaimed ground dash, DEV-04) within %d ticks (got %s)" % [TREE_TRAVEL_TICKS, playback.get_current_node()])
 	check.call(_dashes.size() == 1, "(1) exactly one dash_started (got %d)" % _dashes.size())
 	if _dashes.size() == 1:
 		check.call(_dashes[0][1].dot(Vector3(0, 0, -1)) > 0.95, "(1) direction points to -Z (got %s)" % _dashes[0][1])

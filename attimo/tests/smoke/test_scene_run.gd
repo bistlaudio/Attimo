@@ -187,10 +187,10 @@ func _play_through(tree: SceneTree, scene: Node, player: PlayerController, check
 	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Idle", 60)
 	await Fixtures.wait_physics(tree, 5)
 
-	# Dash: the tree travels to Dash within 3 frames and one dash_started is recorded.
+	# Dash: the tree travels to Slide (unaimed ground dash) within 3 frames and one dash_started is recorded.
 	await Fixtures.tap_action(tree, &"dash")
-	var reached_dash: int = await Fixtures.wait_until(tree, func() -> bool: return playback.get_current_node() == &"Dash", TREE_TRAVEL_TICKS)
-	check.call(reached_dash >= 0, "dash: tree travels to Dash within %d ticks (got %s)" % [TREE_TRAVEL_TICKS, playback.get_current_node()])
+	var reached_dash: int = await Fixtures.wait_until(tree, func() -> bool: return playback.get_current_node() == &"Slide", TREE_TRAVEL_TICKS)
+	check.call(reached_dash >= 0, "dash: tree travels to Slide (unaimed ground dash, DEV-04) within %d ticks (got %s)" % [TREE_TRAVEL_TICKS, playback.get_current_node()])
 	check.call(_dashes.size() == 1, "dash: exactly one dash_started (got %d)" % _dashes.size())
 	await Fixtures.wait_physics(tree, 40)
 

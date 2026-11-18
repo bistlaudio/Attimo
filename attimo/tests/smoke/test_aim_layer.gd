@@ -168,15 +168,15 @@ func _scenario_dash_scale(tree: SceneTree, check: Callable) -> void:
 	await _begin(tree)
 	_record()
 	var config: MovementConfig = _player.config
-	var dodge_length: float = _library.get_animation(&"Dodge_Forward").length
 	Input.action_press(&"move_forward")
 	await Fixtures.wait_physics(tree, 6)
 	await Fixtures.tap_action(tree, &"dash")
 	var entry: int = _find(&"Run", &"Dash")
 	check.call(entry >= 0, "(e1) Run -> Dash was recorded (calls %s)" % [_names()])
 	if entry >= 0:
-		var expected: float = dodge_length / config.dash_time
-		check.call(absf(float(_calls[entry]["scale"]) - expected) < SCALE_TOLERANCE, "(e1) the ground dash plays Dodge_Forward in dash_time: scale %.3f on the entry frame, expected %.3f" % [_calls[entry]["scale"], expected])
+		var expected: float = _slide_window() / config.dash_time
+		check.call(_calls[entry]["travel"] == &"Slide", "(e1) the unaimed ground dash travels to Slide inside the call (got %s)" % _calls[entry]["travel"])
+		check.call(absf(float(_calls[entry]["scale"]) - expected) < SCALE_TOLERANCE, "(e1) the unaimed ground dash plays the Slide window in dash_time: scale %.3f on the entry frame, expected %.3f" % [_calls[entry]["scale"], expected])
 	Input.action_release(&"move_forward")
 	await Fixtures.wait_until(tree, func() -> bool: return _player.is_grounded() and _player.state_machine.current.name == &"Idle", 120)
 	await Fixtures.wait_physics(tree, 40)
@@ -204,14 +204,14 @@ func _scenario_dash_scale(tree: SceneTree, check: Callable) -> void:
 	await _end(tree)
 
 
-# D-12: an aimed ground dash plays the Dodge clip of its direction relative to the facing; an unaimed one is Dash.
+# D-12: an aimed ground dash plays the Dodge clip of its direction relative to the facing; an unaimed one is Slide (DEV-04).
 func _scenario_aim_dash_choice(tree: SceneTree, check: Callable) -> void:
 	await _aim_dash_case(tree, check, true, &"move_right", &"DashRight", &"Dodge_Right", "(f1)")
 	await _aim_dash_case(tree, check, true, &"move_left", &"DashLeft", &"Dodge_Left", "(f2)")
 	await _aim_dash_case(tree, check, true, &"move_back", &"DashBack", &"Dodge_Backward", "(f3)")
 	await _aim_dash_case(tree, check, true, &"move_forward", &"Dash", &"Dodge_Forward", "(f4)")
 	await _aim_dash_case(tree, check, true, &"", &"Dash", &"Dodge_Forward", "(f5)")
-	await _aim_dash_case(tree, check, false, &"move_right", &"Dash", &"Dodge_Forward", "(f6)")
+	await _aim_dash_case(tree, check, false, &"move_right", &"Slide", &"Running_Slide", "(f6)")
 
 
 func _aim_dash_case(tree: SceneTree, check: Callable, aiming: bool, move: StringName, expected_node: StringName, clip: StringName, label: String) -> void:
@@ -231,7 +231,8 @@ func _aim_dash_case(tree: SceneTree, check: Callable, aiming: bool, move: String
 		var entry: Dictionary = _calls[dash_call]
 		check.call(entry["travel"] == expected_node, "%s %s: last_travel is %s inside the Dash call (got %s)" % [label, how, expected_node, entry["travel"]])
 		check.call(entry["travel_frame"] == entry["frame"], "%s %s: last_travel_frame %d equals the physics frame %d of the call" % [label, how, entry["travel_frame"], entry["frame"]])
-		var expected_scale: float = _library.get_animation(clip).length / _player.config.dash_time
+		var clip_length: float = _slide_window() if expected_node == &"Slide" else _library.get_animation(clip).length
+		var expected_scale: float = clip_length / _player.config.dash_time
 		check.call(absf(float(entry["scale"]) - expected_scale) < SCALE_TOLERANCE, "%s %s: the ground dash scale is %s length / dash_time = %.3f (got %.3f)" % [label, how, clip, expected_scale, entry["scale"]])
 		await Fixtures.wait_process(tree, 2)
 		var visible: StringName = Fixtures.playback(_player).get_current_node()
@@ -353,3 +354,10 @@ func _names() -> Array[String]:
 	for entry: Dictionary in _calls:
 		names.append("%s->%s" % [entry["from"], entry["to"]])
 	return names
+
+
+## timeline_length of the Slide node of the tree (the window of Running_Slide that plays in dash_time).
+func _slide_window() -> float:
+	var root: AnimationNodeBlendTree = _animator.animation_tree.tree_root as AnimationNodeBlendTree
+	var machine: AnimationNodeStateMachine = root.get_node(&"StateMachine") as AnimationNodeStateMachine
+	return (machine.get_node(&"Slide") as AnimationNodeAnimation).timeline_length

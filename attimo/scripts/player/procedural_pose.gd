@@ -1,8 +1,10 @@
 class_name ProceduralPose
 extends Node
-## Code-driven body motion the animation kit has no clip for (MOVE-09): the forward lean of a ground dash (D-01) that
-## eases back to upright when the dash hands over to a long jump, and the single pirouette of Jump 3 and of long jump
-## stage 3 (D-05, D-07). An air dash adds no lean (D-02). The held long-jump stretch lean of D-04 was dropped after the
+## Code-driven body motion the animation kit has no clip for (MOVE-09): the forward lean of an aimed ground dash (D-01,
+## scaled by aim_lean_scale) that eases back to upright when the dash hands over to a long jump, and the single pirouette of Jump 3 and of long jump
+## stage 3 (D-05, D-07). An air dash adds no lean (D-02), and neither does the unaimed ground dash: it is shown as the
+## retargeted Running_Slide (DEV-04), whose own pose would clash with a body pitch about the hip pivot (the extended lead
+## foot would sink into the floor). The held long-jump stretch lean of D-04 was dropped after the
 ## Phase 3 gym check: at 60 degrees the body lay almost horizontal in the air (quick task 261118-okz). It is presentation only: it reads the FSM and the player, writes
 ## nothing back and never delays any input.
 ##
@@ -13,7 +15,7 @@ extends Node
 ## _physics_process only (the Player is interpolated, so a write in _process would jitter or be ignored).
 ## Easing is hand-written with move_toward.
 ##
-## Lean: the angle eases toward a target per state (ground dash: dash_lean_deg, otherwise 0) at dash_lean_deg per
+## Lean: the angle eases toward a target per state (aimed ground dash: dash_lean_deg, otherwise 0) at dash_lean_deg per
 ## lean_in_time when it grows and per lean_out_time when it shrinks. It always eases from where it is, so Dash into
 ## LongJump (the dash hop) eases the lean back to upright with no pop and the long jump itself stays upright. The lean
 ## target is scaled by aim_lean_scale while aiming (03-01 checkpoint item 3).
@@ -101,10 +103,10 @@ func pose_basis() -> Basis:
 	return spin * lean
 
 
-## Lean target in degrees for the current state: only a ground dash leans. An air dash, the long jump that follows a
-## dash and everything else are upright (D-02).
+## Lean target in degrees for the current state: only an aimed ground dash leans. An air dash, the unaimed ground dash
+## (the slide), the long jump that follows a dash and everything else are upright (D-02, DEV-04).
 func _lean_target_deg(config: MovementConfig) -> float:
-	if _machine.current.name != &"Dash" or bool(_machine.current.get(&"in_air")):
+	if _machine.current.name != &"Dash" or bool(_machine.current.get(&"in_air")) or bool(_machine.current.get(&"slide")):
 		return 0.0
 	return config.dash_lean_deg
 

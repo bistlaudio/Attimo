@@ -62,10 +62,10 @@ func _scenario_same_frame(tree: SceneTree, check: Callable) -> void:
 	var dash_call: int = _find(&"Run", &"Dash")
 	check.call(dash_call >= 0, "(2) Run -> Dash was recorded (calls %s)" % [_names()])
 	if dash_call >= 0:
-		_check_same_frame(check, "(2) Run -> Dash", _calls[dash_call], &"Dash")
+		_check_same_frame(check, "(2) Run -> Dash", _calls[dash_call], &"Slide")
 		await Fixtures.wait_process(tree, 2)
 		var dash_node: StringName = Fixtures.playback(_player).get_current_node()
-		check.call(dash_node == &"Dash", "(2) the visible node follows Dash within 2 process frames (got %s)" % dash_node)
+		check.call(dash_node == &"Slide", "(2) the visible node follows Slide (the unaimed ground dash, DEV-04) within 2 process frames (got %s)" % dash_node)
 	await _end(tree)
 
 
