@@ -84,18 +84,21 @@ func _process_modification_with_delta(_delta: float) -> void:
 		return
 	last_target_dir = want
 
-	# Torso: the spine takes its share of the budgeted rotation, then the chest takes the rest toward the target.
-	var needed: Quaternion = rotation_between(_arm(skeleton, upper_arm, hand), want)
-	var budget: float = minf(needed.get_angle(), deg_to_rad(max_twist_deg))
-	var spine_rot: Quaternion = _toward(needed, budget * spine_share)
-	_rotate(skeleton, spine, spine_rot)
+	# Torso: a twist about the vertical axis only (developer 2026-11-18: a free torso rotation bent the body backwards
+	# into a bow when aiming). The spine takes its share of the budgeted yaw, the chest the rest; pitch and roll are left
+	# to the upper arm below, so the body stays upright at any camera pitch.
+	var yaw_needed: float = _yaw_between(_arm(skeleton, upper_arm, hand), want)
+	var budget: float = minf(absf(yaw_needed), deg_to_rad(max_twist_deg))
+	var spine_angle: float = signf(yaw_needed) * budget * spine_share
+	_rotate(skeleton, spine, Quaternion(Vector3.UP, spine_angle))
 	want = _want(skeleton, upper_arm, point)
 	if want == Vector3.ZERO:
 		return
-	var chest_budget: float = maxf(budget - spine_rot.get_angle(), 0.0)
-	var chest_rot: Quaternion = _toward(rotation_between(_arm(skeleton, upper_arm, hand), want), chest_budget)
-	_rotate(skeleton, chest, chest_rot)
-	last_twist_deg = rad_to_deg(spine_rot.get_angle() + chest_rot.get_angle())
+	var chest_needed: float = _yaw_between(_arm(skeleton, upper_arm, hand), want)
+	var chest_budget: float = maxf(budget - absf(spine_angle), 0.0)
+	var chest_angle: float = clampf(chest_needed, -chest_budget, chest_budget)
+	_rotate(skeleton, chest, Quaternion(Vector3.UP, chest_angle))
+	last_twist_deg = rad_to_deg(absf(spine_angle) + absf(chest_angle))
 
 	# Residual: the upper arm turns about the shoulder, so the shoulder-to-hand direction reaches the target even
 	# when the torso budget ran out (A-08-1). The shoulder stays where it is, so the target direction stays valid.
@@ -117,6 +120,17 @@ func _want(skeleton: Skeleton3D, upper_arm: int, point: Vector3) -> Vector3:
 ## Skeleton-space direction from the right shoulder to the right hand.
 func _arm(skeleton: Skeleton3D, upper_arm: int, hand: int) -> Vector3:
 	return (skeleton.get_bone_global_pose(hand).origin - skeleton.get_bone_global_pose(upper_arm).origin).normalized()
+
+
+## Signed angle in radians about skeleton-space +Y that turns the horizontal part of `from` onto that of `to`; 0 when
+## either is (nearly) vertical.
+static func _yaw_between(from: Vector3, to: Vector3) -> float:
+	var a: Vector2 = Vector2(from.x, from.z)
+	var b: Vector2 = Vector2(to.x, to.z)
+	if a.length_squared() < 0.0001 or b.length_squared() < 0.0001:
+		return 0.0
+	# Rotation about +Y by angle t maps (x, z) to (x cos t + z sin t, -x sin t + z cos t).
+	return atan2(a.x * b.y - a.y * b.x, a.dot(b)) * -1.0
 
 
 ## `turn` shortened (about the same axis) to at most `max_angle` radians.
