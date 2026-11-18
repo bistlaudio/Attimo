@@ -1,8 +1,9 @@
 class_name ProceduralPose
 extends Node
-## Code-driven body motion the animation kit has no clip for (MOVE-09): the forward lean of a ground dash that flows
-## into the held stretch of a long jump (D-01, D-04), and the single pirouette of Jump 3 and of long jump stage 3
-## (D-05, D-07). An air dash adds no lean (D-02). It is presentation only: it reads the FSM and the player, writes
+## Code-driven body motion the animation kit has no clip for (MOVE-09): the forward lean of a ground dash (D-01) that
+## eases back to upright when the dash hands over to a long jump, and the single pirouette of Jump 3 and of long jump
+## stage 3 (D-05, D-07). An air dash adds no lean (D-02). The held long-jump stretch lean of D-04 was dropped after the
+## Phase 3 gym check: at 60 degrees the body lay almost horizontal in the air (quick task 261118-okz). It is presentation only: it reads the FSM and the player, writes
 ## nothing back and never delays any input.
 ##
 ## The pose is written on the Mannequin child of VisualRoot, not on VisualRoot itself (DEV-01, confirmed by the
@@ -12,9 +13,9 @@ extends Node
 ## _physics_process only (the Player is interpolated, so a write in _process would jitter or be ignored).
 ## Easing is hand-written with move_toward.
 ##
-## Lean: the angle eases toward a target per state (ground dash: dash_lean_deg, long jump and the flight that follows it
-## until landing: stretch_lean_deg, otherwise 0) at stretch_lean_deg per lean_in_time when it grows and per
-## lean_out_time when it shrinks. It always eases from where it is, so Dash into LongJump has no dip (D-04). The lean
+## Lean: the angle eases toward a target per state (ground dash: dash_lean_deg, otherwise 0) at dash_lean_deg per
+## lean_in_time when it grows and per lean_out_time when it shrinks. It always eases from where it is, so Dash into
+## LongJump (the dash hop) eases the lean back to upright with no pop and the long jump itself stays upright. The lean
 ## target is scaled by aim_lean_scale while aiming (03-01 checkpoint item 3).
 ##
 ## Pirouette: a spin of one full turn about the vertical axis. A closed-loop rate (the remaining angle over the
@@ -27,6 +28,8 @@ extends Node
 const SPIN_DONE_EPSILON: float = 0.02
 ## Smallest divisor of the spin rate in seconds (T-03-10: the closed loop never divides by a vanishing time).
 const MIN_SPIN_TIME: float = 0.05
+## Smallest lean in degrees the ease rate is scaled by, so a dash_lean_deg of 0 never gives a zero rate.
+const MIN_LEAN_REFERENCE_DEG: float = 1.0
 
 @export var player: PlayerController
 @export var mannequin: Node3D
@@ -47,7 +50,6 @@ var spinning: bool = false
 
 var _machine: StateMachine
 var _written_identity: bool = true
-var _stretch: bool = false
 var _takeoff_y: float = 0.0
 var _finishing: bool = false
 var _finish_rate: float = 0.0
@@ -62,8 +64,6 @@ func _ready() -> void:
 ## Starts the pirouette of Jump 3 and of long jump stage 3 unless aim is held (DEV-03). The stage was set by the
 ## state's enter, which runs before the signal.
 func _on_state_changed(_from_state: StringName, to_state: StringName) -> void:
-	if to_state == &"LongJump":
-		_stretch = true
 	var pirouette_jump: bool = (to_state == &"Jump" and player.chain_stage == 3) or (to_state == &"LongJump" and player.long_jump_stage == 3)
 	if pirouette_jump and not player.aiming:
 		spinning = true
@@ -78,7 +78,7 @@ func _physics_process(delta: float) -> void:
 	var target: float = deg_to_rad(_lean_target_deg(config))
 	if player.aiming:
 		target *= config.aim_lean_scale
-	var full: float = deg_to_rad(config.stretch_lean_deg)
+	var full: float = deg_to_rad(maxf(config.dash_lean_deg, MIN_LEAN_REFERENCE_DEG))
 	var time: float = config.lean_in_time if target > lean_angle else config.lean_out_time
 	lean_angle = move_toward(lean_angle, target, full / time * delta)
 	_update_axis()
@@ -101,20 +101,12 @@ func pose_basis() -> Basis:
 	return spin * lean
 
 
-## Lean target in degrees for the current state: a ground dash leans, a long jump and the flight after it stretch until
-## landing, an air dash and everything else are upright (D-02).
+## Lean target in degrees for the current state: only a ground dash leans. An air dash, the long jump that follows a
+## dash and everything else are upright (D-02).
 func _lean_target_deg(config: MovementConfig) -> float:
-	var state_name: StringName = _machine.current.name
-	if state_name == &"Dash":
-		if bool(_machine.current.get(&"in_air")):
-			_stretch = false
-			return 0.0
-		return config.dash_lean_deg
-	if state_name == &"LongJump":
-		_stretch = true
-	elif _stretch and player.is_grounded():
-		_stretch = false
-	return config.stretch_lean_deg if _stretch else 0.0
+	if _machine.current.name != &"Dash" or bool(_machine.current.get(&"in_air")):
+		return 0.0
+	return config.dash_lean_deg
 
 
 ## True while the running state is a Dash that started in the air.

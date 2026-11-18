@@ -132,7 +132,6 @@ Every MovementConfig float of res://resources/player/movement_default.tres at ge
 | `aim_speed_factor` | 0.750 |
 | `aim_back_speed_factor` | 0.600 |
 | `dash_lean_deg` | 20.000 |
-| `stretch_lean_deg` | 60.000 |
 | `aim_lean_scale` | 0.500 |
 | `lean_in_time` | 0.050 |
 | `lean_out_time` | 0.120 |

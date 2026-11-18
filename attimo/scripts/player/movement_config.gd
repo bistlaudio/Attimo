@@ -99,13 +99,11 @@ extends Resource
 @export_group("Pose")
 ## Forward lean of the body during a ground dash in degrees (D-01); raise it for a harder lean into the dash.
 @export_range(0.0, 45.0, 0.5) var dash_lean_deg: float = 20.0
-## Held lean of the body through a long jump in degrees (D-04); raise it for a longer stretch.
-@export_range(0.0, 85.0, 0.5) var stretch_lean_deg: float = 60.0
 ## Share of the lean kept while aiming (03-01 checkpoint item 3); raise it for a stronger lean in aim mode.
 @export_range(0.0, 1.0, 0.05) var aim_lean_scale: float = 0.5
-## Seconds the lean takes to build up from upright to the stretch lean; lower it for a snappier lean.
+## Seconds the lean takes to build up from upright to the dash lean; lower it for a snappier lean.
 @export_range(0.01, 0.5, 0.01) var lean_in_time: float = 0.05
-## Seconds the lean takes to ease out from the stretch lean to upright; raise it for a slower recovery.
+## Seconds the lean takes to ease out from the dash lean to upright, also when a dash hands over to a long jump; raise it for a slower recovery.
 @export_range(0.01, 0.5, 0.01) var lean_out_time: float = 0.12
 ## Seconds before the predicted touchdown at which the Jump 3 pirouette is finished; raise it for an earlier finish.
 @export_range(0.0, 0.3, 0.01) var pirouette_lead_time: float = 0.08

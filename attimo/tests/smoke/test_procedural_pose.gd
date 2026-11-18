@@ -1,7 +1,7 @@
 extends RefCounted
 ## MOVE-09 / D-01 / D-04 / D-05 / D-07: ProceduralPose writes a lean and a spin onto the Mannequin child of VisualRoot
 ## inside the physics tick (DEV-01). A ground dash leans the body toward the dash direction about the hip pivot and the
-## lean flows into the held long-jump stretch without a dip; an air dash does not lean; Jump 3 and long jump stage 3
+## lean eases back to upright when the dash hands over to a long jump (no stretch lean); an air dash does not lean; Jump 3 and long jump stage 3
 ## spin once and finish before touchdown; with aim held at take-off no pirouette starts, and an aim press or an air
 ## dash during a pirouette finishes it cleanly (DEV-03). Every expectation derives from player.config. Actions are
 ## released and the tick rate stays at 60 before nodes are freed.
@@ -17,6 +17,7 @@ const LIMIT_TICKS: int = 360
 const SPIN_SEEN_MIN: float = 5.5
 const STEP_EPSILON: float = 1e-4
 const MID_FLIGHT_TICKS: int = 6
+const SYNTHETIC_LEAN: float = 0.6
 
 var _floor: StaticBody3D
 ## Mutable state of the per-tick callbacks (lambdas copy plain variables, a Dictionary is shared).
@@ -26,7 +27,7 @@ var _scratch: Dictionary = {}
 func run(tree: SceneTree, check: Callable) -> void:
 	Engine.physics_ticks_per_second = TPS
 	await _scenario_rest_and_dash_lean(tree, check)
-	await _scenario_stretch_continuity(tree, check)
+	await _scenario_hop_upright(tree, check)
 	await _scenario_air_dash_upright(tree, check)
 	await _scenario_jump_chain_spin(tree, check)
 	await _scenario_cut_jump_3(tree, check)
@@ -226,9 +227,10 @@ func _spin_never_snaps_back(rows: Array[Dictionary], from: int) -> bool:
 	return true
 
 
-# D-04: Dash -> long jump keeps the lean continuous into the held stretch, the stretch holds through Fall until
-# landing and eases out afterwards.
-func _scenario_stretch_continuity(tree: SceneTree, check: Callable) -> void:
+# Quick task 261118-okz: Dash -> long jump eases the dash lean back to upright (no held stretch lean). The lean never
+# grows past dash_lean_deg, never grows again once the long jump started, is 0 within lean_out_time plus a few ticks
+# after the hand-over and stays 0 through the flight and Fall until landing.
+func _scenario_hop_upright(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
 	var config: MovementConfig = player.config
 	var pose: ProceduralPose = _pose(player)
@@ -237,30 +239,31 @@ func _scenario_stretch_continuity(tree: SceneTree, check: Callable) -> void:
 	Fixtures.send_action_event(&"jump", true)
 	Fixtures.send_action_event(&"dash", false)
 	var rows: Array[Dictionary] = await _flight(tree, player, true)
-	var step: float = deg_to_rad(config.stretch_lean_deg) / config.lean_in_time / float(TPS)
-	var biggest_step: float = 0.0
-	var dipped: bool = false
-	var reached_stretch: bool = false
-	var held_in_fall: bool = false
-	for i: int in rows.size():
-		var lean: float = float(rows[i].lean)
-		if i > 0:
-			var change: float = lean - float(rows[i - 1].lean)
-			if not reached_stretch:
-				biggest_step = maxf(biggest_step, absf(change))
-				dipped = dipped or change < -STEP_EPSILON
-		if absf(rad_to_deg(lean) - config.stretch_lean_deg) < LEAN_TOLERANCE_DEG:
-			reached_stretch = true
-		if rows[i].state == &"Fall" and not bool(rows[i].grounded) and absf(rad_to_deg(lean) - config.stretch_lean_deg) < LEAN_TOLERANCE_DEG:
-			held_in_fall = true
-	check.call(biggest_step <= step + STEP_EPSILON, "(s1) the lean change per tick never exceeds the ease-in step (%.4f of %.4f rad)" % [biggest_step, step])
-	check.call(not dipped, "(s1) the lean never dips below the dash lean on the way to the stretch (D-04)")
-	check.call(reached_stretch, "(s1) the lean reaches stretch_lean_deg %.0f during the long jump" % config.stretch_lean_deg)
-	check.call(held_in_fall, "(s1) the stretch is held after LongJump turns into Fall, until landing")
-	var out_budget: int = int(ceil(config.stretch_lean_deg / config.stretch_lean_deg * config.lean_out_time * float(TPS))) + OUT_EXTRA_TICKS
-	var upright: int = await Fixtures.wait_until(tree, func() -> bool: return pose.lean_angle == 0.0, out_budget)
-	check.call(upright >= 0, "(s1) the stretch eases out after landing within %d ticks (got %.2f deg)" % [out_budget, rad_to_deg(pose.lean_angle)])
-	check.call(not _any_spinning(rows), "(s1) long jump stage 1 only stretches, it does not spin (D-05)")
+	var entry: int = _first_state(rows, &"LongJump")
+	check.call(entry >= 0, "(s1) the dash plus jump became a long jump")
+	var peak: float = _max_of(rows, "lean")
+	check.call(rad_to_deg(peak) <= config.dash_lean_deg + LEAN_TOLERANCE_DEG, "(s1) the lean never exceeds dash_lean_deg %.1f (peak %.2f deg)" % [config.dash_lean_deg, rad_to_deg(peak)])
+	if entry >= 0:
+		var grew: bool = false
+		for i: int in range(entry + 1, rows.size()):
+			grew = grew or float(rows[i].lean) > float(rows[i - 1].lean) + STEP_EPSILON
+		check.call(not grew, "(s1) the lean only eases out once the long jump started")
+		var out_budget: int = int(ceil(config.lean_out_time * float(TPS))) + OUT_EXTRA_TICKS
+		var upright_row: int = -1
+		for i: int in range(entry, rows.size()):
+			if float(rows[i].lean) == 0.0:
+				upright_row = i
+				break
+		check.call(upright_row >= 0 and upright_row - entry <= out_budget, "(s1) the lean is 0 within lean_out_time plus %d ticks after the hand-over (row %d of budget %d)" % [OUT_EXTRA_TICKS, upright_row - entry, out_budget])
+		var stays_upright: bool = upright_row >= 0
+		var airborne_upright_rows: int = 0
+		for i: int in range(maxi(upright_row, 0), rows.size()):
+			stays_upright = stays_upright and float(rows[i].lean) == 0.0
+			if not bool(rows[i].grounded):
+				airborne_upright_rows += 1
+		check.call(stays_upright and airborne_upright_rows > 0, "(s1) the body stays upright through the rest of the flight and Fall (%d airborne rows)" % airborne_upright_rows)
+	check.call(pose.lean_angle == 0.0, "(s1) the lean is 0 at landing (got %.2f deg)" % rad_to_deg(pose.lean_angle))
+	check.call(not _any_spinning(rows), "(s1) long jump stage 1 does not spin (D-05)")
 	check.call(_all_finite(rows), "(s1) every written Mannequin basis is finite")
 	await _end(player)
 
@@ -330,7 +333,7 @@ func _scenario_cut_jump_3(tree: SceneTree, check: Callable) -> void:
 	await _end(player)
 
 
-# D-05: long jump stages 1 and 2 only stretch, stage 3 spins; the nesting switch changes the written basis.
+# D-05: long jump stages 1 and 2 do not spin, stage 3 spins; the nesting switch changes the written basis.
 func _scenario_long_jump_stages(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
 	var pose: ProceduralPose = _pose(player)
@@ -341,23 +344,27 @@ func _scenario_long_jump_stages(tree: SceneTree, check: Callable) -> void:
 	var hop_3: Dictionary = await _hop(tree, player, _compare_nesting.bind(pose))
 	check.call(hop_1.started and hop_2.started and hop_3.started, "(l1) all three dash jumps became long jumps")
 	check.call(hop_1.stage == 1 and hop_2.stage == 2 and hop_3.stage == 3, "(l1) the stages are 1, 2, 3 (got %d, %d, %d)" % [hop_1.stage, hop_2.stage, hop_3.stage])
-	check.call(not _any_spinning(hop_1.rows) and not hop_1.entry_spinning and not _any_spinning(hop_2.rows) and not hop_2.entry_spinning, "(l1) long jump stages 1 and 2 only stretch (D-05)")
+	check.call(not _any_spinning(hop_1.rows) and not hop_1.entry_spinning and not _any_spinning(hop_2.rows) and not hop_2.entry_spinning, "(l1) long jump stages 1 and 2 do not spin (D-05)")
 	check.call(hop_3.entry_spinning and _max_of(hop_3.rows, "spin") > SPIN_SEEN_MIN, "(l2) stage 3 spins from its entry tick, max spin %.2f rad" % _max_of(hop_3.rows, "spin"))
 	var done: bool = not pose.spinning and pose.spin_angle == 0.0
 	check.call(done or await _completes_by_touchdown(tree, player), "(l2) the stage 3 spin is complete by touchdown")
-	check.call(bool(_scratch.compared) and bool(_scratch.differs), "(l3) spin_about_body_axis true and false give different Mannequin bases for the same lean and spin")
+	check.call(bool(_scratch.compared) and bool(_scratch.differs), "(l3) spin_about_body_axis true and false give different Mannequin bases for the same spin and a synthetic lean")
 	check.call(bool(_scratch.finite) and _all_finite(hop_3.rows), "(l3) every written basis is finite")
 	await _end(player)
 
 
-## Per-tick hook: once during the spin with a lean, compares both nestings for the same lean and spin.
-func _compare_nesting(_tick: int, rows: Array[Dictionary], pose: ProceduralPose) -> void:
-	if bool(_scratch.compared) or not pose.spinning or pose.lean_angle < 0.5 or pose.spin_angle < 1.0 or pose.spin_angle > 5.0:
+## Per-tick hook: once during the spin, compares both nestings for the same spin with a synthetic lean (the long jump
+## itself is upright, so the lean is set for the comparison and restored).
+func _compare_nesting(_tick: int, _rows: Array[Dictionary], pose: ProceduralPose) -> void:
+	if bool(_scratch.compared) or not pose.spinning or pose.spin_angle < 1.0 or pose.spin_angle > 5.0:
 		return
+	var real_lean: float = pose.lean_angle
+	pose.lean_angle = SYNTHETIC_LEAN
 	var corkscrew: Basis = pose.pose_basis()
 	pose.spin_about_body_axis = not pose.spin_about_body_axis
 	var other: Basis = pose.pose_basis()
 	pose.spin_about_body_axis = not pose.spin_about_body_axis
+	pose.lean_angle = real_lean
 	_scratch.compared = true
 	_scratch.differs = not corkscrew.is_equal_approx(other)
 	_scratch.finite = corkscrew.x.is_finite() and corkscrew.y.is_finite() and corkscrew.z.is_finite() and other.x.is_finite() and other.y.is_finite() and other.z.is_finite()

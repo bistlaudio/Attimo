@@ -22,7 +22,7 @@ Which movement verb is shown by which Mannequin clip. Guarded by `attimo/tests/s
 | Landing | any airborne state to `Idle` or `Run` on floor contact | `Land` (AnimationNodeOneShot overlay) | `Jump_Land` | A 0.3 s timeline fired on touchdown. Any move, jump or dash input fades it out, so landing never locks control (D-08). There is no Land state. |
 | Ground dash | `Dash` (on the ground) | `Dash` | `Dodge_Forward` | Playback stretched to `dash_time` (Dodge length / dash_time). `ProceduralPose` adds a forward dash lean about the hips (`dash_lean_deg`, D-01). |
 | Air dash | `Dash` (in the air) | `Dash`, held through `Fall` | `Dodge_Forward`, then `Jump_Idle` | Plays at 1x, no lean (D-02). DEV-02 hold rule: after the dash the Dodge pose is held past the `Dash` exit through `Fall` until landing or until `air_dash_hold_time` (0.35 s), then the animator hands over to `Jump_Idle`. The hold is presentation only and never delays control: steering, landing and the next jump or dash respond at once. |
-| Long jump stages 1-2 | `LongJump` (stage 1 and 2) | `Jump`, `Fall`, `Land` | `Jump_Start`, `Jump_Idle`, `Jump_Land` | `ProceduralPose` holds the stretch lean (`stretch_lean_deg`, superman style) continuing from the dash lean without a dip (D-04), until landing. |
+| Long jump stages 1-2 | `LongJump` (stage 1 and 2) | `Jump`, `Fall`, `Land` | `Jump_Start`, `Jump_Idle`, `Jump_Land` | Upright in the air (D-04 stretch lean dropped after the Phase 3 gym check, quick task 261118-okz): when a ground dash hands over to the long jump, `ProceduralPose` eases the dash lean back to 0 within `lean_out_time` (0.12 s) and holds the body upright until landing. |
 | Long jump stage 3 | `LongJump` (stage 3) | `Jump`, `Fall`, `Land` | `Jump_Start`, `Jump_Idle`, `Jump_Land` | Stages 1-2 plus the pirouette (D-05). Same DEV-03 aim rule as Jump 3: not started when aim is held at takeoff, finished within `pirouette_finish_time` on an aim press or air dash mid-spin. |
 | Aim stance | any state, while `aim` is held | `Aim` (AnimationNodeBlend2 with a bone filter) | `Ranged_1H_Aiming` | Held from 0.6 s on for spine, chest, head and both arms, never hips or root, blended in within `aim_layer_blend_time`. `AimPoseModifier` then points the right arm at the crosshair. |
 | Aim strafe left | `Idle` or `Run`, aim held | `Locomotion` (strafe point) | `Running_Strafe_Left` | Blend position x = -1. |
@@ -41,7 +41,7 @@ Kit clips in use (all in the library): `Idle_A`, `Running_A`, `Running_Strafe_Le
 ## Left out
 
 - Wall-run (MOVE-12) and ledge grab (MOVE-13) have no kit clip and stay out of this phase.
-- Slide is not wanted (D-03). The dash lean flowing into the long jump covers it.
+- Slide is not wanted (D-03). The dash lean easing out into the long jump covers it.
 - Sprint does not exist: there is one run speed.
 
 ## Adding a verb
