@@ -40,9 +40,10 @@ const MIN_LEAN_REFERENCE_DEG: float = 1.0
 @export var spin_about_body_axis: bool = true
 ## True: the pirouette turns clockwise seen from above (Claude's discretion, D-07).
 @export var pirouette_clockwise: bool = true
-## Longest time in seconds a full pirouette may take (developer 2026-11-18: "faster"). The spin turns at least TAU per
+## Longest time in seconds a full pirouette may take; 0 is off (the spin spreads over the whole flight, the developer
+## kept that speed on 2026-11-18). Above 0 the spin turns at least TAU per
 ## this time, so on a long airtime it finishes early instead of stretching over the whole flight.
-@export_range(0.15, 1.5, 0.05) var pirouette_max_time: float = 0.4
+@export_range(0.0, 1.5, 0.05) var pirouette_max_time: float = 0.0
 
 ## Current forward lean in radians, 0 upright. Read-only for others.
 var lean_angle: float = 0.0
@@ -153,7 +154,8 @@ func _tick_spin(delta: float, config: MovementConfig) -> void:
 		var time_left: float = _time_to_touchdown(config)
 		if is_finite(time_left):
 			rate = remaining / maxf(time_left - config.pirouette_lead_time, MIN_SPIN_TIME)
-			rate = maxf(rate, TAU / maxf(pirouette_max_time, MIN_SPIN_TIME))
+			if pirouette_max_time > 0.0:
+				rate = maxf(rate, TAU / maxf(pirouette_max_time, MIN_SPIN_TIME))
 		else:
 			_begin_finish(remaining, config)
 			rate = _finish_rate
