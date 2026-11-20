@@ -5,10 +5,10 @@ current_phase: 4
 current_phase_name: Fernauslöser & Mechanism Kit
 status: planning
 stopped_at: Phase 03 complete, ready to plan Phase 4
-last_updated: "2026-11-20T09:15:23.509Z"
+last_updated: "2026-11-20T09:35:06.198Z"
 last_activity: 2026-11-20
 last_activity_desc: Phase 03 complete, transitioned to Phase 4
-state_head: 6ea364e1f906c58e0c29178e87d2aa4c2c8d80c4
+state_head: 3b532798e5ddf228cf47f7f5bc6dac42a7c17ae1
 progress:
   total_phases: 15
   completed_phases: 3
@@ -157,6 +157,7 @@ None yet.
 | 261118-qi3 | Animation variations (idle breaks, sprint blend, Jump 2/long jump takes, landing variants, VariantPicker) and UAL clips via retarget gate; Spell clips dropped, aim keeps Ranged_1H_Aiming | 2026-11-18 | f051bba | [261118-qi3-animation-variations-mario-style-and-spe](./quick/261118-qi3-animation-variations-mario-style-and-spe/) |
 | 261120-d4x | Fix phase 03 review warnings WR-01 to WR-06 | 2026-11-20 | 67ae159 | [261120-d4x-fix-phase-03-review-warnings-wr-01-to-wr](./quick/261120-d4x-fix-phase-03-review-warnings-wr-01-to-wr/) |
 | 261120-dik | Dash lockouts, blocked-dash feedback, no dash in aim, softer dash blends | 2026-11-20 | 6ea364e | [261120-dik-dash-lockouts-and-blocked-dash-feedback-](./quick/261120-dik-dash-lockouts-and-blocked-dash-feedback-/) |
+| 261120-ef9 | Remove dash lockouts for pirouette, landing, takeoff; keep aim block and soft blends | 2026-11-20 | 3b53279 | [261120-ef9-remove-dash-lockouts-for-pirouette-landi](./quick/261120-ef9-remove-dash-lockouts-for-pirouette-landi/) |
 
 ## Deferred Items
 
