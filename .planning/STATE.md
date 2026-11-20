@@ -5,10 +5,10 @@ current_phase: 4
 current_phase_name: Fernauslöser & Mechanism Kit
 status: planning
 stopped_at: Phase 03 complete, ready to plan Phase 4
-last_updated: "2026-11-20T08:26:38.601Z"
+last_updated: "2026-11-20T08:36:23.730Z"
 last_activity: 2026-11-20
 last_activity_desc: Phase 03 complete, transitioned to Phase 4
-state_head: 5dcd873a8ab281239a30449dbf0528522940e01b
+state_head: 67ae159dadbcd08bf03eab9191eb93c4ffd857f7
 progress:
   total_phases: 15
   completed_phases: 3
@@ -155,6 +155,7 @@ None yet.
 | 261118-okz | Remove long-jump stretch lean: dash lean 20 deg then upright on dash hop | 2026-11-18 | 5c00a93 | [261118-okz-remove-long-jump-stretch-lean-dash-lean-](./quick/261118-okz-remove-long-jump-stretch-lean-dash-lean-/) |
 | 261118-qbt | Retargeted Mixamo Running_Slide on the unaimed ground dash (generic Mixamo/UAL retarget pipeline), closer lower-third camera with vertical jump lock, crosshair ray aim target | 2026-11-18 | 0624af2 | [261118-qbt-slide-animation-from-running-slide-fbx-c](./quick/261118-qbt-slide-animation-from-running-slide-fbx-c/) |
 | 261118-qi3 | Animation variations (idle breaks, sprint blend, Jump 2/long jump takes, landing variants, VariantPicker) and UAL clips via retarget gate; Spell clips dropped, aim keeps Ranged_1H_Aiming | 2026-11-18 | f051bba | [261118-qi3-animation-variations-mario-style-and-spe](./quick/261118-qi3-animation-variations-mario-style-and-spe/) |
+| 261120-d4x | Fix phase 03 review warnings WR-01 to WR-06 | 2026-11-20 | 67ae159 | [261120-d4x-fix-phase-03-review-warnings-wr-01-to-wr](./quick/261120-d4x-fix-phase-03-review-warnings-wr-01-to-wr/) |
 
 ## Deferred Items
 
