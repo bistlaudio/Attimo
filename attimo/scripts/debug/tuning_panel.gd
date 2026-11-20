@@ -23,6 +23,8 @@ var _value_labels: Dictionary[StringName, Label] = {}
 var _aim_rows: VBoxContainer
 var _aim_sliders: Dictionary[StringName, HSlider] = {}
 var _aim_value_labels: Dictionary[StringName, Label] = {}
+## True between drag_started and drag_ended of the sensitivity slider: ticks apply to the rig but do not save (WR-04).
+var _sensitivity_dragging: bool = false
 
 @onready var _rows: VBoxContainer = %Rows
 @onready var _sensitivity_slider: HSlider = %SensitivitySlider
@@ -42,7 +44,9 @@ func _ready() -> void:
 	_sensitivity_slider.max_value = CameraSettings.SENSITIVITY_MAX
 	for mode: String in CameraSettings.AUTO_FOLLOW_MODES:
 		_auto_follow_selector.add_item(mode.capitalize())
-	_sensitivity_slider.value_changed.connect(set_sensitivity)
+	_sensitivity_slider.drag_started.connect(func() -> void: _sensitivity_dragging = true)
+	_sensitivity_slider.drag_ended.connect(_on_sensitivity_drag_ended)
+	_sensitivity_slider.value_changed.connect(_on_sensitivity_slider_changed)
 	_invert_y_check.toggled.connect(set_invert_y)
 	_auto_follow_selector.item_selected.connect(_on_auto_follow_selected)
 	# A15: the shared res:// config is only ever saved from the editor.
@@ -84,6 +88,23 @@ func set_aim_value(property: StringName, value: float) -> void:
 
 ## Sets the mouse sensitivity multiplier (clamped to the CameraSettings range), applies it to the rig and saves it.
 func set_sensitivity(value: float) -> void:
+	_set_sensitivity(value, true)
+
+
+## Slider ticks while dragging reach the rig at once, the file is written when the drag ends (WR-04). Keyboard steps and
+## clicks outside a drag save at once.
+func _on_sensitivity_slider_changed(value: float) -> void:
+	_set_sensitivity(value, not _sensitivity_dragging)
+
+
+func _on_sensitivity_drag_ended(_value_changed: bool) -> void:
+	_sensitivity_dragging = false
+	var updated: CameraSettings = _copy_rig_settings()
+	if updated != null:
+		_save_camera_settings(updated)
+
+
+func _set_sensitivity(value: float, save: bool) -> void:
 	var clamped: float = clampf(value, CameraSettings.SENSITIVITY_MIN, CameraSettings.SENSITIVITY_MAX)
 	_sensitivity_slider.set_value_no_signal(clamped)
 	_sensitivity_value.text = _format(clamped)
@@ -91,7 +112,7 @@ func set_sensitivity(value: float) -> void:
 	if updated == null:
 		return
 	updated.sensitivity = clamped
-	_apply_camera_settings(updated)
+	_apply_camera_settings(updated, save)
 
 
 ## Flips the vertical mouse look, applies it to the rig and saves it.
@@ -183,9 +204,17 @@ func _copy_rig_settings() -> CameraSettings:
 
 
 ## Gives the rig the changed settings and saves them to settings_path (D-19, CAM-03).
-func _apply_camera_settings(updated: CameraSettings) -> void:
+func _apply_camera_settings(updated: CameraSettings, save: bool = true) -> void:
 	_rig.apply_settings(updated)
-	updated.save_to(settings_path)
+	if save:
+		_save_camera_settings(updated)
+
+
+## Writes the settings to settings_path and warns when that fails (read-only or full user directory), WR-04.
+func _save_camera_settings(updated: CameraSettings) -> void:
+	var err: Error = updated.save_to(settings_path)
+	if err != OK:
+		push_warning("TuningPanel: could not save camera settings to %s (error %d)" % [settings_path, err])
 
 
 func _on_auto_follow_selected(index: int) -> void:
