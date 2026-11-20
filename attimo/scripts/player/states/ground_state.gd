@@ -7,7 +7,7 @@ extends State
 func physics_update(delta: float) -> StringName:
 	if not actor.is_grounded():
 		return &"Fall"
-	if Input.is_action_just_pressed(&"dash") and actor.can_dash():
+	if actor.dash_press_starts_dash():
 		return &"Dash"
 	if actor.wants_jump():
 		# Just after a ground dash a jump is still the long jump (D-06).

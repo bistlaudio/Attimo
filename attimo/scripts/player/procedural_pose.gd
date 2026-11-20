@@ -1,7 +1,7 @@
 class_name ProceduralPose
 extends Node
-## Code-driven body motion the animation kit has no clip for (MOVE-09): the forward lean of an aimed ground dash (D-01,
-## scaled by aim_lean_scale) that eases back to upright when the dash hands over to a long jump, and the single pirouette of Jump 3 and of long jump
+## Code-driven body motion the animation kit has no clip for (MOVE-09): the forward lean of a ground dash (D-01,
+## scaled by aim_lean_scale when aim is pressed mid-dash, there is no dash while aiming), that eases back to upright when the dash hands over to a long jump, the twitch of a refused dash press (quick 261120-dik), and the single pirouette of Jump 3 and of long jump
 ## stage 3 (D-05, D-07). An air dash adds no lean (D-02), and neither does the unaimed ground dash: it is shown as the
 ## retargeted Running_Slide (DEV-04), whose own pose would clash with a body pitch about the hip pivot (the extended lead
 ## foot would sink into the floor). The held long-jump stretch lean of D-04 was dropped after the
@@ -30,6 +30,8 @@ extends Node
 const SPIN_DONE_EPSILON: float = 0.02
 ## Smallest divisor of the spin rate in seconds (T-03-10: the closed loop never divides by a vanishing time).
 const MIN_SPIN_TIME: float = 0.05
+## Smallest twitch duration in seconds (the half sine never divides by a vanishing time).
+const MIN_TWITCH_TIME: float = 0.01
 ## Smallest lean in degrees the ease rate is scaled by, so a dash_lean_deg of 0 never gives a zero rate.
 const MIN_LEAN_REFERENCE_DEG: float = 1.0
 
@@ -49,6 +51,9 @@ const MIN_LEAN_REFERENCE_DEG: float = 1.0
 var lean_angle: float = 0.0
 ## Axis of the lean in VisualRoot space (unit length).
 var lean_axis: Vector3 = Vector3.RIGHT
+## Current blocked-dash twitch in radians, 0 at rest (quick 261120-dik). A refused dash press kicks the body forward by
+## dash_blocked_twitch_deg and back inside dash_blocked_twitch_time (a half sine), on top of lean_angle. Read-only for others.
+var twitch_angle: float = 0.0
 ## Current spin angle in radians, 0 to TAU. Read-only for others.
 var spin_angle: float = 0.0
 ## True while a pirouette runs. Read-only for others.
@@ -87,10 +92,12 @@ func _physics_process(delta: float) -> void:
 	var full: float = deg_to_rad(maxf(config.dash_lean_deg, MIN_LEAN_REFERENCE_DEG))
 	var time: float = config.lean_in_time if target > lean_angle else config.lean_out_time
 	lean_angle = move_toward(lean_angle, target, full / time * delta)
+	twitch_angle = _twitch_for(config)
 	_update_axis()
 	_tick_spin(delta, config)
-	if not is_finite(lean_angle) or not is_finite(spin_angle):
+	if not is_finite(lean_angle) or not is_finite(spin_angle) or not is_finite(twitch_angle):
 		lean_angle = 0.0
+		twitch_angle = 0.0
 		spin_angle = 0.0
 		spinning = false
 	_write(config)
@@ -99,12 +106,26 @@ func _physics_process(delta: float) -> void:
 ## The Mannequin rotation for the current lean and spin: the spin about the vertical axis, nested inside the lean (a
 ## corkscrew about the body axis) or around it (a tilted top), see spin_about_body_axis.
 func pose_basis() -> Basis:
-	var lean: Basis = Basis(lean_axis, lean_angle)
+	var lean: Basis = Basis(lean_axis, total_lean())
 	var turn_sign: float = -1.0 if pirouette_clockwise else 1.0
 	var spin: Basis = Basis(Vector3.UP, turn_sign * spin_angle)
 	if spin_about_body_axis:
 		return lean * spin
 	return spin * lean
+
+
+## The lean written to the body: the eased lean plus the blocked-dash twitch.
+func total_lean() -> float:
+	return lean_angle + twitch_angle
+
+
+## The twitch kick of this tick: a half sine over the controller's twitch timer, exactly 0 when it has run out.
+func _twitch_for(config: MovementConfig) -> float:
+	if player.dash_twitch_timer <= 0.0:
+		return 0.0
+	var duration: float = maxf(config.dash_blocked_twitch_time, MIN_TWITCH_TIME)
+	var progress: float = clampf(1.0 - player.dash_twitch_timer / duration, 0.0, 1.0)
+	return deg_to_rad(config.dash_blocked_twitch_deg) * sin(PI * progress)
 
 
 ## Lean target in degrees for the current state: only an aimed ground dash leans. An air dash, the unaimed ground dash
@@ -130,7 +151,7 @@ func _update_axis() -> void:
 		direction = Vector3(player.move_velocity.x, 0.0, player.move_velocity.z)
 	direction.y = 0.0
 	if direction.length_squared() < 0.01:
-		if lean_angle != 0.0:
+		if total_lean() != 0.0:
 			return
 		direction = player.visual_root.global_basis.z
 		direction.y = 0.0
@@ -191,7 +212,7 @@ func _time_to_touchdown(config: MovementConfig) -> float:
 
 ## Writes the Mannequin transform: exactly identity when upright, otherwise a rotation about the pivot point.
 func _write(config: MovementConfig) -> void:
-	if lean_angle == 0.0 and not spinning:
+	if total_lean() == 0.0 and not spinning:
 		if not _written_identity:
 			mannequin.transform = Transform3D.IDENTITY
 			_written_identity = true

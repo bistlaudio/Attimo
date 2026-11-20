@@ -12,3 +12,6 @@ signal long_jumped(position: Vector3, stage: int)
 signal chain_stage_changed(stage: int)
 ## Emitted by PlayerController when the aim hold starts (true) or ends (false), once per change (CAM-02). Listeners: CameraRig, the crosshair and the animator.
 signal aim_changed(active: bool)
+## Emitted by PlayerController when a dash press is refused by a lockout (quick 261120-dik): `reason` is &"aim", &"pirouette",
+## &"landing" or &"takeoff". Once per press, no dash starts and the cooldown and the air dash stay unspent. Listeners: later juice and audio.
+signal dash_blocked(position: Vector3, reason: StringName)

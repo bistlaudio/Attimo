@@ -1,7 +1,7 @@
 class_name MovementConfig
 extends Resource
 ## The one tunable movement resource (MOVE-10, D-23). Every movement number lives here.
-## Eleven groups, 49 live sliders in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
+## Eleven groups, 56 live sliders in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
 ## Long jump (dash hop), Timing windows, Floor and platforms, Aim, Pose, Clip playback. Gravity is set directly
 ## (rise_gravity, fall_multiplier); jump speeds are derived from the heights, so editing a
 ## height never changes the fall feel. Every divisor field has a strictly positive minimum (T-02-02).
@@ -77,6 +77,10 @@ extends Resource
 @export_range(0.05, 1.5, 0.01) var landing_window: float = 0.35
 ## Seconds after a dash in which a jump still counts as a long jump; raise it for a more forgiving dash hop.
 @export_range(0.0, 0.5, 0.01) var dash_jump_grace: float = 0.15
+## Seconds after a jump take-off in which a dash press is refused (blocked feedback, no buffering); raise it for a longer lockout.
+@export_range(0.0, 0.3, 0.01) var dash_block_takeoff: float = 0.1
+## Seconds after touchdown in which a dash press is refused (blocked feedback, no buffering); raise it for a longer lockout.
+@export_range(0.0, 0.3, 0.01) var dash_block_landing: float = 0.1
 ## Ground speed under which the chain and the long-jump stack reset in m/s; raise it so slow walking breaks the combo.
 @export_range(0.0, 5.0, 0.1) var combo_reset_speed: float = 0.5
 
@@ -109,6 +113,10 @@ extends Resource
 @export_range(0.0, 0.3, 0.01) var pirouette_lead_time: float = 0.08
 ## Seconds the remaining spin takes when an aim press, an air dash or the landing cuts a pirouette short (DEV-03); raise it for a softer finish.
 @export_range(0.01, 0.5, 0.01) var pirouette_finish_time: float = 0.1
+## Forward lean kick in degrees that a refused dash press gives (a non-moving twitch); raise it for a stronger blocked signal.
+@export_range(0.0, 20.0, 0.5) var dash_blocked_twitch_deg: float = 6.0
+## Seconds the blocked-dash twitch lasts (the kick rises and falls inside it); raise it for a slower twitch.
+@export_range(0.02, 0.5, 0.01) var dash_blocked_twitch_time: float = 0.1
 ## Height in m of the point the body leans and spins about (about the hips); raise it to pivot higher up.
 @export_range(0.0, 1.5, 0.05) var pose_pivot_height: float = 0.45
 
@@ -123,6 +131,12 @@ extends Resource
 @export_range(1.0, 40.0, 0.5) var locomotion_blend_rate: float = 10.0
 ## Seconds the Dodge pose is held after an air dash ends before the Fall clip takes over (landing ends it earlier, DEV-02); raise it for a longer hold.
 @export_range(0.0, 2.0, 0.05) var air_dash_hold_time: float = 0.35
+## Crossfade in seconds from the ground locomotion into a dash clip; raise it for a softer dash start on the ground.
+@export_range(0.0, 0.5, 0.01) var dash_in_blend: float = 0.06
+## Crossfade in seconds from a jump, long jump or fall clip into a dash clip; raise it for a softer dash start in the air.
+@export_range(0.0, 0.5, 0.01) var dash_in_blend_air: float = 0.08
+## Crossfade in seconds out of a dash clip into whatever follows; raise it for a softer dash exit.
+@export_range(0.0, 0.5, 0.01) var dash_out_blend: float = 0.15
 
 @export_group("Clip variants")
 ## Shortest still time in Idle in seconds before an idle break clip plays (quick 261118-qi3); raise it for rarer breaks.
