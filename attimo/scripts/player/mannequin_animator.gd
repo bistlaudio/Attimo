@@ -3,7 +3,7 @@ extends Node
 ## Presents FSM state on the Mannequin: maps the LOCAL StateMachine.state_changed signal to AnimationTree travel,
 ## the Locomotion blend and the Land overlay. Animation shows state; it is not feedback in the D-10 sense.
 ## The tree root is a BlendTree (tools/build_mannequin_tree.gd): StateMachine -> TimeScale -> Land OneShot -> Aim
-## (upper-body layer) -> output. The state machine has one dash node per Dodge clip; dash_node_for() picks it (D-12).
+## (upper-body layer) -> output. The state machine has one dash node per Dodge clip; dash_node_for() picks it (D-12, the aimed nodes are dormant).
 ## The aim layer is the spell hand (quick 261118-qi3): an aim press starts the AimMachine at Enter on the same physics
 ## frame, Hold loops while aim is held, use_hand while aiming fires the Shoot OneShot, a release travels to Exit and the
 ## layer fades out after the Exit clip.
@@ -45,8 +45,11 @@ const IDLE_CANCEL_ACTIONS: Array[StringName] = [&"move_forward", &"move_back", &
 ## The AimPoseModifier node, relative to the Mannequin node (the AnimationTree's parent).
 const AIM_MODIFIER_PATH: NodePath = ^"Rig_Medium/Skeleton3D/AimPoseModifier"
 
+## The dash nodes that take the dash crossfades (dash_in_blend, dash_in_blend_air, dash_out_blend). Slide keeps its own edges.
+const DASH_NODES: Array[StringName] = [&"Dash", &"DashLeft", &"DashRight", &"DashBack"]
+
 ## The dash nodes of the state machine and the Dodge clip each plays; the clip length is stretched to dash_time.
-## Dash is the air dash and the aimed forward dash, the others are the aimed dashes (D-12). Slide is the unaimed ground
+## Dash is the ground and the air dash; DashLeft, DashRight and DashBack are dormant since there is no dash while aiming (D-12 amended, quick 261120-dik). Slide is the unaimed ground
 ## dash (DEV-04): the retargeted Running_Slide, picked through Dash.slide.
 const DASH_CLIPS: Dictionary[StringName, StringName] = {
 	&"Dash": &"Dodge_Forward",
@@ -132,6 +135,8 @@ var _slide_hold_left: float = 0.0
 var _dash_state: Node
 ## Length in seconds of each dash node's Dodge clip, read once in _ready (Pitfall 6).
 var _dash_lengths: Dictionary[StringName, float] = {}
+## The state machine's direct edges by "from>to" (one per ordered pair), so the dash crossfades can be set per travel.
+var _edges: Dictionary[StringName, AnimationNodeStateMachineTransition] = {}
 
 
 func _ready() -> void:
@@ -172,6 +177,8 @@ func _ready() -> void:
 	if tree_root != null and tree_root.has_node(&"StateMachine"):
 		var machine: AnimationNodeStateMachine = tree_root.get_node(&"StateMachine") as AnimationNodeStateMachine
 		_has_jump2 = machine.has_node(&"Jump2")
+		for i: int in machine.get_transition_count():
+			_edges[StringName("%s>%s" % [machine.get_transition_from(i), machine.get_transition_to(i)])] = machine.get_transition(i)
 		var locomotion: AnimationNodeBlendSpace2D = machine.get_node(&"Locomotion") as AnimationNodeBlendSpace2D
 		_has_sprint = locomotion != null and locomotion.max_space.y > 1.0
 
@@ -337,9 +344,35 @@ func _on_state_changed(from_state: StringName, to_state: StringName) -> void:
 func _travel_to(node: StringName) -> void:
 	# _playback is null when the tree is inactive or has no StateMachine node; the rest of the handler must still run (WR-03).
 	if _playback != null:
+		apply_blend(_playback.get_current_node(), node)
 		_playback.travel(node)
 	last_travel = node
 	last_travel_frame = Engine.get_physics_frames()
+
+
+## The crossfade in seconds the edge `from_node` to `to_node` should use, or -1 to keep the tree's own value. Into a dash
+## clip: dash_in_blend from the ground locomotion, dash_in_blend_air from a jump, long jump or fall. Out of a dash clip:
+## dash_out_blend. Slide keeps its own edges (quick 261120-dik).
+func blend_time_for(from_node: StringName, to_node: StringName) -> float:
+	var config: MovementConfig = player.config
+	if from_node == &"Slide" or to_node == &"Slide":
+		return -1.0
+	if DASH_NODES.has(from_node):
+		return config.dash_out_blend
+	if DASH_NODES.has(to_node):
+		return config.dash_in_blend if from_node == &"Locomotion" else config.dash_in_blend_air
+	return -1.0
+
+
+## Writes the crossfade of the edge `from_node` to `to_node` just before the travel (live-tunable: the F2 sliders change the
+## config, the next travel picks it up). The tree resource is shared, but every writer uses the same config. Presentation only.
+func apply_blend(from_node: StringName, to_node: StringName) -> void:
+	var blend: float = blend_time_for(from_node, to_node)
+	if blend < 0.0:
+		return
+	var edge: AnimationNodeStateMachineTransition = _edges.get(StringName("%s>%s" % [from_node, to_node]))
+	if edge != null:
+		edge.xfade_time = blend
 
 
 ## Remembers the impact and the horizontal speed of this player's touchdown (EventBus.landed fires one tick before the
