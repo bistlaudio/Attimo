@@ -8,7 +8,7 @@ extends State
 ## A jump press during a ground dash leaves it into the LongJump (D-06; the hop sets its own speed per stage).
 ## During an air dash a jump press only stays in the buffer: there is no air jump (MOVE-05). A ground dash that
 ## ended on the ground opens the config.dash_jump_grace window in which a jump is still a long jump (GroundState).
-## A dash never starts while aiming or inside a lockout (PlayerController.dash_locked_reason, quick 261120-dik); a refused press never reaches enter.
+## A dash never starts while aiming (PlayerController.dash_locked_reason, quick 261120-dik); a refused press never reaches enter.
 ## Emits the dash_started fact once on enter. A ground dash started without aim is shown as the retargeted Running_Slide
 ## (DEV-04, quick 261118-qbt); that is presentation only, see `slide`.
 

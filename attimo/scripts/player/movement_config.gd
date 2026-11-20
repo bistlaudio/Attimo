@@ -1,7 +1,7 @@
 class_name MovementConfig
 extends Resource
 ## The one tunable movement resource (MOVE-10, D-23). Every movement number lives here.
-## Eleven groups, 56 live sliders in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
+## Eleven groups, 54 live sliders in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
 ## Long jump (dash hop), Timing windows, Floor and platforms, Aim, Pose, Clip playback. Gravity is set directly
 ## (rise_gravity, fall_multiplier); jump speeds are derived from the heights, so editing a
 ## height never changes the fall feel. Every divisor field has a strictly positive minimum (T-02-02).
@@ -77,10 +77,6 @@ extends Resource
 @export_range(0.05, 1.5, 0.01) var landing_window: float = 0.35
 ## Seconds after a dash in which a jump still counts as a long jump; raise it for a more forgiving dash hop.
 @export_range(0.0, 0.5, 0.01) var dash_jump_grace: float = 0.15
-## Seconds after a jump take-off in which a dash press is refused (blocked feedback, no buffering); raise it for a longer lockout.
-@export_range(0.0, 0.3, 0.01) var dash_block_takeoff: float = 0.1
-## Seconds after touchdown in which a dash press is refused (blocked feedback, no buffering); raise it for a longer lockout.
-@export_range(0.0, 0.3, 0.01) var dash_block_landing: float = 0.1
 ## Ground speed under which the chain and the long-jump stack reset in m/s; raise it so slow walking breaks the combo.
 @export_range(0.0, 5.0, 0.1) var combo_reset_speed: float = 0.5
 

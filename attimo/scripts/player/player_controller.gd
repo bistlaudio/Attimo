@@ -38,18 +38,11 @@ var dash_jump_grace_timer: float = 0.0
 ## True while the aim button is held (CAM-02, D-09). While true this controller owns the facing: VisualRoot's yaw follows
 ## the camera every physics tick and face() and face_now() do nothing. Changes emit aim_changed.
 var aiming: bool = false
-## Seconds left of the landing lockout: a dash press is refused after touchdown (quick 261120-dik). Set in _land.
-var dash_landing_lock_timer: float = 0.0
-## Seconds left of the take-off lockout: a dash press is refused after a jump leaves the floor. Set in _leave_floor.
-var dash_takeoff_lock_timer: float = 0.0
 ## Seconds left of the blocked-dash twitch. ProceduralPose reads it; a refused dash press starts it.
 var dash_twitch_timer: float = 0.0
 
-## Reasons dash_locked_reason() returns (also the `reason` of EventBus.dash_blocked).
+## Reason dash_locked_reason() returns (also the `reason` of EventBus.dash_blocked). Aim is the only dash lockout.
 const DASH_LOCK_AIM: StringName = &"aim"
-const DASH_LOCK_PIROUETTE: StringName = &"pirouette"
-const DASH_LOCK_LANDING: StringName = &"landing"
-const DASH_LOCK_TAKEOFF: StringName = &"takeoff"
 
 var _was_on_floor: bool = true
 var _dash_block_frame: int = -1
@@ -57,7 +50,6 @@ var _last_platform_velocity: Vector3 = Vector3.ZERO
 
 @onready var visual_root: Node3D = $VisualRoot
 @onready var state_machine: StateMachine = $StateMachine
-@onready var _pose: ProceduralPose = get_node_or_null(^"ProceduralPose") as ProceduralPose
 
 
 func _ready() -> void:
@@ -171,8 +163,6 @@ func teleport(new_position: Vector3) -> void:
 	move_velocity = Vector3.ZERO
 	vertical_speed = 0.0
 	velocity = Vector3.ZERO
-	dash_landing_lock_timer = 0.0
-	dash_takeoff_lock_timer = 0.0
 	_was_on_floor = false
 	reset_physics_interpolation()
 
@@ -213,22 +203,16 @@ func can_coyote_jump() -> bool:
 	return coyote_timer > 0.0
 
 
-## Why a dash is locked right now, or &"" when no lockout applies (quick 261120-dik). The one place both the ground and
-## the air states ask: no dash while aiming, none during the Jump 3 / long jump stage 3 pirouette until it ends, none in the
-## landing window after touchdown or the take-off window after a jump. The cooldown and the air dash charge are not lockouts.
+## Why a dash is locked right now, or &"" when no lockout applies (quick 261120-dik, reduced by quick 261120-ef9). The one place
+## both the ground and the air states ask. The only lockout is aim: no dash while aiming. The pirouette, the landing and the
+## take-off never lock the dash (a dash hop on the landing tick works). The cooldown and the air dash charge are not lockouts.
 func dash_locked_reason() -> StringName:
 	if aiming:
 		return DASH_LOCK_AIM
-	if _pose != null and _pose.spinning:
-		return DASH_LOCK_PIROUETTE
-	if dash_landing_lock_timer > 0.0:
-		return DASH_LOCK_LANDING
-	if dash_takeoff_lock_timer > 0.0:
-		return DASH_LOCK_TAKEOFF
 	return &""
 
 
-## True when a dash may start: no lockout, the cooldown has elapsed, and on the ground always, in the air only while
+## True when a dash may start: not aiming, the cooldown has elapsed, and on the ground always, in the air only while
 ## the air dash of this airtime is unspent (D-12).
 func can_dash() -> bool:
 	if dash_locked_reason() != &"":
@@ -311,15 +295,13 @@ func _set_chain_stage(stage: int) -> void:
 	EventBus.chain_stage_changed.emit(stage)
 
 
-## Per-tick timers (coyote, buffer, dash cooldown, long jump grace, dash lockouts, landing window). Runs before the states, so every state
+## Per-tick timers (coyote, buffer, dash cooldown, long jump grace, blocked-dash twitch, landing window). Runs before the states, so every state
 ## sees the same timers. Polling just_pressed in the physics tick catches presses between two ticks.
 func _tick_timers(delta: float) -> void:
 	coyote_timer = maxf(coyote_timer - delta, 0.0)
 	jump_buffer_timer = maxf(jump_buffer_timer - delta, 0.0)
 	dash_cooldown_timer = maxf(dash_cooldown_timer - delta, 0.0)
 	dash_jump_grace_timer = maxf(dash_jump_grace_timer - delta, 0.0)
-	dash_landing_lock_timer = maxf(dash_landing_lock_timer - delta, 0.0)
-	dash_takeoff_lock_timer = maxf(dash_takeoff_lock_timer - delta, 0.0)
 	dash_twitch_timer = maxf(dash_twitch_timer - delta, 0.0)
 	_tick_combo(delta)
 	if Input.is_action_just_pressed(&"jump"):
@@ -413,7 +395,6 @@ func _post_move() -> void:
 func _land(impact_speed: float) -> void:
 	air_dash_available = true
 	coyote_timer = 0.0
-	dash_landing_lock_timer = config.dash_block_landing
 	if chain_stage > 0 or long_jump_stage > 0:
 		combo_timer = config.landing_window
 	EventBus.landed.emit(global_position, impact_speed)
@@ -423,9 +404,6 @@ func _leave_floor() -> void:
 	# Coyote time starts only when the body walked off (a jump take-off leaves with upward speed).
 	if vertical_speed <= 0.0:
 		coyote_timer = config.coyote_time
-	else:
-		# A jump take-off (not a walk off a ledge) locks the dash for a short window.
-		dash_takeoff_lock_timer = config.dash_block_takeoff
 	move_velocity.x += _last_platform_velocity.x * config.platform_carry
 	move_velocity.z += _last_platform_velocity.z * config.platform_carry
 	air_speed_cap = maxf(config.run_speed, horizontal_speed())
