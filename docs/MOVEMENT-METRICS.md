@@ -30,13 +30,13 @@ Every number comes from the real Player driven headless with scripted per-tick i
 
 ## Long jump (dash hop)
 
-The long jump is the dash hop: a jump during a ground dash or within dash_jump_grace after it. Its speed is set per stage (long_jump_speed_1/2/3), never carried from the dash. Stage 1 is the first hop; each clean repeat (a ground dash started inside the landing window after touchdown, then a jump) climbs to stage 2 and 3; the combo ends after stage 3 and the next hop starts again at stage 1; a miss (window runs out, standing still, a normal jump in between) restarts at stage 1. The speeds are capped by an export maximum of 22 m/s, the envelope the camera and tunnelling tests cover. Take-off speed is the horizontal speed on the first tick of the long jump. One hop streak is measured: dash + jump on the first tick after the landing lockout (dash_block_landing) of each hop, inside the landing window.
+The long jump is the dash hop: a jump during a ground dash or within dash_jump_grace after it. Its speed is set per stage (long_jump_speed_1/2/3), never carried from the dash. Stage 1 is the first hop; each clean repeat (a ground dash started inside the landing window after touchdown, then a jump) climbs to stage 2 and 3; the combo ends after stage 3 and the next hop starts again at stage 1; a miss (window runs out, standing still, a normal jump in between) restarts at stage 1. The speeds are capped by an export maximum of 22 m/s, the envelope the camera and tunnelling tests cover. Take-off speed is the horizontal speed on the first tick of the long jump. One hop streak is measured: dash + jump on the landing tick of each hop.
 
 | Verb | Stage | Height (m) | Distance (m) | Take-off speed (m/s) | Airtime (s) | Note |
 |---|---|---|---|---|---|---|
 | Long jump stage 1 | 1 | 2.00 | 9.10 | 14.00 | 0.63 | dash + jump on one tick from a run, long_jump_speed_1 14.0 m/s |
-| Long jump stage 2 | 2 | 2.50 | 11.73 | 16.00 | 0.72 | dash + jump right after the landing lockout of stage 1, long_jump_speed_2 16.0 m/s |
-| Long jump stage 3 | 3 | 3.60 | 15.60 | 18.00 | 0.85 | dash + jump right after the landing lockout of stage 2, long_jump_speed_3 18.0 m/s |
+| Long jump stage 2 | 2 | 2.50 | 11.73 | 16.00 | 0.72 | dash + jump on the landing tick of stage 1, long_jump_speed_2 16.0 m/s |
+| Long jump stage 3 | 3 | 3.60 | 15.60 | 18.00 | 0.85 | dash + jump on the landing tick of stage 2, long_jump_speed_3 18.0 m/s |
 | Long jump stage 1 (after stage 3) | 1 | 2.00 | 9.10 | 14.00 | 0.63 | the combo ends after stage 3; the next hop starts again at stage 1 |
 | Long jump (last grace tick) | 1 | 2.00 | 9.10 | 14.00 | 0.63 | jump in the last tick of dash_jump_grace, stage 1 row applies |
 
@@ -124,8 +124,6 @@ Every MovementConfig float of res://resources/player/movement_default.tres at ge
 | `jump_buffer_time` | 0.120 |
 | `landing_window` | 0.350 |
 | `dash_jump_grace` | 0.150 |
-| `dash_block_takeoff` | 0.100 |
-| `dash_block_landing` | 0.100 |
 | `combo_reset_speed` | 0.500 |
 | `snap_min` | 0.300 |
 | `snap_max` | 0.500 |
