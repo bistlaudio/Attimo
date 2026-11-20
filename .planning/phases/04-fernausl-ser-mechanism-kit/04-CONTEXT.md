@@ -94,6 +94,9 @@ Everything is greybox built from KayKit Prototype Bits (Group A rule). No partic
 - **D-28:** After the showcase come **several puzzle rooms** that together **cover all mechanisms** and the AND, OR and timer logic, as well as near contact and the big pulse. At least one of them is solved with the pulse (ROADMAP criterion 3).
 - **D-29:** Built from Prototype Bits, on the 1 m grid with 2 m / 4 m modules (same reference geometry as the movement gym).
 
+### Planning size
+- **D-30:** Keep the plan count inside the GSD granularity band (project granularity is `standard`: 3-5 plans per phase). Do not split work into many small plans; group related work (for example all triggers + logic in one plan, all moving mechanisms in one). Phases 2 and 3 ended with 14 and 10 plans; the developer wants fewer. This applies to every phase from now on, not only Phase 4.
+
 ### Claude's Discretion
 - Number and layout of the puzzle rooms (about 3 is a reasonable start), as long as together they cover every mechanism and logic node.
 - Exact numbers: assist angle and hysteresis, slowdown factor, pulse flash duration, glow intensities per stage, door/gate speed, nozzle forces per mode, pendulum knock-back, crank wind-up ratio, energy-core duration (all tunable, exposed in the F2 panel where it fits).
