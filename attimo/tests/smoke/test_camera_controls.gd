@@ -137,6 +137,11 @@ func _scenario_settings_tampering(check: Callable) -> void:
 
 	loaded = _load_with(TEST_PATH_B, "invert_y=true\nsensitivity=2.5\nauto_follow_mode=\"on\"\nextra=Object(Resource,\"script\":null)")
 	check.call(is_equal_approx(loaded.sensitivity, 1.0) and not loaded.invert_y and loaded.auto_follow_mode == "auto", "(c) a file with Object( syntax loads all defaults")
+	# WR-05: whitespace between the name and the parenthesis does not slip past the filter.
+	for gap: String in [" ", "\t", "  "]:
+		for name: String in ["Object", "Resource", "SubResource", "ExtResource"]:
+			loaded = _load_with(TEST_PATH_B, "invert_y=true\nsensitivity=2.5\nextra=%s%s(Resource,\"script\":null)" % [name, gap])
+			check.call(is_equal_approx(loaded.sensitivity, 1.0) and not loaded.invert_y, "(c) a file with '%s' + %d whitespace char(s) + '(' loads all defaults" % [name, gap.length()])
 
 	_cleanup_file(TEST_PATH_C)
 	loaded = CameraSettings.load_from(TEST_PATH_C)

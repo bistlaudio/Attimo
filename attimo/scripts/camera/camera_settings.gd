@@ -14,8 +14,10 @@ const DEFAULT_SENSITIVITY: float = 1.0
 ## Order used by the 02-12 selector.
 const AUTO_FOLLOW_MODES: Array[String] = ["auto", "on", "off"]
 const DEFAULT_AUTO_FOLLOW_MODE: String = "auto"
-## A28: text containing any of these is rejected before ConfigFile parses it (defense in depth).
-const FORBIDDEN_SYNTAX: Array[String] = ["Object(", "Resource(", "SubResource(", "ExtResource("]
+## A28: text containing any of these constructor-like names followed by "(" is rejected before ConfigFile parses it
+## (defense in depth). Godot's variant parser skips whitespace between the name and the parenthesis, so the test allows
+## any whitespace there (WR-05). The per-field type checks below remain the real guard.
+const FORBIDDEN_SYNTAX_PATTERN: String = "(Object|Resource|SubResource|ExtResource)\\s*\\("
 
 ## Multiplier on CameraRig.base_sensitivity, clamped to SENSITIVITY_MIN..SENSITIVITY_MAX on load.
 var sensitivity: float = DEFAULT_SENSITIVITY
@@ -83,7 +85,5 @@ static func _read(config: ConfigFile, key: String) -> Variant:
 
 
 static func _has_forbidden_syntax(text: String) -> bool:
-	for token: String in FORBIDDEN_SYNTAX:
-		if text.contains(token):
-			return true
-	return false
+	var pattern: RegEx = RegEx.create_from_string(FORBIDDEN_SYNTAX_PATTERN)
+	return pattern != null and pattern.search(text) != null
