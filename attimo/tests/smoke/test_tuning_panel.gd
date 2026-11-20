@@ -20,6 +20,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_auto_follow(tree, check)
 	await _scenario_save_button(tree, check)
 	await _scenario_aim_rows(tree, check)
+	await _scenario_slider_save(tree, check)
 	_cleanup_file(TEST_SETTINGS_PATH)
 
 
@@ -195,4 +196,23 @@ func _scenario_aim_rows(tree: SceneTree, check: Callable) -> void:
 			if key.begins_with("aim_"):
 				aim_keys += 1
 	check.call(aim_keys == 0, "(7) the settings file contains no aim_ key (%d)" % aim_keys)
+	await _free_all(tree, nodes)
+
+
+# (8, WR-04) dragging the sensitivity slider reaches the rig on every tick but writes the file only when the drag ends;
+# a bad settings path warns instead of failing silently.
+func _scenario_slider_save(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree)
+	var rig: CameraRig = nodes[2] as CameraRig
+	var panel: TuningPanel = nodes[3] as TuningPanel
+	var slider: HSlider = panel.get_node("%SensitivitySlider") as HSlider
+	slider.drag_started.emit()
+	slider.value = 1.7
+	slider.value = 1.9
+	check.call(is_equal_approx(rig.settings.sensitivity, 1.9), "(8) a drag tick reaches the rig at once (got %.2f)" % rig.settings.sensitivity)
+	check.call(not FileAccess.file_exists(TEST_SETTINGS_PATH), "(8) no settings file is written while the slider is dragged")
+	slider.drag_ended.emit(true)
+	check.call(FileAccess.file_exists(TEST_SETTINGS_PATH) and is_equal_approx(CameraSettings.load_from(TEST_SETTINGS_PATH).sensitivity, 1.9), "(8) the final value is saved when the drag ends")
+	slider.value = 1.2
+	check.call(is_equal_approx(CameraSettings.load_from(TEST_SETTINGS_PATH).sensitivity, 1.2), "(8) a change outside a drag (keyboard step) saves at once")
 	await _free_all(tree, nodes)
