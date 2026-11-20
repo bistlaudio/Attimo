@@ -92,7 +92,14 @@ if [ "${1:-}" = "--tool" ]; then
 		echo "RUN.SH: FAILED (--tool needs a res:// script path)"
 		exit 1
 	fi
-	"$GODOT" --headless --path "$PROJECT_DIR" -s "$2" 2>&1 | tee "$RUN_LOG"
+	# A tool script that hits a script error never reaches quit(); bound the run where a timeout binary exists (WR-02).
+	TOOL_TIMEOUT=()
+	if command -v timeout >/dev/null 2>&1; then
+		TOOL_TIMEOUT=(timeout 300)
+	elif command -v gtimeout >/dev/null 2>&1; then
+		TOOL_TIMEOUT=(gtimeout 300)
+	fi
+	${TOOL_TIMEOUT[@]+"${TOOL_TIMEOUT[@]}"} "$GODOT" --headless --path "$PROJECT_DIR" -s "$2" 2>&1 | tee "$RUN_LOG"
 	RUN_RC=${PIPESTATUS[0]}
 else
 	if [ -n "${1:-}" ]; then

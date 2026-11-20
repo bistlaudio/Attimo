@@ -79,12 +79,12 @@ const LAND_LENGTH: float = 0.3
 ## the hips height share of rest per key): the last key with the hips at or above 95 % of rest before the drop is
 ## 0.0667 s (1.019); the minimum is 0.300 s (0.480, a drop of 0.54); the first key within 10 % of the drop of the
 ## minimum is 0.300 s; plus 0.1 s of the low hold ends the window at 0.400 s (0.596 of rest, below 80 %). The window of
-## 0.3333 s is stretched to dash_time (0.18 s) by the animator, a playback scale of 1.85 (at most 4). Never the run-in
-## steps or the get-up.
+## 0.3333 s is played by the animator at a fixed MannequinAnimator.SLIDE_PLAYBACK_SCALE (1.6), see the drop-only note
+## below. Never the run-in steps or the get-up.
 const SLIDE_START: float = 0.0667
 const SLIDE_LENGTH: float = 0.3333
-## Only the drop (SLIDE_START to the hips minimum at 0.300 s) is stretched to dash_time, about 1.3x instead of the
-## whole window at 1.85x (developer 2026-11-18: "too fast"). The rest of the window holds the low pose. Stored as
+## Only the drop (SLIDE_START to the hips minimum at 0.300 s) is stretched to dash_time (about 1.3x), not the whole
+## window (developer 2026-11-18: "too fast"). The rest of the window holds the low pose. Stored as
 ## metadata "drop_length" on the Slide node; MannequinAnimator reads it.
 const SLIDE_DROP_LENGTH: float = 0.2333
 ## Crossfades of the Slide edges (developer 2026-11-18: the slide popped in and out). Presentation only: the travel
@@ -206,6 +206,10 @@ func _build_aim_machine() -> AnimationNodeStateMachine:
 func _spell_clip(ual_clip: StringName, fallback_start: float, fallback_length: float, loop: bool = false) -> AnimationNodeAnimation:
 	if _library.has_animation(ual_clip):
 		return _clip(ual_clip)
+	if not FALLBACK.has(ual_clip):
+		# No fallback row: registering the missing clip makes _first_missing_clip() fail the run through the normal path.
+		push_error("No FALLBACK row for %s" % ual_clip)
+		return _clip(ual_clip)
 	var kaykit: StringName = FALLBACK[ual_clip]
 	print("TREE: fallback %s -> %s" % [ual_clip, kaykit])
 	var node: AnimationNodeAnimation = _clip(kaykit)
@@ -221,8 +225,12 @@ func _spell_clip(ual_clip: StringName, fallback_start: float, fallback_length: f
 func _land_variant(ual_clip: StringName, length: float) -> AnimationNodeAnimation:
 	var clip_name: StringName = ual_clip
 	if not _library.has_animation(ual_clip):
-		clip_name = FALLBACK[ual_clip]
-		print("TREE: fallback %s -> %s" % [ual_clip, clip_name])
+		if FALLBACK.has(ual_clip):
+			clip_name = FALLBACK[ual_clip]
+			print("TREE: fallback %s -> %s" % [ual_clip, clip_name])
+		else:
+			# Registered as used, so _first_missing_clip() fails the run through the normal path.
+			push_error("No FALLBACK row for %s" % ual_clip)
 	var node: AnimationNodeAnimation = _clip(clip_name)
 	node.use_custom_timeline = true
 	node.timeline_length = length
@@ -258,7 +266,9 @@ func _single_cycle(clip_name: StringName) -> AnimationNodeAnimation:
 	var node: AnimationNodeAnimation = _clip(clip_name)
 	node.use_custom_timeline = true
 	node.start_offset = 0.0
-	node.timeline_length = _library.get_animation(clip_name).length
+	var animation: Animation = _library.get_animation(clip_name) if _library.has_animation(clip_name) else null
+	# A missing clip is reported by _first_missing_clip() (the node registered it above); length 0 only lets the build finish.
+	node.timeline_length = animation.length if animation != null else 0.0
 	node.stretch_time_scale = false
 	node.loop_mode = Animation.LOOP_NONE
 	return node

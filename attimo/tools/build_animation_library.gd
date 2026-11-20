@@ -66,7 +66,8 @@ const UAL_DROPPED: Array[StringName] = [
 	## twist the chest 57 degrees away from the right arm (Ranged_1H_Aiming: 36 degrees towards it). The prosthetic is
 	## the right hand and AimPoseModifier points the right arm, so the layer fought the solver (test_aim_pose (z) torso
 	## twist 0.079). Mirroring would need a retargeter change (out of scope). The tree builds the KayKit
-	## Ranged_1H_Aiming fallback for all four (FALLBACK): raise, hold, the raise played backwards, hold.
+	## Ranged_1H_Aiming fallback for all four (FALLBACK): the raise, the hold window, and a short hold for Exit (the reverse
+## playback was dropped, see tools/build_mannequin_tree.gd).
 	&"UAL_Spell_Simple_Enter",
 	&"UAL_Spell_Simple_Idle_Loop",
 	&"UAL_Spell_Simple_Shoot",
@@ -86,7 +87,12 @@ func _initialize() -> void:
 			quit(1)
 			return
 		var instance: Node = scene.instantiate()
-		var player := instance.get_node("AnimationPlayer") as AnimationPlayer
+		var player := instance.get_node_or_null("AnimationPlayer") as AnimationPlayer
+		if player == null:
+			push_error("No AnimationPlayer in %s" % path)
+			instance.free()
+			quit(1)
+			return
 		for clip: StringName in player.get_animation_list():
 			if clip in WANTED:
 				var animation := player.get_animation(clip).duplicate() as Animation
@@ -111,12 +117,28 @@ func _initialize() -> void:
 		var first: Variant = animation.track_get_key_value(track, 0)
 		for key: int in animation.track_get_key_count(track):
 			animation.track_set_key_value(track, key, first)
-	var mannequin: Node = (load(MANNEQUIN) as PackedScene).instantiate()
+	var mannequin_scene: PackedScene = load(MANNEQUIN) as PackedScene
+	if mannequin_scene == null:
+		push_error("Cannot load %s" % MANNEQUIN)
+		quit(1)
+		return
+	var mannequin: Node = mannequin_scene.instantiate()
 	var target_skeleton: Skeleton3D = _find_skeleton(mannequin)
+	if target_skeleton == null:
+		push_error("No Skeleton3D in %s" % MANNEQUIN)
+		mannequin.free()
+		quit(1)
+		return
 	var target_to_character: Transform3D = ClipRetargeter.to_character_space(target_skeleton, mannequin)
 	for row: Dictionary in RETARGETED:
 		var clip: StringName = row["clip"] as StringName
-		var source_root: Node = (load(String(row["source"])) as PackedScene).instantiate()
+		var source_scene: PackedScene = load(String(row["source"])) as PackedScene
+		if source_scene == null:
+			push_error("Conformed source missing: %s" % row["source"])
+			mannequin.free()
+			quit(1)
+			return
+		var source_root: Node = source_scene.instantiate()
 		var source_player: AnimationPlayer = _find_player(source_root)
 		var baked: Animation = null
 		if source_player != null and source_player.has_animation(clip):
