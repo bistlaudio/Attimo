@@ -1,4 +1,4 @@
-[gd_resource type="AnimationNodeBlendTree" format=3]
+[gd_resource type="AnimationNodeBlendTree" format=3 uid="uid://crxlqgvbve4ol"]
 
 [sub_resource type="AnimationNodeBlend2" id="AnimationNodeBlend2_r81t1"]
 filter_enabled = true
