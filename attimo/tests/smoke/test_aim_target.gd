@@ -16,6 +16,23 @@ const PARALLAX_MIN_DEG: float = 1.0
 const SETTLE_FRAMES: int = 6
 const AIM_FRAMES: int = 90
 
+## Records the camera position and aim point in _process at the default priority (like the animator that feeds the arm).
+class EarlyReader extends Node:
+	var rig: CameraRig
+	var camera_position: Vector3 = Vector3.ZERO
+	var aim_point: Vector3 = Vector3.ZERO
+
+	func _process(_delta: float) -> void:
+		camera_position = rig.camera.global_position
+		aim_point = rig.aim_target_point()
+
+
+## Same reads after everything else (priority 200): what the rig finally produced this frame.
+class LateReader extends EarlyReader:
+	func _init() -> void:
+		process_priority = 200
+
+
 var _floor: StaticBody3D
 var _player: PlayerController
 var _rig: CameraRig
@@ -29,6 +46,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_world_hit(tree, check)
 	await _scenario_direction(tree, check)
 	await _scenario_wiring(tree, check)
+	await _scenario_frame_order(tree, check)
 
 
 func _begin(tree: SceneTree) -> void:
@@ -129,3 +147,31 @@ func _scenario_wiring(tree: SceneTree, check: Callable) -> void:
 	var parallax: float = rad_to_deg(arm_direction.angle_to(camera_forward))
 	check.call(parallax > PARALLAX_MIN_DEG, "(t5) the shoulder-to-point direction differs from the camera forward by %.2f degrees (> %.0f)" % [parallax, PARALLAX_MIN_DEG])
 	await _end(tree, [wall])
+
+
+# (t6, WR-01) the rig updates before the Player and every default-priority reader: a node placed BEFORE the rig in the tree
+# sees the same camera position and aim point as a reader that runs after everything, even while the view is turning.
+func _scenario_frame_order(tree: SceneTree, check: Callable) -> void:
+	_floor = Fixtures.spawn_floor(tree.root, Vector3(60.0, 1.0, 60.0))
+	_player = Fixtures.spawn_player(tree.root, Vector3.ZERO)
+	var early: EarlyReader = EarlyReader.new()
+	tree.root.add_child(early)
+	_rig = Fixtures.spawn_camera_rig(tree.root, _player)
+	early.rig = _rig
+	var late: LateReader = LateReader.new()
+	late.rig = _rig
+	tree.root.add_child(late)
+	await Fixtures.wait_physics(tree, 6)
+	await Fixtures.wait_process(tree, 2)
+	check.call(_rig.process_priority < _player.process_priority, "(t6) the rig runs before the Player (priority %d vs %d)" % [_rig.process_priority, _player.process_priority])
+	var worst_camera: float = 0.0
+	var worst_point: float = 0.0
+	for i: int in SETTLE_FRAMES:
+		_rig.yaw += 0.2
+		_rig.pitch = clampf(_rig.pitch + 0.05, _rig.pitch_min, _rig.pitch_max)
+		await Fixtures.wait_process(tree, 1)
+		worst_camera = maxf(worst_camera, early.camera_position.distance_to(late.camera_position))
+		worst_point = maxf(worst_point, early.aim_point.distance_to(late.aim_point))
+	check.call(worst_camera < POINT_TOLERANCE, "(t6) a reader ahead of the rig in tree order sees the current camera position (off by %.5f m)" % worst_camera)
+	check.call(worst_point < POINT_TOLERANCE, "(t6) a reader ahead of the rig in tree order sees the current aim point (off by %.5f m)" % worst_point)
+	await _end(tree, [early, late])

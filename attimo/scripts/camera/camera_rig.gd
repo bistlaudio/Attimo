@@ -74,6 +74,9 @@ extends Node3D
 ## Player camera settings (sensitivity, invert-Y, auto-follow mode). Loaded from user://settings.cfg in _ready.
 var settings: CameraSettings
 
+## Process priority of the rig: lower runs first, so every _process reader of the camera (arm solver) sees this frame's view.
+const PROCESS_PRIORITY: int = -100
+
 ## Input device families tracked for the auto-follow mode (A41).
 enum InputDevice { KEYBOARD_MOUSE, JOYPAD }
 
@@ -173,6 +176,10 @@ var _arm_query: PhysicsShapeQueryParameters3D
 
 
 func _ready() -> void:
+	# Run before the Player's MannequinAnimator and AnimationTree: they read aim_target_point() (camera transform) in
+	# _process, and _process order is tree order, so at the default priority the arm aimed at last frame's camera.
+	# Safe: the rig reads the interpolated target transform, which does not depend on _process order (WR-01).
+	process_priority = PROCESS_PRIORITY
 	top_level = true
 	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	# SpringArm3D only casts on physics ticks, so at low tick rates the lens clips walls (A3, measured at
