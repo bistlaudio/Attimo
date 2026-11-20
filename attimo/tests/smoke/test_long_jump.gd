@@ -234,16 +234,15 @@ func _scenario_chain_new_after_stage_three(tree: SceneTree, check: Callable) -> 
 	await _end(player)
 
 
-# U2 / U4 as amended by quick 261120-dik: no dash during the Jump 3 pirouette. The press is refused (dash_blocked, no dash_started),
-# the dash charge stays unspent and the cooldown untouched, and the press is not buffered.
+# U2 / U4: after the Jump 3 pirouette jump exactly one air dash fires, and a second press in the same airtime is refused.
 func _scenario_jump3_then_one_air_dash(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
+	# Cooldown 0 so only the per-airtime flag can refuse the second dash.
+	player.config = player.config.duplicate() as MovementConfig
+	player.config.dash_cooldown = 0.0
 	await _run_up(tree, player)
 	await _held_jump(tree, player)
 	await _held_jump(tree, player)
-	var blocked: Array[StringName] = []
-	var on_blocked: Callable = func(_position: Vector3, reason: StringName) -> void: blocked.append(reason)
-	_bus.connect(&"dash_blocked", on_blocked)
 	Fixtures.send_action_event(&"jump", true)
 	await Fixtures.wait_until(tree, func() -> bool: return not player.is_grounded() and player.vertical_speed <= 0.0, 120)
 	check.call(_stages_are([1, 2, 3]), "(c7) the third jump is Jump 3, the pirouette jump (got %s)" % [_stages])
@@ -251,23 +250,19 @@ func _scenario_jump3_then_one_air_dash(tree: SceneTree, check: Callable) -> void
 	Fixtures.send_action_event(&"dash", true)
 	Fixtures.send_action_event(&"dash", false)
 	await Fixtures.wait_physics(tree, 3)
-	check.call(_air_dashes == 0 and player.state_machine.current.name != &"Dash", "(c7) the dash press during the Jump 3 pirouette starts no dash (air dashes %d)" % _air_dashes)
-	check.call(blocked.size() == 1, "(c7) the refused press emits dash_blocked once (got %s)" % [blocked])
-	check.call(player.air_dash_available and player.dash_cooldown_timer == 0.0, "(c7) the refused press spends neither the air dash nor the cooldown")
+	check.call(_air_dashes == 1, "(c7) the first dash after Jump 3 is an air dash (air dashes %d)" % _air_dashes)
+	await Fixtures.wait_physics(tree, int(ceil((player.config.dash_time + 0.07) * float(TPS))))
+	var airborne: bool = not player.is_grounded()
+	Fixtures.send_action_event(&"dash", true)
+	Fixtures.send_action_event(&"dash", false)
+	await Fixtures.wait_physics(tree, 3)
+	check.call(airborne, "(c7) the player is still in the air for the second dash press")
+	check.call(_air_dashes == 1, "(c7) a second air dash in the same airtime is refused (air dashes %d)" % _air_dashes)
 	await _fly(tree, player, false)
-	await Fixtures.wait_physics(tree, 6)
-	check.call(_air_dashes == 0, "(c7) the refused press was not buffered: no dash fires after the lockout (air dashes %d)" % _air_dashes)
-	_bus.disconnect(&"dash_blocked", on_blocked)
 	await _end(player)
 
 
 # --- Task 2: the long jump ----------------------------------------------------------------------------------
-
-## Waits until no dash lockout applies (the landing and take-off windows of quick 261120-dik run out); a press during a
-## lockout is refused, not buffered, so the scenarios dash after it.
-func _dash_ready(tree: SceneTree, player: PlayerController) -> void:
-	await Fixtures.wait_until(tree, func() -> bool: return player.dash_locked_reason() == &"", 30)
-
 
 ## Horizontal (x, z) distance between two positions.
 func _flat_distance(a: Vector3, b: Vector3) -> float:
@@ -279,7 +274,6 @@ func _flat_distance(a: Vector3, b: Vector3) -> float:
 ## tick of LongJump and the highest horizontal speed of the airtime.
 func _dash_jump(tree: SceneTree, player: PlayerController) -> Dictionary:
 	var longs_before: int = _longs.size()
-	await _dash_ready(tree, player)
 	Fixtures.send_action_event(&"dash", true)
 	Fixtures.send_action_event(&"jump", true)
 	Fixtures.send_action_event(&"dash", false)
@@ -346,7 +340,6 @@ func _scenario_no_air_dash_after_long_jump(tree: SceneTree, check: Callable) -> 
 	player.config.dash_cooldown = 0.0
 	await _run_up(tree, player)
 	var longs_before: int = _longs.size()
-	await _dash_ready(tree, player)
 	Fixtures.send_action_event(&"dash", true)
 	Fixtures.send_action_event(&"jump", true)
 	Fixtures.send_action_event(&"dash", false)
@@ -474,7 +467,6 @@ func _scenario_grace(tree: SceneTree, check: Callable) -> void:
 
 ## A ground dash pressed while running, followed until the Dash state ends.
 func _dash_and_wait_for_end(tree: SceneTree, player: PlayerController) -> void:
-	await _dash_ready(tree, player)
 	Fixtures.send_action_event(&"dash", true)
 	Fixtures.send_action_event(&"dash", false)
 	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Dash", 6)
@@ -501,7 +493,6 @@ func _scenario_chain_reset_by_dash_and_hop(tree: SceneTree, check: Callable) -> 
 	await _run_up(tree, player)
 	await _held_jump(tree, player)
 	check.call(player.chain_stage == 1, "(l7) Jump 1 leaves the chain at 1 (stage %d)" % player.chain_stage)
-	await _dash_ready(tree, player)
 	Fixtures.send_action_event(&"dash", true)
 	Fixtures.send_action_event(&"dash", false)
 	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Dash", 6)

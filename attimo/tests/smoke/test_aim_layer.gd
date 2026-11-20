@@ -260,7 +260,7 @@ func _scenario_dash_scale(tree: SceneTree, check: Callable) -> void:
 	_calls.clear()
 	# Air dash from a low tap jump: scale 1 on entry and on every frame of the hold (DEV-02).
 	await Fixtures.tap_action(tree, &"jump")
-	await Fixtures.wait_physics(tree, Fixtures.lock_ticks(_player.config))
+	await Fixtures.wait_physics(tree, 4)
 	await Fixtures.tap_action(tree, &"dash")
 	var samples: int = 0
 	var hold_samples: int = 0
@@ -347,7 +347,7 @@ func _scenario_air_dash_blocked_in_aim(tree: SceneTree, check: Callable) -> void
 	Input.action_press(&"aim")
 	await Fixtures.wait_physics(tree, 12)
 	await Fixtures.tap_action(tree, &"jump")
-	await Fixtures.wait_physics(tree, Fixtures.lock_ticks(_player.config))
+	await Fixtures.wait_physics(tree, 4)
 	await Fixtures.tap_action(tree, &"dash")
 	await Fixtures.wait_physics(tree, 4)
 	check.call(_find_to(&"Dash") < 0, "(g1) an aimed air dash press starts no Dash (calls %s)" % [_names()])

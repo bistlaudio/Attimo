@@ -1,8 +1,8 @@
 extends RefCounted
-## Quick 261120-dik: dash lockouts and blocked-dash feedback. A dash press is refused (consumed, never buffered) while aiming,
-## during the Jump 3 / long jump stage 3 pirouette, in the landing window after touchdown and in the take-off window after a
-## jump. A refused press emits EventBus.dash_blocked once, kicks the ProceduralPose twitch (no velocity, no dash clip), and
-## spends neither the cooldown nor the air dash charge. A press outside every lockout dashes as before. The dash crossfades
+## Quick 261120-dik, reduced by quick 261120-ef9: the only dash lockout is aim. A dash press while aiming is refused (consumed,
+## never buffered), emits EventBus.dash_blocked once with the reason aim, kicks the ProceduralPose twitch (no velocity, no dash
+## clip), and spends neither the cooldown nor the air dash charge. A press during the Jump 3 / long jump stage 3 pirouette, on
+## the landing tick or right after a take-off starts a dash as before the lockouts. The dash crossfades
 ## (dash_in_blend, dash_in_blend_air, dash_out_blend) are written to the animation edges by MannequinAnimator.
 ## Every expectation derives from player.config; scenarios that change numbers use a duplicate of the config.
 
@@ -82,52 +82,36 @@ func _unspent(player: PlayerController) -> bool:
 	return player.dash_cooldown_timer == 0.0 and player.air_dash_available
 
 
-# A press right after a jump take-off is refused; nothing fires after the window; outside it the air dash works.
+# A press right after a jump take-off starts the air dash: the take-off is no lockout.
 func _scenario_takeoff(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
 	Fixtures.send_action_event(&"jump", true)
-	var up: int = await Fixtures.wait_until(tree, func() -> bool: return player.dash_takeoff_lock_timer > 0.0, 10)
-	check.call(up >= 0, "(t1) a jump take-off starts the take-off lockout (%.2f s)" % player.dash_takeoff_lock_timer)
-	check.call(player.dash_takeoff_lock_timer <= player.config.dash_block_takeoff, "(t1) the lockout lasts at most dash_block_takeoff %.2f s (got %.3f)" % [player.config.dash_block_takeoff, player.dash_takeoff_lock_timer])
-	await Fixtures.tap_action(tree, &"dash")
-	check.call(_only_reason(&"takeoff"), "(t2) the press inside the take-off window emits dash_blocked once with the takeoff reason (got %s)" % [_reasons()])
-	check.call(_dashes.is_empty() and player.state_machine.current.name != &"Dash", "(t2) no dash starts inside the take-off window")
-	check.call(_unspent(player), "(t2) the refused press spends neither the cooldown nor the air dash")
-	await Fixtures.wait_physics(tree, Fixtures.lock_ticks(player.config) + 2)
-	check.call(_dashes.is_empty(), "(t3) the refused press was not buffered: no dash fires after the window ends")
-	check.call(not player.is_grounded() and player.dash_locked_reason() == &"", "(t3) the player is still in the air and no lockout applies")
+	var up: int = await Fixtures.wait_until(tree, func() -> bool: return not player.is_grounded() and player.vertical_speed > 0.0, 10)
+	check.call(up >= 0 and player.dash_locked_reason() == &"", "(t1) a jump take-off leaves no lockout (reason %s)" % player.dash_locked_reason())
 	await Fixtures.tap_action(tree, &"dash")
 	var dashing: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Dash", 4)
-	check.call(dashing >= 0 and _only_dash(true), "(t4) a press after the window starts the air dash (dashes %s)" % [_dashes])
-	check.call(_blocked.size() == 1, "(t4) the allowed press emits no dash_blocked (got %d)" % _blocked.size())
+	check.call(dashing >= 0 and _only_dash(true), "(t2) a press right after take-off starts the air dash (dashes %s)" % [_dashes])
+	check.call(_blocked.is_empty(), "(t2) the press emits no dash_blocked (got %s)" % [_reasons()])
 	await _end(player)
 
 
-# A press on the touchdown tick is refused and a held key does not fire when the window ends.
+# A press on the touchdown tick starts the ground dash: the landing is no lockout.
 func _scenario_landing(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
 	await Fixtures.tap_action(tree, &"jump")
-	var landed: int = await Fixtures.wait_until(tree, func() -> bool: return player.dash_landing_lock_timer > 0.0, 120)
-	check.call(landed >= 0, "(l1) touchdown starts the landing lockout")
-	Input.action_press(&"dash")
-	await Fixtures.wait_physics(tree, 3)
-	check.call(_only_reason(&"landing"), "(l2) the press in the landing window emits dash_blocked once with the landing reason (got %s)" % [_reasons()])
-	check.call(_dashes.is_empty() and player.state_machine.current.name != &"Dash", "(l2) no dash starts in the landing window")
-	check.call(_unspent(player) and player.is_grounded(), "(l2) the refused press spends neither the cooldown nor the air dash")
-	await Fixtures.wait_physics(tree, Fixtures.lock_ticks(player.config) + 4)
-	check.call(_dashes.is_empty() and _blocked.size() == 1, "(l3) the key held through the window does not dash when it ends (no buffer): dashes %d, blocked %d" % [_dashes.size(), _blocked.size()])
-	Input.action_release(&"dash")
-	await Fixtures.wait_physics(tree, 2)
+	await Fixtures.wait_until(tree, func() -> bool: return not player.is_grounded(), 10)
+	var landed: int = await Fixtures.wait_until(tree, func() -> bool: return player.is_grounded(), 120)
+	check.call(landed >= 0 and player.dash_locked_reason() == &"", "(l1) touchdown leaves no lockout (reason %s)" % player.dash_locked_reason())
 	await Fixtures.tap_action(tree, &"dash")
 	var dashing: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Dash", 4)
-	check.call(dashing >= 0 and _only_dash(false), "(l4) a new press after the window starts the ground dash (dashes %s)" % [_dashes])
+	check.call(dashing >= 0 and _only_dash(false), "(l2) a press on the landing tick starts the ground dash (dashes %s)" % [_dashes])
+	check.call(_blocked.is_empty(), "(l2) the press emits no dash_blocked (got %s)" % [_reasons()])
 	await _end(player)
 
 
-# Jump 3 pirouette: the press is refused until the spin ends (take-off window off, so only the pirouette locks).
+# Jump 3 pirouette: a press during the spin starts the air dash, the pirouette is no lockout.
 func _scenario_pirouette(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree, Vector3(0.0, 0.0, 50.0))
-	player.config.dash_block_takeoff = 0.0
 	var pose: ProceduralPose = player.get_node("ProceduralPose") as ProceduralPose
 	Input.action_press(&"move_forward")
 	await Fixtures.wait_until(tree, func() -> bool: return absf(player.horizontal_speed() - player.config.run_speed) < 0.05, 120)
@@ -138,13 +122,11 @@ func _scenario_pirouette(tree: SceneTree, check: Callable) -> void:
 	check.call(spinning >= 0 and player.chain_stage == 3, "(p1) Jump 3 starts the pirouette (stage %d)" % player.chain_stage)
 	Fixtures.send_action_event(&"jump", false)
 	await Fixtures.wait_physics(tree, 4)
-	check.call(player.dash_locked_reason() == &"pirouette", "(p1) the pirouette is the lock reason (got %s)" % player.dash_locked_reason())
+	check.call(pose.spinning and player.dash_locked_reason() == &"", "(p1) the pirouette is no lock reason (got %s)" % player.dash_locked_reason())
 	await Fixtures.tap_action(tree, &"dash")
-	check.call(_only_reason(&"pirouette"), "(p2) the press during the pirouette emits dash_blocked once with the pirouette reason (got %s)" % [_reasons()])
-	check.call(_dashes.is_empty() and _unspent(player), "(p2) no dash, cooldown and air dash unspent")
-	await Fixtures.wait_until(tree, func() -> bool: return player.is_grounded(), 240)
-	await Fixtures.wait_physics(tree, 3)
-	check.call(_dashes.is_empty(), "(p3) nothing fires when the pirouette has ended (no buffer)")
+	var dashing: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Dash", 4)
+	check.call(dashing >= 0 and _only_dash(true), "(p2) a press during the pirouette starts the air dash (dashes %s)" % [_dashes])
+	check.call(_blocked.is_empty(), "(p2) the press emits no dash_blocked (got %s)" % [_reasons()])
 	await _end(player)
 
 

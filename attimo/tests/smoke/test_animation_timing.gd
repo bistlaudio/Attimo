@@ -164,7 +164,7 @@ func _scenario_anticipation(check: Callable) -> void:
 func _scenario_air_dash_hold(tree: SceneTree, check: Callable) -> void:
 	await _begin(tree, Fixtures.spawn_floor(tree.root), Vector3.ZERO)
 	await Fixtures.tap_action(tree, &"jump")
-	await Fixtures.wait_physics(tree, Fixtures.lock_ticks(_player.config))
+	await Fixtures.wait_physics(tree, 4)
 	await Fixtures.tap_action(tree, &"dash")
 	var exited: int = await Fixtures.wait_until(tree, func() -> bool: return _find(&"Dash", &"Fall") >= 0, 30)
 	check.call(exited >= 0, "(1) the dash exit was recorded within 30 ticks")

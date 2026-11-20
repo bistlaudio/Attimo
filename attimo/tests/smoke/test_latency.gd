@@ -48,8 +48,6 @@ func _run_rate(tree: SceneTree, check: Callable, tps: int) -> void:
 
 	# Dash: press, wait for the sample, release, wait for the ground state and the cooldown.
 	var cooldown_ticks: int = ceili((player.config.dash_cooldown + 0.1) * float(tps))
-	# The last jump just landed: let the landing lockout of the dash run out first (a locked press is refused, quick 261120-dik).
-	await Fixtures.wait_physics(tree, Fixtures.lock_ticks(player.config))
 	for i: int in PRESSES:
 		var before: int = probe.dash_samples_ms.size()
 		await tree.create_timer(PHASE_OFFSETS[i]).timeout

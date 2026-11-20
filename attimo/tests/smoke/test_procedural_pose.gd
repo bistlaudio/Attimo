@@ -6,7 +6,7 @@ extends RefCounted
 ## stretch lean); the unaimed ground dash is the retargeted Running_Slide (DEV-04) and the body stays exactly upright;
 ## an air dash does not lean either; Jump 3 and long jump stage 3
 ## spin once and finish before touchdown; with aim held at take-off no pirouette starts, an aim press during a pirouette
-## finishes it cleanly (DEV-03), and a dash press during a pirouette is refused (dash lockout, quick 261120-dik). Every expectation derives from player.config. Actions are
+## finishes it cleanly, and so does an air dash (DEV-03; the pirouette is no dash lockout, quick 261120-ef9). Every expectation derives from player.config. Actions are
 ## released and the tick rate stays at 60 before nodes are freed.
 
 const Fixtures := preload("res://tests/fixtures.gd")
@@ -40,7 +40,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_long_jump_stages(tree, check)
 	await _scenario_aim_gate(tree, check)
 	await _scenario_aim_lean(tree, check)
-	await _scenario_air_dash_blocked_in_pirouette(tree, check)
+	await _scenario_air_dash_finish(tree, check)
 	await _scenario_aim_press_finish(tree, check)
 
 
@@ -221,7 +221,6 @@ func _jump(tree: SceneTree, player: PlayerController, hold: bool = true, tap: bo
 
 ## Dash plus jump: a long jump. Returns the log, the stage and whether the pose spun on the entry tick.
 func _hop(tree: SceneTree, player: PlayerController, on_tick: Callable = Callable()) -> Dictionary:
-	await Fixtures.wait_until(tree, func() -> bool: return player.dash_locked_reason() == &"", 30)
 	Fixtures.send_action_event(&"dash", true)
 	Fixtures.send_action_event(&"jump", true)
 	Fixtures.send_action_event(&"dash", false)
@@ -446,7 +445,6 @@ func _scenario_aim_gate(tree: SceneTree, check: Callable) -> void:
 	await _run_up(tree, player)
 	await _hop(tree, player)
 	await _hop(tree, player)
-	await Fixtures.wait_until(tree, func() -> bool: return player.dash_locked_reason() == &"", 30)
 	Fixtures.send_action_event(&"dash", true)
 	Fixtures.send_action_event(&"dash", false)
 	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Dash", 6)
@@ -484,31 +482,32 @@ func _scenario_aim_lean(tree: SceneTree, check: Callable) -> void:
 	await _end(player)
 
 
-# Quick 261120-dik (replaces the DEV-03 air-dash finish): a dash press during a running pirouette is refused, so no Dash
-# starts, the spin runs on to its normal end and the refused press emits dash_blocked with the pirouette reason.
-func _scenario_air_dash_blocked_in_pirouette(tree: SceneTree, check: Callable) -> void:
+# DEV-03: an air dash during a running pirouette finishes the remaining spin within pirouette_finish_time.
+func _scenario_air_dash_finish(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
-	var reasons: Array[StringName] = []
-	var bus: Node = tree.root.get_node("EventBus")
-	var on_blocked: Callable = func(_position: Vector3, reason: StringName) -> void: reasons.append(reason)
-	bus.connect(&"dash_blocked", on_blocked)
 	await _run_up(tree, player)
 	await _jump(tree, player)
 	await _jump(tree, player)
-	var third: Dictionary = await _jump(tree, player, true, false, _press_dash_late_in_spin)
+	var third: Dictionary = await _jump(tree, player, true, false, _press_dash_mid_flight)
 	var rows: Array[Dictionary] = third.rows
-	check.call(_first_state(rows, &"Dash") < 0, "(d1) no Dash starts during the Jump 3 pirouette")
-	check.call(reasons.has(PlayerController.DASH_LOCK_PIROUETTE), "(d1) a press inside the pirouette emits dash_blocked with the pirouette reason (got %s)" % [reasons])
-	check.call(_max_of(rows, "spin") > SPIN_SEEN_MIN, "(d1) the spin still runs through (max %.2f rad)" % _max_of(rows, "spin"))
-	check.call(_spin_never_snaps_back(rows, 0), "(d1) the spin angle only grows on the way, no snap back")
+	var dash_index: int = _first_state(rows, &"Dash")
+	check.call(dash_index >= 0, "(d1) the air dash started during the Jump 3 pirouette")
+	if dash_index >= 0:
+		var budget: int = dash_index + int(ceil(player.config.pirouette_finish_time * float(TPS))) + 2
+		var finished_at: int = -1
+		for i: int in range(dash_index, rows.size()):
+			if not bool(rows[i].spinning):
+				finished_at = i
+				break
+		check.call(finished_at >= 0 and finished_at <= budget, "(d1) the air dash finishes the spin within pirouette_finish_time plus 2 ticks (DEV-03): row %d of budget %d" % [finished_at, budget])
+		check.call(_spin_never_snaps_back(rows, 0), "(d1) the spin angle only grows on the way, no snap back (DEV-03)")
+		check.call(_max_of(rows.slice(0, dash_index + 1), "spin") < TAU, "(d1) the spin was still running when the air dash began")
 	check.call(_all_finite(rows), "(d1) every written Mannequin basis is finite")
-	bus.disconnect(&"dash_blocked", on_blocked)
 	await _end(player)
 
 
-## A press well after the take-off lockout, inside the pirouette.
-func _press_dash_late_in_spin(tick: int, _rows: Array[Dictionary]) -> void:
-	if tick == MID_FLIGHT_TICKS * 2:
+func _press_dash_mid_flight(tick: int, _rows: Array[Dictionary]) -> void:
+	if tick == MID_FLIGHT_TICKS:
 		Fixtures.send_action_event(&"dash", true)
 		Fixtures.send_action_event(&"dash", false)
 
