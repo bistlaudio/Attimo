@@ -136,6 +136,8 @@ var _dash_lengths: Dictionary[StringName, float] = {}
 
 func _ready() -> void:
 	_playback = animation_tree.get(P_PLAYBACK) as AnimationNodeStateMachinePlayback
+	if _playback == null:
+		push_warning("MannequinAnimator: AnimationTree has no StateMachine playback; state travel is off")
 	last_travel = &"Locomotion"
 	_dash_state = state_machine.get_node_or_null(^"Dash")
 	var clip_player: AnimationPlayer = animation_tree.get_node_or_null(animation_tree.anim_player) as AnimationPlayer
@@ -317,7 +319,8 @@ func _on_state_changed(from_state: StringName, to_state: StringName) -> void:
 			_travel_to(node)
 		elif was_holding:
 			# The held node is the new target (cannot happen with the shipped FSM): play it again from frame 0.
-			_playback.start(node, true)
+			if _playback != null:
+				_playback.start(node, true)
 			last_travel_frame = Engine.get_physics_frames()
 	_update_land(from_state, to_state)
 	# Step the blend once on the same call so an Idle -> Run change shows a non-zero run weight on this frame.
@@ -332,7 +335,9 @@ func _on_state_changed(from_state: StringName, to_state: StringName) -> void:
 
 ## Travels the state machine to `node` and records it with the physics frame of the request.
 func _travel_to(node: StringName) -> void:
-	_playback.travel(node)
+	# _playback is null when the tree is inactive or has no StateMachine node; the rest of the handler must still run (WR-03).
+	if _playback != null:
+		_playback.travel(node)
 	last_travel = node
 	last_travel_frame = Engine.get_physics_frames()
 

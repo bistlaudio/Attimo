@@ -93,6 +93,28 @@ func run(tree: SceneTree, check: Callable) -> void:
 	player.queue_free()
 	floor_body.queue_free()
 	await tree.process_frame
+	await _scenario_no_playback(tree, check)
+
+
+# WR-03: a missing StateMachine playback must not abort the state-change handler. A SCRIPT ERROR here fails run.sh through
+# its log grep; the checks below prove the rest of the handler (travel record, time scale write) still ran.
+func _scenario_no_playback(tree: SceneTree, check: Callable) -> void:
+	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)
+	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3.ZERO)
+	await Fixtures.wait_physics(tree, 10)
+	var animator: MannequinAnimator = player.get_node("MannequinAnimator") as MannequinAnimator
+	animator.set(&"_playback", null)
+	Input.action_press(&"move_forward")
+	await Fixtures.wait_physics(tree, 6)
+	Input.action_release(&"move_forward")
+	check.call(animator.last_travel == &"Locomotion" and Fixtures.animation_tree(player).get(MannequinAnimator.P_TIME_SCALE) != null, "(wr03) a null playback is tolerated on a state change")
+	Input.action_press(&"jump")
+	await Fixtures.wait_physics(tree, 4)
+	Input.action_release(&"jump")
+	check.call(animator.last_travel == &"Jump", "(wr03) the travel is still recorded without a playback (got %s)" % animator.last_travel)
+	player.queue_free()
+	floor_body.queue_free()
+	await tree.process_frame
 
 
 ## The root is a BlendTree whose state machine has no Land state and only immediate, enabled edges between states.
