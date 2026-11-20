@@ -26,14 +26,14 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [x] **MOVE-06**: Player can dash on the ground
 - [x] **MOVE-07**: Player can dash once in the air (resets on landing), and a dash can flow into a jump (dash + jump = long jump; clean repeats on landing stack its speed over three stages)
 - [x] **MOVE-08**: Player keeps momentum from moving platforms and conveyors, and handles slopes and steps without sticking or launching
-- [ ] **MOVE-09**: Player animations follow movement state, built only from the KayKit Rig_Medium kit (clips, cuts, blends, playback speed, procedural root/visual rotation and scale): idle, run (Running_A), jump (Jump_Start → Jump_Idle → Jump_Land), the Jump 3 pirouette (one turn about the vertical axis, not started while aiming, DEV-03; Jump_Start re-cut + procedural rotation), ground/air dash (Dodge_Forward, held pose in air), aim-mode strafe (Running_Strafe_L/R, Walking_Backwards)
-- [ ] **MOVE-11**: Movement verbs are limited to what the animation kit supports; a new verb needs a kit clip or a clip composition before it is added
+- [x] **MOVE-09**: Player animations follow movement state, built from the KayKit Rig_Medium kit plus a few retargeted Mixamo/UAL clips (DEV-04, see docs/ANIMATION-MAP.md) (clips, cuts, blends, playback speed, procedural root/visual rotation and scale): idle, run (Running_A), jump (Jump_Start → Jump_Idle → Jump_Land), the Jump 3 pirouette (one turn about the vertical axis, not started while aiming, DEV-03; Jump_Start re-cut + procedural rotation), ground/air dash (Dodge_Forward, held pose in air), aim-mode strafe (Running_Strafe_L/R, Walking_Backwards)
+- [x] **MOVE-11**: Movement verbs are limited to what the animation kit supports; a new verb needs a kit clip or a clip composition before it is added
 - [x] **MOVE-10**: Movement values live in a tunable resource and are documented in a movement-metrics table (jump height/distance, dash distance)
 
 ### Camera & Aim
 
 - [ ] **CAM-01**: Third-person follow camera, centered behind the character (shoulder offset only in aim mode), follows smoothly with mouse look, without jitter and without clipping through walls
-- [ ] **CAM-02**: Holding the aim button blends into an aim mode with crosshair, tighter FOV and shoulder offset
+- [x] **CAM-02**: Holding the aim button blends into an aim mode with crosshair, tighter FOV and shoulder offset
 - [x] **CAM-03**: Mouse sensitivity and invert-Y are configurable
 - [ ] **CAM-04**: Interactables in range glow turquoise; the targeted one is clearly highlighted
 - [ ] **CAM-05**: Light aim assist snaps the target to the nearest valid interactable near the crosshair (with hysteresis)
@@ -176,11 +176,11 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | MOVE-06 | Phase 2 | Complete |
 | MOVE-07 | Phase 2 | Complete |
 | MOVE-08 | Phase 2 | Complete |
-| MOVE-09 | Phase 3 | Pending |
+| MOVE-09 | Phase 3 | Complete |
 | MOVE-10 | Phase 2 | Complete |
-| MOVE-11 | Phase 3 | Pending |
+| MOVE-11 | Phase 3 | Complete |
 | CAM-01 | Phase 2 | Pending (144 Hz judder check not verified; accepted override, see 02-VERIFICATION.md) |
-| CAM-02 | Phase 3 | Pending |
+| CAM-02 | Phase 3 | Complete |
 | CAM-03 | Phase 2 | Complete |
 | CAM-04 | Phase 4 | Pending |
 | CAM-05 | Phase 4 | Pending |

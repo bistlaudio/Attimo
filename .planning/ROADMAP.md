@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation & Prototype Character** - Pinned Godot project, conventions, repo hygiene, Mannequin_Medium animating in a Prototype Bits test scene, and the gameplay fact bus (completed 2026-11-04)
 - [x] **Phase 2: Movement Core & Follow Camera** - Run, variable jump with a Jump 1-2-3 chain, ground and air dash, the dash-hop long jump, platforms, and a jitter-free mouse-look camera, signed off without juice (completed 2026-11-06)
-- [ ] **Phase 3: Animated Mannequin & Aim Mode** - The Mannequin animates with every movement state from kit clips, plus aim mode with crosshair
+- [x] **Phase 3: Animated Mannequin & Aim Mode** - The Mannequin animates with every movement state from kit clips, plus aim mode with crosshair (completed 2026-11-20)
 - [ ] **Phase 4: Fernauslöser & Mechanism Kit** - Hand module framework, turquoise highlight with aim assist, Module 1 remote-trigger beam, and greybox switches, valves, gears, conveyors, doors and logic
 - [ ] **Phase 5: Pull/Push & Module Unlocks** - Module 2 with a momentum test room, module pickup, hand poses from kit clips, and a teaching room per module
 - [ ] **Phase 6: Shooting, Enemies & Recovery** - Beam shooting at reactive Prototype Bits objects, 1-2 greybox enemy types, player health, checkpoints and near-instant respawn
@@ -111,11 +111,11 @@ Plans:
 **Depends on**: Phase 2
 **Requirements**: MOVE-09, MOVE-11, CAM-02
 **Success Criteria** (what must be TRUE):
-  1. The Mannequin's animation follows every movement state, using only Rig_Medium clips, cuts, blends and procedural rotation/scale. This covers idle, run, jump start/air/land, the Jump 3 pirouette (not started while aiming, DEV-03), the long jump, the ground dash and the held air-dash pose.
+  1. The Mannequin's animation follows every movement state, using Rig_Medium clips (plus the retargeted clips of DEV-04), cuts, blends and procedural rotation/scale. This covers idle, run, jump start/air/land, the Jump 3 pirouette (not started while aiming, DEV-03), the long jump, the ground dash and the held air-dash pose.
   2. Every movement verb in the game is backed by a kit clip or a documented clip composition. Verbs without one, such as wall-run and ledge grab, stay out.
   3. Holding the aim button blends into an aim mode with a crosshair, a tighter FOV and a shoulder offset. In aim mode the Mannequin strafes and walks backwards using kit clips.
   4. The animation changes on the same frame as the movement state, and no clip delays control: there is no landing lock and no anticipation longer than 2 frames. The one exception to the same-frame rule is the presentation-only air-dash pose hold (DEV-02): after an air dash the Dodge pose stays through the fall until landing or until air_dash_hold_time, and it never delays control. The Phase 2 latency numbers still hold.
-**Plans:** 9/10 plans executed
+**Plans:** 10/10 plans complete
 
 Plans:
 - [x] 03-01-PLAN.md — Tracer: generated BlendTree animation root (StateMachine, TimeScale, Land OneShot), animator on new paths, migrated path readers; developer decisions DEV-01/DEV-02/DEV-03 and the checkpoint for the remaining defaults (wave 1)
@@ -126,7 +126,7 @@ Plans:
 - [x] 03-06-PLAN.md — ProceduralPose on the Mannequin child (DEV-01): ground dash lean into long-jump stretch, Jump 3 / stage 3 pirouette, aim gate and finish cut (DEV-03), metrics label (wave 5)
 - [x] 03-07-PLAN.md — Filtered aim layer (Ranged_1H_Aiming), strafe/back blend points, clip time scale, directional aim dashes keeping the air-dash hold (wave 6)
 - [x] 03-08-PLAN.md — AimPoseModifier: right arm points at the crosshair at any pitch, torso twist clamped (wave 7)
-- [ ] 03-09-PLAN.md — docs/ANIMATION-MAP.md with drift guard, CONVENTIONS rules, Jump 3 wording sweep, ROADMAP criterion 4 and notes amendments (DEV-02, DEV-01), CLAUDE.md/STACK.md animation layout, phase regression, full-suite gate and gym check (wave 8)
+- [x] 03-09-PLAN.md — docs/ANIMATION-MAP.md with drift guard, CONVENTIONS rules, Jump 3 wording sweep, ROADMAP criterion 4 and notes amendments (DEV-02, DEV-01), CLAUDE.md/STACK.md animation layout, phase regression, full-suite gate and gym check (wave 8)
 - [x] 03-10-PLAN.md — Animation timing guard (same frame, no landing lock, 2-frame anticipation) and the air-dash pose hold DEV-02 (wave 3; split out of 03-01 in revision 1)
 **UI hint**: yes
 
@@ -315,7 +315,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 (en
 |-------|----------------|--------|-----------|
 | 1. Foundation & Prototype Character | 7/7 | Complete    | 2026-11-04 |
 | 2. Movement Core & Follow Camera | 14/14 | Complete    | 2026-11-06 |
-| 3. Animated Mannequin & Aim Mode | 9/10 | In Progress | - |
+| 3. Animated Mannequin & Aim Mode | 10/10 | Complete    | 2026-11-20 |
 | 4. Fernauslöser & Mechanism Kit | 0/TBD | Not started | - |
 | 5. Pull/Push & Module Unlocks | 0/TBD | Not started | - |
 | 6. Shooting, Enemies & Recovery | 0/TBD | Not started | - |
