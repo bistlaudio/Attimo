@@ -386,6 +386,8 @@ func _fallback_of(ual_clip: StringName) -> StringName:
 func _begin(tree: SceneTree) -> void:
 	_floor = Fixtures.spawn_floor(tree.root)
 	_player = Fixtures.spawn_player(tree.root, Vector3.ZERO)
+	# A private copy: scenarios that change numbers (d3) must not touch the shared movement_default.tres (WR-06).
+	_player.config = _player.config.duplicate() as MovementConfig
 	_rig = Fixtures.spawn_camera_rig(tree.root, _player)
 	await Fixtures.wait_physics(tree, SETTLE_FRAMES)
 	_animator = _player.get_node("MannequinAnimator") as MannequinAnimator
