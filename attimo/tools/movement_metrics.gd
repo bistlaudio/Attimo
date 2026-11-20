@@ -361,7 +361,7 @@ func _dash(player: PlayerController) -> Dictionary:
 
 func _measure_long_jumps() -> Dictionary:
 	var out: Dictionary = {}
-	# One hop streak: dash + jump on every landing tick gives stages 1, 2, 3 and then 1 again (the combo ends after stage 3).
+	# One hop streak: dash + jump right after each landing lockout gives stages 1, 2, 3 and then 1 again (the combo ends after stage 3).
 	var player: PlayerController = await _begin()
 	await _run_up(player)
 	for hop: int in 4:
@@ -378,6 +378,9 @@ func _measure_long_jumps() -> Dictionary:
 ## Dash and jump pressed on the same tick (the jump stays held), then follows the long jump to its landing.
 func _dash_jump(player: PlayerController) -> Dictionary:
 	var before: int = _count(&"long_jumped")
+	# A press inside the landing lockout is refused (quick 261120-dik), so the dash waits for it to run out: the hop is still
+	# inside the landing window then.
+	await Fixtures.wait_until(_tree, func() -> bool: return player.dash_locked_reason() == &"", LIMIT_TICKS)
 	Fixtures.send_action_event(&"dash", true)
 	Fixtures.send_action_event(&"jump", true)
 	Fixtures.send_action_event(&"dash", false)
@@ -506,7 +509,9 @@ func _measure_latency(tps: int, accumulate: bool) -> Dictionary:
 		Fixtures.send_action_event(&"jump", false)
 		await Fixtures.wait_until(_tree, func() -> bool: return player.is_grounded() and _state_is(player, &"Idle"), tps * 4)
 
-	# Dash: press, wait for the sample, release, wait for the ground state and the cooldown.
+	# Dash: press, wait for the sample, release, wait for the ground state and the cooldown. The last jump just landed, so
+	# the landing lockout of the dash runs out first (a locked press is refused, quick 261120-dik).
+	await Fixtures.wait_physics(_tree, Fixtures.lock_ticks(player.config))
 	var cooldown_ticks: int = ceili((player.config.dash_cooldown + 0.1) * float(tps))
 	for i: int in LATENCY_PRESSES:
 		var before: int = probe.dash_samples_ms.size()
@@ -664,13 +669,13 @@ func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, d
 
 	lines.append("## Long jump (dash hop)")
 	lines.append("")
-	lines.append("The long jump is the dash hop: a jump during a ground dash or within dash_jump_grace after it. Its speed is set per stage (long_jump_speed_1/2/3), never carried from the dash. Stage 1 is the first hop; each clean repeat (a ground dash started inside the landing window after touchdown, then a jump) climbs to stage 2 and 3; the combo ends after stage 3 and the next hop starts again at stage 1; a miss (window runs out, standing still, a normal jump in between) restarts at stage 1. The speeds are capped by an export maximum of %.0f m/s, the envelope the camera and tunnelling tests cover. Take-off speed is the horizontal speed on the first tick of the long jump. One hop streak is measured: dash + jump on the landing tick of each hop." % LONG_JUMP_SPEED_LIMIT)
+	lines.append("The long jump is the dash hop: a jump during a ground dash or within dash_jump_grace after it. Its speed is set per stage (long_jump_speed_1/2/3), never carried from the dash. Stage 1 is the first hop; each clean repeat (a ground dash started inside the landing window after touchdown, then a jump) climbs to stage 2 and 3; the combo ends after stage 3 and the next hop starts again at stage 1; a miss (window runs out, standing still, a normal jump in between) restarts at stage 1. The speeds are capped by an export maximum of %.0f m/s, the envelope the camera and tunnelling tests cover. Take-off speed is the horizontal speed on the first tick of the long jump. One hop streak is measured: dash + jump on the first tick after the landing lockout (dash_block_landing) of each hop, inside the landing window." % LONG_JUMP_SPEED_LIMIT)
 	lines.append("")
 	lines.append("| Verb | Stage | Height (m) | Distance (m) | Take-off speed (m/s) | Airtime (s) | Note |")
 	lines.append("|---|---|---|---|---|---|---|")
 	lines.append(_long_row("Long jump stage 1", longs["hop_1"], "dash + jump on one tick from a run, long_jump_speed_1 %.1f m/s" % config.long_jump_speed_1))
-	lines.append(_long_row("Long jump stage 2", longs["hop_2"], "dash + jump on the landing tick of stage 1, long_jump_speed_2 %.1f m/s" % config.long_jump_speed_2))
-	lines.append(_long_row("Long jump stage 3", longs["hop_3"], "dash + jump on the landing tick of stage 2, long_jump_speed_3 %.1f m/s" % config.long_jump_speed_3))
+	lines.append(_long_row("Long jump stage 2", longs["hop_2"], "dash + jump right after the landing lockout of stage 1, long_jump_speed_2 %.1f m/s" % config.long_jump_speed_2))
+	lines.append(_long_row("Long jump stage 3", longs["hop_3"], "dash + jump right after the landing lockout of stage 2, long_jump_speed_3 %.1f m/s" % config.long_jump_speed_3))
 	lines.append(_long_row("Long jump stage 1 (after stage 3)", longs["hop_4"], "the combo ends after stage 3; the next hop starts again at stage 1"))
 	lines.append(_long_row("Long jump (last grace tick)", longs["grace_1"], "jump in the last tick of dash_jump_grace, stage 1 row applies"))
 	lines.append("")

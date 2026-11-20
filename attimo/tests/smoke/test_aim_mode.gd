@@ -2,14 +2,13 @@ extends RefCounted
 ## CAM-02 / D-09 / D-10: the aim hold. Holding `aim` sets PlayerController.aiming on the same physics tick, announces
 ## EventBus.aim_changed once per change and pins VisualRoot's yaw to the camera's flat forward with no smoothing. While
 ## aiming, face() and face_now() do nothing (Dash keeps the crosshair facing), movement steers by the rig's true yaw
-## (W runs along the crosshair, A and D strafe), and jump and dash still work. Without a camera aiming changes no
+## (W runs along the crosshair, A and D strafe), and a jump still works while a dash press is refused (no dash in aim, quick 261120-dik). Without a camera aiming changes no
 ## facing and raises no error. Every expectation derives from player.config. Actions are released and nodes freed at
 ## the end of each scenario.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 const FACING_TOLERANCE_DEG: float = 1.0
 const STEER_TOLERANCE_DEG: float = 10.0
-const DASH_TOLERANCE_DEG: float = 5.0
 const SPEED_TOLERANCE: float = 0.1
 const SETTLE_FRAMES: int = 60
 const TURN_BACK_FRAMES: int = 30
@@ -79,20 +78,25 @@ func _scenario_strafe(tree: SceneTree, check: Callable) -> void:
 	await _end(tree, player)
 
 
-# (d): a dash in aim goes where the input points and does not turn the figure away from the crosshair.
+# (d): no dash in aim (quick 261120-dik): the press is refused, announced once as dash_blocked with the aim reason, and the
+# figure keeps facing the crosshair and keeps running.
 func _scenario_dash_keeps_facing(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = _begin(tree)
+	var blocked: Array[StringName] = []
+	var on_blocked: Callable = func(_position: Vector3, reason: StringName) -> void: blocked.append(reason)
+	_bus.connect(&"dash_blocked", on_blocked)
 	Fixtures.send_action_event(&"aim", true)
 	Input.action_press(&"move_right")
 	await Fixtures.wait_physics(tree, 5)
 	await Fixtures.tap_action(tree, &"dash")
-	check.call(player.state_machine.current.name == &"Dash", "(d) a dash press works while aiming (got %s)" % player.state_machine.current.name)
-	var right: Vector3 = _camera_right()
-	var direction: Vector3 = player.last_dash_direction
-	check.call(rad_to_deg(direction.angle_to(right)) < DASH_TOLERANCE_DEG,
-		"(d) the dash goes along the camera's right (off by %.2f deg)" % rad_to_deg(direction.angle_to(right)))
+	await Fixtures.wait_physics(tree, 2)
+	check.call(player.state_machine.current.name != &"Dash", "(d) a dash press while aiming starts no Dash (got %s)" % player.state_machine.current.name)
+	check.call(blocked.size() == 1 and blocked[0] == PlayerController.DASH_LOCK_AIM, "(d) the refused press emits dash_blocked once with the aim reason (got %s)" % [blocked])
+	check.call(player.dash_cooldown_timer == 0.0, "(d) the refused press spends no cooldown")
+	check.call(player.horizontal_speed() < player.config.dash_speed * 0.6, "(d) no dash speed (%.2f m/s)" % player.horizontal_speed())
 	check.call(_facing_error_deg(player, _camera_forward()) < FACING_TOLERANCE_DEG,
-		"(d) the dash leaves the facing on the crosshair (off by %.2f deg)" % _facing_error_deg(player, _camera_forward()))
+		"(d) the figure stays on the crosshair (off by %.2f deg)" % _facing_error_deg(player, _camera_forward()))
+	_bus.disconnect(&"dash_blocked", on_blocked)
 	Input.action_release(&"move_right")
 	await _end(tree, player)
 
@@ -162,7 +166,7 @@ func _scenario_speed(tree: SceneTree, check: Callable) -> void:
 	await _end(tree, player)
 
 
-# D-10: aim never blocks movement. A jump enters Jump, a dash enters Dash at the unchanged dash speed.
+# D-10 as amended by quick 261120-dik: aim never blocks a jump, but it blocks the dash. Releasing aim gives the dash back.
 func _scenario_jump_and_dash(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = _begin(tree)
 	var config: MovementConfig = player.config
@@ -178,11 +182,15 @@ func _scenario_jump_and_dash(tree: SceneTree, check: Callable) -> void:
 	check.call(landed >= 0, "(h) the aim jump lands again")
 	await Fixtures.wait_physics(tree, 30)
 	await Fixtures.tap_action(tree, &"dash")
-	check.call(player.state_machine.current.name == &"Dash", "(h) a dash press enters Dash while aiming (got %s)" % player.state_machine.current.name)
+	check.call(player.state_machine.current.name != &"Dash", "(h) a dash press does not enter Dash while aiming (got %s)" % player.state_machine.current.name)
+	check.call(player.aiming, "(h) the player is still aiming after jump and the refused dash")
+	Fixtures.send_action_event(&"aim", false)
+	await Fixtures.wait_physics(tree, 4)
+	await Fixtures.tap_action(tree, &"dash")
+	check.call(player.state_machine.current.name == &"Dash", "(h) after releasing aim the dash press enters Dash (got %s)" % player.state_machine.current.name)
 	await Fixtures.wait_physics(tree, 2)
 	check.call(absf(player.horizontal_speed() - config.dash_speed) < SPEED_TOLERANCE,
-		"(h) the aim dash runs at dash_speed %.2f (got %.2f), unchanged by aim" % [config.dash_speed, player.horizontal_speed()])
-	check.call(player.aiming, "(h) the player is still aiming after jump and dash")
+		"(h) the dash runs at dash_speed %.2f (got %.2f)" % [config.dash_speed, player.horizontal_speed()])
 	Input.action_release(&"move_forward")
 	await _end(tree, player)
 

@@ -1,11 +1,12 @@
 extends RefCounted
 ## MOVE-09 / D-01 / D-04 / D-05 / D-07: ProceduralPose writes a lean and a spin onto the Mannequin child of VisualRoot
-## inside the physics tick (DEV-01). An aimed ground dash leans the body toward the dash direction about the hip pivot
-## (dash_lean_deg * aim_lean_scale) and the lean eases back to upright when the dash hands over to a long jump (no
+## inside the physics tick (DEV-01). A ground dash leans the body toward the dash direction about the hip pivot
+## (dash_lean_deg, times aim_lean_scale when aim is pressed mid-dash: there is no dash while aiming, quick 261120-dik) and the
+## lean eases back to upright when the dash hands over to a long jump (no
 ## stretch lean); the unaimed ground dash is the retargeted Running_Slide (DEV-04) and the body stays exactly upright;
 ## an air dash does not lean either; Jump 3 and long jump stage 3
-## spin once and finish before touchdown; with aim held at take-off no pirouette starts, and an aim press or an air
-## dash during a pirouette finishes it cleanly (DEV-03). Every expectation derives from player.config. Actions are
+## spin once and finish before touchdown; with aim held at take-off no pirouette starts, an aim press during a pirouette
+## finishes it cleanly (DEV-03), and a dash press during a pirouette is refused (dash lockout, quick 261120-dik). Every expectation derives from player.config. Actions are
 ## released and the tick rate stays at 60 before nodes are freed.
 
 const Fixtures := preload("res://tests/fixtures.gd")
@@ -32,15 +33,14 @@ var _scratch: Dictionary = {}
 func run(tree: SceneTree, check: Callable) -> void:
 	Engine.physics_ticks_per_second = TPS
 	await _scenario_rest_and_dash_lean(tree, check)
-	await _scenario_hop_upright(tree, check, false)
-	await _scenario_hop_upright(tree, check, true)
+	await _scenario_hop_upright(tree, check)
 	await _scenario_air_dash_upright(tree, check)
 	await _scenario_jump_chain_spin(tree, check)
 	await _scenario_cut_jump_3(tree, check)
 	await _scenario_long_jump_stages(tree, check)
 	await _scenario_aim_gate(tree, check)
 	await _scenario_aim_lean(tree, check)
-	await _scenario_air_dash_finish(tree, check)
+	await _scenario_air_dash_blocked_in_pirouette(tree, check)
 	await _scenario_aim_press_finish(tree, check)
 
 
@@ -108,7 +108,7 @@ func _scenario_rest_and_dash_lean(tree: SceneTree, check: Callable) -> void:
 		check.call(rad_to_deg(slide_lean) > config.dash_lean_deg * 0.5, "(p2) the unaimed ground dash leans forward (D-01, biggest lean %.2f deg)" % rad_to_deg(slide_lean))
 	await _end(player)
 
-	# The aimed ground dash keeps the D-01 lean, scaled by aim_lean_scale.
+	# An aimed press is refused (quick 261120-dik): no Dash, no lean, only the twitch of the blocked press.
 	player = await _begin(tree)
 	pose = _pose(player)
 	mannequin = _mannequin(player)
@@ -117,13 +117,26 @@ func _scenario_rest_and_dash_lean(tree: SceneTree, check: Callable) -> void:
 	Input.action_press(&"move_forward")
 	await Fixtures.wait_physics(tree, 30)
 	await Fixtures.tap_action(tree, &"dash")
+	check.call(player.state_machine.current.name != &"Dash", "(p2a) the aimed dash press does not enter Dash (got %s)" % player.state_machine.current.name)
+	var aimed_lean: float = 0.0
+	for i: int in 12:
+		await tree.physics_frame
+		aimed_lean = maxf(aimed_lean, pose.lean_angle)
+	check.call(aimed_lean == 0.0, "(p2a) the refused aimed press adds no dash lean (biggest %.2f deg)" % rad_to_deg(aimed_lean))
+	await _end(player)
+
+	# The unaimed ground dash keeps the D-01 lean (Dodge_Forward presentation).
+	player = await _begin(tree)
+	pose = _pose(player)
+	mannequin = _mannequin(player)
+	await _run_up(tree, player)
+	await Fixtures.tap_action(tree, &"dash")
 	var in_dash: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Dash", 6)
-	check.call(in_dash >= 0, "(p2a) the aimed dash press enters Dash (got %s)" % player.state_machine.current.name)
-	check.call(not bool(player.state_machine.current.get(&"slide")), "(p2a) an aimed ground dash is not a slide")
-	var target_deg: float = config.dash_lean_deg * config.aim_lean_scale
-	check.call(pose.lean_angle > 0.0, "(p2a) the lean is above 0 on the first tick of the aimed dash (got %.2f deg)" % rad_to_deg(pose.lean_angle))
+	check.call(in_dash >= 0, "(p2b) the dash press enters Dash (got %s)" % player.state_machine.current.name)
+	var target_deg: float = config.dash_lean_deg
+	check.call(pose.lean_angle > 0.0, "(p2b) the lean is above 0 on the first tick of the ground dash (got %.2f deg)" % rad_to_deg(pose.lean_angle))
 	var reached: int = await Fixtures.wait_until(tree, func() -> bool: return absf(rad_to_deg(pose.lean_angle) - target_deg) < LEAN_TOLERANCE_DEG, LEAN_IN_TICKS)
-	check.call(reached >= 0, "(p2a) the lean reaches dash_lean_deg * aim_lean_scale %.1f within %d ticks (got %.2f deg)" % [target_deg, LEAN_IN_TICKS, rad_to_deg(pose.lean_angle)])
+	check.call(reached >= 0, "(p2b) the lean reaches dash_lean_deg %.1f within %d ticks (got %.2f deg)" % [target_deg, LEAN_IN_TICKS, rad_to_deg(pose.lean_angle)])
 
 	var pivot: Vector3 = Vector3(0.0, config.pose_pivot_height, 0.0)
 	var moved: Vector3 = mannequin.transform * pivot
@@ -208,6 +221,7 @@ func _jump(tree: SceneTree, player: PlayerController, hold: bool = true, tap: bo
 
 ## Dash plus jump: a long jump. Returns the log, the stage and whether the pose spun on the entry tick.
 func _hop(tree: SceneTree, player: PlayerController, on_tick: Callable = Callable()) -> Dictionary:
+	await Fixtures.wait_until(tree, func() -> bool: return player.dash_locked_reason() == &"", 30)
 	Fixtures.send_action_event(&"dash", true)
 	Fixtures.send_action_event(&"jump", true)
 	Fixtures.send_action_event(&"dash", false)
@@ -268,20 +282,14 @@ func _spin_never_snaps_back(rows: Array[Dictionary], from: int) -> bool:
 # Quick task 261118-okz: Dash -> long jump eases the dash lean back to upright (no held stretch lean). The lean never
 # grows past the dash lean, never grows again once the long jump started, is 0 within lean_out_time plus a few ticks
 # after the hand-over and stays 0 through the flight and Fall until landing. Unaimed (the slide, DEV-04) the lean is 0
-# on every row; aimed the lean target is dash_lean_deg * aim_lean_scale.
-func _scenario_hop_upright(tree: SceneTree, check: Callable, aimed: bool) -> void:
+# on every row.
+func _scenario_hop_upright(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
 	var config: MovementConfig = player.config
 	var pose: ProceduralPose = _pose(player)
-	var tag: String = "(s1a)" if aimed else "(s1)"
-	var lean_cap_deg: float = config.dash_lean_deg * (config.aim_lean_scale if aimed else (0.0 if UNAIMED_DASH == &"Slide" else 1.0))
-	if aimed:
-		Input.action_press(&"aim")
-		await Fixtures.wait_physics(tree, 12)
-		Input.action_press(&"move_forward")
-		await Fixtures.wait_physics(tree, 30)
-	else:
-		await _run_up(tree, player)
+	var tag: String = "(s1)"
+	var lean_cap_deg: float = config.dash_lean_deg * (0.0 if UNAIMED_DASH == &"Slide" else 1.0)
+	await _run_up(tree, player)
 	Fixtures.send_action_event(&"dash", true)
 	Fixtures.send_action_event(&"jump", true)
 	Fixtures.send_action_event(&"dash", false)
@@ -290,7 +298,7 @@ func _scenario_hop_upright(tree: SceneTree, check: Callable, aimed: bool) -> voi
 	check.call(entry >= 0, tag + " the dash plus jump became a long jump")
 	var peak: float = _max_of(rows, "lean")
 	check.call(rad_to_deg(peak) <= lean_cap_deg + LEAN_TOLERANCE_DEG, tag + " the lean never exceeds %.1f deg (peak %.2f deg)" % [lean_cap_deg, rad_to_deg(peak)])
-	if not aimed and UNAIMED_DASH == &"Slide":
+	if UNAIMED_DASH == &"Slide":
 		check.call(peak == 0.0, tag + " the unaimed dash hop has lean 0 on every row (the slide, DEV-04)")
 	if entry >= 0:
 		var grew: bool = false
@@ -433,65 +441,74 @@ func _scenario_aim_gate(tree: SceneTree, check: Callable) -> void:
 	Fixtures.send_action_event(&"aim", false)
 	await _end(player)
 
+	# There is no dash while aiming, so aim is pressed during the stage 3 dash, before the jump that turns it into the hop.
 	player = await _begin(tree)
 	await _run_up(tree, player)
 	await _hop(tree, player)
 	await _hop(tree, player)
+	await Fixtures.wait_until(tree, func() -> bool: return player.dash_locked_reason() == &"", 30)
+	Fixtures.send_action_event(&"dash", true)
+	Fixtures.send_action_event(&"dash", false)
+	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Dash", 6)
 	Fixtures.send_action_event(&"aim", true)
-	var hop_3: Dictionary = await _hop(tree, player)
-	check.call(hop_3.started and hop_3.stage == 3 and not hop_3.entry_spinning and not _any_spinning(hop_3.rows), "(g2) no pirouette starts when aim is held at take-off, long jump stage 3 (DEV-03)")
+	await Fixtures.wait_physics(tree, 2)
+	Fixtures.send_action_event(&"jump", true)
+	var started: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"LongJump", 12)
+	var hop_3_stage: int = player.long_jump_stage
+	var hop_3_spinning: bool = _pose(player).spinning
+	var hop_3_rows: Array[Dictionary] = await _flight(tree, player, true)
+	check.call(started >= 0 and hop_3_stage == 3 and not hop_3_spinning and not _any_spinning(hop_3_rows), "(g2) no pirouette starts when aim is held at take-off, long jump stage 3 (DEV-03)")
 	Fixtures.send_action_event(&"aim", false)
 	await _end(player)
 
 
-# Checkpoint item 3: while aiming a ground dash lean peaks at dash_lean_deg * aim_lean_scale.
+# Checkpoint item 3: a lean that is running while aim is pressed mid-dash eases to dash_lean_deg * aim_lean_scale (aim
+# itself never starts a dash, quick 261120-dik).
 func _scenario_aim_lean(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
 	var config: MovementConfig = player.config
 	var pose: ProceduralPose = _pose(player)
-	Fixtures.send_action_event(&"aim", true)
-	Input.action_press(&"move_forward")
-	await Fixtures.wait_physics(tree, 30)
+	await _run_up(tree, player)
 	await Fixtures.tap_action(tree, &"dash")
+	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Dash", 6)
+	Fixtures.send_action_event(&"aim", true)
 	var peak: float = 0.0
 	var ticks: int = 0
-	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Dash", 6)
 	while player.state_machine.current.name == &"Dash" and ticks < 40:
 		peak = maxf(peak, pose.lean_angle)
 		await tree.physics_frame
 		ticks += 1
 	var expected: float = config.dash_lean_deg * config.aim_lean_scale
-	check.call(absf(rad_to_deg(peak) - expected) < LEAN_TOLERANCE_DEG, "(m1) the aiming dash lean peaks at dash_lean_deg * aim_lean_scale %.1f deg (got %.2f)" % [expected, rad_to_deg(peak)])
+	check.call(absf(rad_to_deg(peak) - expected) < LEAN_TOLERANCE_DEG, "(m1) the lean of a dash with aim pressed peaks at dash_lean_deg * aim_lean_scale %.1f deg (got %.2f)" % [expected, rad_to_deg(peak)])
 	Fixtures.send_action_event(&"aim", false)
 	await _end(player)
 
 
-# DEV-03: an air dash during a running pirouette finishes the remaining spin within pirouette_finish_time.
-func _scenario_air_dash_finish(tree: SceneTree, check: Callable) -> void:
+# Quick 261120-dik (replaces the DEV-03 air-dash finish): a dash press during a running pirouette is refused, so no Dash
+# starts, the spin runs on to its normal end and the refused press emits dash_blocked with the pirouette reason.
+func _scenario_air_dash_blocked_in_pirouette(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
+	var reasons: Array[StringName] = []
+	var bus: Node = tree.root.get_node("EventBus")
+	var on_blocked: Callable = func(_position: Vector3, reason: StringName) -> void: reasons.append(reason)
+	bus.connect(&"dash_blocked", on_blocked)
 	await _run_up(tree, player)
 	await _jump(tree, player)
 	await _jump(tree, player)
-	var third: Dictionary = await _jump(tree, player, true, false, _press_dash_mid_flight)
+	var third: Dictionary = await _jump(tree, player, true, false, _press_dash_late_in_spin)
 	var rows: Array[Dictionary] = third.rows
-	var dash_index: int = _first_state(rows, &"Dash")
-	check.call(dash_index >= 0, "(d1) the air dash started during the Jump 3 pirouette")
-	if dash_index >= 0:
-		var budget: int = dash_index + int(ceil(player.config.pirouette_finish_time * float(TPS))) + 2
-		var finished_at: int = -1
-		for i: int in range(dash_index, rows.size()):
-			if not bool(rows[i].spinning):
-				finished_at = i
-				break
-		check.call(finished_at >= 0 and finished_at <= budget, "(d1) the air dash finishes the spin within pirouette_finish_time plus 2 ticks (DEV-03): row %d of budget %d" % [finished_at, budget])
-		check.call(_spin_never_snaps_back(rows, 0), "(d1) the spin angle only grows on the way, no snap back (DEV-03)")
-		check.call(_max_of(rows.slice(0, dash_index + 1), "spin") < TAU, "(d1) the spin was still running when the air dash began")
+	check.call(_first_state(rows, &"Dash") < 0, "(d1) no Dash starts during the Jump 3 pirouette")
+	check.call(reasons.has(PlayerController.DASH_LOCK_PIROUETTE), "(d1) a press inside the pirouette emits dash_blocked with the pirouette reason (got %s)" % [reasons])
+	check.call(_max_of(rows, "spin") > SPIN_SEEN_MIN, "(d1) the spin still runs through (max %.2f rad)" % _max_of(rows, "spin"))
+	check.call(_spin_never_snaps_back(rows, 0), "(d1) the spin angle only grows on the way, no snap back")
 	check.call(_all_finite(rows), "(d1) every written Mannequin basis is finite")
+	bus.disconnect(&"dash_blocked", on_blocked)
 	await _end(player)
 
 
-func _press_dash_mid_flight(tick: int, _rows: Array[Dictionary]) -> void:
-	if tick == MID_FLIGHT_TICKS:
+## A press well after the take-off lockout, inside the pirouette.
+func _press_dash_late_in_spin(tick: int, _rows: Array[Dictionary]) -> void:
+	if tick == MID_FLIGHT_TICKS * 2:
 		Fixtures.send_action_event(&"dash", true)
 		Fixtures.send_action_event(&"dash", false)
 

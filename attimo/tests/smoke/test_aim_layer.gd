@@ -2,7 +2,7 @@ extends RefCounted
 ## MOVE-09 / CAM-02 (D-09, D-11, D-12): the clip side of aim mode. The Aim layer is the UAL spell hand (quick 261118-qi3:
 ## Enter, Hold, Exit and a Shoot OneShot; the KayKit Ranged_1H_Aiming is the fallback of a dropped clip) on the upper
 ## body while the legs keep their locomotion clip, aim strafes and walks backwards through one BlendSpace2D, the clip
-## playback speed follows the movement, and aimed dashes play the directional Dodge clips. Tree parameters are read
+## playback speed follows the movement, and the directional Dodge nodes are dormant (no dash while aiming, quick 261120-dik). Tree parameters are read
 ## through the MannequinAnimator constants, never a path literal. Scenarios that count animation time run the tree in
 ## manual mode and advance it once per physics frame (Pitfall 12).
 
@@ -52,7 +52,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_clip_scale(tree, check)
 	await _scenario_dash_scale(tree, check)
 	await _scenario_aim_dash_choice(tree, check)
-	await _scenario_air_dash_directional(tree, check)
+	await _scenario_air_dash_blocked_in_aim(tree, check)
 
 
 # Tracer: hold aim -> animator aim weight -> filtered Aim layer shows the held pose on the upper body.
@@ -260,7 +260,7 @@ func _scenario_dash_scale(tree: SceneTree, check: Callable) -> void:
 	_calls.clear()
 	# Air dash from a low tap jump: scale 1 on entry and on every frame of the hold (DEV-02).
 	await Fixtures.tap_action(tree, &"jump")
-	await Fixtures.wait_physics(tree, 4)
+	await Fixtures.wait_physics(tree, Fixtures.lock_ticks(_player.config))
 	await Fixtures.tap_action(tree, &"dash")
 	var samples: int = 0
 	var hold_samples: int = 0
@@ -281,70 +281,78 @@ func _scenario_dash_scale(tree: SceneTree, check: Callable) -> void:
 	await _end(tree)
 
 
-# D-12: an aimed ground dash plays the Dodge clip of its direction relative to the facing; an unaimed one is Slide (DEV-04).
+# D-12 as amended by quick 261120-dik: there is no dash while aiming, so the directional dash nodes (DashLeft, DashRight,
+# DashBack) are dormant. dash_node_for() still maps a direction to the node (kept for a later aimed dodge), an aimed press is
+# blocked, and an unaimed ground dash is Slide / Dash (DEV-04).
 func _scenario_aim_dash_choice(tree: SceneTree, check: Callable) -> void:
-	await _aim_dash_case(tree, check, true, &"move_right", &"DashRight", &"Dodge_Right", "(f1)")
-	await _aim_dash_case(tree, check, true, &"move_left", &"DashLeft", &"Dodge_Left", "(f2)")
-	await _aim_dash_case(tree, check, true, &"move_back", &"DashBack", &"Dodge_Backward", "(f3)")
-	await _aim_dash_case(tree, check, true, &"move_forward", &"Dash", &"Dodge_Forward", "(f4)")
-	await _aim_dash_case(tree, check, true, &"", &"Dash", &"Dodge_Forward", "(f5)")
-	await _aim_dash_case(tree, check, false, &"move_right", UNAIMED_DASH, &"Running_Slide" if UNAIMED_DASH == &"Slide" else &"Dodge_Forward", "(f6)")
+	await _begin(tree)
+	Input.action_press(&"aim")
+	await Fixtures.wait_physics(tree, 12)
+	var facing: Basis = _player.visual_root.global_basis
+	check.call(_animator.dash_node_for(-facing.x) == &"DashRight", "(f1) dormant: an aimed direction to the figure's right maps to DashRight")
+	check.call(_animator.dash_node_for(facing.x) == &"DashLeft", "(f2) dormant: an aimed direction to the figure's left maps to DashLeft")
+	check.call(_animator.dash_node_for(-facing.z) == &"DashBack", "(f3) dormant: an aimed direction behind the figure maps to DashBack")
+	check.call(_animator.dash_node_for(facing.z) == &"Dash", "(f4) dormant: an aimed direction ahead maps to Dash")
+	check.call(_animator.dash_node_for(Vector3.ZERO) == &"Dash", "(f5) dormant: no direction maps to Dash")
+	await _end(tree)
+	await _aim_dash_blocked_case(tree, check, &"move_right", "(f1b)")
+	await _aim_dash_blocked_case(tree, check, &"move_back", "(f3b)")
+	await _aim_dash_blocked_case(tree, check, &"", "(f5b)")
+	await _unaimed_dash_case(tree, check, &"move_right", "(f6)")
 
 
-func _aim_dash_case(tree: SceneTree, check: Callable, aiming: bool, move: StringName, expected_node: StringName, clip: StringName, label: String) -> void:
+# An aimed dash press starts no Dash and no dash node travel, and the tree stays on its locomotion node.
+func _aim_dash_blocked_case(tree: SceneTree, check: Callable, move: StringName, label: String) -> void:
 	await _begin(tree)
 	_record()
-	var how: String = "%s%s" % ["aiming, " if aiming else "", String(move) if move != &"" else "no input"]
-	if aiming:
-		Input.action_press(&"aim")
-		await Fixtures.wait_physics(tree, 12)
+	Input.action_press(&"aim")
+	await Fixtures.wait_physics(tree, 12)
 	if move != &"":
 		Input.action_press(move)
 		await Fixtures.wait_physics(tree, 6)
 	await Fixtures.tap_action(tree, &"dash")
-	var dash_call: int = _find_to(&"Dash")
-	check.call(dash_call >= 0, "%s a dash was recorded (%s; calls %s)" % [label, how, _names()])
-	if dash_call >= 0:
-		var entry: Dictionary = _calls[dash_call]
-		check.call(entry["travel"] == expected_node, "%s %s: last_travel is %s inside the Dash call (got %s)" % [label, how, expected_node, entry["travel"]])
-		check.call(entry["travel_frame"] == entry["frame"], "%s %s: last_travel_frame %d equals the physics frame %d of the call" % [label, how, entry["travel_frame"], entry["frame"]])
-		var clip_length: float = _slide_window() if expected_node == &"Slide" else _library.get_animation(clip).length
-		var expected_scale: float = MannequinAnimator.SLIDE_PLAYBACK_SCALE if expected_node == &"Slide" else clip_length / _player.config.dash_time
-		check.call(absf(float(entry["scale"]) - expected_scale) < SCALE_TOLERANCE, "%s %s: the ground dash scale is %s length / dash_time = %.3f (got %.3f)" % [label, how, clip, expected_scale, entry["scale"]])
-		await Fixtures.wait_process(tree, 2)
-		var visible: StringName = Fixtures.playback(_player).get_current_node()
-		check.call(visible == expected_node, "%s %s: the playback is on %s within 2 process frames (got %s)" % [label, how, expected_node, visible])
+	await Fixtures.wait_physics(tree, 6)
+	check.call(_find_to(&"Dash") < 0, "%s an aimed dash press starts no Dash (calls %s)" % [label, _names()])
+	check.call(not MannequinAnimator.DASH_NODES.has(_animator.last_travel), "%s the tree never travels to a dash node while aiming (got %s)" % [label, _animator.last_travel])
+	check.call(_player.dash_cooldown_timer == 0.0, "%s the blocked press spends no cooldown" % label)
 	await _end(tree)
 
 
-# DEV-02 with a directional node: the air dash holds DashRight past the Dash exit and landing travels on its frame.
-func _scenario_air_dash_directional(tree: SceneTree, check: Callable) -> void:
+func _unaimed_dash_case(tree: SceneTree, check: Callable, move: StringName, label: String) -> void:
+	await _begin(tree)
+	_record()
+	Input.action_press(move)
+	await Fixtures.wait_physics(tree, 6)
+	await Fixtures.tap_action(tree, &"dash")
+	var dash_call: int = _find_to(&"Dash")
+	check.call(dash_call >= 0, "%s an unaimed dash was recorded (calls %s)" % [label, _names()])
+	if dash_call >= 0:
+		var entry: Dictionary = _calls[dash_call]
+		var clip: StringName = &"Running_Slide" if UNAIMED_DASH == &"Slide" else &"Dodge_Forward"
+		check.call(entry["travel"] == UNAIMED_DASH, "%s last_travel is %s inside the Dash call (got %s)" % [label, UNAIMED_DASH, entry["travel"]])
+		check.call(entry["travel_frame"] == entry["frame"], "%s last_travel_frame %d equals the physics frame %d of the call" % [label, entry["travel_frame"], entry["frame"]])
+		var clip_length: float = _slide_window() if UNAIMED_DASH == &"Slide" else _library.get_animation(clip).length
+		var expected_scale: float = MannequinAnimator.SLIDE_PLAYBACK_SCALE if UNAIMED_DASH == &"Slide" else clip_length / _player.config.dash_time
+		check.call(absf(float(entry["scale"]) - expected_scale) < SCALE_TOLERANCE, "%s the ground dash scale is %s length / dash_time = %.3f (got %.3f)" % [label, clip, expected_scale, entry["scale"]])
+		await Fixtures.wait_process(tree, 2)
+		var visible: StringName = Fixtures.playback(_player).get_current_node()
+		check.call(visible == UNAIMED_DASH, "%s the playback is on %s within 2 process frames (got %s)" % [label, UNAIMED_DASH, visible])
+	await _end(tree)
+
+
+# An aim press in the air blocks the air dash: no Dash, the dash charge stays unspent, the hold never starts.
+func _scenario_air_dash_blocked_in_aim(tree: SceneTree, check: Callable) -> void:
 	await _begin(tree)
 	_record()
 	Input.action_press(&"aim")
 	await Fixtures.wait_physics(tree, 12)
 	await Fixtures.tap_action(tree, &"jump")
-	await Fixtures.wait_physics(tree, 4)
-	Input.action_press(&"move_right")
+	await Fixtures.wait_physics(tree, Fixtures.lock_ticks(_player.config))
 	await Fixtures.tap_action(tree, &"dash")
-	var exited: int = await Fixtures.wait_until(tree, func() -> bool: return _find(&"Dash", &"Fall") >= 0, 30)
-	check.call(exited >= 0, "(g1) the aimed air dash exits into Fall (calls %s)" % [_names()])
-	var exit_call: int = _find(&"Dash", &"Fall")
-	if exit_call >= 0:
-		check.call(_calls[exit_call]["holding"] == true, "(g1) air_dash_holding is true inside the Dash -> Fall call")
-		check.call(_calls[exit_call]["travel"] == &"DashRight", "(g1) the playback stays on DashRight through the Dash -> Fall call (got %s)" % _calls[exit_call]["travel"])
-		check.call(absf(float(_calls[exit_call]["scale"]) - 1.0) < HOLD_SCALE_TOLERANCE, "(g1) the held DashRight plays at 1x (got %.3f)" % _calls[exit_call]["scale"])
-	await Fixtures.wait_process(tree, 2)
-	if _find_from(&"Fall") < 0:
-		var held: StringName = Fixtures.playback(_player).get_current_node()
-		check.call(held == &"DashRight", "(g2) two process frames after the exit the tree is still on DashRight (got %s)" % held)
-	var landed: int = await Fixtures.wait_until(tree, func() -> bool: return _find_from(&"Fall") >= 0, 120)
-	check.call(landed >= 0, "(g3) the aimed air dash jump ends on the floor (calls %s)" % [_names()])
-	var land_call: int = _find_from(&"Fall")
-	if land_call >= 0:
-		var land: Dictionary = _calls[land_call]
-		check.call(land["holding"] == false, "(g3) air_dash_holding is false inside the landing call")
-		check.call(land["travel"] == &"Locomotion" and land["travel_frame"] == land["frame"], "(g3) landing travels to Locomotion on the landing frame (travel %s at %d, call at %d)" % [land["travel"], land["travel_frame"], land["frame"]])
+	await Fixtures.wait_physics(tree, 4)
+	check.call(_find_to(&"Dash") < 0, "(g1) an aimed air dash press starts no Dash (calls %s)" % [_names()])
+	check.call(_player.air_dash_available, "(g1) the blocked press spends no air dash charge")
+	check.call(not _animator.air_dash_holding, "(g1) no air dash pose hold starts")
 	await _end(tree)
 
 

@@ -103,6 +103,11 @@ static func land_active(player: PlayerController) -> bool:
 	return bool(animation_tree(player).get(MannequinAnimator.P_LAND_ACTIVE))
 
 
+## Physics ticks to wait after a jump or a landing so the take-off and landing dash lockouts (quick 261120-dik) have run out.
+static func lock_ticks(config: MovementConfig) -> int:
+	return ceili(maxf(config.dash_block_takeoff, config.dash_block_landing) * float(Engine.physics_ticks_per_second)) + 3
+
+
 static func wait_physics(tree: SceneTree, frames: int) -> void:
 	for i: int in frames:
 		await tree.physics_frame
