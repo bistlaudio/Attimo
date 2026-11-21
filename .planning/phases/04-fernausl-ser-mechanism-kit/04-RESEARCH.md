@@ -392,13 +392,16 @@ func run(tree: SceneTree, check: Callable) -> void:
 | A8 | StandardMaterial3D emission API names (`emission_enabled`, `emission_energy_multiplier`) unchanged in 4.7 | Pattern 5 | trivial; check in class ref when implementing |
 | A9 | The gym `WorldEnvironment` glow is on/off (not verified) | Pattern 5 | glow reads weaker; visual only |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Does near contact work while aiming?** (Claude's discretion.) Recommendation: yes, `interact` is independent of `aim`; near range ~2.2 m from the player; when both a shot target and a near target exist, E always means near.
-2. **Which input toggles module in aim?** `module_next/prev` are defined (mouse wheel stays free while aiming per CameraRig comment); with one module the indicator is static. Recommendation: wire the actions but do nothing visible beyond the dummy module in a debug-only test (the dummy proves HAND-01).
-3. **"Dash and further jumps stay available" after a nozzle (D-20).** There is no air jump (MOVE-05); read as: air dash and landing jump chain intact. Recommendation: do not reset `air_dash_available` on launch (it is not spent by a launch), leave coyote 0.
-4. **Reset/soft-lock policy.** Per-room reset via a `reset()` sweep plus `FallReset` (existing); confirm with the developer whether an in-world reset lever is wanted (out of scope here).
-5. **Rotating platform axis variants.** Standing (clock hand) and tilting are the hardest for carry; the spike covers them; if the tilting case fails, restrict tilt to small angles per instance.
+1. **Does near contact work while aiming?** (Claude's discretion.) **RESOLVED:** yes. `interact` is independent of `aim`. The near range is `hand_near_range` = 2.2 m from the player origin. When both a shot target and a near target exist, E always means near (plan 04-02).
+2. **Which input toggles the module in aim?** **RESOLVED:** `module_next`/`module_prev` cycle the registry modules only while aiming, because outside aim the mouse wheel zooms the camera. The dummy module is `debug_only` and cyclable in debug builds, which proves HAND-01 (plans 04-01, 04-02).
+3. **"Dash and further jumps stay available" after a nozzle (D-20).** **RESOLVED:** `launch_along` never touches `air_dash_available` or `dash_cooldown_timer` and sets coyote to 0. Landing refills the air dash and keeps the jump-chain window as before (plan 04-04).
+4. **Reset/soft-lock policy.** **RESOLVED by orchestrator default** (the developer asked for no questions):
+   - A per-room mechanism reset sweep: when a room's `FallReset` respawns the player, every node in group `mechanism` inside that room gets `reset()`. This is in addition to the existing `FallReset` respawn.
+   - There is no in-world reset lever.
+   - Puzzles also avoid one-way states by design: no `stays_on` in puzzles, timed sources expire, and gates never close on the player (plan 04-05).
+5. **Rotating platform axis variants.** **RESOLVED:** STANDING (clock hand) and TILTING are both bounded oscillations within the floor angle minus 10 degrees (defaults +-35 and +-30). The 04-04 Task 1 spike covers LYING, STANDING and TILTING at 60 and 10 TPS as a go/no-go gate, with a named primary and fallback carry approach.
 
 ## Environment Availability
 
