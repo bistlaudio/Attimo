@@ -1,0 +1,79 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/mechanisms/triggers/valve.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/mechanisms/interactable.gd" id="2_interactable"]
+[ext_resource type="PackedScene" path="res://assets/prototype_bits/Primitive_Pillar.gltf" id="4_pillar"]
+[ext_resource type="Material" path="res://resources/mechanisms/glow_idle.tres" id="5_glow"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_wheel"]
+albedo_color = Color(0.55, 0.35, 0.2, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_base"]
+size = Vector3(0.8, 1.2, 0.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hit"]
+size = Vector3(0.9, 0.9, 0.9)
+
+[sub_resource type="TorusMesh" id="TorusMesh_rim"]
+inner_radius = 0.34
+outer_radius = 0.44
+material = SubResource("Mat_wheel")
+
+[sub_resource type="BoxMesh" id="BoxMesh_spoke"]
+size = Vector3(0.8, 0.07, 0.07)
+material = SubResource("Mat_wheel")
+
+[sub_resource type="SphereMesh" id="SphereMesh_hub"]
+radius = 0.13
+height = 0.26
+
+[node name="Valve" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Base" type="StaticBody3D" parent="."]
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Base"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+shape = SubResource("BoxShape3D_base")
+
+[node name="Mesh" parent="Base" instance=ExtResource("4_pillar")]
+transform = Transform3D(0.35, 0, 0, 0, 0.3, 0, 0, 0, 0.35, 0, 0, 0)
+
+[node name="Wheel" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0.3)
+
+[node name="Rim" type="MeshInstance3D" parent="Wheel"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0)
+mesh = SubResource("TorusMesh_rim")
+
+[node name="SpokeA" type="MeshInstance3D" parent="Wheel"]
+mesh = SubResource("BoxMesh_spoke")
+
+[node name="SpokeB" type="MeshInstance3D" parent="Wheel"]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("BoxMesh_spoke")
+
+[node name="GlowLens" type="MeshInstance3D" parent="Wheel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.1)
+mesh = SubResource("SphereMesh_hub")
+material_override = ExtResource("5_glow")
+
+[node name="AimPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0.4)
+
+[node name="HitBody" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
+collision_layer = 4
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HitBody"]
+shape = SubResource("BoxShape3D_hit")
+
+[node name="Interactable" type="Node" parent="." node_paths=PackedStringArray("hit_body", "aim_point", "glow_meshes")]
+script = ExtResource("2_interactable")
+min_pulse = 1
+hit_body = NodePath("../HitBody")
+aim_point = NodePath("../AimPoint")
+glow_meshes = [NodePath("../Wheel/GlowLens")]
