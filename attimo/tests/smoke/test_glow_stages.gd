@@ -18,6 +18,8 @@ var _rig: CameraRig
 
 
 func run(tree: SceneTree, check: Callable) -> void:
+	# The runner calls us from _initialize, before the root is inside the tree.
+	await tree.process_frame
 	Engine.physics_ticks_per_second = SHIPPED_TPS
 	for path: String in [GLOW_IDLE, GLOW_AIM, GLOW_TARGET]:
 		check.call(ResourceLoader.exists(path), "%s exists" % path)

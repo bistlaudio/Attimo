@@ -4,6 +4,12 @@ extends Node
 ## the shot, near contact or both, and the minimum pulse size. accepts_module and can_accept are the only deciders;
 ## modules only call try_trigger. Add it as a child of the thing and point hit_body at its collision body.
 
+const GLOW_IDLE_MATERIAL: StandardMaterial3D = preload("res://resources/mechanisms/glow_idle.tres")
+const GLOW_AIM_MATERIAL: StandardMaterial3D = preload("res://resources/mechanisms/glow_aim.tres")
+const GLOW_TARGET_MATERIAL: StandardMaterial3D = preload("res://resources/mechanisms/glow_target.tres")
+## Emission energy of the brightest stage before Targeting adds its pulse.
+const GLOW_TARGET_ENERGY: float = 3.0
+
 ## Glow stages of the shared turquoise materials (D-11): faint always, stronger while aiming, brightest when targeted.
 enum GlowStage { IDLE, AIM, TARGET }
 
@@ -20,21 +26,42 @@ signal near_ended()
 @export var hit_body: CollisionObject3D
 ## Where the crosshair and the glow aim at; the hit body position when unset.
 @export var aim_point: Node3D
-## Meshes whose material the glow stages switch (plan 04-02).
+## Meshes whose material the glow stages switch.
 @export var glow_meshes: Array[MeshInstance3D] = []
+
+
+## The current glow stage (read-only for others).
+var glow_stage: int = GlowStage.IDLE
 
 
 func _ready() -> void:
 	add_to_group(&"interactable")
+	set_glow_stage(GlowStage.IDLE)
+	EventBus.aim_changed.connect(_on_aim_changed)
 	if hit_body != null:
 		hit_body.collision_layer = PhysicsLayers.INTERACTABLE
 		hit_body.collision_mask = 0
 		hit_body.set_meta(&"interactable", self)
 
 
-## Switches the glow meshes to the shared material of `stage`. Stub until plan 04-02 task 2.
-func set_glow_stage(_stage: int) -> void:
-	pass
+## Switches the glow meshes to the shared material of `stage` (the same resource instance on every Interactable).
+func set_glow_stage(stage: int) -> void:
+	glow_stage = stage
+	var material: StandardMaterial3D = GLOW_IDLE_MATERIAL
+	match stage:
+		GlowStage.AIM:
+			material = GLOW_AIM_MATERIAL
+		GlowStage.TARGET:
+			material = GLOW_TARGET_MATERIAL
+	for mesh: MeshInstance3D in glow_meshes:
+		if is_instance_valid(mesh):
+			mesh.material_override = material
+
+
+func _on_aim_changed(active: bool) -> void:
+	if glow_stage == GlowStage.TARGET:
+		return
+	set_glow_stage(GlowStage.AIM if active else GlowStage.IDLE)
 
 
 func accepts_module(id: StringName) -> bool:

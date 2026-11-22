@@ -119,6 +119,9 @@ func available_ids() -> Array[StringName]:
 func _physics_process(delta: float) -> void:
 	cooldown_left = maxf(cooldown_left - delta, 0.0)
 	_context.rig = _player.camera_rig()
+	# The assist runs first, so a shot decided on this tick reads this tick's target (Pitfall 7).
+	if targeting != null:
+		targeting.update(delta)
 	if not _player.aiming:
 		# D-02: nothing fires without aim, and releasing aim mid-charge cancels the shot.
 		_reset_charge()

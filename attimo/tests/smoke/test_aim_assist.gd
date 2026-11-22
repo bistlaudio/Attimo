@@ -7,6 +7,9 @@ const Fixtures := preload("res://tests/fixtures.gd")
 const LEVER_SCENE: String = "res://scenes/mechanisms/lever.tscn"
 const SHIPPED_TPS: int = 60
 const AIM_SETTLE_FRAMES: int = 180
+const SETTLE_TICKS: int = 6
+## Where a lever spawns before it is moved onto the line: away from the player, whose capsule its base would push.
+const PARK: Vector3 = Vector3(300.0, 0.0, 300.0)
 
 var _nodes: Array[Node] = []
 var _player: PlayerController
@@ -15,6 +18,8 @@ var _hand: HandController
 
 
 func run(tree: SceneTree, check: Callable) -> void:
+	# The runner calls us from _initialize, before the root is inside the tree.
+	await tree.process_frame
 	Engine.physics_ticks_per_second = SHIPPED_TPS
 	await _scenario_dummy_invalid(tree, check)
 	await _scenario_snap(tree, check)
@@ -39,7 +44,7 @@ func _begin(tree: SceneTree) -> void:
 	while _rig.aim_weight < 0.999 and frames < AIM_SETTLE_FRAMES:
 		await tree.process_frame
 		frames += 1
-	await Fixtures.wait_physics(tree, 3)
+	await Fixtures.wait_physics(tree, SETTLE_TICKS)
 	await Fixtures.wait_process(tree, 3)
 
 
@@ -74,7 +79,7 @@ func _point(distance: float, yaw_deg: float = 0.0) -> Vector3:
 
 ## A lever whose hit body sits at `point` (the hit body is also its target point: the aim point is cleared).
 func _lever_at(tree: SceneTree, point: Vector3) -> Lever:
-	var lever: Lever = Fixtures.spawn_scene(tree.root, LEVER_SCENE, Vector3.ZERO) as Lever
+	var lever: Lever = Fixtures.spawn_scene(tree.root, LEVER_SCENE, PARK) as Lever
 	var interactable: Interactable = lever.get_node("Interactable") as Interactable
 	interactable.aim_point = null
 	lever.global_position = point - (interactable.hit_body.global_position - lever.global_position)
@@ -154,7 +159,7 @@ func _scenario_states(tree: SceneTree, check: Callable) -> void:
 	var no_shot: Lever = _lever_at(tree, _point(8.0))
 	_interactable(no_shot).accepts_shot = false
 	await Fixtures.wait_physics(tree, 8)
-	check.call(_hand.targeting.state == Targeting.State.INVALID, "(4) a lever that does not accept the shot reads INVALID")
+	check.call(_hand.targeting.state == Targeting.State.INVALID, "(4) a lever that does not accept the shot reads INVALID (state %d, target %s)" % [_hand.targeting.state, str(_hand.targeting.target)])
 	check.call(_hand.targeting.target == null, "(4) the cone never selects it as the target")
 	no_shot.queue_free()
 	await Fixtures.wait_physics(tree, 12)

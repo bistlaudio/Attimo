@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://scripts/mechanisms/interactable.gd" id="2_interactable"]
 [ext_resource type="PackedScene" path="res://assets/prototype_bits/Primitive_Cube_Small.gltf" id="3_cube"]
 [ext_resource type="PackedScene" path="res://assets/prototype_bits/Primitive_Pillar.gltf" id="4_pillar"]
+[ext_resource type="Material" path="res://resources/mechanisms/glow_idle.tres" id="5_glow"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_base"]
 size = Vector3(0.8, 0.8, 0.8)
@@ -14,9 +15,6 @@ size = Vector3(0.6, 0.6, 0.6)
 [sub_resource type="SphereMesh" id="SphereMesh_lens"]
 radius = 0.12
 height = 0.24
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lens"]
-albedo_color = Color(0.6, 0.6, 0.6, 1)
 
 [node name="Lever" type="Node3D"]
 script = ExtResource("1_lever")
@@ -41,7 +39,7 @@ transform = Transform3D(0.1, 0, 0, 0, 0.15, 0, 0, 0, 0.1, 0, 0, 0)
 [node name="GlowLens" type="MeshInstance3D" parent="Handle"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 mesh = SubResource("SphereMesh_lens")
-surface_material_override/0 = SubResource("StandardMaterial3D_lens")
+material_override = ExtResource("5_glow")
 
 [node name="AimPoint" type="Marker3D" parent="Handle"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)

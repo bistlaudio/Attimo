@@ -223,7 +223,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		if motion.relative != Vector2.ZERO:
 			notify_look_activity()
-		var scale: float = base_sensitivity * settings.sensitivity * lerpf(1.0, aim_sensitivity_factor, aim_weight)
+		var scale: float = base_sensitivity * settings.sensitivity * lerpf(1.0, aim_sensitivity_factor, aim_weight) * look_sensitivity_multiplier
 		var vertical: float = motion.relative.y * scale
 		if settings.invert_y:
 			vertical = -vertical

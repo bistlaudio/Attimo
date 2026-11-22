@@ -18,6 +18,8 @@ var _bus: Node
 
 
 func run(tree: SceneTree, check: Callable) -> void:
+	# The runner calls us from _initialize, before the root is inside the tree.
+	await tree.process_frame
 	Engine.physics_ticks_per_second = SHIPPED_TPS
 	_bus = tree.root.get_node("EventBus")
 	await _scenario_toggle(tree, check)
