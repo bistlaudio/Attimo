@@ -175,7 +175,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 04-03-PLAN.md — Handrad-Ventil, Energiekern, Uhrwerk-Kurbel, AND/OR/Timer logic with packed-ref round trip, showcase stations (wave 3)
+- [x] 04-03-PLAN.md — Handrad-Ventil, Energiekern, Uhrwerk-Kurbel, AND/OR/Timer logic with packed-ref round trip, showcase stations (wave 3)
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
@@ -391,7 +391,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 (en
 | 1. Foundation & Prototype Character | 7/7 | Complete    | 2026-11-04 |
 | 2. Movement Core & Follow Camera | 14/14 | Complete    | 2026-11-06 |
 | 3. Animated Mannequin & Aim Mode | 10/10 | Complete    | 2026-11-20 |
-| 4. Fernauslöser & Mechanism Kit | 2/5 | In Progress|  |
+| 4. Fernauslöser & Mechanism Kit | 3/5 | In Progress|  |
 | 5. Pull/Push & Module Unlocks | 0/TBD | Not started | - |
 | 6. Shooting, Enemies & Recovery | 0/TBD | Not started | - |
 | 7. Level Blockout & Game Flow | 0/TBD | Not started | - |
