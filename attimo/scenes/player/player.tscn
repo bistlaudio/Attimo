@@ -14,6 +14,7 @@
 [ext_resource type="Script" path="res://scripts/player/procedural_pose.gd" id="14_pose"]
 [ext_resource type="Script" path="res://scripts/hand/hand_controller.gd" id="15_hand"]
 [ext_resource type="Resource" path="res://resources/hand/module_registry.tres" id="16_registry"]
+[ext_resource type="Script" path="res://scripts/hand/hand_presentation.gd" id="17_presentation"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.5
@@ -69,3 +70,8 @@ mannequin = NodePath("../VisualRoot/Mannequin")
 [node name="HandController" type="Node" parent="."]
 script = ExtResource("15_hand")
 registry = ExtResource("16_registry")
+
+[node name="HandPresentation" type="Node" parent="." node_paths=PackedStringArray("player", "mannequin")]
+script = ExtResource("17_presentation")
+player = NodePath("..")
+mannequin = NodePath("../VisualRoot/Mannequin")

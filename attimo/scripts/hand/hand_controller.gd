@@ -49,6 +49,7 @@ var arm_out_point: Vector3 = Vector3.ZERO
 ## The Interactable held by near contact, or null.
 var near_target: Interactable = null
 
+var _shot_arm_left: float = 0.0
 var _player: PlayerController = null
 var _context: HandContext = HandContext.new()
 var _charge_time: float = 0.0
@@ -63,6 +64,7 @@ func _ready() -> void:
 	if _player == null:
 		set_physics_process(false)
 		return
+	EventBus.pulse_fired.connect(_on_pulse_fired)
 	_context.player = _player
 	_context.controller = self
 	equip(default_module_id)
@@ -122,6 +124,10 @@ func _physics_process(delta: float) -> void:
 	# The assist runs first, so a shot decided on this tick reads this tick's target (Pitfall 7).
 	if targeting != null:
 		targeting.update(delta)
+	# Near contact does not depend on aim (D-08), it works while aiming too.
+	_tick_near(delta)
+	_shot_arm_left = maxf(_shot_arm_left - delta, 0.0)
+	arm_out = near_target != null or _shot_arm_left > 0.0 or _player.aiming
 	if not _player.aiming:
 		# D-02: nothing fires without aim, and releasing aim mid-charge cancels the shot.
 		_reset_charge()
@@ -153,3 +159,53 @@ func _reset_charge() -> void:
 	charging = false
 	charge_ratio = 0.0
 	_charge_time = 0.0
+
+
+## Near contact (D-08, D-09, D-10): interact next to an Interactable that accepts it starts the contact, holding interact
+## keeps it, releasing it (or leaving hand_near_range) ends it. Presentation reads arm_out and the facts on the bus.
+func _tick_near(delta: float) -> void:
+	if near_target != null and not is_instance_valid(near_target):
+		near_target = null
+		EventBus.near_contact_changed.emit(false, arm_out_point)
+	if near_target == null:
+		if Input.is_action_just_pressed(&"interact"):
+			var candidate: Interactable = _nearest_near_target()
+			if candidate != null and candidate.near_begin():
+				near_target = candidate
+				arm_out_point = candidate.target_point()
+				EventBus.near_contact_changed.emit(true, arm_out_point)
+		return
+	if Input.is_action_pressed(&"interact") and _in_near_range(near_target):
+		arm_out_point = near_target.target_point()
+		near_target.near_hold(delta)
+		return
+	var ended: Interactable = near_target
+	near_target = null
+	ended.near_end()
+	EventBus.near_contact_changed.emit(false, ended.target_point())
+
+
+## The nearest Interactable in group interactable that accepts near contact and is within hand_near_range, or null.
+func _nearest_near_target() -> Interactable:
+	var best: Interactable = null
+	var best_distance: float = INF
+	for node: Node in get_tree().get_nodes_in_group(&"interactable"):
+		var candidate: Interactable = node as Interactable
+		if candidate == null or not candidate.accepts_near or not _in_near_range(candidate):
+			continue
+		var distance: float = _player.global_position.distance_to(candidate.target_point())
+		if distance < best_distance:
+			best = candidate
+			best_distance = distance
+	return best
+
+
+func _in_near_range(candidate: Interactable) -> bool:
+	var point: Vector3 = candidate.target_point()
+	return point.is_finite() and _player.global_position.distance_to(point) <= hand_near_range
+
+
+func _on_pulse_fired(_origin: Vector3, point: Vector3, _size: int, _hit_valid: bool) -> void:
+	_shot_arm_left = hand_shot_arm_time
+	if near_target == null and point.is_finite():
+		arm_out_point = point

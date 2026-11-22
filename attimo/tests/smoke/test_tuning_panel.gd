@@ -21,6 +21,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_save_button(tree, check)
 	await _scenario_aim_rows(tree, check)
 	await _scenario_slider_save(tree, check)
+	await _scenario_hand_rows(tree, check)
 	_cleanup_file(TEST_SETTINGS_PATH)
 
 
@@ -215,4 +216,32 @@ func _scenario_slider_save(tree: SceneTree, check: Callable) -> void:
 	check.call(FileAccess.file_exists(TEST_SETTINGS_PATH) and is_equal_approx(CameraSettings.load_from(TEST_SETTINGS_PATH).sensitivity, 1.9), "(8) the final value is saved when the drag ends")
 	slider.value = 1.2
 	check.call(is_equal_approx(CameraSettings.load_from(TEST_SETTINGS_PATH).sensitivity, 1.2), "(8) a change outside a drag (keyboard step) saves at once")
+	await _free_all(tree, nodes)
+
+
+# (9) the Hand section: hand_* range floats of the HandController, live, never saved.
+func _scenario_hand_rows(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree)
+	var player: PlayerController = nodes[1] as PlayerController
+	var panel: TuningPanel = nodes[3] as TuningPanel
+	var hand: HandController = player.get_node("HandController") as HandController
+	check.call(panel.hand_row_count() >= 8, "(9) the Hand section has at least 8 rows (%d)" % panel.hand_row_count())
+	var has_header: bool = false
+	for label: Node in panel.find_children("*", "Label", true, false):
+		if (label as Label).text.contains("Hand"):
+			has_header = true
+	check.call(has_header, "(9) the panel shows a 'Hand' header")
+	panel.set_hand_value(&"hand_charge_threshold", 0.9)
+	check.call(is_equal_approx(hand.hand_charge_threshold, 0.9), "(9) set_hand_value changes hand_charge_threshold (got %.2f)" % hand.hand_charge_threshold)
+	panel.set_hand_value(&"not_a_property", 1.0)
+	check.call(panel.row_count() == _expected_rows(), "(9) the movement rows are unchanged by the Hand section")
+	panel.set_sensitivity(1.2)
+	var config_file: ConfigFile = ConfigFile.new()
+	check.call(config_file.load(TEST_SETTINGS_PATH) == OK, "(9) the saved settings file loads")
+	var hand_keys: int = 0
+	for section: String in config_file.get_sections():
+		for key: String in config_file.get_section_keys(section):
+			if key.begins_with("hand_"):
+				hand_keys += 1
+	check.call(hand_keys == 0, "(9) the settings file contains no hand_ key (%d)" % hand_keys)
 	await _free_all(tree, nodes)

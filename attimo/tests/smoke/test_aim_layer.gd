@@ -150,9 +150,12 @@ func _scenario_spell_hand(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.wait_physics(tree, 30)
 	check.call(machine.get_current_node() == &"Hold", "(h4) holding aim stays in Hold (node %s)" % machine.get_current_node())
 
+	# The shot is the pulse on release (EventBus.pulse_fired), not the press: the tap releases after 2 physics frames, the
+	# release tick fires the pulse and the animator fires Shoot on that same tick.
 	await Fixtures.tap_action(tree, &"use_hand")
+	await Fixtures.wait_physics(tree, 2)
 	await Fixtures.wait_process(tree, 2)
-	check.call(bool(_anim_tree.get(P_SHOOT_ACTIVE)), "(h5) use_hand while aiming fires the Shoot OneShot")
+	check.call(bool(_anim_tree.get(P_SHOOT_ACTIVE)), "(h5) a tap of use_hand while aiming fires the Shoot OneShot on release")
 	var shot_done: int = await Fixtures.wait_until(tree, func() -> bool: return not bool(_anim_tree.get(P_SHOOT_ACTIVE)), 90)
 	check.call(shot_done >= 0, "(h5) the Shoot OneShot ends on its own (%d frames)" % shot_done)
 	check.call(machine.get_current_node() == &"Hold", "(h5) the hand is still in Hold after the shot")

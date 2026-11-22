@@ -5,7 +5,7 @@ extends Node
 ## The tree root is a BlendTree (tools/build_mannequin_tree.gd): StateMachine -> TimeScale -> Land OneShot -> Aim
 ## (upper-body layer) -> output. The state machine has one dash node per Dodge clip; dash_node_for() picks it (D-12, the aimed nodes are dormant).
 ## The aim layer is the spell hand (quick 261118-qi3): an aim press starts the AimMachine at Enter on the same physics
-## frame, Hold loops while aim is held, use_hand while aiming fires the Shoot OneShot, a release travels to Exit and the
+## frame, Hold loops while aim is held, a pulse_fired while aiming fires the Shoot OneShot, a release travels to Exit and the
 ## layer fades out after the Exit clip.
 ## Idle breaks (quick 261118-qi3): standing still in Idle for a rolled delay (MovementConfig idle_break_delay_min/max)
 ## fires the IdleBreak OneShot with a clip picked by a VariantPicker (never the same one twice in a row). Any gameplay
@@ -105,6 +105,8 @@ var last_impact_speed: float = 0.0
 var last_landing_horizontal_speed: float = 0.0
 
 var _playback: AnimationNodeStateMachinePlayback
+## The hand of this player (read only): arm_out raises the arm layer, arm_out_point is where the arm points.
+var _hand: HandController
 ## The spell hand state machine (Enter, Hold, Exit) inside the Aim layer; null when the tree has none.
 var _aim_machine: AnimationNodeStateMachinePlayback
 var _was_aiming: bool = false
@@ -171,8 +173,10 @@ func _ready() -> void:
 	var mannequin: Node = animation_tree.get_parent()
 	if mannequin != null:
 		_aim_modifier = mannequin.get_node_or_null(AIM_MODIFIER_PATH) as AimPoseModifier
+	_hand = player.get_node_or_null(^"HandController") as HandController
 	state_machine.state_changed.connect(_on_state_changed)
 	EventBus.landed.connect(_on_landed)
+	EventBus.pulse_fired.connect(_on_pulse_fired)
 	var tree_root: AnimationNodeBlendTree = animation_tree.tree_root as AnimationNodeBlendTree
 	if tree_root != null and tree_root.has_node(&"StateMachine"):
 		var machine: AnimationNodeStateMachine = tree_root.get_node(&"StateMachine") as AnimationNodeStateMachine
@@ -220,8 +224,6 @@ func _aim_exit_length(clip_player: AnimationPlayer) -> float:
 ## first so they never depend on the hold.
 func _physics_process(delta: float) -> void:
 	_update_aim_edge(delta)
-	if Input.is_action_just_pressed(&"use_hand"):
-		play_hand_shot()
 	_update_idle_break(delta)
 	if slide_holding:
 		_slide_hold_left -= delta
@@ -253,9 +255,20 @@ func _update_aim_edge(delta: float) -> void:
 	_was_aiming = aiming
 
 
-## Fires the Shoot OneShot of the spell hand. Only while aiming: outside aim the layer weight is 0 and hip-fire
-## presentation is Phase 4. Stand-in until Phase 4 emits a hand fact (the hand does not exist yet): it is called from the
-## use_hand poll in _physics_process.
+## The shot of the hand happened (EventBus.pulse_fired, on release after charge and cooldown): fire the Shoot OneShot.
+func _on_pulse_fired(_origin: Vector3, _point: Vector3, _size: int, _hit_valid: bool) -> void:
+	play_hand_shot()
+
+
+## True while the arm layer is up: aiming, or the hand reports the arm stretched out (shot, near contact). Only the Aim
+## layer weight and the solver target use it. The aim edge, strafe, backward locomotion and the dash node stay on
+## player.aiming, so near contact without aim never enters strafe or backward clips.
+func _arm_up() -> bool:
+	return player.aiming or (_hand != null and _hand.arm_out)
+
+
+## Fires the Shoot OneShot of the spell hand. Only while aiming: outside aim the layer weight stays on the near-contact
+## pose and the spell hand clips belong to aim.
 func play_hand_shot() -> void:
 	if player.aiming:
 		animation_tree.set(P_SHOOT_REQUEST, AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
@@ -273,8 +286,9 @@ func _process(delta: float) -> void:
 	animation_tree.set(P_LOCOMOTION, _loco_blend)
 	animation_tree.set(P_TIME_SCALE, clip_scale())
 	var blend_time: float = maxf(player.config.aim_layer_blend_time, 0.001)
-	aim_weight = move_toward(aim_weight, 1.0 if player.aiming else 0.0, delta / blend_time)
-	var layer_target: float = 1.0 if (player.aiming or _exit_left > 0.0) else 0.0
+	var arm_up: bool = _arm_up()
+	aim_weight = move_toward(aim_weight, 1.0 if arm_up else 0.0, delta / blend_time)
+	var layer_target: float = 1.0 if (arm_up or _exit_left > 0.0) else 0.0
 	layer_weight = move_toward(layer_weight, layer_target, delta / blend_time)
 	animation_tree.set(P_AIM, layer_weight)
 	_feed_aim_modifier()
@@ -289,6 +303,10 @@ func _feed_aim_modifier() -> void:
 		return
 	_aim_modifier.influence = aim_weight
 	if aim_weight <= 0.0:
+		return
+	if not player.aiming and _hand != null and _hand.arm_out:
+		# Near contact or a shot without aim: the arm points at the hand's own point, not the crosshair.
+		_aim_modifier.set_aim_point(_hand.arm_out_point)
 		return
 	var rig: CameraRig = player.camera_rig()
 	if rig != null:
