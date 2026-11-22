@@ -47,6 +47,19 @@ const DASH_LOCK_AIM: StringName = &"aim"
 var _was_on_floor: bool = true
 var _dash_block_frame: int = -1
 var _last_platform_velocity: Vector3 = Vector3.ZERO
+## Test-only switch: true leaves rotating platforms to the engine's own platform velocity (A2 measurement).
+var debug_disable_custom_carry: bool = false
+## The mechanism root (has carry_velocity_at) of the carrying_platform body the last post-move stood on, or null.
+var _floor_carrier: Node = null
+var _floor_body: CollisionObject3D = null
+## Our position in the local frame of _floor_body at the end of the last move.
+var _carry_local: Vector3 = Vector3.ZERO
+## The chord velocity applied on the last move, or ZERO. Used for the take-off momentum on a carrying platform.
+var _carry_chord: Vector3 = Vector3.ZERO
+var _carry_active: bool = false
+
+## A rotating platform never carries further than this per tick (a guard against a bad transform).
+const MAX_CARRY_SHIFT: float = 2.0
 
 @onready var visual_root: Node3D = $VisualRoot
 @onready var state_machine: StateMachine = $StateMachine
@@ -363,6 +376,7 @@ func _integrate(delta: float) -> void:
 	g *= gravity_scale
 	# Half-step gravity around the move keeps the jump height tick-rate independent.
 	vertical_speed = maxf(vertical_speed - g * delta * 0.5, -config.terminal_speed)
+	_attach_to_carrier(delta)
 	velocity = Vector3(move_velocity.x, vertical_speed, move_velocity.z)
 	# Speed-scaled floor snap, held inside the D-13 band (A35).
 	var snap: float = horizontal_speed() * delta * tan(floor_max_angle) + 0.1
@@ -388,7 +402,12 @@ func _post_move() -> void:
 		_leave_floor()
 	if on_floor:
 		vertical_speed = 0.0
-		_last_platform_velocity = get_platform_velocity()
+		_last_platform_velocity = _carry_chord if _carry_active else get_platform_velocity()
+		_floor_carrier = _find_floor_carrier()
+		if _floor_body != null:
+			_carry_local = _floor_body.global_transform.affine_inverse() * global_position
+	else:
+		_floor_carrier = null
 	_was_on_floor = on_floor
 
 
@@ -407,3 +426,42 @@ func _leave_floor() -> void:
 	move_velocity.x += _last_platform_velocity.x * config.platform_carry
 	move_velocity.z += _last_platform_velocity.z * config.platform_carry
 	air_speed_cap = maxf(config.run_speed, horizontal_speed())
+
+
+## Rotating platforms (group carrying_platform), MECH-03: the rider is carried by reference frame, not by velocity. The engine
+## would move it along the tangent of the platform point, which drifts outward on a circle, and a surface that moves through the
+## rider's feet makes any velocity based carry double count its normal motion. So the engine carry is switched off for these
+## floors (platform_floor_layers), and at the start of the tick the rider is placed at the same local point of the platform
+## it stood on at the end of the last tick (the platform ticks after the player, so its body pose is the world the move sees).
+## The own movement of this tick then happens on top. _carry_chord (carry_velocity_at) is only the take-off momentum.
+func _attach_to_carrier(delta: float) -> void:
+	_carry_chord = Vector3.ZERO
+	_carry_active = false
+	platform_floor_layers = 0xFFFFFFFF
+	if debug_disable_custom_carry or not _was_on_floor or _floor_body == null or not is_instance_valid(_floor_body):
+		return
+	if _floor_carrier == null or not _floor_carrier.has_method(&"carry_velocity_at"):
+		return
+	var target: Vector3 = _floor_body.global_transform * _carry_local
+	if not target.is_finite() or target.distance_to(global_position) > MAX_CARRY_SHIFT:
+		return
+	global_position = target
+	_carry_active = true
+	platform_floor_layers = 0
+	var chord: Vector3 = _floor_carrier.call(&"carry_velocity_at", target, delta) as Vector3
+	_carry_chord = chord if chord.is_finite() else Vector3.ZERO
+
+
+## The mechanism root above the carrying_platform floor body of the last move, or null.
+func _find_floor_carrier() -> Node:
+	var floor_normal: Vector3 = get_floor_normal()
+	for index: int in get_slide_collision_count():
+		var hit: KinematicCollision3D = get_slide_collision(index)
+		if hit.get_normal().dot(floor_normal) < 0.99:
+			continue
+		var collider: CollisionObject3D = hit.get_collider() as CollisionObject3D
+		if collider != null and collider.is_in_group(&"carrying_platform"):
+			_floor_body = collider
+			return collider.get_parent()
+	_floor_body = null
+	return null
