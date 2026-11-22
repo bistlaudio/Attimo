@@ -128,3 +128,19 @@ static func wait_until(tree: SceneTree, condition: Callable, max_physics_frames:
 		await tree.physics_frame
 		waited += 1
 	return -1
+
+
+## Holds `action` for `seconds` of physics time, then releases it.
+static func hold_action(tree: SceneTree, action: StringName, seconds: float) -> void:
+	Input.action_press(action)
+	await wait_physics(tree, ceili(seconds * Engine.physics_ticks_per_second))
+	Input.action_release(action)
+
+
+## Instances the scene at `path` under `root` at `position`.
+static func spawn_scene(root: Node, path: String, position: Vector3) -> Node3D:
+	var scene: PackedScene = load(path) as PackedScene
+	var node: Node3D = scene.instantiate() as Node3D
+	node.position = position
+	root.add_child(node)
+	return node
