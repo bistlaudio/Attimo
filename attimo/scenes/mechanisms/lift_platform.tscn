@@ -1,0 +1,60 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/mechanisms/lift_platform.gd" id="1_script"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_deck"]
+size = Vector3(4, 0.5, 4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_deck"]
+size = Vector3(4, 0.5, 4)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_piston"]
+top_radius = 0.35
+bottom_radius = 0.35
+height = 4.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_chain"]
+size = Vector3(0.12, 4, 0.12)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_deck"]
+albedo_color = Color(0.55, 0.5, 0.42, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_metal"]
+albedo_color = Color(0.4, 0.43, 0.47, 1)
+
+[node name="LiftPlatform" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Body" type="AnimatableBody3D" parent="."]
+collision_layer = 1
+collision_mask = 0
+sync_to_physics = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+shape = SubResource("BoxShape3D_deck")
+
+[node name="Deck" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+mesh = SubResource("BoxMesh_deck")
+surface_material_override/0 = SubResource("StandardMaterial3D_deck")
+
+[node name="Piston" type="Node3D" parent="Body"]
+
+[node name="Column" type="MeshInstance3D" parent="Body/Piston"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.5, 0)
+mesh = SubResource("CylinderMesh_piston")
+surface_material_override/0 = SubResource("StandardMaterial3D_metal")
+
+[node name="Chains" type="Node3D" parent="Body"]
+visible = false
+
+[node name="ChainLeft" type="MeshInstance3D" parent="Body/Chains"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 2, 0)
+mesh = SubResource("BoxMesh_chain")
+surface_material_override/0 = SubResource("StandardMaterial3D_metal")
+
+[node name="ChainRight" type="MeshInstance3D" parent="Body/Chains"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 2, 0)
+mesh = SubResource("BoxMesh_chain")
+surface_material_override/0 = SubResource("StandardMaterial3D_metal")
