@@ -17,6 +17,14 @@ const CRANK_SCENE: String = "res://scenes/mechanisms/crank.tscn"
 const AND_SCENE: String = "res://scenes/mechanisms/logic_and.tscn"
 const OR_SCENE: String = "res://scenes/mechanisms/logic_or.tscn"
 const TIMER_SCENE: String = "res://scenes/mechanisms/logic_timer.tscn"
+const ROTATING_SCENE: String = "res://scenes/mechanisms/rotating_platform.tscn"
+const LIFT_SCENE: String = "res://scenes/mechanisms/lift_platform.tscn"
+const CONVEYOR_SCENE: String = "res://scenes/mechanisms/conveyor.tscn"
+const NOZZLE_SCENE: String = "res://scenes/mechanisms/steam_nozzle.tscn"
+const PENDULUM_SCENE: String = "res://scenes/mechanisms/pendulum.tscn"
+## Height of the raised moving stations (Dreh-Plattform, Hub-Plattform, Pendel walkway): their bodies are 0.5 m thick, so the
+## deck stays clear of the floor tiles and the rider really stands on the moving body.
+const RAISED: float = 1.0
 ## Showcase rows: the north row stands at z -12, the south row at z 12; the stations are 10 m apart on x.
 const STATION_X: Array[float] = [48.0, 58.0, 68.0]
 const STATION_Z: float = 12.0
@@ -24,7 +32,8 @@ const STATION_Z: float = 12.0
 const GATE_DISTANCE: float = 4.0
 const WALL_X: float = 42.5
 const ROOM_X_MIN: float = 43.0
-const ROOM_X_MAX: float = 75.0
+## Room 2 was x 43..75 (04-03) and grew to x 115 in 04-04 for the moving stations; the puzzle rooms start behind it.
+const ROOM_X_MAX: float = 115.0
 const ROOM_Z_HALF: float = 16.0
 const TILE: float = 4.0
 
@@ -47,6 +56,7 @@ func build_showcase_stations(zone: Node3D, builder: RefCounted) -> void:
 	_station_logic(zone, builder, Vector3(STATION_X[0], 0.0, STATION_Z), "And", AND_SCENE, "UND: beide Hebel")
 	_station_logic(zone, builder, Vector3(STATION_X[1], 0.0, STATION_Z), "Or", OR_SCENE, "ODER: ein Hebel")
 	_station_timer(zone, builder, Vector3(STATION_X[2], 0.0, STATION_Z))
+	_build_moving_stations(zone, builder)
 
 
 ## A gate GATE_DISTANCE towards the room centre from `at`, wired to `source`. Returns the gate.
@@ -99,6 +109,41 @@ func _station_timer(zone: Node3D, builder: RefCounted, at: Vector3) -> void:
 	timer.set("hold_time", 4.0)
 	_station_gate(zone, builder, at, "Timer", timer)
 	_sign(zone, builder, "Timer", "Timer (4 s)", at)
+
+
+## Moving mechanisms (04-04, D-27): one station per mechanism, rotating-platform axis, lift look, belt behaviour and nozzle
+## mode, each wired to its own lever. Stations are at least 6 m apart on the 1 m grid.
+## Old part: nozzles JUMP (58, 0), UPDRAFT (68, 0), CANNON (74, -12), WALL (74, 12).
+## Extension x 76..115: north row z -12 Dreh-Plattform LYING 80, STANDING 90, TILTING 100 and the Pendel bridge at 110;
+## centre row z 0 Hub-Plattform PISTON 80 and CHAIN 90; south row z 12 Foerderband RUN_WHILE_ON (84) and REVERSE_ON_SIGNAL (102).
+func _build_moving_stations(zone: Node3D, builder: RefCounted) -> void:
+	var yaw_east: Basis = Basis(Vector3.UP, -PI * 0.5)
+	var yaw_west: Basis = Basis(Vector3.UP, PI * 0.5)
+	_station_mover(zone, builder, "NozzleJump", NOZZLE_SCENE, Vector3(58.0, 0.0, 0.0), Basis.IDENTITY, Vector3(55.5, 0.0, 0.0), {"mode": SteamNozzle.Mode.JUMP}, "Dampfdüse: Sprung")
+	_station_mover(zone, builder, "NozzleUpdraft", NOZZLE_SCENE, Vector3(68.0, 0.0, 0.0), Basis.IDENTITY, Vector3(65.5, 0.0, 0.0), {"mode": SteamNozzle.Mode.UPDRAFT}, "Dampfdüse: Aufwind")
+	_station_mover(zone, builder, "NozzleCannon", NOZZLE_SCENE, Vector3(74.0, 0.0, -STATION_Z), Basis.from_euler(Vector3(PI * 0.25, -PI * 0.5, 0.0)), Vector3(74.0, 0.0, -9.5), {"mode": SteamNozzle.Mode.CANNON}, "Dampfdüse: Kanone")
+	_station_mover(zone, builder, "NozzleWall", NOZZLE_SCENE, Vector3(74.0, 0.0, STATION_Z), yaw_west, Vector3(74.0, 0.0, 9.5), {"mode": SteamNozzle.Mode.WALL}, "Dampfdüse: Wand")
+	_station_mover(zone, builder, "RotatingLying", ROTATING_SCENE, Vector3(80.0, RAISED, -STATION_Z), Basis.IDENTITY, Vector3(80.0, 0.0, -6.5), {"axis_mode": RotatingPlatform.AxisMode.LYING}, "Dreh-Plattform: liegend (Zahnrad)", 4.5)
+	_station_mover(zone, builder, "RotatingStanding", ROTATING_SCENE, Vector3(90.0, RAISED, -STATION_Z), Basis.IDENTITY, Vector3(92.5, 0.0, -8.0), {"axis_mode": RotatingPlatform.AxisMode.STANDING}, "Dreh-Plattform: stehend (Uhrzeiger)", 4.5)
+	_station_mover(zone, builder, "RotatingTilting", ROTATING_SCENE, Vector3(100.0, RAISED, -STATION_Z), Basis.IDENTITY, Vector3(100.0, 0.0, -6.5), {"axis_mode": RotatingPlatform.AxisMode.TILTING}, "Dreh-Plattform: kippend", 4.5)
+	_station_mover(zone, builder, "LiftPiston", LIFT_SCENE, Vector3(80.0, RAISED, 0.0), Basis.IDENTITY, Vector3(80.0, 0.0, 4.5), {"look": LiftPlatform.Look.PISTON}, "Hub-Plattform: Kolben", 7.0)
+	_station_mover(zone, builder, "LiftChain", LIFT_SCENE, Vector3(90.0, RAISED, 0.0), Basis.IDENTITY, Vector3(90.0, 0.0, 4.5), {"look": LiftPlatform.Look.CHAIN}, "Hub-Plattform: Kette", 7.0)
+	_station_mover(zone, builder, "ConveyorRun", CONVEYOR_SCENE, Vector3(84.0, 0.0, STATION_Z), yaw_east, Vector3(84.0, 0.0, 15.5), {"behaviour": Mechanism.Behaviour.RUN_WHILE_ON}, "Förderband: läuft solange an")
+	_station_mover(zone, builder, "ConveyorReverse", CONVEYOR_SCENE, Vector3(102.0, 0.0, STATION_Z), yaw_east, Vector3(102.0, 0.0, 15.5), {"behaviour": Mechanism.Behaviour.REVERSE_ON_SIGNAL}, "Förderband: Hebel kehrt um")
+	# The Pendel hangs over a narrow 2 m walkway (two beams, 1 m high); the bob swings across it just above the deck.
+	builder.call(&"_instance", zone, BEAM_SCENE, "PendulumWalkA", Vector3(110.0, 0.0, -14.0), builder.call(&"_yaw", 90.0))
+	builder.call(&"_instance", zone, BEAM_SCENE, "PendulumWalkB", Vector3(110.0, 0.0, -10.0), builder.call(&"_yaw", 90.0))
+	_station_mover(zone, builder, "Pendulum", PENDULUM_SCENE, Vector3(110.0, RAISED, -STATION_Z), Basis.IDENTITY, Vector3(112.5, 0.0, -8.0), {}, "Pendel: Knockback", 7.5)
+
+
+## One moving mechanism wired to a fresh lever, with its sign. `props` are set on the mechanism before it is saved.
+func _station_mover(zone: Node3D, builder: RefCounted, tag: String, scene: String, at: Vector3, basis: Basis, lever_at: Vector3, props: Dictionary, text: String, sign_height: float = 3.2) -> void:
+	var lever: Node3D = builder.call(&"_instance", zone, LEVER_SCENE, "Lever%s" % tag, lever_at) as Node3D
+	var mechanism: Node3D = builder.call(&"_instance", zone, scene, tag, at, basis) as Node3D
+	mechanism.set("source", lever)
+	for key: Variant in props:
+		mechanism.set(String(key), props[key])
+	_sign(zone, builder, tag, text, Vector3(lever_at.x, 0.0, lever_at.z), sign_height)
 
 
 func _build_room_shell(zone: Node3D, builder: RefCounted) -> void:

@@ -288,6 +288,7 @@ func _check_mechanism_rooms(gym: Node, check: Callable) -> void:
 	check.call(gate != null and gate.source is Lever, "the GearGate source is a Lever")
 	check.call(gym.find_child("WallEast_0", true, false) == null, "WallEast_0 is absent (the door cell)")
 	_check_showcase_stations(zone, check)
+	_check_moving_stations(zone, check)
 
 
 ## Room 2 holds a station per trigger and logic node (D-27), and every wired node has its sources (T-04-08).
@@ -315,3 +316,35 @@ func _check_showcase_stations(zone: Node, check: Callable) -> void:
 	for kind: String in counts:
 		check.call(int(counts[kind]) >= 1, "room 2 has a %s station (%d)" % [kind, int(counts[kind])])
 	check.call(unwired == 0, "every Mechanism and logic node in Zone_MechanismRooms is wired (%d unwired)" % unwired)
+
+
+## Room 2 holds a station per moving mechanism and variant (D-27), each with a source. The group moving_platform stays at its three
+## test platforms (checked with the platform scenarios above).
+func _check_moving_stations(zone: Node, check: Callable) -> void:
+	var axes: Dictionary = {}
+	var looks: Dictionary = {}
+	var modes: Dictionary = {}
+	var behaviours: Dictionary = {}
+	var pendulums: int = 0
+	var unwired: int = 0
+	for child: Node in zone.get_children():
+		if child is RotatingPlatform:
+			axes[(child as RotatingPlatform).axis_mode] = true
+		elif child is LiftPlatform:
+			looks[(child as LiftPlatform).look] = true
+		elif child is SteamNozzle:
+			modes[(child as SteamNozzle).mode] = true
+		elif child is Conveyor:
+			behaviours[(child as Conveyor).behaviour] = true
+		elif child is Pendulum:
+			pendulums += 1
+		else:
+			continue
+		if (child as Mechanism).source == null:
+			unwired += 1
+	check.call(axes.size() == 3, "room 2 has a Dreh-Plattform in all three axis modes (%d)" % axes.size())
+	check.call(looks.size() == 2, "room 2 has a Hub-Plattform with both looks (%d)" % looks.size())
+	check.call(behaviours.size() == 2, "room 2 has a Foerderband per behaviour (%d)" % behaviours.size())
+	check.call(modes.size() == 4, "room 2 has a Dampfduese in all four modes (%d)" % modes.size())
+	check.call(pendulums >= 1, "room 2 has a Pendel (%d)" % pendulums)
+	check.call(unwired == 0, "every moving mechanism in Zone_MechanismRooms has a source (%d unwired)" % unwired)
