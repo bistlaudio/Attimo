@@ -1,6 +1,8 @@
 class_name Interactable
 extends Node
-## Stub, filled in Task 2.
+## The HAND-02 contract component: what a hand module may trigger. It declares the accepted modules, whether it accepts
+## the shot, near contact or both, and the minimum pulse size. accepts_module and can_accept are the only deciders;
+## modules only call try_trigger. Add it as a child of the thing and point hit_body at its collision body.
 
 signal triggered(hit: PulseHit)
 signal near_started()
@@ -11,38 +13,72 @@ signal near_ended()
 @export var accepts_shot: bool = true
 @export var accepts_near: bool = false
 @export var min_pulse: PulseHit.Size = PulseHit.Size.SMALL
+## The body the hand rays hit. It is moved onto the Interactable layer with mask 0 in _ready.
 @export var hit_body: CollisionObject3D
+## Where the crosshair and the glow aim at; the hit body position when unset.
 @export var aim_point: Node3D
+## Meshes whose material the glow stages switch (plan 04-02).
 @export var glow_meshes: Array[MeshInstance3D] = []
 
 
-func accepts_module(_id: StringName) -> bool:
+func _ready() -> void:
+	add_to_group(&"interactable")
+	if hit_body != null:
+		hit_body.collision_layer = PhysicsLayers.INTERACTABLE
+		hit_body.collision_mask = 0
+		hit_body.set_meta(&"interactable", self)
+
+
+func accepts_module(id: StringName) -> bool:
+	return accepted_modules.has(id)
+
+
+func can_accept(kind: PulseHit.Kind, size: PulseHit.Size) -> bool:
+	match kind:
+		PulseHit.Kind.SHOT:
+			return accepts_shot and size >= min_pulse
+		PulseHit.Kind.NEAR:
+			return accepts_near
 	return false
 
 
-func can_accept(_kind: PulseHit.Kind, _size: PulseHit.Size) -> bool:
-	return false
-
-
-func try_trigger(_hit: PulseHit) -> bool:
-	return false
+## Runs the hit synchronously. False when the contract rejects it.
+func try_trigger(hit: PulseHit) -> bool:
+	if hit == null or not can_accept(hit.kind, hit.size):
+		return false
+	if hit.kind == PulseHit.Kind.SHOT and not accepts_module(hit.module_id):
+		return false
+	triggered.emit(hit)
+	EventBus.interactable_triggered.emit(get_parent(), int(hit.kind))
+	return true
 
 
 func near_begin() -> bool:
-	return false
+	if not accepts_near:
+		return false
+	near_started.emit()
+	EventBus.interactable_triggered.emit(get_parent(), int(PulseHit.Kind.NEAR))
+	return true
 
 
-func near_hold(_delta: float) -> void:
-	pass
+func near_hold(delta: float) -> void:
+	near_held.emit(delta)
 
 
 func near_end() -> void:
-	pass
+	near_ended.emit()
 
 
 func target_point() -> Vector3:
+	if aim_point != null:
+		return aim_point.global_position
+	if hit_body != null:
+		return hit_body.global_position
 	return Vector3.ZERO
 
 
-static func from_collider(_collider: Object) -> Interactable:
-	return null
+## The Interactable that owns `collider` (set as meta by the hit body), or null.
+static func from_collider(collider: Object) -> Interactable:
+	if collider == null or not collider.has_meta(&"interactable"):
+		return null
+	return collider.get_meta(&"interactable") as Interactable

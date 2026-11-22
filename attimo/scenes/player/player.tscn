@@ -12,6 +12,8 @@
 [ext_resource type="Resource" path="res://resources/player/movement_default.tres" id="10_cfg"]
 [ext_resource type="Script" path="res://scripts/player/states/long_jump.gd" id="13_long_jump"]
 [ext_resource type="Script" path="res://scripts/player/procedural_pose.gd" id="14_pose"]
+[ext_resource type="Script" path="res://scripts/hand/hand_controller.gd" id="15_hand"]
+[ext_resource type="Resource" path="res://resources/hand/module_registry.tres" id="16_registry"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.5
@@ -63,3 +65,7 @@ player = NodePath("..")
 script = ExtResource("14_pose")
 player = NodePath("..")
 mannequin = NodePath("../VisualRoot/Mannequin")
+
+[node name="HandController" type="Node" parent="."]
+script = ExtResource("15_hand")
+registry = ExtResource("16_registry")

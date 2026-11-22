@@ -145,6 +145,13 @@ Exception: placeholder hit puffs in `scripts/debug` + `scenes/debug/hit_puff.tsc
 | `dash_blocked` | `position: Vector3, reason: StringName` | `PlayerController` when a dash press is refused while aiming, the only dash lockout (quick 261120-dik, reduced by 261120-ef9); `reason` is `aim`. Once per press, no cooldown or air dash spent, no buffering. A refusal by the cooldown or the spent air dash emits nothing. |
 | `movement_state_changed` | `from_state: StringName, to_state: StringName` | `StateMachine` on every transition |
 | `aim_changed` | `active: bool` | `PlayerController._tick_aim` when the aim hold starts (true) and ends (false), once per change; consumers `CameraRig`, `Crosshair`, `MannequinAnimator` |
+| `pulse_fired` | `origin: Vector3, point: Vector3, size: int, hit_valid: bool` | The Fernauslöser module (`RemoteTrigger`) on every shot, valid or not (D-06); `size` is a `PulseHit.Size`, `hit_valid` is true when an accepting `Interactable` was triggered |
+| `interactable_triggered` | `node: Node, kind: int` | `Interactable` when it accepted a hit; `node` is its parent, `kind` a `PulseHit.Kind` |
+| `mechanism_changed` | `node: Node, active: bool` | `Mechanism.set_signal` when its signal state changed |
+| `hand_module_changed` | `id: StringName` | `HandController.equip` after a module was equipped |
+| `near_contact_changed` | `active: bool, point: Vector3` | The near-contact hand (plan 04-02) when contact starts or ends |
+| `launched` | `position: Vector3, direction: Vector3, speed: float` | Launching mechanisms (plan 04-04) when they throw the player |
+| `knocked_back` | `position: Vector3, impulse: Vector3` | Hazards and mechanisms that push the player back (plan 04-04) |
 
 Listeners: the debug event log now, juice (Phases 11-12), audio (Phase 14). A new fact is a new typed signal added in the phase that needs it. The bus holds no state and no logic.
 

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ModuleRegistry" format=3]
+
+[ext_resource type="Script" path="res://scripts/hand/module_registry.gd" id="1_reg"]
+[ext_resource type="Script" path="res://scripts/hand/hand_module_def.gd" id="2_def"]
+[ext_resource type="Resource" path="res://scripts/hand/modules/remote_trigger/remote_trigger_def.tres" id="3_remote"]
+[ext_resource type="Resource" path="res://scripts/hand/modules/dummy/dummy_def.tres" id="4_dummy"]
+
+[resource]
+script = ExtResource("1_reg")
+modules = Array[ExtResource("2_def")]([ExtResource("3_remote"), ExtResource("4_dummy")])

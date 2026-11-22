@@ -331,6 +331,22 @@ func aim_target_point() -> Vector3:
 	return point
 
 
+## The raw first hit of the centre crosshair ray on `mask`, up to `length` metres: the ray starts level with the character
+## (aim_ray_start), so geometry between lens and character is never hit. Empty when nothing is hit or the hit is not finite.
+## Areas are not hit. One ray per call.
+func aim_ray(mask: int, length: float) -> Dictionary:
+	if not is_inside_tree() or camera == null:
+		return {}
+	var origin: Vector3 = camera.global_position
+	var forward: Vector3 = -camera.global_basis.z.normalized()
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(aim_ray_start(origin, forward, global_position), origin + forward * length, mask)
+	query.collide_with_areas = false
+	var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
+	if hit.is_empty() or not (hit["position"] as Vector3).is_finite():
+		return {}
+	return hit
+
+
 ## Unit direction from `origin` (the hand, the shoulder) to the aim target point; the camera forward when the target is
 ## closer than 1 mm. The Phase 4 beam fires along this from the hand.
 func aim_direction_from(origin: Vector3) -> Vector3:
