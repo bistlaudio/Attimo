@@ -58,6 +58,11 @@ var _carry_local: Vector3 = Vector3.ZERO
 var _carry_chord: Vector3 = Vector3.ZERO
 var _carry_active: bool = false
 
+## Continuous pushes recorded by push_toward this tick: direction, target speed, acceleration. Consumed in _physics_process.
+var _push_directions: Array[Vector3] = []
+var _push_targets: PackedFloat32Array = PackedFloat32Array()
+var _push_accels: PackedFloat32Array = PackedFloat32Array()
+
 ## A rotating platform never carries further than this per tick (a guard against a bad transform).
 const MAX_CARRY_SHIFT: float = 2.0
 
@@ -78,6 +83,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	_tick_timers(delta)
 	_tick_aim()
+	_apply_push_requests(delta)
 	state_machine.physics_update(delta)
 	_integrate(delta)
 
@@ -264,6 +270,80 @@ func start_dash(direction: Vector3, in_air: bool) -> void:
 	if in_air:
 		air_dash_available = false
 	last_dash_direction = direction
+
+
+## One-shot launch (steam nozzle jump and cannon, D-20): sets the velocity along `direction` to exactly `speed` and keeps the
+## sideways momentum, so height and distance repeat. Leaves Dash, LongJump and Jump for Fall. The air dash and the landing
+## chain are not touched. Mechanisms call this with call_deferred (never inside the physics flush). A bad vector is ignored.
+func launch_along(direction: Vector3, speed: float) -> void:
+	if not direction.is_finite() or not is_finite(speed) or direction.length_squared() < 0.0001:
+		return
+	var dir: Vector3 = direction.normalized()
+	var v: Vector3 = Vector3(move_velocity.x, vertical_speed, move_velocity.z)
+	v = v - dir * v.dot(dir) + dir * speed
+	move_velocity = Vector3(v.x, 0.0, v.z)
+	vertical_speed = clampf(v.y, -config.terminal_speed, config.terminal_speed)
+	coyote_timer = 0.0
+	air_speed_cap = maxf(config.run_speed, horizontal_speed())
+	_enter_fall()
+	EventBus.launched.emit(global_position, dir, speed)
+
+
+## Continuous push (steam updraft and wall, D-20): moves the velocity component along `direction` toward `target_speed` by
+## `accel` per second. Safe to call straight from a mechanism's _physics_process every tick: it only records a request that
+## this controller applies in its own next _physics_process, so no outside code writes the velocity.
+func push_toward(direction: Vector3, target_speed: float, accel: float) -> void:
+	if not direction.is_finite() or not is_finite(target_speed) or not is_finite(accel):
+		return
+	if direction.length_squared() < 0.0001 or accel <= 0.0:
+		return
+	_push_directions.append(direction.normalized())
+	_push_targets.append(target_speed)
+	_push_accels.append(accel)
+
+
+## Knock-back (pendulum, D-21): adds `impulse` to the velocity (the caller supplies the upward part), interrupts a dash and
+## leaves the floor states for Fall. No damage. Mechanisms call this with call_deferred.
+func knock_back(impulse: Vector3) -> void:
+	if not impulse.is_finite():
+		return
+	move_velocity += Vector3(impulse.x, 0.0, impulse.z)
+	vertical_speed = clampf(vertical_speed + impulse.y, -config.terminal_speed, config.terminal_speed)
+	coyote_timer = 0.0
+	air_speed_cap = maxf(air_speed_cap, horizontal_speed())
+	_enter_fall()
+	EventBus.knocked_back.emit(global_position, impulse)
+
+
+func _enter_fall() -> void:
+	if state_machine.current.name != &"Fall":
+		state_machine.transition_to(&"Fall")
+
+
+## Applies and clears the pushes recorded since the last tick (see push_toward). A push that lifts the player off the floor
+## or out of a dash ends in Fall.
+func _apply_push_requests(delta: float) -> void:
+	if _push_directions.is_empty():
+		return
+	var lifted: bool = false
+	for index: int in _push_directions.size():
+		var dir: Vector3 = _push_directions[index]
+		var v: Vector3 = Vector3(move_velocity.x, vertical_speed, move_velocity.z)
+		var along: float = v.dot(dir)
+		var next_along: float = move_toward(along, _push_targets[index], _push_accels[index] * delta)
+		v += dir * (next_along - along)
+		move_velocity = Vector3(v.x, 0.0, v.z)
+		vertical_speed = maxf(v.y, -config.terminal_speed)
+		if dir.y > 0.1 and next_along > along:
+			lifted = true
+	_push_directions.clear()
+	_push_targets.clear()
+	_push_accels.clear()
+	if lifted:
+		coyote_timer = 0.0
+		var state_name: StringName = state_machine.current.name
+		if state_name == &"Idle" or state_name == &"Run" or state_name == &"Dash":
+			_enter_fall()
 
 
 ## Called by Jump on enter for every ground jump (also coyote and buffered landing jumps). Returns the stage of
