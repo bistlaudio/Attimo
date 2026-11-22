@@ -5,6 +5,12 @@
 [ext_resource type="PackedScene" path="res://assets/prototype_bits/Primitive_Pillar.gltf" id="4_pillar"]
 [ext_resource type="Material" path="res://resources/mechanisms/glow_idle.tres" id="5_glow"]
 
+[sub_resource type="StandardMaterial3D" id="Mat_pip"]
+albedo_color = Color(0.2, 0.9, 0.85, 1)
+emission_enabled = true
+emission = Color(0.2, 0.9, 0.85, 1)
+emission_energy_multiplier = 2.0
+
 [sub_resource type="StandardMaterial3D" id="Mat_frame"]
 albedo_color = Color(0.35, 0.33, 0.3, 1)
 
@@ -81,42 +87,42 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
 [node name="Pip0" type="MeshInstance3D" parent="Lantern/TimerRing"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 0, 0)
 mesh = SubResource("BoxMesh_pip")
-material_override = ExtResource("5_glow")
+material_override = SubResource("Mat_pip")
 
 [node name="Pip1" type="MeshInstance3D" parent="Lantern/TimerRing"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2828, 0, 0.2828)
 mesh = SubResource("BoxMesh_pip")
-material_override = ExtResource("5_glow")
+material_override = SubResource("Mat_pip")
 
 [node name="Pip2" type="MeshInstance3D" parent="Lantern/TimerRing"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.4)
 mesh = SubResource("BoxMesh_pip")
-material_override = ExtResource("5_glow")
+material_override = SubResource("Mat_pip")
 
 [node name="Pip3" type="MeshInstance3D" parent="Lantern/TimerRing"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2828, 0, 0.2828)
 mesh = SubResource("BoxMesh_pip")
-material_override = ExtResource("5_glow")
+material_override = SubResource("Mat_pip")
 
 [node name="Pip4" type="MeshInstance3D" parent="Lantern/TimerRing"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4, 0, 0)
 mesh = SubResource("BoxMesh_pip")
-material_override = ExtResource("5_glow")
+material_override = SubResource("Mat_pip")
 
 [node name="Pip5" type="MeshInstance3D" parent="Lantern/TimerRing"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2828, 0, -0.2828)
 mesh = SubResource("BoxMesh_pip")
-material_override = ExtResource("5_glow")
+material_override = SubResource("Mat_pip")
 
 [node name="Pip6" type="MeshInstance3D" parent="Lantern/TimerRing"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0, 0, -0.4)
 mesh = SubResource("BoxMesh_pip")
-material_override = ExtResource("5_glow")
+material_override = SubResource("Mat_pip")
 
 [node name="Pip7" type="MeshInstance3D" parent="Lantern/TimerRing"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2828, 0, -0.2828)
 mesh = SubResource("BoxMesh_pip")
-material_override = ExtResource("5_glow")
+material_override = SubResource("Mat_pip")
 
 [node name="AimPoint" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)

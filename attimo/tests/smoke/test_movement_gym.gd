@@ -283,10 +283,35 @@ func _check_mechanism_rooms(gym: Node, check: Callable) -> void:
 	check.call(zone != null, "the gym has Zone_MechanismRooms")
 	if zone == null:
 		return
-	var gate: GearGate = null
-	for child: Node in zone.get_children():
-		if child is GearGate:
-			gate = child as GearGate
+	var gate: GearGate = zone.get_node_or_null("ZahnradTor") as GearGate
 	check.call(gate != null, "Zone_MechanismRooms holds a GearGate")
 	check.call(gate != null and gate.source is Lever, "the GearGate source is a Lever")
 	check.call(gym.find_child("WallEast_0", true, false) == null, "WallEast_0 is absent (the door cell)")
+	_check_showcase_stations(zone, check)
+
+
+## Room 2 holds a station per trigger and logic node (D-27), and every wired node has its sources (T-04-08).
+func _check_showcase_stations(zone: Node, check: Callable) -> void:
+	var counts: Dictionary = {"Valve": 0, "EnergyCore": 0, "Crank": 0, "LogicAnd": 0, "LogicOr": 0, "LogicTimer": 0}
+	var unwired: int = 0
+	for child: Node in zone.get_children():
+		if child is Valve:
+			counts["Valve"] += 1
+		elif child is EnergyCore:
+			counts["EnergyCore"] += 1
+		elif child is Crank:
+			counts["Crank"] += 1
+		elif child is LogicAnd or child is LogicOr:
+			counts["LogicAnd" if child is LogicAnd else "LogicOr"] += 1
+			var sources: Array = child.get("sources")
+			if sources.is_empty() or sources.has(null):
+				unwired += 1
+		elif child is LogicTimer:
+			counts["LogicTimer"] += 1
+			if (child as LogicTimer).source == null:
+				unwired += 1
+		if child is Mechanism and (child as Mechanism).source == null:
+			unwired += 1
+	for kind: String in counts:
+		check.call(int(counts[kind]) >= 1, "room 2 has a %s station (%d)" % [kind, int(counts[kind])])
+	check.call(unwired == 0, "every Mechanism and logic node in Zone_MechanismRooms is wired (%d unwired)" % unwired)
