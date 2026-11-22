@@ -4,13 +4,13 @@ milestone: v0.11.0.4
 milestone_name: milestone
 status: executing
 stopped_at: Phase 4 context gathered
-last_updated: "2026-11-22T22:18:48.986Z"
+last_updated: "2026-11-22T22:48:09.584Z"
 last_activity: 2026-11-22
 progress:
   total_phases: 15
   completed_phases: 3
   total_plans: 36
-  completed_plans: 32
+  completed_plans: 33
   percent: 20
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 04 (fernausl-ser-mechanism-kit) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-11-22
 
-Progress: [█████████░] 89%
+Progress: [█████████░] 92%
 
 ## Performance Metrics
 
@@ -83,6 +83,7 @@ Progress: [█████████░] 89%
 | Phase 03 P08 | 25 min | 2 tasks | 6 files |
 | Phase 03 P09 | 30min | 3 tasks | 14 files |
 | Phase 04 P01 | ~1h | 3 tasks | 40 files |
+| Phase 04 P04-02 | 90min | 3 tasks | 20 files |
 
 ## Accumulated Context
 
@@ -135,6 +136,8 @@ Recent decisions that affect current work:
 - [Phase 03]: 03-07: dash clip lengths read per dash node (DASH_CLIPS); strafe blend divisor is ground_target_speed of the velocity direction
 - [Phase 03]: 03-08: AimPoseModifier closes the arm error with the upper arm after the torso budget (spine_share 0.4, max_twist_deg 70); measured error 0.000 deg in every locomotion case and at both pitch limits
 - [Phase 04]: [04-01] GearGate holds open only once opening started; room-2 floor starts x 43 with threshold beam; module switching only while aiming
+- [Phase 04]: [04-02] arm_out lives on HandController; animator uses it only for Aim layer weight and solver target, aim edge/strafe/dash stay on player.aiming
+- [Phase 04]: [04-02] Targeting holds only valid targets; exact hits on invalid Interactables only set reticle state INVALID
 
 ### Pending Todos
 
@@ -170,6 +173,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-22T22:18:44.695Z
+Last session: 2026-11-22T22:48:04.405Z
 Stopped at: Phase 4 context gathered
 Resume file: None

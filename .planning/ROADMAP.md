@@ -171,7 +171,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 04-02-PLAN.md — Targeting with aim assist + sticky aim, shared glow stages, goggle HUD, near contact (E, hold), arm-out, palm glow and pulse streak, F2 Hand section (wave 2)
+- [x] 04-02-PLAN.md — Targeting with aim assist + sticky aim, shared glow stages, goggle HUD, near contact (E, hold), arm-out, palm glow and pulse streak, F2 Hand section (wave 2)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -391,7 +391,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 (en
 | 1. Foundation & Prototype Character | 7/7 | Complete    | 2026-11-04 |
 | 2. Movement Core & Follow Camera | 14/14 | Complete    | 2026-11-06 |
 | 3. Animated Mannequin & Aim Mode | 10/10 | Complete    | 2026-11-20 |
-| 4. Fernauslöser & Mechanism Kit | 1/5 | In Progress|  |
+| 4. Fernauslöser & Mechanism Kit | 2/5 | In Progress|  |
 | 5. Pull/Push & Module Unlocks | 0/TBD | Not started | - |
 | 6. Shooting, Enemies & Recovery | 0/TBD | Not started | - |
 | 7. Level Blockout & Game Flow | 0/TBD | Not started | - |

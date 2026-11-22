@@ -35,8 +35,8 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [ ] **CAM-01**: Third-person follow camera, centered behind the character (shoulder offset only in aim mode), follows smoothly with mouse look, without jitter and without clipping through walls
 - [x] **CAM-02**: Holding the aim button blends into an aim mode with crosshair, tighter FOV and shoulder offset
 - [x] **CAM-03**: Mouse sensitivity and invert-Y are configurable
-- [ ] **CAM-04**: Interactables in range glow turquoise; the targeted one is clearly highlighted
-- [ ] **CAM-05**: Light aim assist snaps the target to the nearest valid interactable near the crosshair (with hysteresis)
+- [x] **CAM-04**: Interactables in range glow turquoise; the targeted one is clearly highlighted
+- [x] **CAM-05**: Light aim assist snaps the target to the nearest valid interactable near the crosshair (with hysteresis)
 
 ### Hand Modules
 
@@ -182,8 +182,8 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | CAM-01 | Phase 2 | Pending (144 Hz judder check not verified; accepted override, see 02-VERIFICATION.md) |
 | CAM-02 | Phase 3 | Complete |
 | CAM-03 | Phase 2 | Complete |
-| CAM-04 | Phase 4 | Pending |
-| CAM-05 | Phase 4 | Pending |
+| CAM-04 | Phase 4 | Complete |
+| CAM-05 | Phase 4 | Complete |
 | HAND-01 | Phase 4 | Complete |
 | HAND-02 | Phase 4 | Complete |
 | HAND-03 | Phase 4 | Complete |
