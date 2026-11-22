@@ -19,6 +19,11 @@ extends CanvasLayer
 ## True while the Phase 4 lock colour is shown. Reserved: nothing in this phase sets it.
 var locked: bool = false
 
+## The Targeting.State shown by the reticle, the charge ratio of the big pulse and the active module name (goggle HUD).
+var state: int = 0
+var charge: float = 0.0
+var module_name: String = ""
+
 const RING_POINTS: int = 48
 
 @onready var _reticle: Control = $Reticle
@@ -34,6 +39,22 @@ func _ready() -> void:
 func set_locked(value: bool) -> void:
 	locked = value
 	_reticle.queue_redraw()
+
+
+func set_state(_value: int) -> void:
+	pass
+
+
+func set_charge(_ratio: float) -> void:
+	pass
+
+
+func set_cooldown_dim(_dim: bool) -> void:
+	pass
+
+
+func set_module_name(_text: String) -> void:
+	pass
 
 
 func _on_aim_changed(active: bool) -> void:

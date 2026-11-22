@@ -32,6 +32,9 @@ extends Node3D
 ## Auto-follow mode (A41, CameraSettings.auto_follow_mode): "on" always follows, "off" never, "auto" only while
 ## the last input event came from a joypad. `_input` records the device and never consumes the event.
 
+## Sticky aim factor written by Targeting (1.0 = off). It scales the look sensitivity and never rotates the camera.
+var look_sensitivity_multiplier: float = 1.0
+
 ## The node to follow (the Player).
 @export var target: Node3D
 ## Tests set this to false: a headless run cannot capture the mouse.

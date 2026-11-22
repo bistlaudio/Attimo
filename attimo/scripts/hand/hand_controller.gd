@@ -17,12 +17,37 @@ signal module_changed(def: HandModuleDef)
 ## Reach in m of a big pulse.
 @export_range(1.0, 60.0, 0.5) var hand_big_range: float = 25.0
 
+## Cone half angle in degrees within which a valid Interactable snaps the pulse (D-14, CAM-05).
+@export_range(0.5, 10.0, 0.1) var hand_assist_angle: float = 3.5
+## The current target is kept until it leaves hand_assist_angle times this factor (hysteresis).
+@export_range(1.0, 3.0, 0.05) var hand_assist_hold_factor: float = 1.6
+## A candidate replaces the current target only when it is this many degrees closer to the crosshair.
+@export_range(0.0, 5.0, 0.1) var hand_assist_switch_margin: float = 1.0
+## Seconds a target that failed (angle or line of sight) is still held before it is released.
+@export_range(0.0, 0.5, 0.01) var hand_assist_drop_delay: float = 0.1
+## Look sensitivity factor while a valid target is held (sticky aim, D-14).
+@export_range(0.2, 1.0, 0.05) var hand_sticky_factor: float = 0.6
+## Rate in 1/s at which the sticky factor eases in and out.
+@export_range(1.0, 20.0, 0.5) var hand_sticky_rate: float = 6.0
+## Reach in m of near contact, measured from the player origin to the Interactable point (D-08).
+@export_range(0.5, 5.0, 0.1) var hand_near_range: float = 2.2
+## Seconds the arm stays out after a pulse (presentation only).
+@export_range(0.0, 1.0, 0.05) var hand_shot_arm_time: float = 0.25
+
 var active_def: HandModuleDef = null
 var active_module: HandModule = null
 var charging: bool = false
 var charge_ratio: float = 0.0
 var cooldown_left: float = 0.0
 var shots_fired: int = 0
+## The aim assist, a child created in _ready.
+var targeting: Targeting = null
+## True while the arm is stretched out: aiming, shortly after a pulse, near contact. Presentation state of the hand.
+var arm_out: bool = false
+## The world point the stretched arm points at (the near target, else the last pulse point).
+var arm_out_point: Vector3 = Vector3.ZERO
+## The Interactable held by near contact, or null.
+var near_target: Interactable = null
 
 var _player: PlayerController = null
 var _context: HandContext = HandContext.new()
@@ -31,6 +56,9 @@ var _charge_time: float = 0.0
 
 func _ready() -> void:
 	add_to_group(&"hand_controller")
+	targeting = Targeting.new()
+	targeting.name = &"Targeting"
+	add_child(targeting)
 	_player = get_parent() as PlayerController
 	if _player == null:
 		set_physics_process(false)

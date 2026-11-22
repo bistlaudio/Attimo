@@ -38,4 +38,27 @@ func run(tree: SceneTree, check: Callable) -> void:
 	crosshair.set_locked(false)
 	check.call(not crosshair.locked, "set_locked(false) restores it")
 
+	# Goggle HUD (Phase 4, D-13): the reticle state, the charge arc and the module frame.
+	crosshair.set_state(Targeting.State.VALID)
+	check.call(crosshair.state == Targeting.State.VALID and crosshair.locked, "set_state(VALID) switches to the lock colour and keeps locked true")
+	crosshair.set_state(Targeting.State.VALID_BIG)
+	check.call(crosshair.state == Targeting.State.VALID_BIG, "set_state(VALID_BIG) changes the state")
+	crosshair.set_state(Targeting.State.INVALID)
+	check.call(crosshair.state == Targeting.State.INVALID and not crosshair.locked, "set_state(INVALID) changes the state and unlocks")
+	crosshair.set_state(Targeting.State.NONE)
+	check.call(crosshair.state == Targeting.State.NONE and not crosshair.locked, "set_state(NONE) is the white reticle")
+	crosshair.set_charge(0.5)
+	check.call(is_equal_approx(crosshair.charge, 0.5), "set_charge(0.5) stores the charge ratio")
+	crosshair.set_charge(2.0)
+	check.call(is_equal_approx(crosshair.charge, 1.0), "set_charge clamps to 1.0")
+	crosshair.set_charge(0.0)
+	crosshair.set_cooldown_dim(true)
+	crosshair.set_cooldown_dim(false)
+	crosshair.set_module_name("Fernauslöser")
+	check.call(crosshair.module_name == "Fernauslöser", "set_module_name stores the name")
+	bus.aim_changed.emit(true)
+	await tree.process_frame
+	bus.aim_changed.emit(false)
+	check.call(not crosshair.visible, "the goggle HUD is hidden again when aim ends")
+
 	crosshair.free()

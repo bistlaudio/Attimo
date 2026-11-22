@@ -4,6 +4,9 @@ extends Node
 ## the shot, near contact or both, and the minimum pulse size. accepts_module and can_accept are the only deciders;
 ## modules only call try_trigger. Add it as a child of the thing and point hit_body at its collision body.
 
+## Glow stages of the shared turquoise materials (D-11): faint always, stronger while aiming, brightest when targeted.
+enum GlowStage { IDLE, AIM, TARGET }
+
 signal triggered(hit: PulseHit)
 signal near_started()
 signal near_held(delta: float)
@@ -27,6 +30,11 @@ func _ready() -> void:
 		hit_body.collision_layer = PhysicsLayers.INTERACTABLE
 		hit_body.collision_mask = 0
 		hit_body.set_meta(&"interactable", self)
+
+
+## Switches the glow meshes to the shared material of `stage`. Stub until plan 04-02 task 2.
+func set_glow_stage(_stage: int) -> void:
+	pass
 
 
 func accepts_module(id: StringName) -> bool:
