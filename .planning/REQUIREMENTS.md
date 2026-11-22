@@ -51,7 +51,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 
 - [x] **MECH-01**: Switches, valves, gears, conveyor belts and doors exist as reusable mechanism components
 - [x] **MECH-02**: Mechanisms are wired via signals in the editor, including simple logic (AND, OR, timer)
-- [ ] **MECH-03**: Moving mechanisms (gears, platforms, conveyors) carry the player correctly
+- [x] **MECH-03**: Moving mechanisms (gears, platforms, conveyors) carry the player correctly
 
 ### Shooting & Enemies (exact design defined in its phase)
 
@@ -192,7 +192,7 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | HAND-06 | Phase 5 | Pending |
 | MECH-01 | Phase 4 | Complete |
 | MECH-02 | Phase 4 | Complete |
-| MECH-03 | Phase 4 | Pending |
+| MECH-03 | Phase 4 | Complete |
 | SHOOT-01 | Phase 6 | Pending |
 | SHOOT-02 | Phase 6 | Pending |
 | SHOOT-03 | Phase 6 | Pending |

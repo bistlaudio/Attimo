@@ -179,7 +179,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 04-04-PLAN.md — Rotation-carry spike as go/no-go gate (all three axes), PlayerController launch/push/knock-back + rotating carry, Dreh-/Hub-Plattform, Förderband, Dampfdüse, Pendel, showcase stations (wave 4)
+- [x] 04-04-PLAN.md — Rotation-carry spike as go/no-go gate (all three axes), PlayerController launch/push/knock-back + rotating carry, Dreh-/Hub-Plattform, Förderband, Dampfdüse, Pendel, showcase stations (wave 4)
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
@@ -391,7 +391,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 (en
 | 1. Foundation & Prototype Character | 7/7 | Complete    | 2026-11-04 |
 | 2. Movement Core & Follow Camera | 14/14 | Complete    | 2026-11-06 |
 | 3. Animated Mannequin & Aim Mode | 10/10 | Complete    | 2026-11-20 |
-| 4. Fernauslöser & Mechanism Kit | 3/5 | In Progress|  |
+| 4. Fernauslöser & Mechanism Kit | 4/5 | In Progress|  |
 | 5. Pull/Push & Module Unlocks | 0/TBD | Not started | - |
 | 6. Shooting, Enemies & Recovery | 0/TBD | Not started | - |
 | 7. Level Blockout & Game Flow | 0/TBD | Not started | - |
