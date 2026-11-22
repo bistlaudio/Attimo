@@ -1,0 +1,116 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/mechanisms/conveyor.gd" id="1_script"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_belt"]
+size = Vector3(4, 0.5, 16)
+
+[sub_resource type="BoxMesh" id="BoxMesh_belt"]
+size = Vector3(4, 0.5, 16)
+
+[sub_resource type="BoxMesh" id="BoxMesh_slat"]
+size = Vector3(3.6, 0.06, 0.25)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_belt"]
+albedo_color = Color(0.32, 0.33, 0.36, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_slat"]
+albedo_color = Color(0.6, 0.5, 0.35, 1)
+
+[node name="Conveyor" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Belt" type="StaticBody3D" parent="."]
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Belt"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+shape = SubResource("BoxShape3D_belt")
+
+[node name="Mesh" type="MeshInstance3D" parent="Belt"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+mesh = SubResource("BoxMesh_belt")
+surface_material_override/0 = SubResource("StandardMaterial3D_belt")
+
+[node name="Slats" type="Node3D" parent="Belt"]
+
+[node name="Slat0" type="MeshInstance3D" parent="Belt/Slats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, -7.5)
+mesh = SubResource("BoxMesh_slat")
+surface_material_override/0 = SubResource("StandardMaterial3D_slat")
+
+[node name="Slat1" type="MeshInstance3D" parent="Belt/Slats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, -6.5)
+mesh = SubResource("BoxMesh_slat")
+surface_material_override/0 = SubResource("StandardMaterial3D_slat")
+
+[node name="Slat2" type="MeshInstance3D" parent="Belt/Slats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, -5.5)
+mesh = SubResource("BoxMesh_slat")
+surface_material_override/0 = SubResource("StandardMaterial3D_slat")
+
+[node name="Slat3" type="MeshInstance3D" parent="Belt/Slats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, -4.5)
+mesh = SubResource("BoxMesh_slat")
+surface_material_override/0 = SubResource("StandardMaterial3D_slat")
+
+[node name="Slat4" type="MeshInstance3D" parent="Belt/Slats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, -3.5)
+mesh = SubResource("BoxMesh_slat")
+surface_material_override/0 = SubResource("StandardMaterial3D_slat")
+
+[node name="Slat5" type="MeshInstance3D" parent="Belt/Slats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, -2.5)
+mesh = SubResource("BoxMesh_slat")
+surface_material_override/0 = SubResource("StandardMaterial3D_slat")
+
+[node name="Slat6" type="MeshInstance3D" parent="Belt/Slats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, -1.5)
+mesh = SubResource("BoxMesh_slat")
+surface_material_override/0 = SubResource("StandardMaterial3D_slat")
+
+[node name="Slat7" type="MeshInstance3D" parent="Belt/Slats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, -0.5)
+mesh = SubResource("BoxMesh_slat")
+surface_material_override/0 = SubResource("StandardMaterial3D_slat")
+
+[node name="Slat8" type="MeshInstance3D" parent="Belt/Slats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0.5)
+mesh = SubResource("BoxMesh_slat")
+surface_material_override/0 = SubResource("StandardMaterial3D_slat")
+
+[node name="Slat9" type="MeshInstance3D" parent="Belt/Slats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 1.5)
+mesh = SubResource("BoxMesh_slat")
+surface_material_override/0 = SubResource("StandardMaterial3D_slat")
+
+[node name="Slat10" type="MeshInstance3D" parent="Belt/Slats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 2.5)
+mesh = SubResource("BoxMesh_slat")
+surface_material_override/0 = SubResource("StandardMaterial3D_slat")
+
+[node name="Slat11" type="MeshInstance3D" parent="Belt/Slats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 3.5)
+mesh = SubResource("BoxMesh_slat")
+surface_material_override/0 = SubResource("StandardMaterial3D_slat")
+
+[node name="Slat12" type="MeshInstance3D" parent="Belt/Slats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 4.5)
+mesh = SubResource("BoxMesh_slat")
+surface_material_override/0 = SubResource("StandardMaterial3D_slat")
+
+[node name="Slat13" type="MeshInstance3D" parent="Belt/Slats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 5.5)
+mesh = SubResource("BoxMesh_slat")
+surface_material_override/0 = SubResource("StandardMaterial3D_slat")
+
+[node name="Slat14" type="MeshInstance3D" parent="Belt/Slats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 6.5)
+mesh = SubResource("BoxMesh_slat")
+surface_material_override/0 = SubResource("StandardMaterial3D_slat")
+
+[node name="Slat15" type="MeshInstance3D" parent="Belt/Slats"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 7.5)
+mesh = SubResource("BoxMesh_slat")
+surface_material_override/0 = SubResource("StandardMaterial3D_slat")

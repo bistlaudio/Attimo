@@ -1,0 +1,59 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/mechanisms/pendulum.gd" id="1_script"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_beam"]
+size = Vector3(0.3, 4, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_beam"]
+size = Vector3(0.3, 4, 0.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bob"]
+size = Vector3(1, 1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_bob"]
+size = Vector3(1, 1, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hit"]
+size = Vector3(1.5, 1.5, 1.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_metal"]
+albedo_color = Color(0.4, 0.43, 0.47, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bob"]
+albedo_color = Color(0.5, 0.32, 0.22, 1)
+
+[node name="Pendulum" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Arm" type="AnimatableBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 0)
+collision_layer = 1
+collision_mask = 0
+sync_to_physics = true
+
+[node name="BeamShape" type="CollisionShape3D" parent="Arm"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 0)
+shape = SubResource("BoxShape3D_beam")
+
+[node name="Beam" type="MeshInstance3D" parent="Arm"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 0)
+mesh = SubResource("BoxMesh_beam")
+surface_material_override/0 = SubResource("StandardMaterial3D_metal")
+
+[node name="BobShape" type="CollisionShape3D" parent="Arm"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -4.5, 0)
+shape = SubResource("BoxShape3D_bob")
+
+[node name="Bob" type="MeshInstance3D" parent="Arm"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -4.5, 0)
+mesh = SubResource("BoxMesh_bob")
+surface_material_override/0 = SubResource("StandardMaterial3D_bob")
+
+[node name="Hit" type="Area3D" parent="Arm"]
+collision_layer = 32
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Arm/Hit"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -4.5, 0)
+shape = SubResource("BoxShape3D_hit")

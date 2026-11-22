@@ -18,6 +18,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_conveyor_run(tree, check)
 	await _scenario_conveyor_reverse(tree, check)
 	await _scenario_pendulum(tree, check)
+	await _scenario_pendulum_stop(tree, check)
 	EventBus.knocked_back.disconnect(_on_knocked)
 
 
@@ -124,3 +125,25 @@ func _scenario_pendulum(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.wait_physics(tree, window)
 	check.call(_knocks == 1, "no second knock inside the rehit cooldown (%d knocks)" % _knocks)
 	await _free(tree, [pendulum, player, floor_body, source])
+
+
+# RUN_WHILE_ON: the signal off lets the swing finish at the bottom and stop there.
+func _scenario_pendulum_stop(tree: SceneTree, check: Callable) -> void:
+	var source: SignalSource = SignalSource.new()
+	tree.root.add_child(source)
+	var pendulum: Pendulum = _spawn(PENDULUM_SCENE, check) as Pendulum
+	if pendulum == null:
+		await _free(tree, [source])
+		return
+	pendulum.source = source
+	tree.root.add_child(pendulum)
+	source.set_active(true)
+	await Fixtures.wait_physics(tree, 100)
+	var swinging: bool = absf(pendulum.current_angle()) > 0.05
+	source.set_active(false)
+	await Fixtures.wait_physics(tree, 4 * SHIPPED_TPS)
+	var angle_a: float = pendulum.current_angle()
+	await Fixtures.wait_physics(tree, 30)
+	check.call(swinging, "the pendulum swings while the signal is on")
+	check.call(absf(angle_a) < 0.03 and absf(pendulum.current_angle() - angle_a) < 0.001, "signal off: the pendulum stops at the bottom (angle %.3f)" % angle_a)
+	await _free(tree, [pendulum, source])
