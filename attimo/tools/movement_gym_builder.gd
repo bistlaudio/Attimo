@@ -64,6 +64,7 @@ func build() -> Node3D:
 	_build_moving_platforms(_group(_root, "Zone_MovingPlatforms"))
 	_build_conveyors(_group(_root, "Zone_Conveyors"))
 	_build_camera_tests(_group(_root, "Zone_CameraTests"))
+	_build_mechanism_rooms(_group(_root, "Zone_MechanismRooms"))
 	_build_hall(hall)
 
 	var hall_reset: Area3D = _fall_reset("FallResetHall", Vector3(0.0, -30.0, -8.0), Vector3(160.0, 4.0, 160.0), spawn, rig)
@@ -220,7 +221,9 @@ func _build_hall(hall: Node3D) -> void:
 		_wall(hall, "WallNorth_%s" % _cell_name(i), i * TILE, z_north, 0.0)
 		_wall(hall, "WallSouth_%s" % _cell_name(i), i * TILE, z_south, 0.0)
 	for j: int in range(CELLS_Z.x, CELLS_Z.y + 1):
-		_wall(hall, "WallEast_%s" % _cell_name(j), x_edge, j * TILE, 90.0)
+		# Cell 0 is the door into room 2 (the Zahnrad-Tor of Zone_MechanismRooms).
+		if j != 0:
+			_wall(hall, "WallEast_%s" % _cell_name(j), x_edge, j * TILE, 90.0)
 		_wall(hall, "WallWest_%s" % _cell_name(j), -x_edge, j * TILE, 90.0)
 
 
@@ -408,6 +411,18 @@ func _conveyor_strip(zone: Node3D, prefix: String, z: float, velocity: Vector3) 
 		_take_cell(x, z)
 		var tile: StaticBody3D = _floor_tile(zone, "%s_%d" % [prefix, index], x, 0.0, z) as StaticBody3D
 		tile.constant_linear_velocity = velocity
+
+
+# --- Zone_MechanismRooms ------------------------------------------------------------------------------------
+
+
+func _build_mechanism_rooms(zone: Node3D) -> void:
+	var script: GDScript = load("res://tools/mechanism_rooms_builder.gd") as GDScript
+	if script == null or not script.can_instantiate():
+		failure = "cannot load res://tools/mechanism_rooms_builder.gd"
+		return
+	var worker: RefCounted = script.new() as RefCounted
+	worker.call(&"build_into", zone, self)
 
 
 # --- Zone_CameraTests ---------------------------------------------------------------------------------------

@@ -7,6 +7,7 @@ const Fixtures := preload("res://tests/fixtures.gd")
 
 const GYM_SCENE: String = "res://scenes/test/movement_gym.tscn"
 const PROTO_PREFIX: String = "res://scenes/proto/"
+const MECHANISMS_PREFIX: String = "res://scenes/mechanisms/"
 const MANNEQUIN_SCENE: String = "res://scenes/player/mannequin.tscn"
 const CONTRACT_NODES: Array[String] = [
 	"WorldEnvironment", "Sun", "Hall", "Spawn", "Player", "CameraRig",
@@ -69,7 +70,7 @@ func _check_composition(gym: Node, check: Callable) -> PlayerController:
 	for node: Node in _all_nodes(gym):
 		if node is StaticBody3D:
 			bodies += 1
-			if (node as StaticBody3D).collision_layer != PhysicsLayers.WORLD:
+			if not _layer_allowed(node as StaticBody3D):
 				off_world.append(str(gym.get_path_to(node)))
 		if node is MeshInstance3D:
 			meshes += 1
@@ -104,6 +105,7 @@ func _check_composition(gym: Node, check: Callable) -> PlayerController:
 	if cameras.size() == 1:
 		_check_camera_rig(cameras[0], player, check)
 
+	_check_mechanism_rooms(gym, check)
 	_check_platforms_and_conveyors(gym, check)
 	_check_fall_resets(gym, check)
 	_check_risers(gym, check)
@@ -253,7 +255,38 @@ func _has_sanctioned_ancestor(node: Node) -> bool:
 	var current: Node = node
 	while current != null:
 		var path: String = current.scene_file_path
-		if path.begins_with(PROTO_PREFIX) or path == MANNEQUIN_SCENE:
+		if path.begins_with(PROTO_PREFIX) or path.begins_with(MECHANISMS_PREFIX) or path == MANNEQUIN_SCENE:
 			return true
 		current = current.get_parent()
 	return false
+
+
+## World, or Interactable for a hit body that carries the back reference or sits under a mechanisms scene.
+func _layer_allowed(body: StaticBody3D) -> bool:
+	if body.collision_layer == PhysicsLayers.WORLD:
+		return true
+	if body.collision_layer != PhysicsLayers.INTERACTABLE:
+		return false
+	if body.has_meta(&"interactable"):
+		return true
+	var current: Node = body
+	while current != null:
+		if current.scene_file_path.begins_with(MECHANISMS_PREFIX):
+			return true
+		current = current.get_parent()
+	return false
+
+
+## The door into room 2 (D-26): a Zahnrad-Tor wired to a Lever in Zone_MechanismRooms, and no WallEast_0.
+func _check_mechanism_rooms(gym: Node, check: Callable) -> void:
+	var zone: Node = gym.get_node_or_null("Zone_MechanismRooms")
+	check.call(zone != null, "the gym has Zone_MechanismRooms")
+	if zone == null:
+		return
+	var gate: GearGate = null
+	for child: Node in zone.get_children():
+		if child is GearGate:
+			gate = child as GearGate
+	check.call(gate != null, "Zone_MechanismRooms holds a GearGate")
+	check.call(gate != null and gate.source is Lever, "the GearGate source is a Lever")
+	check.call(gym.find_child("WallEast_0", true, false) == null, "WallEast_0 is absent (the door cell)")

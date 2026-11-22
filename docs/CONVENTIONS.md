@@ -89,7 +89,10 @@ Rules:
 |---|---|---|
 | `player` | now (Phase 1) | The Player root node |
 | `moving_platform` | now (Phase 2) | Moving platforms (`MovingPlatform`); the player carries their horizontal velocity |
-| `interactable` | reserved, Phase 4 | Mechanisms and anything the hand can target |
+| `interactable` | now (Phase 4) | Every `Interactable` component: anything the hand can target |
+| `mechanism` | now (Phase 4) | Every `SignalSource` and `Mechanism`; the reset sweep walks it |
+| `hand_controller` | now (Phase 4) | The `HandController` under the Player |
+| `carrying_platform` | now (Phase 4) | Rotating platforms with chord carry (plan 04-04) |
 | `anchor` | reserved, Phase 5 | Hook and anchor points |
 | `enemy` | reserved, Phase 6 | Enemies |
 | `hazard` | reserved, Phase 6 | Kill zones and damage volumes |
