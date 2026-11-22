@@ -167,7 +167,7 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 04-01-PLAN.md — Tracer: hand module framework + registry (dummy module), Fernauslöser pulse (tap/hold, cooldown, range), Interactable contract, lever + Zahnrad-Tor as the gym door into room 2 (wave 1)
+- [x] 04-01-PLAN.md — Tracer: hand module framework + registry (dummy module), Fernauslöser pulse (tap/hold, cooldown, range), Interactable contract, lever + Zahnrad-Tor as the gym door into room 2 (wave 1)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -391,7 +391,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 (en
 | 1. Foundation & Prototype Character | 7/7 | Complete    | 2026-11-04 |
 | 2. Movement Core & Follow Camera | 14/14 | Complete    | 2026-11-06 |
 | 3. Animated Mannequin & Aim Mode | 10/10 | Complete    | 2026-11-20 |
-| 4. Fernauslöser & Mechanism Kit | 0/TBD | Not started | - |
+| 4. Fernauslöser & Mechanism Kit | 1/5 | In Progress|  |
 | 5. Pull/Push & Module Unlocks | 0/TBD | Not started | - |
 | 6. Shooting, Enemies & Recovery | 0/TBD | Not started | - |
 | 7. Level Blockout & Game Flow | 0/TBD | Not started | - |

@@ -40,16 +40,16 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 
 ### Hand Modules
 
-- [ ] **HAND-01**: Hand module framework: a module is a definition resource + behaviour scene; adding a module = one folder + one registry entry; arm mesh never changes
-- [ ] **HAND-02**: Interactables declare which modules they accept; modules only talk to the Interactable contract
-- [ ] **HAND-03**: Module 1 "Fernauslöser": player aims and fires a turquoise beam that triggers mechanisms at range (exact design confirmed in its phase)
+- [x] **HAND-01**: Hand module framework: a module is a definition resource + behaviour scene; adding a module = one folder + one registry entry; arm mesh never changes
+- [x] **HAND-02**: Interactables declare which modules they accept; modules only talk to the Interactable contract
+- [x] **HAND-03**: Module 1 "Fernauslöser": player aims and fires a turquoise beam that triggers mechanisms at range (exact design confirmed in its phase)
 - [ ] **HAND-04**: Module 2 "Pull/Push": player can pull themselves toward an anchor point and carry the momentum on, and can push/repulse with steam (exact design confirmed in its phase)
 - [ ] **HAND-05**: Picking up a module is a clear moment (pickup feedback, HUD icon) and unlocks the module permanently
 - [ ] **HAND-06**: Each module has a teaching room: safe first use, then a test, then a twist
 
 ### Mechanisms & World
 
-- [ ] **MECH-01**: Switches, valves, gears, conveyor belts and doors exist as reusable mechanism components
+- [x] **MECH-01**: Switches, valves, gears, conveyor belts and doors exist as reusable mechanism components
 - [ ] **MECH-02**: Mechanisms are wired via signals in the editor, including simple logic (AND, OR, timer)
 - [ ] **MECH-03**: Moving mechanisms (gears, platforms, conveyors) carry the player correctly
 
@@ -184,13 +184,13 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | CAM-03 | Phase 2 | Complete |
 | CAM-04 | Phase 4 | Pending |
 | CAM-05 | Phase 4 | Pending |
-| HAND-01 | Phase 4 | Pending |
-| HAND-02 | Phase 4 | Pending |
-| HAND-03 | Phase 4 | Pending |
+| HAND-01 | Phase 4 | Complete |
+| HAND-02 | Phase 4 | Complete |
+| HAND-03 | Phase 4 | Complete |
 | HAND-04 | Phase 5 | Pending |
 | HAND-05 | Phase 5 | Pending |
 | HAND-06 | Phase 5 | Pending |
-| MECH-01 | Phase 4 | Pending |
+| MECH-01 | Phase 4 | Complete |
 | MECH-02 | Phase 4 | Pending |
 | MECH-03 | Phase 4 | Pending |
 | SHOOT-01 | Phase 6 | Pending |

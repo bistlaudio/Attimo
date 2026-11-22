@@ -4,13 +4,13 @@ milestone: v0.11.0.4
 milestone_name: milestone
 status: executing
 stopped_at: Phase 4 context gathered
-last_updated: "2026-11-21T10:09:42.625Z"
-last_activity: 2026-11-21 -- Phase 4 planning complete
+last_updated: "2026-11-22T22:18:48.986Z"
+last_activity: 2026-11-22
 progress:
   total_phases: 15
   completed_phases: 3
   total_plans: 36
-  completed_plans: 31
+  completed_plans: 32
   percent: 20
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-02)
 
 **Core value:** Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprint, Sprung und Dash fühlen sich smooth an, und die Hand verbindet sich nahtlos damit.
-**Current focus:** Phase 03 — Animated Mannequin & Aim Mode
+**Current focus:** Phase 04 — fernausl-ser-mechanism-kit
 
 ## Current Position
 
-Phase: 4 — Fernauslöser & Mechanism Kit
-Plan: Not started
+Phase: 04 (fernausl-ser-mechanism-kit) — EXECUTING
+Plan: 2 of 5
 Status: Ready to execute
-Last activity: 2026-11-21 -- Phase 4 planning complete
+Last activity: 2026-11-22
 
-Progress: [██░░░░░░░░] 20%
+Progress: [█████████░] 89%
 
 ## Performance Metrics
 
@@ -82,6 +82,7 @@ Progress: [██░░░░░░░░] 20%
 | Phase 03 P07 | 40min | 3 tasks | 7 files |
 | Phase 03 P08 | 25 min | 2 tasks | 6 files |
 | Phase 03 P09 | 30min | 3 tasks | 14 files |
+| Phase 04 P01 | ~1h | 3 tasks | 40 files |
 
 ## Accumulated Context
 
@@ -133,6 +134,7 @@ Recent decisions that affect current work:
 - [Phase 03]: 03-06: ProceduralPose finds the StateMachine via get_node (Player @onready is set after children ready) and exposes pose_basis() for the nesting switch test
 - [Phase 03]: 03-07: dash clip lengths read per dash node (DASH_CLIPS); strafe blend divisor is ground_target_speed of the velocity direction
 - [Phase 03]: 03-08: AimPoseModifier closes the arm error with the upper arm after the torso budget (spine_share 0.4, max_twist_deg 70); measured error 0.000 deg in every locomotion case and at both pitch limits
+- [Phase 04]: [04-01] GearGate holds open only once opening started; room-2 floor starts x 43 with threshold beam; module switching only while aiming
 
 ### Pending Todos
 
@@ -168,6 +170,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-20T10:20:29.686Z
+Last session: 2026-11-22T22:18:44.695Z
 Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-fernausl-ser-mechanism-kit/04-CONTEXT.md
+Resume file: None
