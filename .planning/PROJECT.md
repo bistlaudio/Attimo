@@ -12,20 +12,19 @@ Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprungkette, Dash und Dash-Hop m
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Interagierbares leuchtet türkis (Energiekerne), leichte Zielhilfe — Validated in Phase 4: Fernauslöser & Mechanism-Kit
+- [x] Hand-Modul-System als Rahmen: Module lassen sich leicht hinzufügen und tauschen; jedes Modul hat klare Eingabe, klaren Effekt und eine Level-Situation, in der es gebraucht wird — Validated in Phase 4: Fernauslöser & Mechanism-Kit
+- [x] Steampunk-Mechanismen in der Welt (Ventile, Zahnräder, Förderbänder, Schalter), die die Hand auslöst — Validated in Phase 4: Fernauslöser & Mechanism-Kit
 
 ### Active
 
 - [ ] Third-Person-Basis-Movement: Laufen, Sprungkette, Dash, Dash-Hop, evtl. Wall-Run, mit Fokus auf flüssiges, schnelles Gefühl (Coyote-Time, Jump-Buffering, weiche Beschleunigung)
 - [ ] Over-the-Shoulder-Kamera; Taste halten = Zielmodus mit Fadenkreuz
-- [ ] Interagierbares leuchtet türkis (Energiekerne), leichte Zielhilfe
-- [ ] Hand-Modul-System als Rahmen: Module lassen sich leicht hinzufügen und tauschen; jedes Modul hat klare Eingabe, klaren Effekt und eine Level-Situation, in der es gebraucht wird
 - [ ] Zwei Hand-Module, Details in der jeweiligen Phase: Modul 1 Fernauslöser (türkiser Strahl), Modul 2 Pull/Push (zum Ankerpunkt ziehen mit Momentum, Dampfstoß zum Wegdrücken)
 - [ ] Schießen mit dem Hand-Strahl auf Gegenstände und 1–2 einfache Gegnertypen (Details in der Phase)
 - [ ] Juicy Feedback, wissenschaftlich fundiert (Game-Feel-Forschung), als durchgehender Schwerpunkt; Sound erst ganz am Ende
 - [ ] Menüs: Titel, Pause, Einstellungen, Endbild
 - [ ] Animationen nur aus dem KayKit-Kit (Rig_Medium), Movement richtet sich danach
-- [ ] Steampunk-Mechanismen in der Welt (Ventile, Zahnräder, Förderbänder, Schalter), die die Hand auslöst
 - [ ] Loop: Rätsel lösen → Bauteil finden → Hand bekommt neue Fähigkeit → neue Wege werden frei
 - [ ] Ein polierter Level (vertikaler Slice) mit Boss am Ende; Bosse sind durch die Katastrophe böse gewordene Gegenstände
 - [ ] Look: Steampunk, post-apokalyptisch, warm und hoffnungsvoll, Low-Poly; Stil-Referenz KayKit Dungeon Remastered, aber auf den eigenen Stil angepasst
@@ -93,4 +92,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-02 after roadmap approval*
+*Last updated: 2026-11-23 after Phase 4 (Fernauslöser & Mechanism-Kit) completion*
