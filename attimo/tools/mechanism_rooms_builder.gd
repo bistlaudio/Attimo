@@ -23,6 +23,7 @@ const LIFT_SCENE: String = "res://scenes/mechanisms/lift_platform.tscn"
 const CONVEYOR_SCENE: String = "res://scenes/mechanisms/conveyor.tscn"
 const NOZZLE_SCENE: String = "res://scenes/mechanisms/steam_nozzle.tscn"
 const PENDULUM_SCENE: String = "res://scenes/mechanisms/pendulum.tscn"
+const LOW_GRAVITY_SCENE: String = "res://scenes/mechanisms/low_gravity_zone.tscn"
 ## Height of the raised moving stations (Dreh-Plattform, Hub-Plattform, Pendel walkway): their bodies are 0.5 m thick, so the
 ## deck stays clear of the floor tiles and the rider really stands on the moving body.
 const RAISED: float = 1.0
@@ -82,8 +83,12 @@ func _station_gate(zone: Node3D, builder: RefCounted, at: Vector3, tag: String, 
 	return gate
 
 
-func _sign(zone: Node3D, builder: RefCounted, tag: String, text: String, at: Vector3, height: float = 2.8) -> void:
+## A station sign Label_<tag>. With `expect` (D-03) a second, smaller line Label_<tag>_Expect hangs 0.7 m below it; its text starts
+## with "Erwartet:" and says what should happen when the player tries the station.
+func _sign(zone: Node3D, builder: RefCounted, tag: String, text: String, at: Vector3, height: float = 2.8, expect: String = "") -> void:
 	builder.call(&"_label", zone, "Label_%s" % tag, text, Vector3(at.x, height, at.z))
+	if expect != "":
+		builder.call(&"_label", zone, "Label_%s_Expect" % tag, expect, Vector3(at.x, height - 0.7, at.z), 40)
 
 
 func _station_valve(zone: Node3D, builder: RefCounted, at: Vector3) -> void:
@@ -148,16 +153,18 @@ func _build_moving_stations(zone: Node3D, builder: RefCounted) -> void:
 	builder.call(&"_instance", zone, BEAM_SCENE, "PendulumWalkA", Vector3(110.0, 0.0, -14.0), builder.call(&"_yaw", 90.0))
 	builder.call(&"_instance", zone, BEAM_SCENE, "PendulumWalkB", Vector3(110.0, 0.0, -10.0), builder.call(&"_yaw", 90.0))
 	_station_mover(zone, builder, "Pendulum", PENDULUM_SCENE, Vector3(110.0, RAISED, -STATION_Z), Basis.IDENTITY, Vector3(112.5, 0.0, -8.0), {}, "Pendel: Knockback", 7.5)
+	# Tracer of 04.1 (MECH-04 K): a 10 x 12 x 10 m volume at (106, 0, 0), its lever 6.5 m south. Plan 04.1-05 moves it onto the slot grid.
+	_station_mover(zone, builder, "LowGravity", LOW_GRAVITY_SCENE, Vector3(106.0, 0.0, 0.0), Basis.IDENTITY, Vector3(106.0, 0.0, 6.5), {}, "Schwerkraft-Zone", 3.2, "Erwartet: Sprünge hoch, weit und langsam")
 
 
 ## One moving mechanism wired to a fresh lever, with its sign. `props` are set on the mechanism before it is saved.
-func _station_mover(zone: Node3D, builder: RefCounted, tag: String, scene: String, at: Vector3, basis: Basis, lever_at: Vector3, props: Dictionary, text: String, sign_height: float = 3.2) -> void:
+func _station_mover(zone: Node3D, builder: RefCounted, tag: String, scene: String, at: Vector3, basis: Basis, lever_at: Vector3, props: Dictionary, text: String, sign_height: float = 3.2, expect: String = "") -> void:
 	var lever: Node3D = builder.call(&"_instance", zone, LEVER_SCENE, "Lever%s" % tag, lever_at) as Node3D
 	var mechanism: Node3D = builder.call(&"_instance", zone, scene, tag, at, basis) as Node3D
 	mechanism.set("source", lever)
 	for key: Variant in props:
 		mechanism.set(String(key), props[key])
-	_sign(zone, builder, tag, text, Vector3(lever_at.x, 0.0, lever_at.z), sign_height)
+	_sign(zone, builder, tag, text, Vector3(lever_at.x, 0.0, lever_at.z), sign_height, expect)
 
 
 func _build_room_shell(zone: Node3D, builder: RefCounted) -> void:

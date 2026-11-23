@@ -139,10 +139,10 @@ func _yaw(degrees: float) -> Basis:
 	return Basis(Vector3.UP, deg_to_rad(degrees))
 
 
-func _label(parent: Node, node_name: String, text: String, position: Vector3) -> void:
+func _label(parent: Node, node_name: String, text: String, position: Vector3, font_size: int = MARKER_FONT_SIZE) -> void:
 	var label: Label3D = Label3D.new()
 	label.text = text
-	label.font_size = MARKER_FONT_SIZE
+	label.font_size = font_size
 	label.pixel_size = MARKER_PIXEL_SIZE
 	label.outline_size = 12
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED

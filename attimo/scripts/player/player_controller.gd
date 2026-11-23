@@ -62,6 +62,9 @@ var _carry_active: bool = false
 var _push_directions: Array[Vector3] = []
 var _push_targets: PackedFloat32Array = PackedFloat32Array()
 var _push_accels: PackedFloat32Array = PackedFloat32Array()
+## Smallest gravity factor requested this tick by request_gravity_scale (1.0 = none). Multiplies gravity_scale in _integrate and is
+## cleared after every move, so leaving a zone needs no restore step.
+var _zone_gravity_scale: float = 1.0
 
 ## A rotating platform never carries further than this per tick (a guard against a bad transform).
 const MAX_CARRY_SHIFT: float = 2.0
@@ -315,6 +318,15 @@ func knock_back(impulse: Vector3) -> void:
 	EventBus.knocked_back.emit(global_position, impulse)
 
 
+## Gravity request of a zone (low gravity, D-06): scales gravity by `scale` (clamped to 0.05..1.0) for this tick only. Safe to call
+## straight from a mechanism's _physics_process every tick; the smallest request of a tick wins. It never touches gravity_scale
+## (the Dash state owns that field) and needs no restore: the factor is cleared after every move. A non-finite scale is ignored.
+func request_gravity_scale(scale: float) -> void:
+	if not is_finite(scale):
+		return
+	_zone_gravity_scale = minf(_zone_gravity_scale, clampf(scale, 0.05, 1.0))
+
+
 func _enter_fall() -> void:
 	if state_machine.current.name != &"Fall":
 		state_machine.transition_to(&"Fall")
@@ -453,7 +465,7 @@ func _integrate(delta: float) -> void:
 	var g: float = config.rise_gravity
 	if vertical_speed < 0.0:
 		g = config.fall_gravity()
-	g *= gravity_scale
+	g *= gravity_scale * _zone_gravity_scale
 	# Half-step gravity around the move keeps the jump height tick-rate independent.
 	vertical_speed = maxf(vertical_speed - g * delta * 0.5, -config.terminal_speed)
 	_attach_to_carrier(delta)
@@ -464,6 +476,7 @@ func _integrate(delta: float) -> void:
 	move_and_slide()
 	vertical_speed = maxf(vertical_speed - g * delta * 0.5, -config.terminal_speed)
 	_post_move()
+	_zone_gravity_scale = 1.0
 
 
 func _post_move() -> void:
