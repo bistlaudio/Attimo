@@ -12,9 +12,9 @@ uniform float rim_width = 0.02;
 uniform float rivet_count = 16.0;
 uniform float intro_scale = 1.15;
 uniform float vignette_alpha = 0.38;
-uniform vec4 brass : source_color = vec4(0.62, 0.45, 0.27, 1.0);
-uniform vec4 brass_dark : source_color = vec4(0.24, 0.17, 0.1, 1.0);
-uniform vec4 shade : source_color = vec4(0.07, 0.05, 0.04, 1.0);
+uniform vec4 brass : source_color = vec4(0.62, 0.68, 0.72, 1.0);
+uniform vec4 brass_dark : source_color = vec4(0.16, 0.2, 0.24, 1.0);
+uniform vec4 shade : source_color = vec4(0.04, 0.06, 0.08, 1.0);
 uniform vec4 tint : source_color = vec4(0.25, 0.9, 0.85, 0.04);
 
 void fragment() {
@@ -47,7 +47,7 @@ void fragment() {
 		float tangent = cell * 6.2831853 * (lens_radius - rim_width * 0.5) / rivet_count;
 		float radial = (-sd) - rim_width * 0.5;
 		float rivet = 1.0 - smoothstep(rim_width * 0.2, rim_width * 0.28, length(vec2(radial, tangent)));
-		vec3 rivet_col = mix(brass_dark.rgb, vec3(0.85, 0.72, 0.5), 0.5 + 0.5 * (-radial / rim_width));
+		vec3 rivet_col = mix(brass_dark.rgb, vec3(0.88, 0.92, 0.95), 0.5 + 0.5 * (-radial / rim_width));
 		col = vec4(mix(metal, rivet_col, rivet), 1.0);
 	} else {
 		// Inside: nearly clear, faint turquoise tint, darker towards the rim.

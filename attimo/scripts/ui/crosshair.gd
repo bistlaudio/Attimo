@@ -3,9 +3,9 @@ extends CanvasLayer
 ## Reticle and goggle HUD (D-13, D-01, D-02, CAM-02, CAM-04, CAM-06): lines drawn in code plus one lens shader.
 ## The reticle is always on: outside aim mode only a small centre dot and a thin ring. While the aim button is held
 ## (hud_visible, driven by EventBus.aim_changed, gameplay never calls it) the goggle HUD shows a full-screen lens overlay
-## (goggle_lens.gdshader: two round lenses, dark vignette outside, thick brass rim with rivets) that snaps in with a
+## (goggle_lens.gdshader: two round lenses, dark vignette outside, steel rim with rivets) that snaps in with a
 ## small overshoot and a HUD jolt, a big reticle ring with notches and a slowly rotating gear ring (faster while the big
-## pulse charges), a charge arc, and a brass module plate at the bottom centre with the active module name.
+## pulse charges), a charge arc, and a steel module plate at the bottom centre with the active module name.
 ## Everything is sized from the screen height (ui_reference_height), so it keeps its proportions at any resolution.
 ## The camera jolt on aim press lives in CameraRig (goggle snap), not here.
 ## The reticle is cream with no target, turquoise on a valid target (a second outer ring when the target needs the big
@@ -46,12 +46,12 @@ extends CanvasLayer
 @export var hud_jolt_pixels: float = 9.0
 @export var hud_jolt_time: float = 0.2
 @export_group("Module plate")
-## Size of the brass module plate in pixels, its distance from the bottom edge and the font size.
+## Size of the steel module plate in pixels, its distance from the bottom edge and the font size.
 @export var plate_size: Vector2 = Vector2(240.0, 38.0)
 @export var plate_bottom_gap: float = 36.0
 @export var plate_font_size: int = 19
-@export var plate_fill: Color = Color(0.16, 0.12, 0.08, 0.88)
-@export var plate_border: Color = Color(0.62, 0.45, 0.27, 1.0)
+@export var plate_fill: Color = Color(0.09, 0.12, 0.15, 0.88)
+@export var plate_border: Color = Color(0.62, 0.68, 0.72, 1.0)
 @export_group("")
 ## Radius of the thin idle ring (no goggle HUD) in pixels.
 @export var idle_ring_radius: float = 5.0
@@ -299,7 +299,7 @@ func _rivet(at: Vector2) -> void:
 	_reticle.draw_circle(at, RIVET_RADIUS * _u, plate_border)
 
 
-## Brass plate at the bottom centre with the active module name.
+## Steel plate at the bottom centre with the active module name.
 func _draw_module_plate(size: Vector2) -> void:
 	if module_name.is_empty():
 		return
