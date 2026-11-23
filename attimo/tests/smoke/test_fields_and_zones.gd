@@ -1,11 +1,13 @@
 extends RefCounted
 ## MECH-04 K (D-06): the low-gravity zone. Inside the volume a held full jump rises at least twice as high, switching the
 ## source off restores the normal apex (no restore step), and the zone only uses PlayerController.request_gravity_scale (the
-## Dash-owned gravity_scale stays untouched). Later plans extend this file with the force fields and the wind tunnel.
+## Dash-owned gravity_scale stays untouched). MECH-04 A, B, J: the repulsor and attractor (ForceField) and the wind tunnel.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
 const ZONE_SCENE: String = "res://scenes/mechanisms/low_gravity_zone.tscn"
+const FIELD_SCENE: String = "res://scenes/mechanisms/force_field.tscn"
+const WIND_SCENE: String = "res://scenes/mechanisms/wind_tunnel.tscn"
 const SHIPPED_TPS: int = 60
 
 
@@ -13,6 +15,9 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await tree.process_frame
 	Engine.physics_ticks_per_second = SHIPPED_TPS
 	await _scenario_low_gravity(tree, check)
+	await _scenario_repulsor(tree, check)
+	await _scenario_attractor(tree, check)
+	await _scenario_wind(tree, check)
 	Engine.physics_ticks_per_second = SHIPPED_TPS
 
 
@@ -90,3 +95,95 @@ func _scenario_low_gravity(tree: SceneTree, check: Callable) -> void:
 	check.call(player.gravity_scale == 1.0, "after the air dash gravity_scale is 1.0 (%.2f)" % player.gravity_scale)
 
 	await _free(tree, [zone, player, floor_body, source])
+
+
+func _field(tree: SceneTree, check: Callable, mode: ForceField.Mode, source: SignalSource, at: Vector3) -> ForceField:
+	var field: ForceField = (load(FIELD_SCENE) as PackedScene).instantiate() as ForceField
+	field.mode = mode
+	field.source = source
+	field.position = at
+	tree.root.add_child(field)
+	var volume: Area3D = field.get_node("Volume") as Area3D
+	check.call(volume.collision_layer == 0 and volume.collision_mask == PhysicsLayers.PLAYER, "the field volume is an Area3D on no layer that masks the Player")
+	return field
+
+
+# Repulsor: with the source on an airborne player 1.5 m beside the centre is pushed at least 2 m farther away (horizontally)
+# within 1 s; with the source off it only falls. (A grounded player is held by ground friction, the same as for the steam wall.)
+func _scenario_repulsor(tree: SceneTree, check: Callable) -> void:
+	for on: bool in [true, false]:
+		var source: SignalSource = SignalSource.new()
+		tree.root.add_child(source)
+		var field: ForceField = _field(tree, check, ForceField.Mode.REPEL, source, Vector3(0.0, 3.0, 0.0))
+		var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(1.5, 2.0, 0.0))
+		source.set_active(on)
+		await Fixtures.wait_physics(tree, SHIPPED_TPS)
+		var flat: float = Vector2(player.global_position.x, player.global_position.z).distance_to(Vector2(field.global_position.x, field.global_position.z))
+		if on:
+			check.call(flat - 1.5 >= 2.0, "repulsor on: the player ends %.2f m farther from the centre axis (at least 2)" % (flat - 1.5))
+		else:
+			check.call(flat - 1.5 < 0.3, "repulsor off: the player does not move away (%.2f m)" % (flat - 1.5))
+		await _free(tree, [field, player, source])
+
+
+# Attractor: with the source on a player released 4 m away is held at the core without oscillating; off, it falls.
+func _scenario_attractor(tree: SceneTree, check: Callable) -> void:
+	for on: bool in [true, false]:
+		var source: SignalSource = SignalSource.new()
+		tree.root.add_child(source)
+		source.set_active(on)
+		var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)
+		var field: ForceField = _field(tree, check, ForceField.Mode.ATTRACT, source, Vector3(0.0, 4.0, 0.0))
+		var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(4.0, 3.0, 0.0))
+		var max_speed_late: float = 0.0
+		for i: int in 2 * SHIPPED_TPS:
+			await Fixtures.wait_physics(tree, 1)
+			if i > SHIPPED_TPS + 20:
+				var v: Vector3 = Vector3(player.move_velocity.x, player.vertical_speed, player.move_velocity.z)
+				max_speed_late = maxf(max_speed_late, v.length())
+		var dist: float = (player.global_position + Vector3.UP).distance_to(field.global_position)
+		if on:
+			check.call(dist <= field.core_radius + 0.5, "attractor on: after 2 s the player is %.2f m from the centre (within %.2f)" % [dist, field.core_radius + 0.5])
+			check.call(max_speed_late < 3.0, "attractor on: the late 3D speed stays below 3 m/s (%.2f), no oscillation" % max_speed_late)
+		else:
+			check.call(dist > 3.0 and player.global_position.y < 2.0, "attractor off: the player falls normally (%.2f m away, y %.2f)" % [dist, player.global_position.y])
+		await _free(tree, [field, player, floor_body, source])
+
+
+## Runs along -Z, starts a held jump at z = 5 and returns how far (along -Z) the jump carried. tunnel_mode: 0 none, 1 tailwind, 2 headwind.
+func _wind_jump(tree: SceneTree, check: Callable, tunnel_mode: int) -> float:
+	var source: SignalSource = SignalSource.new()
+	tree.root.add_child(source)
+	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root, Vector3(60, 1, 80))
+	var tunnel: WindTunnel = null
+	if tunnel_mode > 0:
+		tunnel = (load(WIND_SCENE) as PackedScene).instantiate() as WindTunnel
+		tunnel.source = source
+		tree.root.add_child(tunnel)
+		var volume: Area3D = tunnel.get_node("Volume") as Area3D
+		check.call(volume.collision_layer == 0 and volume.collision_mask == PhysicsLayers.PLAYER, "the wind volume is an Area3D on no layer that masks the Player")
+		source.set_active(tunnel_mode == 2)
+	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(0.0, 0.0, 14.0))
+	await Fixtures.wait_physics(tree, 15)
+	Input.action_press(&"move_forward")
+	await Fixtures.wait_until(tree, func() -> bool: return player.global_position.z <= 5.0, 400)
+	var start_z: float = player.global_position.z
+	Input.action_press(&"jump")
+	for i: int in 400:
+		await Fixtures.wait_physics(tree, 1)
+		if i > 3 and player.is_grounded():
+			break
+	var distance: float = start_z - player.global_position.z
+	Input.action_release(&"jump")
+	Input.action_release(&"move_forward")
+	await _free(tree, [tunnel, player, floor_body, source])
+	return distance
+
+
+func _scenario_wind(tree: SceneTree, check: Callable) -> void:
+	var plain: float = await _wind_jump(tree, check, 0)
+	var tail: float = await _wind_jump(tree, check, 1)
+	var head: float = await _wind_jump(tree, check, 2)
+	check.call(plain > 2.0, "without wind the run-jump covers %.2f m" % plain)
+	check.call(tail >= plain + 2.0, "tailwind: the jump covers %.2f m, at least 2 m more than %.2f m" % [tail, plain])
+	check.call(head <= plain - 1.0, "headwind (lever flipped): the jump covers %.2f m, at least 1 m less than %.2f m" % [head, plain])

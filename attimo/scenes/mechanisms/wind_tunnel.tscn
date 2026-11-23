@@ -1,0 +1,52 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/mechanisms/wind_tunnel.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/proto/primitive_pillar.tscn" id="2_pillar"]
+[ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="3_glow"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_volume"]
+size = Vector3(6, 6, 16)
+
+[sub_resource type="PrismMesh" id="PrismMesh_arrow"]
+size = Vector3(2, 1.2, 0.04)
+
+[node name="WindTunnel" type="Node3D"]
+script = ExtResource("1_script")
+behaviour = 1
+
+[node name="Volume" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Volume"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+shape = SubResource("BoxShape3D_volume")
+
+[node name="Chevrons" type="Node3D" parent="."]
+
+[node name="Chevron0" type="MeshInstance3D" parent="Chevrons"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0.02, -4)
+mesh = SubResource("PrismMesh_arrow")
+surface_material_override/0 = ExtResource("3_glow")
+
+[node name="Chevron1" type="MeshInstance3D" parent="Chevrons"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0.02, 0)
+mesh = SubResource("PrismMesh_arrow")
+surface_material_override/0 = ExtResource("3_glow")
+
+[node name="Chevron2" type="MeshInstance3D" parent="Chevrons"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0.02, 4)
+mesh = SubResource("PrismMesh_arrow")
+surface_material_override/0 = ExtResource("3_glow")
+
+[node name="PostNW" parent="." instance=ExtResource("2_pillar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -8)
+
+[node name="PostNE" parent="." instance=ExtResource("2_pillar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, -8)
+
+[node name="PostSW" parent="." instance=ExtResource("2_pillar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, 8)
+
+[node name="PostSE" parent="." instance=ExtResource("2_pillar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 8)
