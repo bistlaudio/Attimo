@@ -203,7 +203,7 @@ Plans:
   4. The glow lens on every interactable is a steampunk element (brass bezel or gear ring around a glowing turquoise core) instead of a plain sphere.
   5. Every new mechanism (A-K plus the planner's steampunk extras) has its own showcase station with a lever or self-trigger, moves the player as described, and has a smoke test; wall-run and wall-jump are movement FSM states.
 
-**Plans:** 3/5 plans executed
+**Plans:** 4/5 plans executed
 
 Plans:
 
@@ -218,7 +218,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 04.1-04-PLAN.md — Always-on crosshair with aim-only goggle HUD, E near-contact prompt, look pass with steampunk GlowElement styles on every mechanism (wave 3)
+- [x] 04.1-04-PLAN.md — Always-on crosshair with aim-only goggle HUD, E near-contact prompt, look pass with steampunk GlowElement styles on every mechanism (wave 3)
 
 **Wave 4** *(blocked on Wave 3 completion)*
 

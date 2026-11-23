@@ -38,7 +38,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [x] **CAM-03**: Mouse sensitivity and invert-Y are configurable
 - [x] **CAM-04**: Interactables in range glow turquoise; the targeted one is clearly highlighted
 - [x] **CAM-05**: Light aim assist snaps the target to the nearest valid interactable near the crosshair (with hysteresis)
-- [ ] **CAM-06**: The crosshair is always visible (small dot and thin ring outside aim, the full goggle HUD only while aiming), and an "E" key prompt floats over the nearest near-contact interactable in range
+- [x] **CAM-06**: The crosshair is always visible (small dot and thin ring outside aim, the full goggle HUD only while aiming), and an "E" key prompt floats over the nearest near-contact interactable in range
 
 ### Hand Modules
 
@@ -48,7 +48,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [ ] **HAND-04**: Module 2 "Pull/Push": player can pull themselves toward an anchor point and carry the momentum on, and can push/repulse with steam (exact design confirmed in its phase)
 - [ ] **HAND-05**: Picking up a module is a clear moment (pickup feedback, HUD icon) and unlocks the module permanently
 - [ ] **HAND-06**: Each module has a teaching room: safe first use, then a test, then a twist
-- [ ] **HAND-07**: Every interactable's glow element is a steampunk primitive element (brass bezel or gear ring around a faceted turquoise core) shaped to fit its mechanic, built from shared primitives and materials; the glow stages still switch on the core
+- [x] **HAND-07**: Every interactable's glow element is a steampunk primitive element (brass bezel or gear ring around a faceted turquoise core) shaped to fit its mechanic, built from shared primitives and materials; the glow stages still switch on the core
 
 ### Mechanisms & World
 
@@ -189,14 +189,14 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | CAM-03 | Phase 2 | Complete |
 | CAM-04 | Phase 4 | Complete |
 | CAM-05 | Phase 4 | Complete |
-| CAM-06 | Phase 04.1 | Pending |
+| CAM-06 | Phase 04.1 | Complete |
 | HAND-01 | Phase 4 | Complete |
 | HAND-02 | Phase 4 | Complete |
 | HAND-03 | Phase 4 | Complete |
 | HAND-04 | Phase 5 | Pending |
 | HAND-05 | Phase 5 | Pending |
 | HAND-06 | Phase 5 | Pending |
-| HAND-07 | Phase 04.1 | Pending |
+| HAND-07 | Phase 04.1 | Complete |
 | MECH-01 | Phase 4 | Complete |
 | MECH-02 | Phase 4 | Complete |
 | MECH-03 | Phase 4 | Complete |
