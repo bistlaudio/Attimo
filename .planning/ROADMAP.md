@@ -188,6 +188,26 @@ Plans:
 **UI hint**: yes
 **Notes**: The exact Fernauslöser design is confirmed at the start of the phase. Gears, valves, conveyors and gates are stand-ins built from Prototype Bits primitives. Pulse VFX (flash, sparks, impact ring) come in Phase 12.
 
+### Phase 04.1: Mechanism Kit Extension & HUD Polish (INSERTED)
+
+**Group:** A (Prototyp)
+**Goal:** As a player, I want a richer set of steampunk mechanisms that move me (fields, slingshot, wall-run and wall-jump pads, bounce pads, boost rings, wind, low gravity and more) and a clearer hand HUD, so that the showcase reads at a glance and the world itself becomes part of my movement.
+**Mode:** mvp
+**Depends on:** Phase 4
+**Requirements**: MOVE-12 (pulled into scope), MECH-04, MECH-05, CAM-06, HAND-07 (new, see 04.1-CONTEXT.md)
+**Success Criteria** (what must be TRUE):
+
+  1. The crosshair is always on screen (small dot/ring when not aiming, the full goggle HUD while aiming), and an "E" prompt floats over the nearest near-contact interactable in range.
+  2. The showcase room is split into visible sub-zones with zone headers, and every station sign carries a second line "Erwartet: ..." that states the expected behaviour.
+  3. Conveyors carry the player on the belt, and every existing mechanism that should move the player does so through the PlayerController request APIs.
+  4. The glow lens on every interactable is a steampunk element (brass bezel or gear ring around a glowing turquoise core) instead of a plain sphere.
+  5. Every new mechanism (A-K plus the planner's steampunk extras) has its own showcase station with a lever or self-trigger, moves the player as described, and has a smoke test; wall-run and wall-jump are movement FSM states.
+
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 04.1 to break down)
+
 ### Phase 5: Pull/Push & Module Unlocks
 
 **Group:** A (Prototyp)

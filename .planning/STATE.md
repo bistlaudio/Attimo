@@ -1,17 +1,18 @@
 ---
-gsd_state_version: 1.0
+gsd_state_version: "1.0"
 milestone: v0.11.0.4
-milestone_name: milestone
+current_phase: "04.1"
 status: ready_to_plan
 stopped_at: Phase 04 complete (5/5) — ready to discuss Phase 5
-last_updated: 2026-11-23T05:13:04.003Z
+last_updated: "2026-11-23T10:01:16.531Z"
 last_activity: 2026-11-23
+state_head: 416bd459221de75e6e26843d063639f4d1a0239f
 progress:
-  total_phases: 15
+  total_phases: 16
   completed_phases: 4
   total_plans: 36
   completed_plans: 36
-  percent: 27
+milestone_name: milestone
 ---
 
 # Project State
@@ -25,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 
 ## Current Position
 
-Phase: 5
+Phase: 04.1
 Plan: Not started
 Status: Ready to plan
 Last activity: 2026-11-23
@@ -170,6 +171,10 @@ None yet.
 | 261120-d4x | Fix phase 03 review warnings WR-01 to WR-06 | 2026-11-20 | 67ae159 | [261120-d4x-fix-phase-03-review-warnings-wr-01-to-wr](./quick/261120-d4x-fix-phase-03-review-warnings-wr-01-to-wr/) |
 | 261120-dik | Dash lockouts, blocked-dash feedback, no dash in aim, softer dash blends | 2026-11-20 | 6ea364e | [261120-dik-dash-lockouts-and-blocked-dash-feedback-](./quick/261120-dik-dash-lockouts-and-blocked-dash-feedback-/) |
 | 261120-ef9 | Remove dash lockouts for pirouette, landing, takeoff; keep aim block and soft blends | 2026-11-20 | 3b53279 | [261120-ef9-remove-dash-lockouts-for-pirouette-landi](./quick/261120-ef9-remove-dash-lockouts-for-pirouette-landi/) |
+
+### Roadmap Evolution
+
+- Phase 04.1 inserted after Phase 4: Mechanism kit extension (movement mechanisms A-K + steampunk extras, wall-run MOVE-12 into scope, conveyor carry fix) and HUD polish (always-on crosshair, E prompt, expectation signs, showcase sub-zones, lens restyle) (URGENT)
 
 ## Deferred Items
 

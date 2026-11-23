@@ -21,7 +21,7 @@
     {
       "number": "4",
       "name": "Fernauslöser & Mechanism Kit",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "number": "5",
@@ -80,9 +80,9 @@
     }
   ],
   "next": {
-    "command": "/gsd-progress --next",
-    "label": "Advance to the next step (plan phase 4)",
-    "reason": "Phase 4 of 15 — needs a plan"
+    "command": "/gsd-progress",
+    "label": "Show progress",
+    "reason": "Unsure of state — showing progress"
   },
-  "updated_at": "2026-11-20T08:26:38.614Z"
+  "updated_at": "2026-11-23T10:01:04.846Z"
 }
