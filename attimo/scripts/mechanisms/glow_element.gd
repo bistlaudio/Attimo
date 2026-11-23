@@ -163,7 +163,7 @@ static func _faceted(parts: Array) -> ArrayMesh:
 			var a: Vector3 = placement * source[indices[corner]]
 			var b: Vector3 = placement * source[indices[corner + 1]]
 			var c: Vector3 = placement * source[indices[corner + 2]]
-			var face: Vector3 = (b - a).cross(c - a)
+			var face: Vector3 = (c - a).cross(b - a)  # Godot primitives wind clockwise (WR-04)
 			if face.length_squared() < 0.0000001:
 				continue
 			face = face.normalized()
