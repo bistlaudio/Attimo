@@ -4,7 +4,7 @@ milestone: v0.11.0.4
 milestone_name: milestone
 status: executing
 stopped_at: Completed 04.1-01-PLAN.md
-last_updated: "2026-11-23T13:57:27.279Z"
+last_updated: "2026-11-23T13:57:31.013Z"
 last_activity: 2026-11-23
 progress:
   total_phases: 16
@@ -89,6 +89,7 @@ Progress: [██████████] 98%
 | Phase 04 P04-04 | 150min | - tasks | - files |
 | Phase 04 P05 | n/a | 3 tasks | 9 files |
 | Phase 04.1 P01 | 40 min | 3 tasks | 15 files |
+| Phase 04.1 P04 | 75min | 2 tasks | 45 files |
 
 ## Accumulated Context
 
@@ -149,6 +150,7 @@ Recent decisions that affect current work:
 - [Phase 04]: 04-05: Puzzle rooms start after x 115, 24 m wide; FallReset reset_root sweeps mechanism nodes; SignalSource start_active
 - [Phase 04.1]: Zone gravity factor is a per-tick request (request_gravity_scale, clamped 0.05..1.0, cleared after the move); Dash-owned gravity_scale untouched
 - [Phase 04.1]: Conveyor carry fixed in conveyor.tscn (belt top 0.05 m above node origin), not in PlayerController: belt top was coplanar with the floor tile
+- [Phase 04.1]: MechanismLook hooks on NOTIFICATION_READY (subclasses override _ready without super)
 
 ### Pending Todos
 
