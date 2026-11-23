@@ -152,7 +152,8 @@ func _update_axis() -> void:
 	# eases out, so the recovery rolls back about the same axis even after the facing or the velocity changed.
 	if _machine.current.name == &"WallRun":
 		_wall_axis = player.wall_normal.cross(Vector3.UP)
-	elif lean_angle == 0.0:
+	elif lean_angle == 0.0 or _machine.current.name == &"Dash":
+		# A dash wants its own forward lean; keeping the wall axis would lean the whole dash sideways (WR-06).
 		_wall_axis = Vector3.ZERO
 	if _wall_axis.length_squared() > 0.0001:
 		var wall_local: Vector3 = player.visual_root.global_basis.orthonormalized().inverse() * _wall_axis
