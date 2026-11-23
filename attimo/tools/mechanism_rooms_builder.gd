@@ -25,7 +25,8 @@ const NOZZLE_SCENE: String = "res://scenes/mechanisms/steam_nozzle.tscn"
 const PENDULUM_SCENE: String = "res://scenes/mechanisms/pendulum.tscn"
 const LOW_GRAVITY_SCENE: String = "res://scenes/mechanisms/low_gravity_zone.tscn"
 ## Height of the raised moving stations (Dreh-Plattform, Hub-Plattform, Pendel walkway): their bodies are 0.5 m thick, so the
-## deck stays clear of the floor tiles and the rider really stands on the moving body.
+## deck stays clear of the floor tiles and the rider really stands on the moving body. No moving body's top face may be coplanar
+## with a floor tile (the engine would pick the tile as the supporting body); belts carry a 0.05 m lip above their node origin.
 const RAISED: float = 1.0
 ## Showcase rows: the north row stands at z -12, the south row at z 12; the stations are 10 m apart on x.
 const STATION_X: Array[float] = [48.0, 58.0, 68.0]

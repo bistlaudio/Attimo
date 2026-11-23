@@ -17,6 +17,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	EventBus.knocked_back.connect(_on_knocked)
 	await _scenario_conveyor_run(tree, check)
 	await _scenario_conveyor_reverse(tree, check)
+	await _scenario_conveyor_on_floor(tree, check)
 	await _scenario_pendulum(tree, check)
 	await _scenario_pendulum_stop(tree, check)
 	EventBus.knocked_back.disconnect(_on_knocked)
@@ -99,6 +100,42 @@ func _scenario_conveyor_reverse(tree: SceneTree, check: Callable) -> void:
 	check.call(before > 2.9 and previous < -2.9, "REVERSE_ON_SIGNAL runs and reverses (%.2f -> %.2f)" % [before, previous])
 	check.call(worst_step < conveyor.speed * 0.5, "the reversal is eased (largest step %.3f m/s per tick)" % worst_step)
 	await _free(tree, [conveyor, source])
+
+
+# D-05 / MOVE-08: a belt whose node sits on a floor tile at the same height carries an idle rider at belt speed and the rider keeps
+# the belt momentum when jumping off. At HEAD the belt top was coplanar with the floor top, the engine took the floor tile as the
+# supporting body and get_platform_velocity() stayed zero (RESEARCH, conveyor probe).
+func _scenario_conveyor_on_floor(tree: SceneTree, check: Callable) -> void:
+	var source: SignalSource = SignalSource.new()
+	tree.root.add_child(source)
+	source.set_active(true)
+	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)
+	var conveyor: Conveyor = _spawn(CONVEYOR_SCENE, check) as Conveyor
+	if conveyor == null:
+		await _free(tree, [source, floor_body])
+		return
+	conveyor.source = source
+	tree.root.add_child(conveyor)
+	var belt: StaticBody3D = conveyor.get_node("Belt") as StaticBody3D
+	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(0.0, 0.1, 6.0))
+	await Fixtures.wait_physics(tree, 30)
+	var axis: Vector3 = (belt.global_basis * conveyor.direction).normalized()
+	var start: Vector3 = player.global_position
+	await Fixtures.wait_physics(tree, 60)
+	var carried: float = (player.global_position - start).dot(axis)
+	check.call(carried >= conveyor.speed * 0.8, "an idle rider on the belt is carried %.2f m in 1 s (belt %.1f m/s, at least %.2f)" % [carried, conveyor.speed, conveyor.speed * 0.8])
+	var platform_velocity: Vector3 = player.get_platform_velocity()
+	check.call(platform_velocity.distance_to(belt.constant_linear_velocity) < 0.2, "get_platform_velocity() is the belt velocity (%s vs %s)" % [str(platform_velocity), str(belt.constant_linear_velocity)])
+	Input.action_press(&"jump")
+	var airborne_along: float = 0.0
+	for i: int in 20:
+		await Fixtures.wait_physics(tree, 1)
+		if not player.is_grounded():
+			airborne_along = player.move_velocity.dot(axis)
+			break
+	Input.action_release(&"jump")
+	check.call(airborne_along >= conveyor.speed * 0.8, "jumping off keeps the belt momentum on the first airborne tick (%.2f m/s along the belt, belt %.1f)" % [airborne_along, conveyor.speed])
+	await _free(tree, [conveyor, player, floor_body, source])
 
 
 # The pendulum knocks a player in its path once, then waits rehit_cooldown.

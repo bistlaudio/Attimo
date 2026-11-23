@@ -157,6 +157,8 @@ Exception: placeholder hit puffs in `scripts/debug` + `scenes/debug/hit_puff.tsc
 | `near_contact_changed` | `active: bool, point: Vector3` | The near-contact hand (plan 04-02) when contact starts or ends |
 | `launched` | `position: Vector3, direction: Vector3, speed: float` | Launching mechanisms (plan 04-04) when they throw the player |
 | `knocked_back` | `position: Vector3, impulse: Vector3` | Hazards and mechanisms that push the player back (plan 04-04) |
+| `dash_refilled` | `position: Vector3` | `PlayerController.refill_air_dash` when a mechanism gave the air dash back (boost ring, phase 04.1) |
+| `boosted` | `position: Vector3, direction: Vector3, speed: float` | `PlayerController.boost_along` after a boost; `speed` is the speed along `direction` afterwards (boost ring, bounce pad, phase 04.1) |
 
 Listeners: the debug event log now, juice (Phases 11-12), audio (Phase 14). A new fact is a new typed signal added in the phase that needs it. The bus holds no state and no logic.
 
