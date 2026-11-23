@@ -2,16 +2,18 @@
 gsd_state_version: "1.0"
 milestone: v0.11.0.4
 current_phase: "04.1"
-status: ready_to_plan
-stopped_at: Phase 04 complete (5/5) — ready to discuss Phase 5
-last_updated: "2026-11-23T10:01:16.531Z"
+current_phase_name: Mechanism Kit Extension & HUD Polish
+status: executing
+stopped_at: Completed 04.1-01-PLAN.md
+last_updated: "2026-11-23T12:13:09.143Z"
 last_activity: 2026-11-23
-state_head: 416bd459221de75e6e26843d063639f4d1a0239f
+last_activity_desc: Phase 04.1 execution started
+state_head: bd3761f6a300dce93ce87a40def182398f650e04
 progress:
   total_phases: 16
   completed_phases: 4
-  total_plans: 36
-  completed_plans: 36
+  total_plans: 41
+  completed_plans: 37
 milestone_name: milestone
 ---
 
@@ -22,14 +24,14 @@ milestone_name: milestone
 See: .planning/PROJECT.md (updated 2026-11-02)
 
 **Core value:** Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprint, Sprung und Dash fühlen sich smooth an, und die Hand verbindet sich nahtlos damit.
-**Current focus:** Phase 5 — pull/push & module unlocks
+**Current focus:** Phase 04.1 — Mechanism Kit Extension & HUD Polish
 
 ## Current Position
 
-Phase: 04.1
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-11-23
+Phase: 04.1 (Mechanism Kit Extension & HUD Polish) — EXECUTING
+Plan: 2 of 5
+Status: Ready to execute
+Last activity: 2026-11-23 — Phase 04.1 execution started
 
 Progress: [██████████] 100%
 
@@ -89,6 +91,7 @@ Progress: [██████████] 100%
 | Phase 04 P03 | 35min | 3 tasks | 22 files |
 | Phase 04 P04-04 | 150min | - tasks | - files |
 | Phase 04 P05 | n/a | 3 tasks | 9 files |
+| Phase 04.1 P01 | 40 min | 3 tasks | 15 files |
 
 ## Accumulated Context
 
@@ -147,6 +150,8 @@ Recent decisions that affect current work:
 - [Phase 04]: 04-04: rotating-platform carry is a reference-frame attach (rider re-placed at the same local point each tick, engine carry off, platform ticks after the player); the plan's velocity based primary and fallback failed the spike gate
 - [Phase 04]: 04-04: room 2 extended to x 43..115 for the moving stations; puzzle rooms (04-05) start behind x 115
 - [Phase 04]: 04-05: Puzzle rooms start after x 115, 24 m wide; FallReset reset_root sweeps mechanism nodes; SignalSource start_active
+- [Phase 04.1]: Zone gravity factor is a per-tick request (request_gravity_scale, clamped 0.05..1.0, cleared after the move); Dash-owned gravity_scale untouched
+- [Phase 04.1]: Conveyor carry fixed in conveyor.tscn (belt top 0.05 m above node origin), not in PlayerController: belt top was coplanar with the floor tile
 
 ### Pending Todos
 
@@ -186,6 +191,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-23T05:08:16.221Z
-Stopped at: Completed 04-03-PLAN.md
+Last session: 2026-11-23T12:13:08.867Z
+Stopped at: Completed 04.1-01-PLAN.md
 Resume file: None

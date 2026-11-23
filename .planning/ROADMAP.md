@@ -203,13 +203,13 @@ Plans:
   4. The glow lens on every interactable is a steampunk element (brass bezel or gear ring around a glowing turquoise core) instead of a plain sphere.
   5. Every new mechanism (A-K plus the planner's steampunk extras) has its own showcase station with a lever or self-trigger, moves the player as described, and has a smoke test; wall-run and wall-jump are movement FSM states.
 
-**Plans:** 5 plans
+**Plans:** 1/5 plans executed
 
 Plans:
 
 **Wave 1**
 
-- [ ] 04.1-01-PLAN.md — Tracer: low-gravity zone end to end (request_gravity_scale, station with "Erwartet:" sign), request APIs for the phase (refill_air_dash, boost_along, lock_air_control), conveyor carry fix with guard test, D-06 influence audit (wave 1)
+- [x] 04.1-01-PLAN.md — Tracer: low-gravity zone end to end (request_gravity_scale, station with "Erwartet:" sign), request APIs for the phase (refill_air_dash, boost_along, lock_air_control), conveyor carry fix with guard test, D-06 influence audit (wave 1)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
