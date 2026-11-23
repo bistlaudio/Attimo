@@ -18,20 +18,20 @@ extends CanvasLayer
 ## Radius of the centre dot in pixels.
 @export var dot_radius: float = 2.0
 ## Radius of the thin ring in pixels.
-@export var ring_radius: float = 11.0
+@export var ring_radius: float = 7.0
 ## Line width of the ring in pixels.
-@export var ring_width: float = 1.8
+@export var ring_width: float = 1.4
 ## Length of the four notches on the ring in pixels.
-@export var notch_length: float = 4.5
+@export var notch_length: float = 3.0
 ## Screen height in pixels at which the pixel sizes below apply 1:1; the HUD scales with height / this.
 @export var ui_reference_height: float = 720.0
 @export_group("Gear ring")
 ## Gap between the reticle ring and the gear ring in pixels.
-@export var gear_gap: float = 6.0
+@export var gear_gap: float = 4.0
 ## Length of the gear teeth in pixels.
-@export var gear_tooth_length: float = 4.0
+@export var gear_tooth_length: float = 3.0
 ## Number of gear teeth.
-@export var gear_teeth: int = 16
+@export var gear_teeth: int = 12
 ## Idle rotation of the gear ring in degrees per second.
 @export var gear_speed_deg: float = 25.0
 ## Extra rotation speed at full charge in degrees per second.
