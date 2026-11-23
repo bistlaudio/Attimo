@@ -141,10 +141,10 @@ Recent decisions that affect current work:
 - [Phase 04]: [04-01] GearGate holds open only once opening started; room-2 floor starts x 43 with threshold beam; module switching only while aiming
 - [Phase 04]: [04-02] arm_out lives on HandController; animator uses it only for Aim layer weight and solver target, aim edge/strafe/dash stay on player.aiming
 - [Phase 04]: [04-02] Targeting holds only valid targets; exact hits on invalid Interactables only set reticle state INVALID
-- [Phase ?]: 04-03: Array[SignalSource] exports survive pack when typed at the set site; Valve wheel turns forward per toggle; Crank wind/decay exclusive per tick
-- [Phase ?]: 04-04: rotating-platform carry is a reference-frame attach (rider re-placed at the same local point each tick, engine carry off, platform ticks after the player); the plan's velocity based primary and fallback failed the spike gate
-- [Phase ?]: 04-04: room 2 extended to x 43..115 for the moving stations; puzzle rooms (04-05) start behind x 115
-- [Phase ?]: 04-05: Puzzle rooms start after x 115, 24 m wide; FallReset reset_root sweeps mechanism nodes; SignalSource start_active
+- [Phase 04]: 04-03: Array[SignalSource] exports survive pack when typed at the set site; Valve wheel turns forward per toggle; Crank wind/decay exclusive per tick
+- [Phase 04]: 04-04: rotating-platform carry is a reference-frame attach (rider re-placed at the same local point each tick, engine carry off, platform ticks after the player); the plan's velocity based primary and fallback failed the spike gate
+- [Phase 04]: 04-04: room 2 extended to x 43..115 for the moving stations; puzzle rooms (04-05) start behind x 115
+- [Phase 04]: 04-05: Puzzle rooms start after x 115, 24 m wide; FallReset reset_root sweeps mechanism nodes; SignalSource start_active
 
 ### Pending Todos
 
