@@ -13,7 +13,7 @@ const SENSITIVITY_MAX: float = 3.0
 const DEFAULT_SENSITIVITY: float = 1.0
 ## Order used by the 02-12 selector.
 const AUTO_FOLLOW_MODES: Array[String] = ["auto", "on", "off"]
-const DEFAULT_AUTO_FOLLOW_MODE: String = "auto"
+const DEFAULT_AUTO_FOLLOW_MODE: String = "on"
 ## A28: text containing any of these constructor-like names followed by "(" is rejected before ConfigFile parses it
 ## (defense in depth). Godot's variant parser skips whitespace between the name and the parenthesis, so the test allows
 ## any whitespace there (WR-05). The per-field type checks below remain the real guard.

@@ -127,16 +127,16 @@ func _scenario_settings_tampering(check: Callable) -> void:
 	loaded = _load_with(TEST_PATH_B, "invert_y=7")
 	check.call(not loaded.invert_y, "(c) invert_y = 7 loads as false")
 	loaded = _load_with(TEST_PATH_B, "auto_follow_mode=\"sideways\"")
-	check.call(loaded.auto_follow_mode == "auto", "(c) auto_follow_mode \"sideways\" loads as auto ('%s')" % loaded.auto_follow_mode)
+	check.call(loaded.auto_follow_mode == CameraSettings.DEFAULT_AUTO_FOLLOW_MODE, "(c) auto_follow_mode \"sideways\" loads as the default ('%s')" % loaded.auto_follow_mode)
 	loaded = _load_with(TEST_PATH_B, "auto_follow_mode=\"ON\"")
-	check.call(loaded.auto_follow_mode == "auto", "(c) auto_follow_mode \"ON\" loads as auto ('%s')" % loaded.auto_follow_mode)
+	check.call(loaded.auto_follow_mode == CameraSettings.DEFAULT_AUTO_FOLLOW_MODE, "(c) auto_follow_mode \"ON\" loads as the default ('%s')" % loaded.auto_follow_mode)
 	loaded = _load_with(TEST_PATH_B, "auto_follow_mode=5")
-	check.call(loaded.auto_follow_mode == "auto", "(c) auto_follow_mode 5 loads as auto ('%s')" % loaded.auto_follow_mode)
+	check.call(loaded.auto_follow_mode == CameraSettings.DEFAULT_AUTO_FOLLOW_MODE, "(c) auto_follow_mode 5 loads as the default ('%s')" % loaded.auto_follow_mode)
 	loaded = _load_with(TEST_PATH_B, "auto_follow_mode=\"off\"")
 	check.call(loaded.auto_follow_mode == "off", "(c) a valid auto_follow_mode \"off\" is kept ('%s')" % loaded.auto_follow_mode)
 
 	loaded = _load_with(TEST_PATH_B, "invert_y=true\nsensitivity=2.5\nauto_follow_mode=\"on\"\nextra=Object(Resource,\"script\":null)")
-	check.call(is_equal_approx(loaded.sensitivity, 1.0) and not loaded.invert_y and loaded.auto_follow_mode == "auto", "(c) a file with Object( syntax loads all defaults")
+	check.call(is_equal_approx(loaded.sensitivity, 1.0) and not loaded.invert_y and loaded.auto_follow_mode == CameraSettings.DEFAULT_AUTO_FOLLOW_MODE, "(c) a file with Object( syntax loads all defaults")
 	# WR-05: whitespace between the name and the parenthesis does not slip past the filter.
 	for gap: String in [" ", "\t", "  "]:
 		for name: String in ["Object", "Resource", "SubResource", "ExtResource"]:
@@ -145,7 +145,7 @@ func _scenario_settings_tampering(check: Callable) -> void:
 
 	_cleanup_file(TEST_PATH_C)
 	loaded = CameraSettings.load_from(TEST_PATH_C)
-	check.call(is_equal_approx(loaded.sensitivity, 1.0) and not loaded.invert_y and loaded.auto_follow_mode == "auto", "(c) a missing file loads all defaults")
+	check.call(is_equal_approx(loaded.sensitivity, 1.0) and not loaded.invert_y and loaded.auto_follow_mode == CameraSettings.DEFAULT_AUTO_FOLLOW_MODE, "(c) a missing file loads all defaults")
 
 
 # (d) saving outside user:// is refused and creates nothing (T-02-15).
