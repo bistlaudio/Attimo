@@ -3,7 +3,7 @@ extends RefCounted
 ## (tools/mechanism_rooms_builder.gd) stores two metadata arrays on Zone_MechanismRooms:
 ##   zones     Array[Dictionary] {tag, title, rect: Rect2 (x, z, width, depth), header: NodePath}
 ##   stations  Array[Dictionary] {tag, at: Vector3, zone: StringName}
-## The test checks nine zones with tint, dividers and headers, a spacious slot grid (stations 10 m apart at least, 16 m to the
+## The test checks seven rooms with tint, walls with doorways and headers, a spacious slot grid (stations 10 m apart at least, 16 m to the
 ## nearest neighbour at most, 4 m inside their zone), a two-line sign per station, and that no moving or vanishing body is
 ## coplanar with a floor tile (a downward ray from 1 m above its top must hit the body itself).
 
@@ -11,9 +11,10 @@ const Fixtures := preload("res://tests/fixtures.gd")
 
 const GYM_SCENE: String = "res://scenes/test/movement_gym.tscn"
 const ZONE_FLOOR_SCENE: String = "res://scenes/mechanisms/zone_floor.tscn"
-const ROOM_MIN: Vector2 = Vector2(43.0, -36.0)
-const ROOM_MAX: Vector2 = Vector2(163.0, 36.0)
-const ZONE_TAGS: Array[String] = ["Trigger", "Logik", "Dampf", "Gefahren", "Plattformen", "Felder", "Wand", "Tempo", "Umwelt"]
+const ROOM_MIN: Vector2 = Vector2(43.0, -32.0)
+const ROOM_MAX: Vector2 = Vector2(219.0, 32.0)
+const ZONE_TAGS: Array[String] = ["Ausloeser", "Kraft", "Hoch", "Stossen", "Wand", "Tragen", "Werfen"]
+const ZONE_COUNT: int = 7
 const STATION_TAGS: Array[String] = [
 	"Valve", "EnergyCore", "Crank", "PressurePlate", "LogicAnd", "LogicOr", "LogicTimer",
 	"NozzleCannon", "NozzleJump", "NozzleUpdraft", "Geyser", "NozzleWall",
@@ -27,7 +28,8 @@ const MIN_SPACING: float = 10.0
 const MAX_NEIGHBOUR: float = 16.0
 const EDGE_MARGIN: float = 4.0
 const GATE_REACH: float = 6.0
-const FLOOR_TILES: int = 540
+## (219 - 43) / 4 = 44 columns x 64 / 4 = 16 rows.
+const FLOOR_TILES: int = 704
 const MIN_HEADER_FONT: int = 128
 const RESPAWN_DOOR_REACH: float = 6.0
 
@@ -58,7 +60,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 func _check_zones(gym: Node, zone: Node3D, check: Callable) -> Dictionary:
 	var rects: Dictionary = {}
 	var entries: Array = zone.get_meta(&"zones", []) as Array
-	check.call(entries.size() == 9, "Zone_MechanismRooms has nine zones in its metadata (got %d)" % entries.size())
+	check.call(entries.size() == ZONE_COUNT, "Zone_MechanismRooms has %d rooms in its metadata (got %d)" % [ZONE_COUNT, entries.size()])
 	var tints: Array[Color] = []
 	var room: Rect2 = Rect2(ROOM_MIN, ROOM_MAX - ROOM_MIN)
 	for entry: Variant in entries:
@@ -96,14 +98,14 @@ func _check_zones(gym: Node, zone: Node3D, check: Callable) -> Dictionary:
 		for b: int in range(a + 1, tints.size()):
 			if tints[a].is_equal_approx(tints[b]):
 				distinct = false
-	check.call(tints.size() == 9 and distinct, "the nine zone tints are pairwise different (%d tints)" % tints.size())
+	check.call(tints.size() == ZONE_COUNT and distinct, "the room tints are pairwise different (%d tints)" % tints.size())
 
 	var dividers: Array[Node3D] = []
 	for node: Node in _all(zone.get_node("ZoneDecor")):
-		if str(node.name).begins_with("Divider_") and node is Node3D:
+		if str(node.name).begins_with("RoomWall_") and node is Node3D:
 			dividers.append(node as Node3D)
-	check.call(dividers.size() >= 9, "at least nine Divider_* beams stand on the zone borders (got %d)" % dividers.size())
-	# One 4 m beam per 12 m border segment leaves a walkable gap of at least 4 m (here 8 m).
+	check.call(dividers.size() >= 20, "RoomWall_* tiles stand on the room borders (got %d)" % dividers.size())
+	# Every room is its own box: wall tiles on its rect edges, one tile left out as the doorway into the corridor.
 	var segments: Dictionary = {}
 	var duplicate: int = 0
 	for divider: Node3D in dividers:
@@ -111,12 +113,15 @@ func _check_zones(gym: Node, zone: Node3D, check: Callable) -> Dictionary:
 		if segments.has(key):
 			duplicate += 1
 		segments[key] = true
-	check.call(duplicate == 0, "no border segment holds two dividers (%d duplicates)" % duplicate)
+	check.call(duplicate == 0, "no two wall tiles share a spot (%d duplicates)" % duplicate)
 	var off_border: PackedStringArray = PackedStringArray()
 	for divider: Node3D in dividers:
 		if not _on_a_border(divider.global_position, rects):
 			off_border.append("%s %s" % [divider.name, divider.global_position])
-	check.call(off_border.is_empty(), "every divider stands on a zone border (off: %s)" % ", ".join(off_border))
+	check.call(off_border.is_empty(), "every wall tile stands on a room border (off: %s)" % ", ".join(off_border))
+	for tag: String in ZONE_TAGS:
+		var door_sign: Label3D = zone.get_node_or_null("ZoneDecor/DoorSign_%s" % tag) as Label3D
+		check.call(door_sign != null, "room %s has a door sign DoorSign_%s" % [tag, tag])
 	return rects
 
 
