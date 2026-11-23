@@ -18,7 +18,7 @@ Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprungkette, Dash und Dash-Hop m
 
 ### Active
 
-- [ ] Third-Person-Basis-Movement: Laufen, Sprungkette, Dash, Dash-Hop, evtl. Wall-Run, mit Fokus auf flüssiges, schnelles Gefühl (Coyote-Time, Jump-Buffering, weiche Beschleunigung)
+- [ ] Third-Person-Basis-Movement: Laufen, Sprungkette, Dash, Dash-Hop, Wall-Run auf Wandlauf-Platten (Phase 04.1), mit Fokus auf flüssiges, schnelles Gefühl (Coyote-Time, Jump-Buffering, weiche Beschleunigung)
 - [ ] Over-the-Shoulder-Kamera; Taste halten = Zielmodus mit Fadenkreuz
 - [ ] Zwei Hand-Module, Details in der jeweiligen Phase: Modul 1 Fernauslöser (türkiser Strahl), Modul 2 Pull/Push (zum Ankerpunkt ziehen mit Momentum, Dampfstoß zum Wegdrücken)
 - [ ] Schießen mit dem Hand-Strahl auf Gegenstände und 1–2 einfache Gegnertypen (Details in der Phase)
@@ -34,7 +34,7 @@ Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprungkette, Dash und Dash-Hop m
 
 - Dialoge und Cutscenes — Story läuft nur über Welt und Look
 - Mehrere Level — Umfang ist ein vertikaler Slice
-- Wall-Run, Kanten greifen — keine Clips im KayKit-Kit (v2)
+- Kanten greifen — kein Clip im KayKit-Kit (v2)
 - Volles Kampfsystem — nur Strahl-Schießen und 1–2 einfache Gegnertypen
 - Controller-Optimierung im ersten Schritt — erst Maus/Tastatur, Controller später (Input trotzdem über Input-Actions angelegt)
 - Festlegung aller Hand-Module vorab — werden pro Phase definiert

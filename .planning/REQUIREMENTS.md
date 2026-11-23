@@ -29,6 +29,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [x] **MOVE-09**: Player animations follow movement state, built from the KayKit Rig_Medium kit plus a few retargeted Mixamo/UAL clips (DEV-04, see docs/ANIMATION-MAP.md) (clips, cuts, blends, playback speed, procedural root/visual rotation and scale): idle, run (Running_A), jump (Jump_Start → Jump_Idle → Jump_Land), the Jump 3 pirouette (one turn about the vertical axis, not started while aiming, DEV-03; Jump_Start re-cut + procedural rotation), ground/air dash (Dodge_Forward, held pose in air), aim-mode strafe (Running_Strafe_L/R, Walking_Backwards)
 - [x] **MOVE-11**: Movement verbs are limited to what the animation kit supports; a new verb needs a kit clip or a clip composition before it is added
 - [x] **MOVE-10**: Movement values live in a tunable resource and are documented in a movement-metrics table (jump height/distance, dash distance)
+- [ ] **MOVE-12**: Player can wall-run along glowing wall-run pads and kick off wall-run or wall-jump pads with a wall-jump (pads only, D-09); shown as the run clip plus a roll lean (MOVE-11 composition)
 
 ### Camera & Aim
 
@@ -37,6 +38,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [x] **CAM-03**: Mouse sensitivity and invert-Y are configurable
 - [x] **CAM-04**: Interactables in range glow turquoise; the targeted one is clearly highlighted
 - [x] **CAM-05**: Light aim assist snaps the target to the nearest valid interactable near the crosshair (with hysteresis)
+- [ ] **CAM-06**: The crosshair is always visible (small dot and thin ring outside aim, the full goggle HUD only while aiming), and an "E" key prompt floats over the nearest near-contact interactable in range
 
 ### Hand Modules
 
@@ -46,12 +48,15 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [ ] **HAND-04**: Module 2 "Pull/Push": player can pull themselves toward an anchor point and carry the momentum on, and can push/repulse with steam (exact design confirmed in its phase)
 - [ ] **HAND-05**: Picking up a module is a clear moment (pickup feedback, HUD icon) and unlocks the module permanently
 - [ ] **HAND-06**: Each module has a teaching room: safe first use, then a test, then a twist
+- [ ] **HAND-07**: Every interactable's glow element is a steampunk primitive element (brass bezel or gear ring around a faceted turquoise core) shaped to fit its mechanic, built from shared primitives and materials; the glow stages still switch on the core
 
 ### Mechanisms & World
 
 - [x] **MECH-01**: Levers, hand-wheel valves, energy cores, clockwork cranks, gear gates, rotating and lift platforms, conveyors, steam nozzles and pendulums exist as reusable mechanism components
 - [x] **MECH-02**: Mechanisms are wired via signals in the editor, including simple logic (AND, OR, timer)
 - [x] **MECH-03**: Moving mechanisms (gears, platforms, conveyors) carry the player correctly
+- [ ] **MECH-04**: Movement mechanisms exist as reusable components with a showcase station and a smoke test each: repulsor field, attractor field, point-symmetric slingshot core, wall-run pad, wall-jump pad, bounce pad, boost ring, pressure plate, crumbling platform, wind tunnel, low-gravity zone
+- [ ] **MECH-05**: Steampunk extras: piston punch wall, pneumatic tube, pressure-valve geyser, paternoster (D-11)
 
 ### Shooting & Enemies (exact design defined in its phase)
 
@@ -132,12 +137,11 @@ Deferred. Tracked but not in the current roadmap.
 
 ### Movement extras
 
-- **MOVE-12**: Wall-run (no kit clip, would need a new animation)
 - **MOVE-13**: Ledge grab (no kit clip, would need a new animation)
 
 ### Content
 
-- **HAND-07**: Third hand module
+- **HAND-08**: Third hand module
 - **CONT-01**: Collectibles (hidden gears/cores)
 
 ## Out of Scope
@@ -179,20 +183,25 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | MOVE-09 | Phase 3 | Complete |
 | MOVE-10 | Phase 2 | Complete |
 | MOVE-11 | Phase 3 | Complete |
+| MOVE-12 | Phase 04.1 | Pending |
 | CAM-01 | Phase 2 | Pending (144 Hz judder check not verified; accepted override, see 02-VERIFICATION.md) |
 | CAM-02 | Phase 3 | Complete |
 | CAM-03 | Phase 2 | Complete |
 | CAM-04 | Phase 4 | Complete |
 | CAM-05 | Phase 4 | Complete |
+| CAM-06 | Phase 04.1 | Pending |
 | HAND-01 | Phase 4 | Complete |
 | HAND-02 | Phase 4 | Complete |
 | HAND-03 | Phase 4 | Complete |
 | HAND-04 | Phase 5 | Pending |
 | HAND-05 | Phase 5 | Pending |
 | HAND-06 | Phase 5 | Pending |
+| HAND-07 | Phase 04.1 | Pending |
 | MECH-01 | Phase 4 | Complete |
 | MECH-02 | Phase 4 | Complete |
 | MECH-03 | Phase 4 | Complete |
+| MECH-04 | Phase 04.1 | Pending |
+| MECH-05 | Phase 04.1 | Pending |
 | SHOOT-01 | Phase 6 | Pending |
 | SHOOT-02 | Phase 6 | Pending |
 | SHOOT-03 | Phase 6 | Pending |
@@ -235,10 +244,10 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | REL-03 | Phase 15 | Pending |
 
 **Coverage:**
-- v1 requirements: 71 total
-- Mapped to phases: 71
+- v1 requirements: 76 total
+- Mapped to phases: 76
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-11-02*
-*Last updated: 2026-11-02 after roadmap revision (two groups: Prototyp / Produktion; juice presets and toggles removed; Polish and Release requirements added)*
+*Last updated: 2026-11-23 after Phase 04.1 insertion (MOVE-12 into scope, MECH-04/05, CAM-06, HAND-07; v2 third module renumbered HAND-08)*
