@@ -56,6 +56,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 			if room != null:
 				rooms.append(room)
 		if rooms.size() == ROOMS.size():
+			_check_entry_plane(gym, zone, check)
 			_check_union(rooms, check)
 			for room: Node3D in rooms:
 				_check_wiring(room, check)
@@ -67,6 +68,15 @@ func run(tree: SceneTree, check: Callable) -> void:
 
 	gym.queue_free()
 	await gym.tree_exited
+
+
+## The doorway into puzzle room 1 stands in room 2's east wall plane (the puzzle group is shifted east, 04.1-05).
+func _check_entry_plane(gym: Node, zone: Node, check: Callable) -> void:
+	var entry: Node3D = zone.get_node_or_null("EntryGate") as Node3D
+	var wall: Node3D = gym.get_node_or_null("Zone_MechanismRooms/Room2WallEast_0") as Node3D
+	check.call(entry != null and wall != null, "EntryGate and Room2WallEast_0 exist")
+	if entry != null and wall != null:
+		check.call(absf(entry.global_position.x - wall.global_position.x) < 0.01, "EntryGate (x %.2f) stands in the room-2 east wall plane (x %.2f)" % [entry.global_position.x, wall.global_position.x])
 
 
 # --- coverage -----------------------------------------------------------------------------------------------

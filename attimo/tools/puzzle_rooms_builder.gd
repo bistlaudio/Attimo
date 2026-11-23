@@ -3,7 +3,7 @@ extends RefCounted
 ## Contract: build_into(zone, builder) where `builder` is the movement_gym_builder instance (helpers via builder.call). `zone` is
 ## Zone_MechanismRooms; the rooms go into its child Zone_PuzzleRooms.
 ##
-## Plan view (x east, z south). Room 2 of the showcase ends at x 115 (east wall plane x 115.5). Its east wall has a doorway in the
+## Plan view (x east, z south), local coordinates (the group is shifted east by PUZZLE_SHIFT_X = 48). Room 2 of the showcase ended at x 115 (east wall plane x 115.5, global 163.5). Its east wall has a doorway in the
 ## z 0..4 cell (EntryGate, opened by LeverEntry). Every puzzle room is 24 m wide (z -12..12), 1 m grid, 4 m tiles; the doorway of each
 ## room's east wall is the same z 0..4 cell and holds that room's ExitGate, which is also the entrance of the next room.
 ##   PuzzleRoom_1 "Fernschuss"  x 116..152.5   pulse room: small shot, big pulse, AND, lift, timed energy core
@@ -39,12 +39,17 @@ const ROWS_LEDGE: Array[float] = [-6.0, -2.0, 2.0, 6.0]
 const FALL_Y: float = -8.0
 const FALL_THICKNESS: float = 4.0
 const FALL_HALF_Z: float = 40.0
-## Room 2's east wall plane (the entrance of puzzle room 1).
+## Local x of room 2's east wall plane before the shift (the entrance of puzzle room 1).
 const ENTRY_X: float = 115.5
+## Room 2 of the showcase grew to x 163 (04.1-05, equal to ROOM_X_MAX of mechanism_rooms_builder): the whole group moves east by
+## ROOM2_EAST_X - 115. Node names, local coordinates and reach checks stay unchanged; x_range metadata is global.
+const ROOM2_EAST_X: float = 163.0
+const PUZZLE_SHIFT_X: float = ROOM2_EAST_X - 115.0
 
 
 func build_into(zone: Node3D, builder: RefCounted) -> void:
 	var puzzle: Node3D = builder.call(&"_group", zone, "Zone_PuzzleRooms") as Node3D
+	puzzle.position = Vector3(PUZZLE_SHIFT_X, 0.0, 0.0)
 	_build_entry(puzzle, builder)
 	_build_room_1(puzzle, builder)
 	_build_room_2(puzzle, builder)
@@ -65,7 +70,7 @@ func _build_entry(puzzle: Node3D, builder: RefCounted) -> void:
 ## A room node with its name label and the x range metadata.
 func _room(puzzle: Node3D, builder: RefCounted, node_name: String, title: String, x_in: float, x_out: float) -> Node3D:
 	var room: Node3D = builder.call(&"_group", puzzle, node_name) as Node3D
-	room.set_meta(&"x_range", Vector2(x_in, x_out))
+	room.set_meta(&"x_range", Vector2(x_in + PUZZLE_SHIFT_X, x_out + PUZZLE_SHIFT_X))
 	builder.call(&"_label", room, "Label_Name", title, Vector3(x_in + 6.0, 5.0, DOOR_Z))
 	return room
 
