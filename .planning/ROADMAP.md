@@ -7,7 +7,7 @@ The roadmap has two groups. **Group A: Prototyp** (Phases 1-8) builds every mech
 **Rules for every phase:**
 
 - Every phase ends with something playable.
-- **Group A only:** All geometry comes from KayKit Prototype Bits. Shapes the kit lacks (gears, valves, conveyors, enemies, the boss) are stand-ins built from Prototype Bits pieces. The character is the KayKit Mannequin_Medium on Rig_Medium. No particles, no juice VFX, no camera juice and no Meshy work. Feedback that carries information is part of the mechanic and is allowed: interactable glow, reticle states, HUD, the plain beam and rope lines.
+- **Group A only:** All geometry comes from KayKit Prototype Bits. Shapes the kit lacks (gears, valves, conveyors, enemies, the boss) are stand-ins built from Prototype Bits pieces. The character is the KayKit Mannequin_Medium on Rig_Medium. No particles, no juice VFX, no camera juice and no Meshy work. Feedback that carries information is part of the mechanic and is allowed: interactable glow, reticle states, HUD, the plain pulse and rope lines.
 - From Phase 1, gameplay emits facts on an event bus. Juice (Phases 11-12) and audio (Phase 14) listen to these facts, so they plug in without changes to gameplay code.
 - There are no juice presets, levels or toggles. Juice is tuned to one fixed, strong level (user decision).
 - Keyboard and mouse come first. All input goes through Input Map actions. Gamepad is tuned only in Phase 13.
@@ -34,9 +34,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation & Prototype Character** - Pinned Godot project, conventions, repo hygiene, Mannequin_Medium animating in a Prototype Bits test scene, and the gameplay fact bus (completed 2026-11-04)
 - [x] **Phase 2: Movement Core & Follow Camera** - Run, variable jump with a Jump 1-2-3 chain, ground and air dash, the dash-hop long jump, platforms, and a jitter-free mouse-look camera, signed off without juice (completed 2026-11-06)
 - [x] **Phase 3: Animated Mannequin & Aim Mode** - The Mannequin animates with every movement state from kit clips, plus aim mode with crosshair (completed 2026-11-20)
-- [ ] **Phase 4: Fernauslöser & Mechanism Kit** - Hand module framework, turquoise highlight with aim assist, Module 1 remote-trigger beam, and greybox switches, valves, gears, conveyors, doors and logic
+- [ ] **Phase 4: Fernauslöser & Mechanism Kit** - Hand module framework, turquoise highlight with aim assist, Module 1 remote-trigger pulse, and the greybox D-15/D-16 mechanism kit (levers, valves, energy cores, cranks, gear gates, rotating and lift platforms, conveyors, steam nozzles, pendulums) with AND, OR and timer logic
 - [ ] **Phase 5: Pull/Push & Module Unlocks** - Module 2 with a momentum test room, module pickup, hand poses from kit clips, and a teaching room per module
-- [ ] **Phase 6: Shooting, Enemies & Recovery** - Beam shooting at reactive Prototype Bits objects, 1-2 greybox enemy types, player health, checkpoints and near-instant respawn
+- [ ] **Phase 6: Shooting, Enemies & Recovery** - Pulse shooting at reactive Prototype Bits objects, 1-2 greybox enemy types, player health, checkpoints and near-instant respawn
 - [ ] **Phase 7: Level Blockout & Game Flow** - The full Prototype Bits level with ability gating and reset paths, plus title, pause and settings menus
 - [ ] **Phase 8: Boss & Ending** - A greybox object-boss with 2-3 telegraphed phases, beaten through hand modules and arena mechanisms, followed by the end screen
 
@@ -45,7 +45,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 9: Style Contract & Final Hero** - Style contract first, then the final Meshy hero on Rig_Medium replaces the Mannequin
 - [ ] **Phase 10: Steampunk World Building** - Steampunk prop/environment kit, the level, arena and boss rebuilt with it, warm lighting, fog and steam, and storytelling through the world alone
 - [ ] **Phase 11: Movement & Camera Juice** - Data-driven cue catalogue, squash/stretch, dust and steam on every move, FOV kicks, camera shake and hit-stop at one fixed, strong level
-- [ ] **Phase 12: Hand & Combat Juice + Polish** - Feedback for beam, pull, push, mechanisms and hits, then a polish pass that retunes all mechanics together and fixes rough spots
+- [ ] **Phase 12: Hand & Combat Juice + Polish** - Feedback for pulse, pull, push, mechanisms and hits, then a polish pass that retunes all mechanics together and fixes rough spots
 - [ ] **Phase 13: Controller Support** - Gamepad bindings for everything, plus stick look and aim assist tuned for controller
 - [ ] **Phase 14: Audio** - Sound effects through the catalogue SFX slots, level and boss music, and a hit-stop/shake retune with sound
 - [ ] **Phase 15: Windows Release & Performance** - Standalone Windows build, profiling on a weaker laptop at 60 fps, and debug tools stripped
@@ -150,16 +150,16 @@ Plans:
 ### Phase 4: Fernauslöser & Mechanism Kit
 
 **Group:** A (Prototyp)
-**Goal:** As a player, I want to aim the Fernauslöser beam at glowing mechanisms, so that I can solve puzzles from a distance.
+**Goal:** As a player, I want to aim the Fernauslöser pulse at glowing mechanisms, so that I can solve puzzles from a distance.
 **Mode:** mvp
 **Depends on**: Phase 3
 **Requirements**: HAND-01, HAND-02, HAND-03, CAM-04, CAM-05, MECH-01, MECH-02, MECH-03
 **Success Criteria** (what must be TRUE):
 
   1. Interactables in range glow turquoise, and the targeted one is clearly highlighted. Light aim assist snaps to the nearest valid interactable near the crosshair without flickering between neighbours.
-  2. Firing the Fernauslöser draws a plain turquoise beam that triggers a switch or valve at range, and the target reacts on the very next frame. An interactable that does not accept the module shows an invalid reticle state and stays unchanged.
-  3. In a sandbox puzzle room built from Prototype Bits, the player solves a puzzle with the beam. The room uses switches, valves, gears, conveyor belts and doors wired in the editor, including AND, OR and timer logic.
-  4. Gears, platforms and conveyors set in motion by the beam carry the player without sliding, jitter or launching.
+  2. Firing the Fernauslöser sends a plain turquoise pulse that triggers a lever or valve at range, and the target reacts on the very next frame. An interactable that does not accept the module shows an invalid reticle state and stays unchanged.
+  3. In a showcase room plus puzzle rooms built from Prototype Bits, the player solves puzzles with the pulse. The rooms use the D-15 triggers and D-16 mechanisms wired in the editor, including AND, OR and timer logic.
+  4. Gears, platforms and conveyors set in motion by the pulse carry the player without sliding, jitter or launching.
   5. A dummy test module can be added with one folder and one registry entry, and it shows up in game without changes to other code. The arm mesh never changes.
 
 **Plans**: 5 plans
@@ -186,7 +186,7 @@ Plans:
 - [ ] 04-05-PLAN.md — Three puzzle rooms with coverage and scripted solve test, pulse wording in REQUIREMENTS/ROADMAP, end-of-phase feel check (wave 5)
 
 **UI hint**: yes
-**Notes**: The exact Fernauslöser design is confirmed at the start of the phase. Gears, valves and conveyors are stand-ins built from Prototype Bits primitives; doors use the kit's Door pieces. Beam VFX (flash, sparks, impact ring) come in Phase 12.
+**Notes**: The exact Fernauslöser design is confirmed at the start of the phase. Gears, valves, conveyors and gates are stand-ins built from Prototype Bits primitives. Pulse VFX (flash, sparks, impact ring) come in Phase 12.
 
 ### Phase 5: Pull/Push & Module Unlocks
 
@@ -199,7 +199,7 @@ Plans:
 
   1. The player can pull themselves toward an anchor and fly on with the carried momentum, with a plain rope line to the anchor. The player can also push. The exact push use (objects, self-push, or both) is confirmed at the start of the phase.
   2. A momentum test room exists, and the pull metrics table (range, speed cap, carry-over, release boost) is recorded and tuned. Pulling into a wall at maximum speed never tunnels or gets stuck.
-  3. Beam, pull and push each show a readable Mannequin pose, composed from kit clips on an upper-body layer.
+  3. Pulse, pull and push each show a readable Mannequin pose, composed from kit clips on an upper-body layer.
   4. Picking up a module plays the kit PickUp clip and shows the module's HUD icon. The module then stays unlocked for good and cannot be used before pickup.
   5. Each module has a teaching room: safe first use, then a test, then a twist. A fresh player gets through each room without any text.
 
@@ -216,8 +216,8 @@ Plans:
 **Requirements**: SHOOT-01, SHOOT-02, SHOOT-03, PROG-01, PROG-03, PROG-04
 **Success Criteria** (what must be TRUE):
 
-  1. Beam shots hit Prototype Bits barrels, crates and targets, and these react visibly (tip, burst into pieces or break).
-  2. 1-2 simple greybox enemy types (small machines turned evil, built from Prototype Bits) patrol, notice the player and attack. The beam defeats them.
+  1. Pulse shots hit Prototype Bits barrels, crates and targets, and these react visibly (tip, burst into pieces or break).
+  2. 1-2 simple greybox enemy types (small machines turned evil, built from Prototype Bits) patrol, notice the player and attack. The pulse defeats them.
   3. The player has 3-5 health points, shown in a minimal HUD or diegetically. Taking damage is obvious from a kit Hit clip and the health display. At 0 health the player respawns at the last checkpoint.
   4. Reaching a checkpoint visibly changes its state and saves progress, including unlocked modules. After a death or a fall into a kill zone, the player is back in control at the checkpoint within about 1 second.
 
@@ -323,7 +323,7 @@ Plans:
 **Requirements**: FEEL-03, SHOOT-04, POLISH-01, POLISH-02
 **Success Criteria** (what must be TRUE):
 
-  1. Beam, pull, push and mechanism activation each show distinct visual feedback: beam flash and impact, an amber rope and hook, a steam cone, and the mechanism activation pulse. Module pickup is a clear moment, with a brief freeze and the HUD icon popping in.
+  1. Pulse, pull, push and mechanism activation each show distinct visual feedback: pulse flash and impact, an amber rope and hook, a steam cone, and the mechanism activation pulse. Module pickup is a clear moment, with a brief freeze and the HUD icon popping in.
   2. Every hit on an object or enemy gives clear feedback: a hit reaction on the next frame, sparks and a short hit-stop. Big moments (module pickup, boss hit, death) feel stronger than small ones (jump, landing).
   3. Movement, camera, both modules, shooting, enemies, mechanisms and the boss are retuned together over full playthroughs. The movement and pull metrics tables are updated to the final values.
   4. Rough spots found while playing the full slice (stuck spots, unclear moments, timing problems) are logged and fixed. A final playthrough from title to end screen finds none left open.

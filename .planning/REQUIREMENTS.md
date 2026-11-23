@@ -42,22 +42,22 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 
 - [x] **HAND-01**: Hand module framework: a module is a definition resource + behaviour scene; adding a module = one folder + one registry entry; arm mesh never changes
 - [x] **HAND-02**: Interactables declare which modules they accept; modules only talk to the Interactable contract
-- [x] **HAND-03**: Module 1 "Fernauslöser": player aims and fires a turquoise beam that triggers mechanisms at range (exact design confirmed in its phase)
+- [x] **HAND-03**: Module 1 "Fernauslöser": player aims and fires a turquoise pulse (tap = small, hold = big) that triggers mechanisms at range
 - [ ] **HAND-04**: Module 2 "Pull/Push": player can pull themselves toward an anchor point and carry the momentum on, and can push/repulse with steam (exact design confirmed in its phase)
 - [ ] **HAND-05**: Picking up a module is a clear moment (pickup feedback, HUD icon) and unlocks the module permanently
 - [ ] **HAND-06**: Each module has a teaching room: safe first use, then a test, then a twist
 
 ### Mechanisms & World
 
-- [x] **MECH-01**: Switches, valves, gears, conveyor belts and doors exist as reusable mechanism components
+- [x] **MECH-01**: Levers, hand-wheel valves, energy cores, clockwork cranks, gear gates, rotating and lift platforms, conveyors, steam nozzles and pendulums exist as reusable mechanism components
 - [x] **MECH-02**: Mechanisms are wired via signals in the editor, including simple logic (AND, OR, timer)
 - [x] **MECH-03**: Moving mechanisms (gears, platforms, conveyors) carry the player correctly
 
 ### Shooting & Enemies (exact design defined in its phase)
 
-- [ ] **SHOOT-01**: The hand beam can also shoot: hits deal damage/impulse to objects and enemies
-- [ ] **SHOOT-02**: Destructible/reactive objects (e.g. barrels, crates, pipes) react to beam hits
-- [ ] **SHOOT-03**: 1–2 simple enemy types (e.g. small machines turned evil) with simple behaviour (patrol, notice, attack), defeated by the beam
+- [ ] **SHOOT-01**: The hand pulse can also shoot: hits deal damage/impulse to objects and enemies
+- [ ] **SHOOT-02**: Destructible/reactive objects (e.g. barrels, crates, pipes) react to pulse hits
+- [ ] **SHOOT-03**: 1–2 simple enemy types (e.g. small machines turned evil) with simple behaviour (patrol, notice, attack), defeated by the pulse
 - [ ] **SHOOT-04**: Hits on objects and enemies give clear feedback (hit reaction, VFX, hit-stop)
 
 ### Progression & Health
@@ -84,7 +84,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 
 - [x] **FEEL-01**: Feedback hooks: gameplay events are broadcast so juice can be layered on without touching gameplay code
 - [ ] **FEEL-02**: Every movement action has visual/kinetic feedback (landing, jump, Jump 3 pirouette, dash, long jump)
-- [ ] **FEEL-03**: Every hand action and mechanism activation has visual feedback (beam, impact, pull, push, activation)
+- [ ] **FEEL-03**: Every hand action and mechanism activation has visual feedback (pulse, impact, pull, push, activation)
 - [ ] **FEEL-04**: Camera feedback (trauma-based shake, FOV kick) and hit-stop on impacts
 - [ ] **FEEL-05**: Juice is tuned to one fixed, strong level (no presets or toggles)
 - [x] **FEEL-06**: Input-to-response latency is measured; target ≤ 66 ms, hard limit 100 ms
@@ -101,7 +101,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [ ] **ART-01**: Final Meshy hero replaces the Mannequin: rigged onto KayKit Rig_Medium as rigid segments (~6–9k tris), all existing KayKit clip mappings keep working
 - [ ] **ART-02**: Steampunk prop/environment kit in the palette atlas, within poly budgets, consistent with KayKit style
 - [ ] **ART-03**: Lighting and atmosphere: warm directional light, turquoise emissive glow, fog, steam particles
-- [ ] **ART-04**: Hand-module poses are composed from kit clips (pull: Ranged_Magic_Raise upper body over Jump_Idle/Dodge_Forward; push: Ranged_Magic_Shoot/Throw; beam: Ranged_1H_Aiming/Ranged_Magic_Shoot) via AnimationTree upper-body layer, no new clips
+- [ ] **ART-04**: Hand-module poses are composed from kit clips (pull: Ranged_Magic_Raise upper body over Jump_Idle/Dodge_Forward; push: Ranged_Magic_Shoot/Throw; pulse: Ranged_1H_Aiming/Ranged_Magic_Shoot) via AnimationTree upper-body layer, no new clips
 
 ### Menus & UX
 
@@ -147,7 +147,7 @@ Deferred. Tracked but not in the current roadmap.
 | Visual arm swapping per module | Too much work; arm always looks the same, modules are abilities |
 | Dialogue and cutscenes | Story is told only through world and look |
 | Multiple levels | Vertical slice: one level, one boss |
-| Full combat system (weapons, many enemy types, combat arenas) | Only beam shooting + 1–2 simple enemy types; boss is a puzzle boss using modules and mechanisms |
+| Full combat system (weapons, many enemy types, combat arenas) | Only pulse shooting + 1–2 simple enemy types; boss is a puzzle boss using modules and mechanisms |
 | Skill trees, save slots | Not needed for a slice |
 | Localization | Uni prototype |
 | Playtest study / questionnaires / consent forms | User decision: just the game, juice tuned to one fixed strong level |
