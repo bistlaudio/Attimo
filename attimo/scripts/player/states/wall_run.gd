@@ -50,6 +50,7 @@ func physics_update(delta: float) -> StringName:
 		if actor.input_direction() != Vector3.ZERO:
 			return &"Run"
 		return &"Idle"
-	if _timer >= config.wall_run_time or actor.wall_contact_age > config.wall_contact_grace:
+	# wall_surface folds in wall_contact_grace and re-checks the group every tick: a plain wall or a pad switched off ends the run.
+	if _timer >= config.wall_run_time or not actor.wall_surface(&"wall_run_surface"):
 		return &"Fall"
 	return &""
