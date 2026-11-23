@@ -1,13 +1,16 @@
 class_name Crosshair
 extends CanvasLayer
-## Goggle HUD (D-13, CAM-02, CAM-04): thin white lines drawn in code, no image asset. Hidden at start, shown only while
-## the aim button is held (it listens to EventBus.aim_changed, gameplay never calls it). Elements: rim arcs with rivets at
-## the left and right screen edges, the ring reticle with four gear notches and a centre dot, a charge arc around the
-## ring while the big pulse charges, and a module frame at the bottom centre with the active module name.
+## Reticle and goggle HUD (D-13, D-01, D-02, CAM-02, CAM-04, CAM-06): thin white lines drawn in code, no image asset.
+## The reticle is always on: outside aim mode only a small centre dot and a thin ring. While the aim button is held
+## (hud_visible, driven by EventBus.aim_changed, gameplay never calls it) the goggle HUD adds the rim arcs with rivets at
+## the left and right screen edges, the four gear notches, a charge arc while the big pulse charges, and a module frame
+## at the bottom centre with the active module name.
 ## The reticle is cream with no target, turquoise on a valid target (a second outer ring when the target needs the big
 ## pulse) and dimmed with a diagonal stroke for an invalid or out-of-range target. It dims during the shot cooldown.
-## While visible it polls the hand_controller group (read only, it never drives the hand). The Reticle child ignores the
-## mouse, so the HUD never eats gameplay or F2 panel clicks.
+## The NearPrompt child is a cream "E" keycap over HandController.prompt_target (the nearest grabbable lever or crank in
+## reach); it hides during near contact, out of range and when the point is behind the camera.
+## It polls the hand_controller group (read only, it never drives the hand). The Reticle and NearPrompt children ignore
+## the mouse, so the HUD never eats gameplay or F2 panel clicks.
 
 ## Radius of the centre dot in pixels.
 @export var dot_radius: float = 2.0
@@ -15,6 +18,10 @@ extends CanvasLayer
 @export var ring_radius: float = 8.0
 ## Line width of the ring in pixels.
 @export var ring_width: float = 1.5
+## Radius of the thin idle ring (no goggle HUD) in pixels.
+@export var idle_ring_radius: float = 5.0
+## Alpha of the idle reticle outside aim mode.
+@export var idle_alpha: float = 0.6
 ## Normal colour (cream, the UI accent colour).
 @export var color: Color = Color(0.96, 0.93, 0.85, 0.9)
 ## Lock colour (turquoise: valid target and charge arc).
@@ -24,6 +31,8 @@ extends CanvasLayer
 
 ## True while the reticle shows a valid target (turquoise).
 var locked: bool = false
+## True while the goggle HUD is shown (aim held). The reticle itself is always visible.
+var hud_visible: bool = false
 ## The Targeting.State shown by the reticle, the charge ratio of the big pulse and the active module name.
 var state: int = Targeting.State.NONE
 var charge: float = 0.0
@@ -44,23 +53,38 @@ const FRAME_BOTTOM_GAP: float = 24.0
 const FRAME_FONT_SIZE: int = 14
 const COOLDOWN_ALPHA: float = 0.5
 const INVALID_ALPHA: float = 0.35
+const PROMPT_LIFT: float = 0.35
+const PROMPT_FONT_SIZE: int = 16
 
 var _cooldown_dim: bool = false
+var _prompt_style: StyleBoxFlat
 
 @onready var _reticle: Control = $Reticle
+@onready var _prompt: Control = $NearPrompt
 
 
 func _ready() -> void:
-	visible = false
+	visible = true
+	_prompt_style = StyleBoxFlat.new()
+	_prompt_style.bg_color = color
+	_prompt_style.border_color = outline_color
+	_prompt_style.set_border_width_all(2)
+	_prompt_style.set_corner_radius_all(5)
+	_prompt.visible = false
+	_prompt.draw.connect(_draw_prompt)
 	_reticle.draw.connect(_draw_reticle)
 	EventBus.aim_changed.connect(_on_aim_changed)
 
 
 func _process(_delta: float) -> void:
-	if not visible:
-		return
 	var hand: HandController = get_tree().get_first_node_in_group(&"hand_controller") as HandController
+	_update_prompt(hand)
 	if hand == null:
+		return
+	if not hud_visible:
+		set_state(Targeting.State.NONE)
+		set_charge(0.0)
+		set_cooldown_dim(false)
 		return
 	if hand.targeting != null:
 		set_state(hand.targeting.state)
@@ -111,8 +135,26 @@ func set_module_name(text: String) -> void:
 
 
 func _on_aim_changed(active: bool) -> void:
-	visible = active
+	hud_visible = active
 	_reticle.queue_redraw()
+
+
+## Places the E keycap over HandController.prompt_target, hidden without a finite point in front of the camera.
+func _update_prompt(hand: HandController) -> void:
+	var camera: Camera3D = get_viewport().get_camera_3d()
+	var point: Vector3 = Vector3(INF, INF, INF) if hand == null else hand.prompt_point()
+	if camera == null or not point.is_finite() or camera.is_position_behind(point):
+		_prompt.visible = false
+		return
+	_prompt.position = camera.unproject_position(point + Vector3.UP * PROMPT_LIFT) - _prompt.size * 0.5
+	_prompt.visible = true
+
+
+func _draw_prompt() -> void:
+	_prompt.draw_style_box(_prompt_style, Rect2(Vector2.ZERO, _prompt.size))
+	var font: Font = ThemeDB.fallback_font
+	var baseline: Vector2 = Vector2(0.0, _prompt.size.y * 0.5 + PROMPT_FONT_SIZE * 0.35)
+	_prompt.draw_string(font, baseline, "E", HORIZONTAL_ALIGNMENT_CENTER, _prompt.size.x, PROMPT_FONT_SIZE, Color(0.12, 0.1, 0.08, 1.0))
 
 
 func _draw_reticle() -> void:
@@ -123,6 +165,12 @@ func _draw_reticle() -> void:
 		tint = Color(color.r, color.g, color.b, INVALID_ALPHA)
 	if _cooldown_dim:
 		tint.a *= COOLDOWN_ALPHA
+	if not hud_visible:
+		var idle: Color = Color(color.r, color.g, color.b, color.a * idle_alpha)
+		_reticle.draw_circle(centre, dot_radius + OUTLINE_EXTRA * 0.5, outline_color)
+		_reticle.draw_circle(centre, dot_radius, idle)
+		_arc(centre, idle_ring_radius, 0.0, TAU, idle, ring_width * 0.7)
+		return
 	_draw_rim(size)
 	_draw_ring(centre, tint)
 	if charge > 0.0:

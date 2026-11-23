@@ -1,5 +1,5 @@
 extends RefCounted
-## CAM-02 / D-15 / T-03-09: the crosshair is hidden at start, shown exactly while aim_changed(true) holds, never takes
+## CAM-02 / D-15 / T-03-09: the reticle is always visible, the goggle HUD (hud_visible) follows aim_changed, it never takes
 ## mouse input, covers the full screen rect and draws below the debug overlays (layers 100-102). It carries a reserved
 ## lock state for Phase 4.
 
@@ -20,12 +20,12 @@ func run(tree: SceneTree, check: Callable) -> void:
 	tree.root.add_child(crosshair)
 	await tree.process_frame
 
-	check.call(not crosshair.visible, "the crosshair is hidden after one process frame")
+	check.call(crosshair.visible and not crosshair.hud_visible, "the reticle is always on and the goggle HUD is off after one process frame (D-01)")
 	bus.aim_changed.emit(true)
-	check.call(crosshair.visible, "aim_changed(true) shows the crosshair")
+	check.call(crosshair.visible and crosshair.hud_visible, "aim_changed(true) switches the goggle HUD on, the reticle stays visible")
 	await tree.process_frame
 	bus.aim_changed.emit(false)
-	check.call(not crosshair.visible, "aim_changed(false) hides the crosshair")
+	check.call(crosshair.visible and not crosshair.hud_visible, "aim_changed(false) switches the goggle HUD off, the reticle stays visible")
 
 	var reticle: Control = crosshair.get_node("Reticle") as Control
 	check.call(reticle.mouse_filter == Control.MOUSE_FILTER_IGNORE, "the Reticle ignores the mouse (T-03-09)")
@@ -59,6 +59,6 @@ func run(tree: SceneTree, check: Callable) -> void:
 	bus.aim_changed.emit(true)
 	await tree.process_frame
 	bus.aim_changed.emit(false)
-	check.call(not crosshair.visible, "the goggle HUD is hidden again when aim ends")
+	check.call(crosshair.visible and not crosshair.hud_visible, "the goggle HUD is off again when aim ends (hud_visible false)")
 
 	crosshair.free()

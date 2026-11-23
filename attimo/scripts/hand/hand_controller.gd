@@ -48,6 +48,8 @@ var arm_out: bool = false
 var arm_out_point: Vector3 = Vector3.ZERO
 ## The Interactable held by near contact, or null.
 var near_target: Interactable = null
+## The nearest near-contact Interactable in reach while no contact is held (the HUD E prompt), else null (D-02).
+var prompt_target: Interactable = null
 
 var _shot_arm_left: float = 0.0
 var _player: PlayerController = null
@@ -168,13 +170,17 @@ func _tick_near(delta: float) -> void:
 		near_target = null
 		EventBus.near_contact_changed.emit(false, arm_out_point)
 	if near_target == null:
+		# D-02: the HUD prompt marks the grabbable Interactable in reach, independent of input and of aim.
+		prompt_target = _nearest_near_target()
 		if Input.is_action_just_pressed(&"interact"):
 			var candidate: Interactable = _nearest_near_target()
 			if candidate != null and candidate.near_begin():
 				near_target = candidate
+				prompt_target = null
 				arm_out_point = candidate.target_point()
 				EventBus.near_contact_changed.emit(true, arm_out_point)
 		return
+	prompt_target = null
 	if Input.is_action_pressed(&"interact") and _in_near_range(near_target):
 		arm_out_point = near_target.target_point()
 		near_target.near_hold(delta)
@@ -183,6 +189,13 @@ func _tick_near(delta: float) -> void:
 	near_target = null
 	ended.near_end()
 	EventBus.near_contact_changed.emit(false, ended.target_point())
+
+
+## The world point the E prompt hangs over, or (INF, INF, INF) when there is no prompt target.
+func prompt_point() -> Vector3:
+	if prompt_target == null or not is_instance_valid(prompt_target):
+		return Vector3(INF, INF, INF)
+	return prompt_target.target_point()
 
 
 ## The nearest Interactable in group interactable that accepts near contact and is within hand_near_range, or null.
