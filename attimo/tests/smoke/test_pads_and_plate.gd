@@ -97,6 +97,7 @@ func _scenario_bounce(tree: SceneTree, check: Callable) -> void:
 	var low: float = await _drop_apex(tree, pad, 2.0, 0.0)
 	var hop: float = await _drop_apex(tree, pad, 0.5, 0.0)
 	check.call(high > low and low > 0.0, "bounce: a 6 m drop bounces higher (%.2f m) than a 2 m drop (%.2f m)" % [high, low])
+	check.call(high < 6.0 + 0.5, "bounce: restitution 1.0 returns about the drop height and gains no energy (6 m drop -> %.2f m)" % high)
 	var floor_apex: float = pad.min_bounce * pad.min_bounce / 68.0
 	check.call(hop >= floor_apex - 0.2, "bounce: a 0.5 m hop still bounces at least min_bounce (%.2f m, floor %.2f m)" % [hop, floor_apex])
 	check.call(pad.get_node("Body").collision_layer == PhysicsLayers.WORLD, "the pad body is on the World layer")

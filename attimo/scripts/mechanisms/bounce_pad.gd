@@ -1,14 +1,14 @@
 class_name BouncePad
 extends Mechanism
 ## Bounce pad (MECH-04 F, D-06): a raised pad that throws the player back up with a speed that scales with the landing impact
-## (impact * restitution, clamped between min_bounce and max_bounce), so a high drop bounces higher and a small hop still bounces.
+## (back to the drop height * restitution, clamped between min_bounce and max_bounce), so a high drop bounces higher and a small hop still bounces.
 ## It listens to EventBus.landed (emitted by the player on every floor arrival, independent of tick rate), checks the landing
 ## spot against its top face and then asks the player through call_deferred(launch_along). It never uses an overlap callback:
 ## a terminal-speed fall would tunnel through a thin trigger (Pitfall 2). Active means the signal is on. This script never
 ## writes the player's velocity (D-06).
 
 @export var size: Vector3 = Vector3(3.0, 0.3, 3.0)
-## Share of the landing speed that comes back.
+## Share of the drop height that comes back (1.0 = back to the drop height).
 @export_range(0.1, 2.0, 0.05) var restitution: float = 1.0
 ## Bounce speed floor (a hop onto the pad) and cap, in m/s.
 @export_range(1.0, 40.0, 0.5) var min_bounce: float = 11.0
@@ -48,8 +48,12 @@ func _on_landed(position: Vector3, impact_speed: float) -> void:
 		return
 	if absf(local.y - size.y) > 0.4:
 		return
-	var player: Node = get_tree().get_first_node_in_group(&"player")
-	if player == null:
+	var player: PlayerController = get_tree().get_first_node_in_group(&"player") as PlayerController
+	if player == null or player.config == null:
 		return
-	var bounce: float = clampf(impact_speed * restitution, min_bounce, max_bounce)
+	# The bounce returns the drop height (times restitution) under the rise gravity. Reusing the impact speed would gain energy on
+	# every bounce, because the fall gravity is heavier than the rise gravity (WR-01).
+	var config: MovementConfig = player.config
+	var drop_height: float = impact_speed * impact_speed / (2.0 * config.fall_gravity())
+	var bounce: float = clampf(config.jump_speed(drop_height * restitution), min_bounce, max_bounce)
 	player.call_deferred(&"launch_along", Vector3.UP, bounce)
