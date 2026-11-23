@@ -64,6 +64,8 @@ var _written_identity: bool = true
 var _takeoff_y: float = 0.0
 var _finishing: bool = false
 var _finish_rate: float = 0.0
+## World axis of the wall-run roll lean while it is set or still easing out, else ZERO.
+var _wall_axis: Vector3 = Vector3.ZERO
 
 
 func _ready() -> void:
@@ -131,6 +133,8 @@ func _twitch_for(config: MovementConfig) -> float:
 ## Lean target in degrees for the current state: only an aimed ground dash leans. An air dash, the unaimed ground dash
 ## (the slide), the long jump that follows a dash and everything else are upright (D-02, DEV-04).
 func _lean_target_deg(config: MovementConfig) -> float:
+	if _machine.current.name == &"WallRun":
+		return config.wall_run_lean_deg
 	if _machine.current.name != &"Dash" or bool(_machine.current.get(&"in_air")) or bool(_machine.current.get(&"slide")):
 		return 0.0
 	return config.dash_lean_deg
@@ -144,6 +148,17 @@ func _air_dash_running() -> bool:
 ## Keeps lean_axis on up x travel direction, expressed in VisualRoot space. With no direction the last axis is kept
 ## while the lean eases out, and the facing is used once upright.
 func _update_axis() -> void:
+	# Wall-run roll lean (MOVE-12): the axis wall normal x up tilts the body toward the wall. The world axis is kept while the lean
+	# eases out, so the recovery rolls back about the same axis even after the facing or the velocity changed.
+	if _machine.current.name == &"WallRun":
+		_wall_axis = player.wall_normal.cross(Vector3.UP)
+	elif lean_angle == 0.0:
+		_wall_axis = Vector3.ZERO
+	if _wall_axis.length_squared() > 0.0001:
+		var wall_local: Vector3 = player.visual_root.global_basis.orthonormalized().inverse() * _wall_axis
+		if wall_local.length_squared() > 0.0001:
+			lean_axis = wall_local.normalized()
+		return
 	var direction: Vector3 = Vector3.ZERO
 	if _machine.current.name == &"Dash":
 		direction = _machine.current.get(&"direction") as Vector3

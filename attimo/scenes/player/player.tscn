@@ -13,6 +13,7 @@
 [ext_resource type="Script" path="res://scripts/player/states/long_jump.gd" id="13_long_jump"]
 [ext_resource type="Script" path="res://scripts/player/procedural_pose.gd" id="14_pose"]
 [ext_resource type="Script" path="res://scripts/player/states/wall_run.gd" id="18_wall_run"]
+[ext_resource type="Script" path="res://scripts/player/states/wall_jump.gd" id="19_wall_jump"]
 [ext_resource type="Script" path="res://scripts/hand/hand_controller.gd" id="15_hand"]
 [ext_resource type="Resource" path="res://resources/hand/module_registry.tres" id="16_registry"]
 [ext_resource type="Script" path="res://scripts/hand/hand_presentation.gd" id="17_presentation"]
@@ -59,6 +60,9 @@ script = ExtResource("9_dash")
 
 [node name="WallRun" type="Node" parent="StateMachine"]
 script = ExtResource("18_wall_run")
+
+[node name="WallJump" type="Node" parent="StateMachine"]
+script = ExtResource("19_wall_jump")
 
 [node name="MannequinAnimator" type="Node" parent="." node_paths=PackedStringArray("state_machine", "animation_tree", "player")]
 script = ExtResource("6_anim")

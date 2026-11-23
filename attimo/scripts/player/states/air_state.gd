@@ -6,7 +6,8 @@ extends State
 ##
 ## Jump decision rules (D-09; there is no air jump, MOVE-05), in order:
 ##   1. grounded, or airborne with coyote time left: ground jump (Jump)
-##   2. otherwise the press stays in the jump buffer: landing inside the buffer window fires it as a ground
+##   2. in the air against a wall-jump pad (before the coyote check): WallJump; a wall-run pad with speed starts WallRun first (MOVE-12)
+##   3. otherwise the press stays in the jump buffer: landing inside the buffer window fires it as a ground
 ##      jump on the landing tick (no ground deceleration tick), later it expires with the buffer
 
 
@@ -24,6 +25,8 @@ func physics_update(delta: float) -> StringName:
 		return &"Idle"
 	if actor.can_wall_run():
 		return &"WallRun"
+	if actor.can_wall_jump():
+		return &"WallJump"
 	var jump_state: StringName = _airborne_jump_decision()
 	if jump_state != &"":
 		return jump_state

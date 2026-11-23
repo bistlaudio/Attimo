@@ -66,10 +66,12 @@ const STATE_TO_ANIM: Dictionary[StringName, StringName] = {
 	&"LongJump": &"LongJump",
 	&"Fall": &"Fall",
 	&"Dash": &"Dash",
+	&"WallRun": &"Locomotion",
+	&"WallJump": &"Jump",
 }
 
 ## States that count as airborne for the landing check (Landing into Idle plays the Land overlay).
-const AIRBORNE_STATES: Array[StringName] = [&"Jump", &"Fall", &"LongJump"]
+const AIRBORNE_STATES: Array[StringName] = [&"Jump", &"Fall", &"LongJump", &"WallJump"]
 
 @export var state_machine: StateMachine
 @export var animation_tree: AnimationTree
@@ -321,7 +323,7 @@ func _on_state_changed(from_state: StringName, to_state: StringName) -> void:
 	_fsm_state = to_state
 	_cancel_idle_break()
 	var node: StringName = STATE_TO_ANIM.get(to_state, &"Locomotion")
-	if node == &"Jump" and player.chain_stage == 2 and _has_jump2:
+	if to_state == &"Jump" and player.chain_stage == 2 and _has_jump2:
 		# Jump 2 of the ground chain has its own take (chain_stage is set before state_changed fires).
 		node = &"Jump2"
 	if node == &"Dash":

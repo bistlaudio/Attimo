@@ -18,6 +18,9 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_run_end_and_cooldown(tree, check)
 	await _scenario_rejections(tree, check)
 	await _scenario_dash_and_landing(tree, check)
+	await _scenario_wall_jump_from_run(tree, check)
+	await _scenario_wall_jump_pads(tree, check)
+	await _scenario_lean(tree, check)
 	Engine.physics_ticks_per_second = SHIPPED_TPS
 
 
@@ -151,3 +154,107 @@ func _scenario_dash_and_landing(tree: SceneTree, check: Callable) -> void:
 	var landed: int = await Fixtures.wait_until(tree, func() -> bool: return low_player.state_machine.current.name == &"Run" or low_player.state_machine.current.name == &"Idle", 60)
 	check.call(landed >= 0 and low_player.is_grounded(), "landing during WallRun goes to Run or Idle (%s)" % low_player.state_machine.current.name)
 	await _free(tree, parts_b)
+
+
+## Waits until the player has touched the wall this very tick (wall_contact_age 0) or `ticks` ran out. True on contact.
+func _wait_contact(tree: SceneTree, player: PlayerController, ticks: int) -> bool:
+	var waited: int = await Fixtures.wait_until(tree, func() -> bool: return player.wall_contact_age == 0.0, ticks)
+	return waited >= 0
+
+
+func _scenario_wall_jump_from_run(tree: SceneTree, check: Callable) -> void:
+	var jumped: Array[int] = [0]
+	var on_jumped: Callable = func(_p: Vector3, _d: Vector3) -> void: jumped[0] += 1
+	EventBus.wall_jumped.connect(on_jumped)
+	var parts: Array = await _setup(tree, 0, -7.0)
+	var player: PlayerController = parts[3] as PlayerController
+	var animator: MannequinAnimator = player.get_node("MannequinAnimator") as MannequinAnimator
+	_launch_at_pad(player, 10.0)
+	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"WallRun", 20)
+	await Fixtures.wait_physics(tree, 6)
+	Input.action_press(&"jump")
+	var waited: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"WallJump", 6)
+	check.call(waited >= 0, "a jump press during WallRun enters WallJump (%d)" % waited)
+	var normal: Vector3 = player.wall_normal
+	var flat: Vector3 = Vector3(player.move_velocity.x, 0.0, player.move_velocity.z)
+	check.call(flat.dot(normal) > 0.5 * flat.length(), "the first WallJump tick points away from the wall (out %.2f of %.2f m/s)" % [flat.dot(normal), flat.length()])
+	check.call(player.vertical_speed > 0.0, "and upward (%.2f m/s)" % player.vertical_speed)
+	check.call(player.air_control_lock_timer > 0.0, "air control is locked (%.2f s)" % player.air_control_lock_timer)
+	check.call(player.wall_run_cooldown_timer > 0.0, "the wall-run cooldown runs after the jump (%.2f s)" % player.wall_run_cooldown_timer)
+	check.call(jumped[0] == 1, "wall_jumped fired once (%d)" % jumped[0])
+	check.call(animator.last_travel == &"Jump", "the animator travelled to Jump (%s)" % animator.last_travel)
+	var base_y: float = player.global_position.y
+	var apex: float = base_y
+	for i: int in 90:
+		await tree.physics_frame
+		apex = maxf(apex, player.global_position.y)
+		if player.vertical_speed <= 0.0:
+			break
+	Input.action_release(&"jump")
+	check.call(absf((apex - base_y) - player.config.wall_jump_height) < 0.4, "the held kick rises %.2f m (wall_jump_height %.2f, within 0.4)" % [apex - base_y, player.config.wall_jump_height])
+	var regrabbed: bool = await _ever_in(tree, player, &"WallRun", 10)
+	check.call(not regrabbed, "no wall-run re-grab right after the wall-jump")
+	EventBus.wall_jumped.disconnect(on_jumped)
+	await _free(tree, parts)
+
+
+func _scenario_wall_jump_pads(tree: SceneTree, check: Callable) -> void:
+	# A WALL_JUMP pad: a slow approach touches it, a jump press kicks off.
+	var parts: Array = await _setup(tree, 1, -2.0)
+	var player: PlayerController = parts[3] as PlayerController
+	var panel: Node = (parts[2] as WallPad).get_node("Panel")
+	check.call(panel.is_in_group(&"wall_jump_surface") and not panel.is_in_group(&"wall_run_surface"), "an active WALL_JUMP pad puts its panel in group wall_jump_surface only")
+	player.launch_along(Vector3(0.2, 0.2, -0.8), 6.0, false)
+	var touched: bool = await _wait_contact(tree, player, 40)
+	check.call(touched, "the player touches the wall-jump pad")
+	Input.action_press(&"jump")
+	var waited: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"WallJump", 6)
+	Input.action_release(&"jump")
+	check.call(waited >= 0, "a jump press in the air against a wall-jump pad enters WallJump (%d)" % waited)
+	var no_run: bool = not (await _ever_in(tree, player, &"WallRun", 10))
+	check.call(no_run, "a wall-jump pad never starts a wall-run")
+	await _free(tree, parts)
+
+	# A WALL_RUN pad without speed: a jump press is no wall-jump (the run needs the speed).
+	var run_parts: Array = await _setup(tree, 0, -2.0)
+	var slow: PlayerController = run_parts[3] as PlayerController
+	slow.teleport(Vector3(-2.0, 2.5, 1.4))
+	await Fixtures.wait_physics(tree, 2)
+	slow.launch_along(Vector3(0.2, 0.2, -0.8), 4.0, false)
+	touched = await _wait_contact(tree, slow, 40)
+	check.call(touched, "the slow player touches the wall-run pad")
+	Input.action_press(&"jump")
+	var kicked: bool = await _ever_in(tree, slow, &"WallJump", 8)
+	Input.action_release(&"jump")
+	check.call(not kicked, "a jump press against a wall-run pad without speed is no wall-jump")
+	await _free(tree, run_parts)
+
+	# A plain wall.
+	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)
+	var wall: StaticBody3D = Fixtures.spawn_box(tree.root, Vector3(12.0, 4.0, 0.5), Vector3(0.0, 2.0, 0.0))
+	var plain: PlayerController = Fixtures.spawn_player(tree.root, Vector3(-2.0, 2.0, START_Z))
+	await Fixtures.wait_physics(tree, 3)
+	plain.launch_along(Vector3(0.2, 0.2, -0.8), 6.0, false)
+	touched = await _wait_contact(tree, plain, 40)
+	check.call(touched, "the player touches the plain wall")
+	Input.action_press(&"jump")
+	kicked = await _ever_in(tree, plain, &"WallJump", 8)
+	Input.action_release(&"jump")
+	check.call(not kicked, "a plain wall never starts a WallJump")
+	await _free(tree, [floor_body, wall, plain])
+
+
+func _scenario_lean(tree: SceneTree, check: Callable) -> void:
+	var parts: Array = await _setup(tree, 0, -7.0)
+	var player: PlayerController = parts[3] as PlayerController
+	var mannequin: Node3D = player.get_node("VisualRoot/Mannequin") as Node3D
+	_launch_at_pad(player, 10.0)
+	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"WallRun", 20)
+	await Fixtures.wait_physics(tree, 10)
+	var toward_wall: float = mannequin.global_basis.y.normalized().dot(-player.wall_normal)
+	check.call(toward_wall > 0.1, "during WallRun the body tilts toward the wall (up dot -normal = %.3f)" % toward_wall)
+	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name != &"WallRun", 80)
+	await Fixtures.wait_physics(tree, 18)
+	var upright: float = mannequin.global_basis.y.normalized().dot(-player.wall_normal)
+	check.call(absf(upright) < 0.02, "0.3 s after the run the body is upright again (%.3f)" % upright)
+	await _free(tree, parts)
