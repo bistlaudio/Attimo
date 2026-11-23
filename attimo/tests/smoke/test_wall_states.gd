@@ -71,6 +71,8 @@ func _scenario_run_basics(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = parts[3] as PlayerController
 	var panel: Node = pad.get_node("Panel")
 	check.call(panel.is_in_group(&"wall_run_surface") and not panel.is_in_group(&"wall_jump_surface"), "an active WALL_RUN pad puts its panel in group wall_run_surface only")
+	pad.reset()
+	check.call(pad.signal_on and panel.is_in_group(&"wall_run_surface"), "reset() keeps a pad on while its source is on (WR-05)")
 	_launch_at_pad(player, 10.0)
 	var waited: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"WallRun", 20)
 	check.call(waited >= 0, "a 10 m/s approach at an active wall-run pad enters WallRun within 20 ticks (%d)" % waited)

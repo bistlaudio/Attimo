@@ -39,6 +39,8 @@ func _on_signal(_on: bool) -> void:
 	pass
 
 
-## Virtual: back to the load state.
+## Virtual: back to the load state. The signal is re-read from the source without firing _on_signal (WR-05): an always-on driver
+## does not emit again on its own reset, so clearing signal_on alone would leave the mechanism dead. A source that resets later
+## still corrects the value through active_changed. Subclasses rebuild their look from signal_on after super.reset().
 func reset() -> void:
-	signal_on = false
+	signal_on = source.is_active if source != null else false

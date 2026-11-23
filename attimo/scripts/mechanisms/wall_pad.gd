@@ -27,7 +27,7 @@ func surface_group() -> StringName:
 
 func reset() -> void:
 	super.reset()
-	_apply(false)
+	_apply(signal_on)
 
 
 func _on_signal(on: bool) -> void:
