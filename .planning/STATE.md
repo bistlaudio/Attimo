@@ -1,20 +1,17 @@
 ---
-gsd_state_version: "1.0"
+gsd_state_version: 1.0
 milestone: v0.11.0.4
-current_phase: "04.1"
-current_phase_name: Mechanism Kit Extension & HUD Polish
+milestone_name: milestone
 status: executing
 stopped_at: Completed 04.1-01-PLAN.md
-last_updated: "2026-11-23T12:13:09.143Z"
+last_updated: "2026-11-23T12:53:01.001Z"
 last_activity: 2026-11-23
-last_activity_desc: Phase 04.1 execution started
-state_head: bd3761f6a300dce93ce87a40def182398f650e04
 progress:
   total_phases: 16
   completed_phases: 4
   total_plans: 41
-  completed_plans: 37
-milestone_name: milestone
+  completed_plans: 38
+  percent: 25
 ---
 
 # Project State
@@ -24,16 +21,16 @@ milestone_name: milestone
 See: .planning/PROJECT.md (updated 2026-11-02)
 
 **Core value:** Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprint, Sprung und Dash fühlen sich smooth an, und die Hand verbindet sich nahtlos damit.
-**Current focus:** Phase 04.1 — Mechanism Kit Extension & HUD Polish
+**Current focus:** Phase 04.1 — mechanism-kit-extension-hud-polish
 
 ## Current Position
 
-Phase: 04.1 (Mechanism Kit Extension & HUD Polish) — EXECUTING
+Phase: 04.1 (mechanism-kit-extension-hud-polish) — EXECUTING
 Plan: 2 of 5
 Status: Ready to execute
-Last activity: 2026-11-23 — Phase 04.1 execution started
+Last activity: 2026-11-23
 
-Progress: [██████████] 100%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
@@ -191,6 +188,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-23T12:13:08.867Z
+Last session: 2026-11-23T12:53:00.990Z
 Stopped at: Completed 04.1-01-PLAN.md
 Resume file: None

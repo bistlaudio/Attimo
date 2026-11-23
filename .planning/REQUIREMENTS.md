@@ -29,7 +29,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [x] **MOVE-09**: Player animations follow movement state, built from the KayKit Rig_Medium kit plus a few retargeted Mixamo/UAL clips (DEV-04, see docs/ANIMATION-MAP.md) (clips, cuts, blends, playback speed, procedural root/visual rotation and scale): idle, run (Running_A), jump (Jump_Start → Jump_Idle → Jump_Land), the Jump 3 pirouette (one turn about the vertical axis, not started while aiming, DEV-03; Jump_Start re-cut + procedural rotation), ground/air dash (Dodge_Forward, held pose in air), aim-mode strafe (Running_Strafe_L/R, Walking_Backwards)
 - [x] **MOVE-11**: Movement verbs are limited to what the animation kit supports; a new verb needs a kit clip or a clip composition before it is added
 - [x] **MOVE-10**: Movement values live in a tunable resource and are documented in a movement-metrics table (jump height/distance, dash distance)
-- [ ] **MOVE-12**: Player can wall-run along glowing wall-run pads and kick off wall-run or wall-jump pads with a wall-jump (pads only, D-09); shown as the run clip plus a roll lean (MOVE-11 composition)
+- [x] **MOVE-12**: Player can wall-run along glowing wall-run pads and kick off wall-run or wall-jump pads with a wall-jump (pads only, D-09); shown as the run clip plus a roll lean (MOVE-11 composition)
 
 ### Camera & Aim
 
@@ -183,7 +183,7 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | MOVE-09 | Phase 3 | Complete |
 | MOVE-10 | Phase 2 | Complete |
 | MOVE-11 | Phase 3 | Complete |
-| MOVE-12 | Phase 04.1 | Pending |
+| MOVE-12 | Phase 04.1 | Complete |
 | CAM-01 | Phase 2 | Pending (144 Hz judder check not verified; accepted override, see 02-VERIFICATION.md) |
 | CAM-02 | Phase 3 | Complete |
 | CAM-03 | Phase 2 | Complete |
