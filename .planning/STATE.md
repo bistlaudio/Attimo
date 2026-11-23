@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.11.0.4
 milestone_name: milestone
-status: executing
+status: verifying
 stopped_at: Completed 04-03-PLAN.md
-last_updated: "2026-11-22T23:57:01.056Z"
-last_activity: 2026-11-22
+last_updated: "2026-11-23T05:08:16.233Z"
+last_activity: 2026-11-23
 progress:
   total_phases: 15
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 36
-  completed_plans: 35
-  percent: 20
+  completed_plans: 36
+  percent: 27
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 
 Phase: 04 (fernausl-ser-mechanism-kit) — EXECUTING
 Plan: 5 of 5
-Status: Ready to execute
-Last activity: 2026-11-22
+Status: Phase complete — ready for verification
+Last activity: 2026-11-23
 
-Progress: [██████████] 97%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -86,6 +86,7 @@ Progress: [██████████] 97%
 | Phase 04 P04-02 | 90min | 3 tasks | 20 files |
 | Phase 04 P03 | 35min | 3 tasks | 22 files |
 | Phase 04 P04-04 | 150min | - tasks | - files |
+| Phase 04 P05 | n/a | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -143,6 +144,7 @@ Recent decisions that affect current work:
 - [Phase ?]: 04-03: Array[SignalSource] exports survive pack when typed at the set site; Valve wheel turns forward per toggle; Crank wind/decay exclusive per tick
 - [Phase ?]: 04-04: rotating-platform carry is a reference-frame attach (rider re-placed at the same local point each tick, engine carry off, platform ticks after the player); the plan's velocity based primary and fallback failed the spike gate
 - [Phase ?]: 04-04: room 2 extended to x 43..115 for the moving stations; puzzle rooms (04-05) start behind x 115
+- [Phase ?]: 04-05: Puzzle rooms start after x 115, 24 m wide; FallReset reset_root sweeps mechanism nodes; SignalSource start_active
 
 ### Pending Todos
 
@@ -178,6 +180,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-22T23:57:01.045Z
+Last session: 2026-11-23T05:08:16.221Z
 Stopped at: Completed 04-03-PLAN.md
 Resume file: None

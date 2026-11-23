@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation & Prototype Character** - Pinned Godot project, conventions, repo hygiene, Mannequin_Medium animating in a Prototype Bits test scene, and the gameplay fact bus (completed 2026-11-04)
 - [x] **Phase 2: Movement Core & Follow Camera** - Run, variable jump with a Jump 1-2-3 chain, ground and air dash, the dash-hop long jump, platforms, and a jitter-free mouse-look camera, signed off without juice (completed 2026-11-06)
 - [x] **Phase 3: Animated Mannequin & Aim Mode** - The Mannequin animates with every movement state from kit clips, plus aim mode with crosshair (completed 2026-11-20)
-- [ ] **Phase 4: Fernauslöser & Mechanism Kit** - Hand module framework, turquoise highlight with aim assist, Module 1 remote-trigger pulse, and the greybox D-15/D-16 mechanism kit (levers, valves, energy cores, cranks, gear gates, rotating and lift platforms, conveyors, steam nozzles, pendulums) with AND, OR and timer logic
+- [x] **Phase 4: Fernauslöser & Mechanism Kit** - Hand module framework, turquoise highlight with aim assist, Module 1 remote-trigger pulse, and the greybox D-15/D-16 mechanism kit (levers, valves, energy cores, cranks, gear gates, rotating and lift platforms, conveyors, steam nozzles, pendulums) with AND, OR and timer logic (completed 2026-11-23)
 - [ ] **Phase 5: Pull/Push & Module Unlocks** - Module 2 with a momentum test room, module pickup, hand poses from kit clips, and a teaching room per module
 - [ ] **Phase 6: Shooting, Enemies & Recovery** - Pulse shooting at reactive Prototype Bits objects, 1-2 greybox enemy types, player health, checkpoints and near-instant respawn
 - [ ] **Phase 7: Level Blockout & Game Flow** - The full Prototype Bits level with ability gating and reset paths, plus title, pause and settings menus
@@ -183,7 +183,7 @@ Plans:
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
-- [ ] 04-05-PLAN.md — Three puzzle rooms with coverage and scripted solve test, pulse wording in REQUIREMENTS/ROADMAP, end-of-phase feel check (wave 5)
+- [x] 04-05-PLAN.md — Three puzzle rooms with coverage and scripted solve test, pulse wording in REQUIREMENTS/ROADMAP, end-of-phase feel check (wave 5)
 
 **UI hint**: yes
 **Notes**: The exact Fernauslöser design is confirmed at the start of the phase. Gears, valves, conveyors and gates are stand-ins built from Prototype Bits primitives. Pulse VFX (flash, sparks, impact ring) come in Phase 12.
@@ -391,7 +391,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 (en
 | 1. Foundation & Prototype Character | 7/7 | Complete    | 2026-11-04 |
 | 2. Movement Core & Follow Camera | 14/14 | Complete    | 2026-11-06 |
 | 3. Animated Mannequin & Aim Mode | 10/10 | Complete    | 2026-11-20 |
-| 4. Fernauslöser & Mechanism Kit | 4/5 | In Progress|  |
+| 4. Fernauslöser & Mechanism Kit | 5/5 | Complete   | 2026-11-23 |
 | 5. Pull/Push & Module Unlocks | 0/TBD | Not started | - |
 | 6. Shooting, Enemies & Recovery | 0/TBD | Not started | - |
 | 7. Level Blockout & Game Flow | 0/TBD | Not started | - |
