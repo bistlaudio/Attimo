@@ -106,6 +106,9 @@ enum InputDevice { KEYBOARD_MOUSE, JOYPAD }
 ## Metres the camera arm moves to the right shoulder at full aim weight, along Pitch-local X (D-13). There is one
 ## fixed shoulder: no swap.
 @export_range(0.0, 1.5, 0.05) var aim_shoulder_offset: float = 0.6
+## DEBUG: permanent over-the-shoulder offset outside aim (Pitch-local, x right, y up), so the crosshair is not behind the
+## character. Aim blends x from here to aim_shoulder_offset. Set to zero for the centered framing (D-14).
+@export var base_shoulder_offset: Vector3 = Vector3(0.6, 0.35, 0.0)
 ## Seconds a full aim blend takes, in and out (D-14). The 0.01 minimum keeps the blend rate finite.
 @export_range(0.01, 1.0, 0.01) var aim_blend_time: float = 0.18
 ## Factor on the look sensitivity while aiming, scaled in with the aim weight (D-15).
@@ -272,7 +275,7 @@ func _process(delta: float) -> void:
 	pitch_node.rotation.x = pitch
 	_update_aim(delta)
 	_max_arm_length = lerpf(_max_arm_length, zoom_distance, 1.0 - exp(-zoom_rate * delta))
-	spring_arm.position = _offset_total()
+	spring_arm.position = base_shoulder_offset + _offset_total()
 	camera.fov = get_fov_total()
 	_update_arm(delta)
 
@@ -289,7 +292,7 @@ func _update_aim(delta: float) -> void:
 	aim_weight = smoothstep(0.0, 1.0, _aim_linear)
 	if aim_weight > 0.0:
 		set_fov_offset(&"aim", -aim_fov_delta * aim_weight)
-		set_offset(&"aim", Vector3(aim_shoulder_offset * aim_weight, 0.0, 0.0))
+		set_offset(&"aim", Vector3(maxf(aim_shoulder_offset - base_shoulder_offset.x, 0.0) * aim_weight, 0.0, 0.0))
 		_aim_sources_written = true
 	elif _aim_sources_written:
 		clear_fov_offset(&"aim")

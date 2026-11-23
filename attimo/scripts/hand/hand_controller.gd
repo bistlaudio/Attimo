@@ -33,6 +33,8 @@ signal module_changed(def: HandModuleDef)
 @export_range(0.5, 5.0, 0.1) var hand_near_range: float = 2.2
 ## Seconds the arm stays out after a pulse (presentation only).
 @export_range(0.0, 1.0, 0.05) var hand_shot_arm_time: float = 0.25
+## DEBUG: use_hand fires without aim (bypasses D-02). Turn off before verification, the D-02 smoke tests expect it off.
+@export var debug_fire_without_aim: bool = true
 
 var active_def: HandModuleDef = null
 var active_module: HandModule = null
@@ -130,7 +132,7 @@ func _physics_process(delta: float) -> void:
 	_tick_near(delta)
 	_shot_arm_left = maxf(_shot_arm_left - delta, 0.0)
 	arm_out = near_target != null or _shot_arm_left > 0.0 or _player.aiming
-	if not _player.aiming:
+	if not _player.aiming and not debug_fire_without_aim:
 		# D-02: nothing fires without aim, and releasing aim mid-charge cancels the shot.
 		_reset_charge()
 		return
