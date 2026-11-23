@@ -289,6 +289,7 @@ func _check_mechanism_rooms(gym: Node, check: Callable) -> void:
 	check.call(gym.find_child("WallEast_0", true, false) == null, "WallEast_0 is absent (the door cell)")
 	_check_showcase_stations(zone, check)
 	_check_moving_stations(zone, check)
+	_check_field_stations(zone, check)
 
 
 ## Room 2 holds a station per trigger and logic node (D-27), and every wired node has its sources (T-04-08).
@@ -348,3 +349,36 @@ func _check_moving_stations(zone: Node, check: Callable) -> void:
 	check.call(modes.size() == 4, "room 2 has a Dampfduese in all four modes (%d)" % modes.size())
 	check.call(pendulums >= 1, "room 2 has a Pendel (%d)" % pendulums)
 	check.call(unwired == 0, "every moving mechanism in Zone_MechanismRooms has a source (%d unwired)" % unwired)
+
+
+## Phase 04.1 stations (MECH-04, MECH-05, MOVE-12): the new mechanisms each have a station with a source in room 2.
+func _check_field_stations(zone: Node, check: Callable) -> void:
+	var field_modes: Dictionary = {}
+	var pad_modes: Dictionary = {}
+	var kinds: Dictionary = {"WindTunnel": 0, "LowGravityZone": 0, "SlingshotCore": 0, "PneumaticTube": 0, "BouncePad": 0, "BoostRing": 0, "CrumblingPlatform": 0, "PistonWall": 0, "Geyser": 0, "Paternoster": 0}
+	var unwired: int = 0
+	var plate_gates: int = 0
+	var plates: Array[Node] = []
+	for child: Node in zone.get_children():
+		if child is PressurePlate:
+			plates.append(child)
+		if child is GearGate and plates.has((child as GearGate).source):
+			plate_gates += 1
+		if not child is Mechanism:
+			continue
+		var mechanism: Mechanism = child as Mechanism
+		if mechanism.source == null:
+			unwired += 1
+		if child is ForceField:
+			field_modes[(child as ForceField).mode] = true
+		elif child is WallPad:
+			pad_modes[(child as WallPad).mode] = true
+		for kind: String in kinds:
+			if str(child.get_script().get_global_name()) == kind:
+				kinds[kind] += 1
+	check.call(field_modes.size() == 2, "room 2 has a ForceField in both modes (%d)" % field_modes.size())
+	check.call(pad_modes.size() == 2, "room 2 has a WallPad in both modes (%d)" % pad_modes.size())
+	for kind: String in kinds:
+		check.call(int(kinds[kind]) >= 1, "room 2 has a %s station (%d)" % [kind, int(kinds[kind])])
+	check.call(plate_gates >= 1, "room 2 has a PressurePlate that drives a gate (%d)" % plate_gates)
+	check.call(unwired == 0, "every new mechanism in Zone_MechanismRooms has a source (%d unwired)" % unwired)

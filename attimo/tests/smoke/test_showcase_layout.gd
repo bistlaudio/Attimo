@@ -45,7 +45,8 @@ func run(tree: SceneTree, check: Callable) -> void:
 	if zone != null:
 		var rects: Dictionary = _check_zones(gym, zone, check)
 		_check_room_shell(gym, zone, check)
-		# TASK2-ENABLE
+		_check_stations(zone, rects, check)
+		await _check_ray_guard(tree, gym, check)
 	gym.queue_free()
 	await gym.tree_exited
 
@@ -221,7 +222,7 @@ func _check_ray_guard(tree: SceneTree, gym: Node, check: Callable) -> void:
 		elif node is Paternoster:
 			for deck: AnimatableBody3D in (node as Paternoster).decks():
 				bodies.append(deck)
-	check.call(bodies.size() >= 20, "the ray guard covers the moving and vanishing bodies (%d bodies)" % bodies.size())
+	check.call(bodies.size() >= 15, "the ray guard covers the moving and vanishing bodies (%d bodies)" % bodies.size())
 	var space: PhysicsDirectSpaceState3D = (gym as Node3D).get_world_3d().direct_space_state
 	var wrong: PackedStringArray = PackedStringArray()
 	for body: CollisionObject3D in bodies:

@@ -25,15 +25,22 @@ const CONVEYOR_SCENE: String = "res://scenes/mechanisms/conveyor.tscn"
 const NOZZLE_SCENE: String = "res://scenes/mechanisms/steam_nozzle.tscn"
 const PENDULUM_SCENE: String = "res://scenes/mechanisms/pendulum.tscn"
 const LOW_GRAVITY_SCENE: String = "res://scenes/mechanisms/low_gravity_zone.tscn"
+const PLATE_SCENE: String = "res://scenes/mechanisms/pressure_plate.tscn"
+const GEYSER_SCENE: String = "res://scenes/mechanisms/geyser.tscn"
+const PISTON_SCENE: String = "res://scenes/mechanisms/piston_wall.tscn"
+const WALL_PAD_SCENE: String = "res://scenes/mechanisms/wall_pad.tscn"
+const FIELD_SCENE: String = "res://scenes/mechanisms/force_field.tscn"
+const SLINGSHOT_SCENE: String = "res://scenes/mechanisms/slingshot_core.tscn"
+const TUBE_SCENE: String = "res://scenes/mechanisms/pneumatic_tube.tscn"
+const WIND_SCENE: String = "res://scenes/mechanisms/wind_tunnel.tscn"
+const CRUMBLING_SCENE: String = "res://scenes/mechanisms/crumbling_platform.tscn"
+const PATERNOSTER_SCENE: String = "res://scenes/mechanisms/paternoster.tscn"
+const BOOST_SCENE: String = "res://scenes/mechanisms/boost_ring.tscn"
+const BOUNCE_SCENE: String = "res://scenes/mechanisms/bounce_pad.tscn"
 ## Height of the raised moving stations (Dreh-Plattform, Hub-Plattform, Pendel walkway): their bodies are 0.5 m thick, so the
 ## deck stays clear of the floor tiles and the rider really stands on the moving body. No moving body's top face may be coplanar
 ## with a floor tile (the engine would pick the tile as the supporting body); belts carry a 0.05 m lip above their node origin.
 const RAISED: float = 1.0
-## Showcase rows: the north row stands at z -12, the south row at z 12; the stations are 10 m apart on x.
-const STATION_X: Array[float] = [48.0, 58.0, 68.0]
-const STATION_Z: float = 12.0
-## Distance of a station's gate from its trigger, towards the room centre.
-const GATE_DISTANCE: float = 4.0
 const WALL_X: float = 42.5
 const ROOM_X_MIN: float = 43.0
 ## Room 2 was x 43..75 (04-03) and grew to x 115 in 04-04 for the moving stations; the puzzle rooms start behind it.
@@ -99,26 +106,135 @@ func _build_puzzle_rooms(zone: Node3D, builder: RefCounted) -> void:
 	worker.call(&"build_into", zone, builder)
 
 
-## Showcase stations along the room walls (04-03: triggers and logic; 04-04 and 04-05 add the moving mechanisms).
-## North row (z -12): Handrad-Ventil x 48, Energiekern x 58 (on a 4 m pillar), Uhrwerk-Kurbel x 68.
-## South row (z 12): UND x 48, ODER x 58, Timer x 68. Every gate stands 4 m towards the room centre.
-## Free slots for plan 04-04 and later: (73, 0, -12) and (73, 0, 12) at the east wall, and the centre area
-## x 52..64, z -4..4. Keep stations at least 6 m apart so the aim assist never mixes up neighbours.
+## Showcase stations (D-03, D-04): 33 stations on the slot grid, one row of STATIONS each, grouped by zone. Every station node is a
+## DIRECT child of the zone under its tag name (the gym tests iterate the direct children); its geometry props (pillars, steps,
+## walkways) go into ZoneDecor. Every sign has two lines: Label_<tag> and Label_<tag>_Expect ("Erwartet: ...").
+## kinds: valve, core, crank, plate (self-triggered, with a gate), and / or / timer (logic, with a gate), mover (own lever at `lever`
+## from the station point), driven (always-on Driver<tag> SignalSource, sign at the lever position).
+## Row keys: tag, zone, slots (one slot, or two for a half block: the midpoint), kind, scene, text, expect, and optional y (node
+## height), yaw / pitch (degrees), offset (node offset from the station point), lever (lever offset), sign_h, gate (gate offset),
+## props (properties set on the mechanism).
+const STATIONS: Array[Dictionary] = [
+	# Trigger
+	{"tag": "Valve", "zone": "Trigger", "slots": [Vector2i(0, 2)], "kind": "valve", "scene": VALVE_SCENE, "text": "Handrad-Ventil (großer Puls)", "expect": "Erwartet: Großer Puls dreht das Rad, das Tor öffnet"},
+	{"tag": "EnergyCore", "zone": "Trigger", "slots": [Vector2i(1, 2)], "kind": "core", "scene": CORE_SCENE, "text": "Energiekern (Zeit)", "expect": "Erwartet: Puls lädt den Kern, das Tor ist kurz offen", "sign_h": 6.6},
+	{"tag": "Crank", "zone": "Trigger", "slots": [Vector2i(0, 3)], "kind": "crank", "scene": CRANK_SCENE, "text": "Uhrwerk-Kurbel (E halten)", "expect": "Erwartet: E halten öffnet das Tor, loslassen schließt es"},
+	{"tag": "PressurePlate", "zone": "Trigger", "slots": [Vector2i(1, 3)], "kind": "plate", "scene": PLATE_SCENE, "text": "Druckplatte", "expect": "Erwartet: Tor offen, solange du draufstehst"},
+	# Logik
+	{"tag": "LogicAnd", "zone": "Logik", "slots": [Vector2i(2, 2)], "kind": "and", "scene": AND_SCENE, "text": "UND: beide Hebel", "expect": "Erwartet: Tor nur offen, wenn beide Hebel an sind", "gate": Vector3(0.0, 0.0, 4.0)},
+	{"tag": "LogicOr", "zone": "Logik", "slots": [Vector2i(3, 2)], "kind": "or", "scene": OR_SCENE, "text": "ODER: ein Hebel", "expect": "Erwartet: Ein Hebel reicht, das Tor öffnet", "gate": Vector3(0.0, 0.0, 4.0)},
+	{"tag": "LogicTimer", "zone": "Logik", "slots": [Vector2i(2, 3)], "kind": "timer", "scene": TIMER_SCENE, "text": "Timer (4 s)", "expect": "Erwartet: Tor bleibt 4 s offen, dann geht es zu"},
+	# Dampf
+	{"tag": "NozzleCannon", "zone": "Dampf", "slots": [Vector2i(4, 1)], "kind": "mover", "scene": NOZZLE_SCENE, "text": "Dampfdüse: Kanone", "expect": "Erwartet: Wirft dich schräg in Düsenrichtung", "yaw": -90.0, "pitch": 45.0, "lever": Vector3(0.0, 0.0, 2.5), "props": {"mode": SteamNozzle.Mode.CANNON}},
+	{"tag": "NozzleJump", "zone": "Dampf", "slots": [Vector2i(4, 2)], "kind": "mover", "scene": NOZZLE_SCENE, "text": "Dampfdüse: Sprung", "expect": "Erwartet: Reinlaufen schleudert dich senkrecht hoch", "lever": Vector3(-2.5, 0.0, 0.0), "props": {"mode": SteamNozzle.Mode.JUMP}},
+	{"tag": "NozzleUpdraft", "zone": "Dampf", "slots": [Vector2i(5, 2)], "kind": "mover", "scene": NOZZLE_SCENE, "text": "Dampfdüse: Aufwind", "expect": "Erwartet: Im Strahl schwebst du langsam nach oben", "lever": Vector3(-2.5, 0.0, 0.0), "props": {"mode": SteamNozzle.Mode.UPDRAFT}},
+	{"tag": "Geyser", "zone": "Dampf", "slots": [Vector2i(4, 3)], "kind": "driven", "scene": GEYSER_SCENE, "text": "Druckventil-Geysir", "expect": "Erwartet: Anzeige füllt sich, dann schießt Dampf dich hoch"},
+	{"tag": "NozzleWall", "zone": "Dampf", "slots": [Vector2i(5, 3)], "kind": "mover", "scene": NOZZLE_SCENE, "text": "Dampfdüse: Wand", "expect": "Erwartet: Der Strahl drückt dich zurück", "yaw": 90.0, "lever": Vector3(0.0, 0.0, -2.5), "props": {"mode": SteamNozzle.Mode.WALL}},
+	# Gefahren
+	{"tag": "Pendulum", "zone": "Gefahren", "slots": [Vector2i(4, 0)], "kind": "mover", "scene": PENDULUM_SCENE, "text": "Pendel: Knockback", "expect": "Erwartet: Treffer stößt dich weg, kein Schaden", "y": RAISED, "lever": Vector3(2.5, 0.0, 4.0), "sign_h": 7.5},
+	{"tag": "PistonWall", "zone": "Gefahren", "slots": [Vector2i(5, 0)], "kind": "driven", "scene": PISTON_SCENE, "text": "Kolbenwand", "expect": "Erwartet: Kolben schlägt aus und stößt dich weg", "yaw": 180.0},
+	# Wand
+	{"tag": "WallRun", "zone": "Wand", "slots": [Vector2i(0, 0), Vector2i(1, 0)], "kind": "driven", "scene": WALL_PAD_SCENE, "text": "Wandlauf-Platte", "expect": "Erwartet: Schnell anlaufen und an der Platte entlang laufen", "offset": Vector3(3.0, 0.0, -3.0), "props": {"mode": WallPad.Mode.WALL_RUN}},
+	{"tag": "WallJump", "zone": "Wand", "slots": [Vector2i(0, 1), Vector2i(1, 1)], "kind": "driven", "scene": WALL_PAD_SCENE, "text": "Wandsprung-Platte", "expect": "Erwartet: In der Luft an die Platte, Sprung stößt dich ab", "offset": Vector3(0.0, 0.0, -2.0), "props": {"mode": WallPad.Mode.WALL_JUMP}},
+	# Felder
+	{"tag": "Repulsor", "zone": "Felder", "slots": [Vector2i(2, 0)], "kind": "mover", "scene": FIELD_SCENE, "text": "Abstoßfeld", "expect": "Erwartet: Das Feld drückt dich vom Kern weg", "y": 3.0, "lever": Vector3(-4.0, 0.0, 4.0), "props": {"mode": ForceField.Mode.REPEL}},
+	{"tag": "Attractor", "zone": "Felder", "slots": [Vector2i(3, 0)], "kind": "mover", "scene": FIELD_SCENE, "text": "Anziehungsfeld", "expect": "Erwartet: Das Feld zieht dich zum Kern", "y": 4.0, "lever": Vector3(-4.0, 0.0, 4.0), "props": {"mode": ForceField.Mode.ATTRACT}},
+	{"tag": "Slingshot", "zone": "Felder", "slots": [Vector2i(2, 1)], "kind": "driven", "scene": SLINGSHOT_SCENE, "text": "Schleuderkern", "expect": "Erwartet: Rein von links oben, raus nach rechts unten", "y": 3.0},
+	{"tag": "Tube", "zone": "Felder", "slots": [Vector2i(3, 1)], "kind": "driven", "scene": TUBE_SCENE, "text": "Rohrpost", "expect": "Erwartet: Rein ins Rohr, am Ende schießt es dich raus", "yaw": -90.0, "offset": Vector3(-8.0, 0.0, 0.0), "props": {"exit_speed": 6.0}},
+	# Umwelt
+	{"tag": "WindTunnel", "zone": "Umwelt", "slots": [Vector2i(6, 0), Vector2i(7, 0)], "kind": "mover", "scene": WIND_SCENE, "text": "Windkanal", "expect": "Erwartet: Rückenwind trägt dich weiter, der Hebel dreht den Wind", "yaw": -90.0, "lever": Vector3(-4.0, 0.0, 4.0)},
+	{"tag": "LowGravity", "zone": "Umwelt", "slots": [Vector2i(6, 1)], "kind": "mover", "scene": LOW_GRAVITY_SCENE, "text": "Schwerkraft-Zone", "expect": "Erwartet: Sprünge hoch, weit und langsam", "lever": Vector3(0.0, 0.0, 6.5), "sign_h": 3.2},
+	# Plattformen
+	{"tag": "RotatingLying", "zone": "Plattformen", "slots": [Vector2i(0, 4)], "kind": "mover", "scene": ROTATING_SCENE, "text": "Dreh-Plattform: liegend (Zahnrad)", "expect": "Erwartet: Dreht sich und trägt dich, ohne zu rutschen", "y": RAISED, "lever": Vector3(0.0, 0.0, 5.5), "sign_h": 4.5, "props": {"axis_mode": RotatingPlatform.AxisMode.LYING}},
+	{"tag": "RotatingStanding", "zone": "Plattformen", "slots": [Vector2i(1, 4)], "kind": "mover", "scene": ROTATING_SCENE, "text": "Dreh-Plattform: stehend (Uhrzeiger)", "expect": "Erwartet: Schwingt hin und her, du bleibst drauf", "y": RAISED, "lever": Vector3(2.5, 0.0, 4.0), "sign_h": 4.5, "props": {"axis_mode": RotatingPlatform.AxisMode.STANDING}},
+	{"tag": "RotatingTilting", "zone": "Plattformen", "slots": [Vector2i(2, 4)], "kind": "mover", "scene": ROTATING_SCENE, "text": "Dreh-Plattform: kippend", "expect": "Erwartet: Kippt, und du rutschst nicht ab", "y": RAISED, "lever": Vector3(0.0, 0.0, 5.5), "sign_h": 4.5, "props": {"axis_mode": RotatingPlatform.AxisMode.TILTING}},
+	{"tag": "Crumbling", "zone": "Plattformen", "slots": [Vector2i(3, 4)], "kind": "driven", "scene": CRUMBLING_SCENE, "text": "Bröckel-Plattform", "expect": "Erwartet: Wackelt, fällt runter, kommt nach 3 s zurück", "y": 2.0, "sign_h": 4.2},
+	{"tag": "LiftPiston", "zone": "Plattformen", "slots": [Vector2i(0, 5)], "kind": "mover", "scene": LIFT_SCENE, "text": "Hub-Plattform: Kolben", "expect": "Erwartet: Hebel an fährt hoch, Hebel aus fährt runter", "y": RAISED, "lever": Vector3(0.0, 0.0, 4.5), "sign_h": 7.0, "props": {"look": LiftPlatform.Look.PISTON}},
+	{"tag": "LiftChain", "zone": "Plattformen", "slots": [Vector2i(1, 5)], "kind": "mover", "scene": LIFT_SCENE, "text": "Hub-Plattform: Kette", "expect": "Erwartet: Hebel an fährt hoch, Hebel aus fährt runter", "y": RAISED, "lever": Vector3(0.0, 0.0, 4.5), "sign_h": 7.0, "props": {"look": LiftPlatform.Look.CHAIN}},
+	{"tag": "Paternoster", "zone": "Plattformen", "slots": [Vector2i(2, 5)], "kind": "mover", "scene": PATERNOSTER_SCENE, "text": "Paternoster", "expect": "Erwartet: Kabinen fahren im Kreis, auf- und abspringen", "y": RAISED, "lever": Vector3(-6.0, 0.0, 4.0)},
+	# Sprung & Tempo
+	{"tag": "BoostRing", "zone": "Tempo", "slots": [Vector2i(4, 4), Vector2i(5, 4)], "kind": "driven", "scene": BOOST_SCENE, "text": "Boost-Ring", "expect": "Erwartet: Durchfliegen gibt Tempo und lädt den Dash", "y": 2.5},
+	{"tag": "Bounce", "zone": "Tempo", "slots": [Vector2i(6, 4)], "kind": "driven", "scene": BOUNCE_SCENE, "text": "Sprungpolster", "expect": "Erwartet: Je tiefer du fällst, desto höher springst du"},
+	{"tag": "ConveyorRun", "zone": "Tempo", "slots": [Vector2i(4, 5), Vector2i(5, 5)], "kind": "mover", "scene": CONVEYOR_SCENE, "text": "Förderband: läuft solange an", "expect": "Erwartet: Das Band trägt dich, der Absprung behält den Schwung", "yaw": -90.0, "lever": Vector3(0.0, 0.0, 3.5), "props": {"behaviour": Mechanism.Behaviour.RUN_WHILE_ON}},
+	{"tag": "ConveyorReverse", "zone": "Tempo", "slots": [Vector2i(6, 5), Vector2i(7, 5)], "kind": "mover", "scene": CONVEYOR_SCENE, "text": "Förderband: Hebel kehrt um", "expect": "Erwartet: Läuft immer, der Hebel kehrt die Richtung um", "yaw": -90.0, "lever": Vector3(0.0, 0.0, 3.5), "props": {"behaviour": Mechanism.Behaviour.REVERSE_ON_SIGNAL}},
+]
+## Default offset of a gate from its station point and of a lever (and sign) of a mover or driven station.
+const GATE_OFFSET: Vector3 = Vector3(4.0, 0.0, 0.0)
+const LEVER_OFFSET: Vector3 = Vector3(-4.0, 0.0, 4.0)
+
+
 func build_showcase_stations(zone: Node3D, builder: RefCounted) -> void:
-	_station_valve(zone, builder, Vector3(STATION_X[0], 0.0, -STATION_Z))
-	_station_core(zone, builder, Vector3(STATION_X[1], 0.0, -STATION_Z))
-	_station_crank(zone, builder, Vector3(STATION_X[2], 0.0, -STATION_Z))
-	_station_logic(zone, builder, Vector3(STATION_X[0], 0.0, STATION_Z), "And", AND_SCENE, "UND: beide Hebel")
-	_station_logic(zone, builder, Vector3(STATION_X[1], 0.0, STATION_Z), "Or", OR_SCENE, "ODER: ein Hebel")
-	_station_timer(zone, builder, Vector3(STATION_X[2], 0.0, STATION_Z))
-	_build_moving_stations(zone, builder)
+	var entries: Array = []
+	for row: Dictionary in STATIONS:
+		var at: Vector3 = _station_point(row)
+		_place_station(zone, builder, row, at)
+		_station_extras(zone, builder, String(row["tag"]), at)
+		entries.append({"tag": StringName(String(row["tag"])), "at": at, "zone": StringName(String(row["zone"]))})
+	zone.set_meta(&"stations", entries)
 
 
-## A gate GATE_DISTANCE towards the room centre from `at`, wired to `source`. Returns the gate.
-func _station_gate(zone: Node3D, builder: RefCounted, at: Vector3, tag: String, source: Node3D) -> Node3D:
-	var toward_centre: float = 1.0 if at.z < 0.0 else -1.0
-	var gate_position: Vector3 = Vector3(at.x, 0.0, at.z + toward_centre * GATE_DISTANCE)
-	var gate: Node3D = builder.call(&"_instance", zone, GATE_SCENE, "Gate_%s" % tag, gate_position) as Node3D
+## The station point: a slot, or the midpoint of two slots (half block).
+func _station_point(row: Dictionary) -> Vector3:
+	var slots: Array = row["slots"] as Array
+	var sum: Vector3 = Vector3.ZERO
+	for item: Variant in slots:
+		var cell: Vector2i = item as Vector2i
+		sum += slot(cell.x, cell.y)
+	return sum / float(slots.size())
+
+
+func _row_basis(row: Dictionary) -> Basis:
+	var yaw: float = deg_to_rad(float(row.get("yaw", 0.0)))
+	var pitch: float = deg_to_rad(float(row.get("pitch", 0.0)))
+	return Basis.from_euler(Vector3(pitch, yaw, 0.0))
+
+
+func _place_station(zone: Node3D, builder: RefCounted, row: Dictionary, at: Vector3) -> void:
+	var tag: String = String(row["tag"])
+	var scene: String = String(row["scene"])
+	var text: String = String(row["text"])
+	var expect: String = String(row["expect"])
+	var height: float = float(row.get("y", 0.0))
+	var node_at: Vector3 = at + (row.get("offset", Vector3.ZERO) as Vector3) + Vector3(0.0, height, 0.0)
+	var basis: Basis = _row_basis(row)
+	var props: Dictionary = row.get("props", {}) as Dictionary
+	var gate_offset: Vector3 = row.get("gate", GATE_OFFSET) as Vector3
+	match String(row["kind"]):
+		"valve", "crank", "plate":
+			var trigger: Node3D = builder.call(&"_instance", zone, scene, tag, node_at) as Node3D
+			_station_gate(zone, builder, at + gate_offset, tag, trigger)
+			_sign(zone, builder, tag, text, at, float(row.get("sign_h", 2.8)), expect)
+		"core":
+			builder.call(&"_instance", _props(zone), PILLAR_SCENE, "CorePillar", at)
+			var core: Node3D = builder.call(&"_instance", zone, scene, tag, Vector3(at.x, 4.0, at.z)) as Node3D
+			_station_gate(zone, builder, at + gate_offset, tag, core)
+			_sign(zone, builder, tag, text, at, float(row.get("sign_h", 2.8)), expect)
+		"and", "or":
+			_station_logic(zone, builder, row, at)
+		"timer":
+			var lever: Node3D = builder.call(&"_instance", zone, LEVER_SCENE, "Lever%s" % tag, at) as Node3D
+			var timer: Node3D = builder.call(&"_instance", zone, scene, tag, at) as Node3D
+			timer.set("source", lever)
+			timer.set("hold_time", 4.0)
+			_station_gate(zone, builder, at + gate_offset, tag, timer)
+			_sign(zone, builder, tag, text, at, 2.8, expect)
+		"mover":
+			var lever_at: Vector3 = at + (row.get("lever", LEVER_OFFSET) as Vector3)
+			_station_mover(zone, builder, tag, scene, node_at, basis, lever_at, props, text, float(row.get("sign_h", 3.2)), expect)
+		"driven":
+			_station_driven(zone, builder, tag, scene, node_at, basis, props, text, expect, float(row.get("sign_h", 3.2)), at + LEVER_OFFSET)
+		_:
+			builder.set(&"failure", "unknown station kind %s" % String(row["kind"]))
+
+
+## ZoneDecor: the group of zone decor and station props (steps, pillars, walkways).
+func _props(zone: Node3D) -> Node3D:
+	return zone.get_node("ZoneDecor") as Node3D
+
+
+## A gate at `gate_at`, wired to `source`, named Gate_<tag>. Returns the gate.
+func _station_gate(zone: Node3D, builder: RefCounted, gate_at: Vector3, tag: String, source: Node3D) -> Node3D:
+	var gate: Node3D = builder.call(&"_instance", zone, GATE_SCENE, "Gate_%s" % tag, Vector3(gate_at.x, 0.0, gate_at.z)) as Node3D
 	gate.set("source", source)
 	return gate
 
@@ -131,80 +247,68 @@ func _sign(zone: Node3D, builder: RefCounted, tag: String, text: String, at: Vec
 		builder.call(&"_label", zone, "Label_%s_Expect" % tag, expect, Vector3(at.x, height - 0.7, at.z), 40)
 
 
-func _station_valve(zone: Node3D, builder: RefCounted, at: Vector3) -> void:
-	var valve: Node3D = builder.call(&"_instance", zone, VALVE_SCENE, "Valve", at) as Node3D
-	_station_gate(zone, builder, at, "Valve", valve)
-	_sign(zone, builder, "Valve", "Handrad-Ventil (großer Puls)", at)
-
-
-func _station_core(zone: Node3D, builder: RefCounted, at: Vector3) -> void:
-	builder.call(&"_instance", zone, PILLAR_SCENE, "CorePillar", at)
-	var core: Node3D = builder.call(&"_instance", zone, CORE_SCENE, "EnergyCore", Vector3(at.x, 4.0, at.z)) as Node3D
-	_station_gate(zone, builder, at, "Core", core)
-	_sign(zone, builder, "Core", "Energiekern (Zeit)", at, 6.6)
-
-
-func _station_crank(zone: Node3D, builder: RefCounted, at: Vector3) -> void:
-	var crank: Node3D = builder.call(&"_instance", zone, CRANK_SCENE, "Crank", at) as Node3D
-	_station_gate(zone, builder, at, "Crank", crank)
-	_sign(zone, builder, "Crank", "Uhrwerk-Kurbel (E halten)", at)
-
-
-## Two levers feeding a LogicAnd or LogicOr node (`tag` "And" or "Or") that drives the gate.
-func _station_logic(zone: Node3D, builder: RefCounted, at: Vector3, tag: String, scene: String, text: String) -> void:
+## Two levers feeding a LogicAnd or LogicOr node (row kind and / or) that drives the gate.
+func _station_logic(zone: Node3D, builder: RefCounted, row: Dictionary, at: Vector3) -> void:
+	var tag: String = String(row["tag"])
 	var lever_a: Node3D = builder.call(&"_instance", zone, LEVER_SCENE, "Lever%sA" % tag, Vector3(at.x - 2.0, 0.0, at.z)) as Node3D
 	var lever_b: Node3D = builder.call(&"_instance", zone, LEVER_SCENE, "Lever%sB" % tag, Vector3(at.x + 2.0, 0.0, at.z)) as Node3D
-	var logic: Node3D = builder.call(&"_instance", zone, scene, "Logic%s" % tag, Vector3(at.x, 0.0, at.z)) as Node3D
+	var logic: Node3D = builder.call(&"_instance", zone, String(row["scene"]), tag, Vector3(at.x, 0.0, at.z)) as Node3D
 	var wired: Array[SignalSource] = [lever_a as SignalSource, lever_b as SignalSource]
 	logic.set("sources", wired)
-	_station_gate(zone, builder, at, tag, logic)
-	_sign(zone, builder, tag, text, at)
-
-
-func _station_timer(zone: Node3D, builder: RefCounted, at: Vector3) -> void:
-	var lever: Node3D = builder.call(&"_instance", zone, LEVER_SCENE, "LeverTimer", at) as Node3D
-	var timer: Node3D = builder.call(&"_instance", zone, TIMER_SCENE, "LogicTimer", Vector3(at.x, 0.0, at.z)) as Node3D
-	timer.set("source", lever)
-	timer.set("hold_time", 4.0)
-	_station_gate(zone, builder, at, "Timer", timer)
-	_sign(zone, builder, "Timer", "Timer (4 s)", at)
-
-
-## Moving mechanisms (04-04, D-27): one station per mechanism, rotating-platform axis, lift look, belt behaviour and nozzle
-## mode, each wired to its own lever. Stations are at least 6 m apart on the 1 m grid.
-## Old part: nozzles JUMP (58, 0), UPDRAFT (68, 0), CANNON (74, -12), WALL (74, 12).
-## Extension x 76..115: north row z -12 Dreh-Plattform LYING 80, STANDING 90, TILTING 100 and the Pendel bridge at 110;
-## centre row z 0 Hub-Plattform PISTON 80 and CHAIN 90; south row z 12 Foerderband RUN_WHILE_ON (84) and REVERSE_ON_SIGNAL (102).
-func _build_moving_stations(zone: Node3D, builder: RefCounted) -> void:
-	var yaw_east: Basis = Basis(Vector3.UP, -PI * 0.5)
-	var yaw_west: Basis = Basis(Vector3.UP, PI * 0.5)
-	_station_mover(zone, builder, "NozzleJump", NOZZLE_SCENE, Vector3(58.0, 0.0, 0.0), Basis.IDENTITY, Vector3(55.5, 0.0, 0.0), {"mode": SteamNozzle.Mode.JUMP}, "Dampfdüse: Sprung")
-	_station_mover(zone, builder, "NozzleUpdraft", NOZZLE_SCENE, Vector3(68.0, 0.0, 0.0), Basis.IDENTITY, Vector3(65.5, 0.0, 0.0), {"mode": SteamNozzle.Mode.UPDRAFT}, "Dampfdüse: Aufwind")
-	_station_mover(zone, builder, "NozzleCannon", NOZZLE_SCENE, Vector3(74.0, 0.0, -STATION_Z), Basis.from_euler(Vector3(PI * 0.25, -PI * 0.5, 0.0)), Vector3(74.0, 0.0, -9.5), {"mode": SteamNozzle.Mode.CANNON}, "Dampfdüse: Kanone")
-	_station_mover(zone, builder, "NozzleWall", NOZZLE_SCENE, Vector3(74.0, 0.0, STATION_Z), yaw_west, Vector3(74.0, 0.0, 9.5), {"mode": SteamNozzle.Mode.WALL}, "Dampfdüse: Wand")
-	_station_mover(zone, builder, "RotatingLying", ROTATING_SCENE, Vector3(80.0, RAISED, -STATION_Z), Basis.IDENTITY, Vector3(80.0, 0.0, -6.5), {"axis_mode": RotatingPlatform.AxisMode.LYING}, "Dreh-Plattform: liegend (Zahnrad)", 4.5)
-	_station_mover(zone, builder, "RotatingStanding", ROTATING_SCENE, Vector3(90.0, RAISED, -STATION_Z), Basis.IDENTITY, Vector3(92.5, 0.0, -8.0), {"axis_mode": RotatingPlatform.AxisMode.STANDING}, "Dreh-Plattform: stehend (Uhrzeiger)", 4.5)
-	_station_mover(zone, builder, "RotatingTilting", ROTATING_SCENE, Vector3(100.0, RAISED, -STATION_Z), Basis.IDENTITY, Vector3(100.0, 0.0, -6.5), {"axis_mode": RotatingPlatform.AxisMode.TILTING}, "Dreh-Plattform: kippend", 4.5)
-	_station_mover(zone, builder, "LiftPiston", LIFT_SCENE, Vector3(80.0, RAISED, 0.0), Basis.IDENTITY, Vector3(80.0, 0.0, 4.5), {"look": LiftPlatform.Look.PISTON}, "Hub-Plattform: Kolben", 7.0)
-	_station_mover(zone, builder, "LiftChain", LIFT_SCENE, Vector3(90.0, RAISED, 0.0), Basis.IDENTITY, Vector3(90.0, 0.0, 4.5), {"look": LiftPlatform.Look.CHAIN}, "Hub-Plattform: Kette", 7.0)
-	_station_mover(zone, builder, "ConveyorRun", CONVEYOR_SCENE, Vector3(84.0, 0.0, STATION_Z), yaw_east, Vector3(84.0, 0.0, 15.5), {"behaviour": Mechanism.Behaviour.RUN_WHILE_ON}, "Förderband: läuft solange an")
-	_station_mover(zone, builder, "ConveyorReverse", CONVEYOR_SCENE, Vector3(102.0, 0.0, STATION_Z), yaw_east, Vector3(102.0, 0.0, 15.5), {"behaviour": Mechanism.Behaviour.REVERSE_ON_SIGNAL}, "Förderband: Hebel kehrt um")
-	# The Pendel hangs over a narrow 2 m walkway (two beams, 1 m high); the bob swings across it just above the deck.
-	builder.call(&"_instance", zone, BEAM_SCENE, "PendulumWalkA", Vector3(110.0, 0.0, -14.0), builder.call(&"_yaw", 90.0))
-	builder.call(&"_instance", zone, BEAM_SCENE, "PendulumWalkB", Vector3(110.0, 0.0, -10.0), builder.call(&"_yaw", 90.0))
-	_station_mover(zone, builder, "Pendulum", PENDULUM_SCENE, Vector3(110.0, RAISED, -STATION_Z), Basis.IDENTITY, Vector3(112.5, 0.0, -8.0), {}, "Pendel: Knockback", 7.5)
-	# Tracer of 04.1 (MECH-04 K): a 10 x 12 x 10 m volume at (106, 0, 0), its lever 6.5 m south. Plan 04.1-05 moves it onto the slot grid.
-	_station_mover(zone, builder, "LowGravity", LOW_GRAVITY_SCENE, Vector3(106.0, 0.0, 0.0), Basis.IDENTITY, Vector3(106.0, 0.0, 6.5), {}, "Schwerkraft-Zone", 3.2, "Erwartet: Sprünge hoch, weit und langsam")
+	_station_gate(zone, builder, at + (row.get("gate", GATE_OFFSET) as Vector3), tag, logic)
+	_sign(zone, builder, tag, String(row["text"]), at, 2.8, String(row["expect"]))
 
 
 ## One moving mechanism wired to a fresh lever, with its sign. `props` are set on the mechanism before it is saved.
 func _station_mover(zone: Node3D, builder: RefCounted, tag: String, scene: String, at: Vector3, basis: Basis, lever_at: Vector3, props: Dictionary, text: String, sign_height: float = 3.2, expect: String = "") -> void:
-	var lever: Node3D = builder.call(&"_instance", zone, LEVER_SCENE, "Lever%s" % tag, lever_at) as Node3D
+	var lever: Node3D = builder.call(&"_instance", zone, LEVER_SCENE, "Lever%s" % tag, Vector3(lever_at.x, 0.0, lever_at.z)) as Node3D
 	var mechanism: Node3D = builder.call(&"_instance", zone, scene, tag, at, basis) as Node3D
 	mechanism.set("source", lever)
 	for key: Variant in props:
 		mechanism.set(String(key), props[key])
 	_sign(zone, builder, tag, text, Vector3(lever_at.x, 0.0, lever_at.z), sign_height, expect)
+
+
+## A self-running mechanism: an always-on Driver<tag> SignalSource is added BEFORE the mechanism (puzzle-room pattern), so it is
+## ready first and the mechanism finds an active source.
+func _station_driven(zone: Node3D, builder: RefCounted, tag: String, scene: String, at: Vector3, basis: Basis, props: Dictionary, text: String, expect: String, sign_height: float, sign_at: Vector3) -> void:
+	var driver: SignalSource = SignalSource.new()
+	driver.start_active = true
+	builder.call(&"_adopt", zone, driver, "Driver%s" % tag, Vector3(at.x, 0.0, at.z))
+	var mechanism: Node3D = builder.call(&"_instance", zone, scene, tag, at, basis) as Node3D
+	mechanism.set("source", driver)
+	for key: Variant in props:
+		mechanism.set(String(key), props[key])
+	_sign(zone, builder, tag, text, Vector3(sign_at.x, 0.0, sign_at.z), sign_height, expect)
+
+
+## Station-specific geometry and second parts, all inside the station's zone.
+func _station_extras(zone: Node3D, builder: RefCounted, tag: String, at: Vector3) -> void:
+	var props: Node3D = _props(zone)
+	var yaw_z: Basis = builder.call(&"_yaw", 90.0) as Basis
+	match tag:
+		"EnergyCore":
+			pass
+		"Pendulum":
+			# The Pendel hangs over a narrow 2 m walkway (two beams, 1 m high); the bob swings across it just above the deck.
+			builder.call(&"_instance", props, BEAM_SCENE, "PendulumWalkA", at + Vector3(0.0, 0.0, -2.0), yaw_z)
+			builder.call(&"_instance", props, BEAM_SCENE, "PendulumWalkB", at + Vector3(0.0, 0.0, 2.0), yaw_z)
+		"WallJump":
+			# Two WALL_JUMP pads face each other 4 m apart along z, so the player can kick from one to the other.
+			var second: Node3D = builder.call(&"_instance", zone, WALL_PAD_SCENE, "WallJump2", at + Vector3(0.0, 0.0, 2.0)) as Node3D
+			second.set("mode", WallPad.Mode.WALL_JUMP)
+			second.set("source", zone.get_node("DriverWallJump"))
+		"Crumbling":
+			# The deck is 2 m up: a 1 m beam step flush with its south edge makes it reachable with a normal jump.
+			builder.call(&"_instance", props, BEAM_SCENE, "CrumblingStep", at + Vector3(0.0, 0.0, 2.5))
+		"Bounce":
+			# A 4 m ledge west-to-east of stacked floor tiles (unit steps 1, 2, 3, 4 m) to drop onto the pad from.
+			var column: int = 0
+			for step: int in [4, 3, 2, 1]:
+				var x: float = at.x + 4.0 + 4.0 * column
+				for top: int in range(1, step + 1):
+					builder.call(&"_floor_tile", props, "BounceStep_%d_%d" % [column, top], x, float(top), at.z)
+				column += 1
 
 
 func _build_room_shell(zone: Node3D, builder: RefCounted) -> void:
