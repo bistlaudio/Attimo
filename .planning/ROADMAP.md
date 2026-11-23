@@ -259,7 +259,7 @@ Plans:
 
 **Plans**: TBD
 **UI hint**: yes
-**Notes**: The exact shooting and enemy designs are confirmed at the start of the phase. Here a hit shows only through the target's own reaction. Sparks, hit VFX and hit-stop (SHOOT-04) come in Phases 11-12.
+**Notes**: The exact shooting and enemy designs are confirmed at the start of the phase. Here a hit shows only through the target's own reaction. Sparks, hit VFX and hit-stop (SHOOT-04) come in Phases 11-12. Added 2026-11-23 (user request): a dash readout belongs in the HUD next to health (dash cooldown, air dash available, dash-hop long-jump combo stage). Open design question for discuss-phase 6: a real stamina resource that limits dashing, or only visualising the existing limits (charges and cooldown)? A draining resource may fight the core value of fast, fluid movement. Compare HUD pips or a bar with the arm-core emission as a diegetic indicator (GAME-FEEL.md: dim when spent, flash on refill).
 
 ### Phase 7: Level Blockout & Game Flow
 
