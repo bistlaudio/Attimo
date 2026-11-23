@@ -34,3 +34,13 @@ signal knocked_back(position: Vector3, impulse: Vector3)
 signal dash_refilled(position: Vector3)
 ## Emitted by PlayerController.boost_along (boost ring, bounce pad) with the speed along `direction` after the boost. Listeners: juice, audio.
 signal boosted(position: Vector3, direction: Vector3, speed: float)
+## Emitted by the WallRun state on enter (MOVE-12, phase 04.1). `normal` is the flat wall normal. Listeners: juice, audio.
+signal wall_run_started(position: Vector3, normal: Vector3)
+## Emitted by the WallRun state on exit, whatever the reason. Listeners: juice, audio.
+signal wall_run_ended(position: Vector3)
+## Emitted by the WallJump state on enter; `direction` is the flat kick direction away from the wall. Listeners: juice, audio.
+signal wall_jumped(position: Vector3, direction: Vector3)
+## Emitted by the Capture state on enter (slingshot core, pneumatic tube, phase 04.1). Listeners: juice, audio.
+signal capture_started(position: Vector3)
+## Emitted by the Capture state when it lets go. `velocity` is the exit velocity (zero after a stuck or time-out release). Listeners: juice, audio.
+signal capture_released(position: Vector3, velocity: Vector3)

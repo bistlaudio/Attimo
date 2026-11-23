@@ -93,6 +93,8 @@ Rules:
 | `mechanism` | now (Phase 4) | Every `SignalSource` and `Mechanism`; the reset sweep walks it |
 | `hand_controller` | now (Phase 4) | The `HandController` under the Player |
 | `carrying_platform` | now (Phase 4) | Rotating platforms with chord carry (plan 04-04) |
+| `wall_run_surface` | now (Phase 04.1) | The `Panel` body of an active `WallPad` in WALL_RUN mode; the player wall-runs on it (MOVE-12, D-09) |
+| `wall_jump_surface` | now (Phase 04.1) | The `Panel` body of an active `WallPad` in WALL_JUMP mode; a jump press against it is a wall-jump (D-09) |
 | `anchor` | reserved, Phase 5 | Hook and anchor points |
 | `enemy` | reserved, Phase 6 | Enemies |
 | `hazard` | reserved, Phase 6 | Kill zones and damage volumes |
@@ -159,6 +161,11 @@ Exception: placeholder hit puffs in `scripts/debug` + `scenes/debug/hit_puff.tsc
 | `knocked_back` | `position: Vector3, impulse: Vector3` | Hazards and mechanisms that push the player back (plan 04-04) |
 | `dash_refilled` | `position: Vector3` | `PlayerController.refill_air_dash` when a mechanism gave the air dash back (boost ring, phase 04.1) |
 | `boosted` | `position: Vector3, direction: Vector3, speed: float` | `PlayerController.boost_along` after a boost; `speed` is the speed along `direction` afterwards (boost ring, bounce pad, phase 04.1) |
+| `wall_run_started` | `position: Vector3, normal: Vector3` | `WallRun` state on enter (MOVE-12, phase 04.1); `normal` is the flat wall normal |
+| `wall_run_ended` | `position: Vector3` | `WallRun` state on exit, whatever the reason |
+| `wall_jumped` | `position: Vector3, direction: Vector3` | `WallJump` state on enter; `direction` is the flat kick direction |
+| `capture_started` | `position: Vector3` | `Capture` state on enter (slingshot core, pneumatic tube, phase 04.1) |
+| `capture_released` | `position: Vector3, velocity: Vector3` | `Capture` state when it lets go; `velocity` is the exit velocity (zero after a stuck or time-out release) |
 
 Listeners: the debug event log now, juice (Phases 11-12), audio (Phase 14). A new fact is a new typed signal added in the phase that needs it. The bus holds no state and no logic.
 

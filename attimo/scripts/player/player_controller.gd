@@ -68,6 +68,22 @@ var _push_accels: PackedFloat32Array = PackedFloat32Array()
 ## cleared after every move, so leaving a zone needs no restore step.
 var _zone_gravity_scale: float = 1.0
 
+## Flat normal (y = 0, unit) of the last wall the move slid along, or ZERO before the first touch. Written in _post_move (MOVE-12).
+var wall_normal: Vector3 = Vector3.ZERO
+## The body of the last wall touched, or null. WallRun and WallJump ask it for its pad group through wall_surface.
+var wall_collider: CollisionObject3D = null
+## Seconds since the last wall touch (INF before the first). A touch inside config.wall_contact_grace still counts.
+var wall_contact_age: float = INF
+## The horizontal move_velocity of the last tick, read before the wall clamp took the into-wall part away (the approach speed, Pitfall 5).
+var wall_pre_velocity: Vector3 = Vector3.ZERO
+## Seconds left before the next wall-run may start. Every WallRun exit and every WallJump sets it to config.wall_run_cooldown.
+var wall_run_cooldown_timer: float = 0.0
+## The Capture request of capture_along: target points of the player origin, speed, hold time at the end and the exit velocity.
+var capture_points: PackedVector3Array = PackedVector3Array()
+var capture_speed: float = 0.0
+var capture_hold: float = 0.0
+var capture_exit_velocity: Vector3 = Vector3.ZERO
+
 ## A rotating platform never carries further than this per tick (a guard against a bad transform).
 const MAX_CARRY_SHIFT: float = 2.0
 
@@ -372,6 +388,63 @@ func request_gravity_scale(scale: float) -> void:
 	_zone_gravity_scale = minf(_zone_gravity_scale, clampf(scale, 0.05, 1.0))
 
 
+## True while the last wall touched belongs to `group` (a pad group, D-09) and the touch is not older than config.wall_contact_grace.
+func wall_surface(group: StringName) -> bool:
+	if wall_collider == null or not is_instance_valid(wall_collider):
+		return false
+	return wall_contact_age <= config.wall_contact_grace and wall_collider.is_in_group(group)
+
+
+## Flat unit direction along the last wall, signed toward the way the approach velocity went (the facing when the approach was
+## almost head-on). ZERO without a wall.
+func wall_tangent() -> Vector3:
+	var tangent: Vector3 = Vector3.UP.cross(wall_normal)
+	if tangent.length_squared() < 0.0001:
+		return Vector3.ZERO
+	tangent = tangent.normalized()
+	var along: float = wall_pre_velocity.dot(tangent)
+	if absf(along) < 0.1:
+		var facing: Vector3 = visual_root.global_basis.z
+		along = facing.dot(tangent)
+	return tangent if along >= 0.0 else -tangent
+
+
+## True when a wall-run may start now: airborne, on a wall-run pad, fast enough on approach (wall_pre_velocity) and not in the cooldown (MOVE-12).
+func can_wall_run() -> bool:
+	if is_grounded() or wall_run_cooldown_timer > 0.0 or not wall_surface(&"wall_run_surface"):
+		return false
+	var flat: Vector2 = Vector2(wall_pre_velocity.x, wall_pre_velocity.z)
+	return flat.length() >= config.wall_run_min_speed
+
+
+## True when a remembered jump press may become a wall-jump now: airborne, touching a wall-jump pad and not in the cooldown (D-09).
+## A jump during WallRun is decided by the WallRun state itself.
+func can_wall_jump() -> bool:
+	if is_grounded() or wall_run_cooldown_timer > 0.0 or not wants_jump():
+		return false
+	return wall_surface(&"wall_jump_surface")
+
+
+## Capture request (slingshot core, pneumatic tube, D-06): the Capture state carries the player origin through `points` at `speed`,
+## holds `hold_time` at the last point and lets go with `exit_velocity`. Mechanisms call this with call_deferred. Empty or non-finite
+## input, a non-positive speed and a request while already captured are ignored.
+func capture_along(points: PackedVector3Array, speed: float, hold_time: float, exit_velocity: Vector3) -> void:
+	if points.is_empty() or not is_finite(speed) or speed <= 0.0:
+		return
+	if not is_finite(hold_time) or hold_time < 0.0 or not exit_velocity.is_finite():
+		return
+	for point: Vector3 in points:
+		if not point.is_finite():
+			return
+	if state_machine.current.name == &"Capture":
+		return
+	capture_points = points
+	capture_speed = speed
+	capture_hold = hold_time
+	capture_exit_velocity = exit_velocity
+	state_machine.transition_to(&"Capture")
+
+
 func _enter_fall() -> void:
 	if state_machine.current.name != &"Fall":
 		state_machine.transition_to(&"Fall")
@@ -457,6 +530,7 @@ func _tick_timers(delta: float) -> void:
 	dash_jump_grace_timer = maxf(dash_jump_grace_timer - delta, 0.0)
 	dash_twitch_timer = maxf(dash_twitch_timer - delta, 0.0)
 	air_control_lock_timer = maxf(air_control_lock_timer - delta, 0.0)
+	wall_run_cooldown_timer = maxf(wall_run_cooldown_timer - delta, 0.0)
 	_tick_combo(delta)
 	if Input.is_action_just_pressed(&"jump"):
 		jump_buffer_timer = config.jump_buffer_time
@@ -522,21 +596,27 @@ func _integrate(delta: float) -> void:
 	# Speed-scaled floor snap, held inside the D-13 band (A35).
 	var snap: float = horizontal_speed() * delta * tan(floor_max_angle) + 0.1
 	floor_snap_length = clampf(snap, config.snap_min, maxf(config.snap_min, config.snap_max))
+	if state_machine.current.name == &"Capture":
+		# A captured body is carried along a path: the floor snap must not pull it back down.
+		floor_snap_length = 0.0
 	move_and_slide()
 	vertical_speed = maxf(vertical_speed - g * delta * 0.5, -config.terminal_speed)
-	_post_move()
+	_post_move(delta)
 	_zone_gravity_scale = 1.0
 
 
-func _post_move() -> void:
+func _post_move(delta: float) -> void:
 	var on_floor: bool = is_on_floor()
 	if is_on_ceiling() and vertical_speed > 0.0:
 		vertical_speed = 0.0
+	# Wall bookkeeping (MOVE-12) reads the approach velocity before the clamp below removes its into-wall part.
+	wall_pre_velocity = move_velocity
+	_track_wall_contact(delta)
 	if is_on_wall():
-		var wall_normal: Vector3 = get_wall_normal()
-		var into_wall: float = move_velocity.dot(wall_normal)
+		var hit_normal: Vector3 = get_wall_normal()
+		var into_wall: float = move_velocity.dot(hit_normal)
 		if into_wall < 0.0:
-			move_velocity -= wall_normal * into_wall
+			move_velocity -= hit_normal * into_wall
 			move_velocity.y = 0.0
 	if on_floor and not _was_on_floor:
 		_land(maxf(-vertical_speed, 0.0))
@@ -551,6 +631,27 @@ func _post_move() -> void:
 	else:
 		_floor_carrier = null
 	_was_on_floor = on_floor
+
+
+## Remembers the last near-vertical surface the move slid along (flat normal and body) and how long ago it was touched.
+func _track_wall_contact(delta: float) -> void:
+	var touched: bool = false
+	for index: int in get_slide_collision_count():
+		var hit: KinematicCollision3D = get_slide_collision(index)
+		var normal: Vector3 = hit.get_normal()
+		if absf(normal.y) >= 0.1:
+			continue
+		var body: CollisionObject3D = hit.get_collider() as CollisionObject3D
+		var flat: Vector3 = Vector3(normal.x, 0.0, normal.z)
+		if body == null or flat.length_squared() < 0.0001:
+			continue
+		wall_normal = flat.normalized()
+		wall_collider = body
+		touched = true
+	if touched:
+		wall_contact_age = 0.0
+	else:
+		wall_contact_age += delta
 
 
 func _land(impact_speed: float) -> void:

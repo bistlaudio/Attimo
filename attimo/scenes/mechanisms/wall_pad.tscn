@@ -1,0 +1,69 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/mechanisms/wall_pad.gd" id="1_script"]
+[ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="2_glow"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_panel"]
+size = Vector3(12, 4, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_panel"]
+size = Vector3(12, 4, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_bar_h"]
+size = Vector3(12.2, 0.2, 0.7)
+
+[sub_resource type="BoxMesh" id="BoxMesh_bar_v"]
+size = Vector3(0.2, 4.2, 0.7)
+
+[sub_resource type="BoxMesh" id="BoxMesh_inlay"]
+size = Vector3(11, 0.3, 0.04)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_panel"]
+albedo_color = Color(0.3, 0.32, 0.36, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_brass"]
+albedo_color = Color(0.62, 0.48, 0.22, 1)
+metallic = 0.3
+roughness = 0.7
+
+[node name="WallPad" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Panel" type="StaticBody3D" parent="."]
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Panel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("BoxShape3D_panel")
+
+[node name="Plate" type="MeshInstance3D" parent="Panel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+mesh = SubResource("BoxMesh_panel")
+surface_material_override/0 = SubResource("StandardMaterial3D_panel")
+
+[node name="FrameTop" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.0, 0)
+mesh = SubResource("BoxMesh_bar_h")
+surface_material_override/0 = SubResource("StandardMaterial3D_brass")
+
+[node name="FrameBottom" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+mesh = SubResource("BoxMesh_bar_h")
+surface_material_override/0 = SubResource("StandardMaterial3D_brass")
+
+[node name="FrameLeft" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.0, 2, 0)
+mesh = SubResource("BoxMesh_bar_v")
+surface_material_override/0 = SubResource("StandardMaterial3D_brass")
+
+[node name="FrameRight" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.0, 2, 0)
+mesh = SubResource("BoxMesh_bar_v")
+surface_material_override/0 = SubResource("StandardMaterial3D_brass")
+
+[node name="Inlay" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0.27)
+visible = false
+mesh = SubResource("BoxMesh_inlay")
+surface_material_override/0 = ExtResource("2_glow")

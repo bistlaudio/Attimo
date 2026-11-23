@@ -1,8 +1,8 @@
 class_name MovementConfig
 extends Resource
 ## The one tunable movement resource (MOVE-10, D-23). Every movement number lives here.
-## Eleven groups, 54 live sliders in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
-## Long jump (dash hop), Timing windows, Floor and platforms, Aim, Pose, Clip playback. Gravity is set directly
+## Twelve groups, 67 live sliders in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
+## Long jump (dash hop), Timing windows, Floor and platforms, Aim, Wall, Pose, Clip playback. Gravity is set directly
 ## (rise_gravity, fall_multiplier); jump speeds are derived from the heights, so editing a
 ## height never changes the fall feel. Every divisor field has a strictly positive minimum (T-02-02).
 
@@ -95,6 +95,34 @@ extends Resource
 @export_range(0.1, 1.0, 0.05) var aim_speed_factor: float = 0.75
 ## Extra factor on the aim run speed for input pointing behind the facing, blended by how far behind it points; raise it for a faster back-pedal.
 @export_range(0.1, 1.0, 0.05) var aim_back_speed_factor: float = 0.6
+
+@export_group("Wall")
+## Smallest horizontal speed in m/s that starts a wall-run on contact with a wall-run pad (MOVE-12); raise it to demand a faster approach.
+@export_range(2.0, 20.0, 0.1) var wall_run_min_speed: float = 7.0
+## Speed along the pad in m/s during a wall-run (never below the entry speed); raise it for a faster run.
+@export_range(2.0, 25.0, 0.1) var wall_run_speed: float = 10.0
+## Longest wall-run in seconds before the player drops to Fall; raise it for longer runs.
+@export_range(0.2, 3.0, 0.05) var wall_run_time: float = 1.1
+## Gravity factor during a wall-run (0 = none, 1 = normal); raise it for a heavier run that sinks.
+@export_range(0.0, 1.0, 0.05) var wall_run_gravity_scale: float = 0.1
+## Upward speed in m/s a wall-run starts with at least; raise it for a run that climbs at the start.
+@export_range(0.0, 8.0, 0.1) var wall_run_entry_rise: float = 1.5
+## Speed in m/s with which the run presses into the pad so the contact holds; raise it if the run drops off the pad.
+@export_range(0.0, 5.0, 0.1) var wall_run_stick_speed: float = 1.5
+## Seconds after a wall-run or wall-jump before the next wall-run may start; raise it to stop re-grabs.
+@export_range(0.0, 2.0, 0.05) var wall_run_cooldown: float = 0.35
+## Seconds a wall contact still counts after the last touch (a run keeps its pad through a one-tick gap); raise it for a more forgiving pad end.
+@export_range(0.0, 0.5, 0.01) var wall_contact_grace: float = 0.12
+## Speed in m/s of the wall-jump kick away from the wall; raise it for a farther kick.
+@export_range(0.0, 20.0, 0.5) var wall_jump_out_speed: float = 9.0
+## Height in m of the wall-jump rise (full hold); raise it for a higher kick.
+@export_range(0.5, 6.0, 0.1) var wall_jump_height: float = 2.6
+## Share of the speed along the wall that a wall-jump keeps; raise it to carry the run into the jump.
+@export_range(0.0, 1.0, 0.05) var wall_jump_keep_along: float = 0.5
+## Seconds air control is off after a wall-jump so the kick is not eaten; raise it for a harder kick.
+@export_range(0.0, 1.0, 0.01) var wall_jump_control_lock: float = 0.18
+## Roll lean in degrees of the body toward the wall during a wall-run (presentation only); raise it for a stronger tilt.
+@export_range(0.0, 45.0, 0.5) var wall_run_lean_deg: float = 18.0
 
 @export_group("Pose")
 ## Forward lean of the body during a ground dash in degrees (D-01); raise it for a harder lean into the dash.

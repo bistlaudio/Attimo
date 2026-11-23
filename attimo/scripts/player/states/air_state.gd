@@ -22,6 +22,8 @@ func physics_update(delta: float) -> StringName:
 		if direction != Vector3.ZERO:
 			return &"Run"
 		return &"Idle"
+	if actor.can_wall_run():
+		return &"WallRun"
 	var jump_state: StringName = _airborne_jump_decision()
 	if jump_state != &"":
 		return jump_state

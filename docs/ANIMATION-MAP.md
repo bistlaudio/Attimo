@@ -27,6 +27,7 @@ Which movement verb is shown by which Mannequin clip. Guarded by `attimo/tests/s
 | Landing hard | any airborne state to `Idle` or `Run` with an impact of at least `hard_landing_speed` (24 m/s, drops of about 5 m) | `Land` > `LandPick` `hard` > `LandHard` | `Jump_Land` (fallback of the dropped `UAL_Jump_Land`) | The clip stretched into 0.5 s, a slower, heavier crouch. Same D-08 fade rule. |
 | Landing roll | any airborne state to `Idle` or `Run` with at least `roll_landing_speed` (13 m/s) horizontally at touchdown (a stage 1 long jump lands at 14 m/s) | `Land` > `LandPick` `roll` > `LandRoll` | `Jump_Land` (fallback of the dropped `UAL_Roll`) | The clip stretched into 0.6 s. Priority roll, then hard, then soft (soft only into Idle); `MannequinAnimator.landing_kind()` picks it through `VariantPicker.pick_first`. Presentation only, same D-08 fade rule: a jump or dash on the next tick starts at once. With both UAL clips dropped, hard and roll differ from soft only in timing (gym check item). |
 | Ground dash | `Dash` (on the ground; there is no dash while aiming) | `Dash` | `Dodge_Forward` | Playback stretched to `dash_time` (Dodge length / dash_time); `ProceduralPose` adds the forward dash lean about the hips (`dash_lean_deg`, D-01). The animator travels on the same physics frame as the FSM enters `Dash`, so a jump press (long jump), steering and the next dash respond at once. |
+| Wall-run | `WallRun` | `Locomotion` | `Running_A`, `UAL_Sprint_Loop` | Composition: the run clip plus the `ProceduralPose` roll lean toward the wall (`wall_run_lean_deg`), no new clip. Wall-run pads only (MOVE-12, D-09). The Mannequin tilts about the hips on the axis wall normal x up; the lean eases out after the run. |
 | Slide (dormant) | none: `Dash.SLIDE_PRESENTATION` is false | `Slide` | `Running_Slide` | The retargeted Mixamo slide (DEV-04, quick 261118-qbt) is superseded by the developer on 2026-11-18 (hand on the floor, no get-up): the unaimed ground dash shows `Dodge_Forward` plus lean again. The `Slide` node, the clip and the animator's slide hold stay in place, dormant, behind the `Dash.SLIDE_PRESENTATION` switch. When switched on: a window of the clip (the drop into the low pose, see "External clips") at a fixed 1.6x (`SLIDE_PLAYBACK_SCALE`); slide hold rule: when the FSM leaves the slide's `Dash` into `Run` or `Idle`, the animator keeps the `Slide` node for `SLIDE_HOLD_TIME` (0.3 s), any other state change ends the hold on that same call; edges into `Slide` crossfade 0.1 s, out 0.15 s. Presentation only, like DEV-02: the travel and every FSM hand-off stay on the state-change frame. |
 | Air dash | `Dash` (in the air) | `Dash`, held through `Fall` | `Dodge_Forward`, then `Jump_Idle` | Plays at 1x, no lean (D-02). DEV-02 hold rule: after the dash the Dodge pose is held past the `Dash` exit through `Fall` until landing or until `air_dash_hold_time` (0.35 s), then the animator hands over to `Jump_Idle`. The hold is presentation only and never delays control: steering, landing and the next jump or dash respond at once. |
 | Long jump stages 1-2 | `LongJump` (stage 1 and 2) | `LongJump`, `Fall`, `Land` | `Jump_Full_Long`, `Jump_Idle`, `Jump_Land` | `Jump_Full_Long` from 0.25 s (crouch bottom 0.267 s) to the end of its airborne leg tuck at 1.667 s, no wind-up; the FSM's `Fall` at the apex still switches to `Jump_Idle` on the same frame (no pose hold, DEV-02 stays the only hold). Upright in the air (D-04 stretch lean dropped after the Phase 3 gym check, quick task 261118-okz): when a ground dash hands over to the long jump, `ProceduralPose` eases the dash lean back to 0 within `lean_out_time` (0.12 s) and holds the body upright until landing. |
@@ -43,7 +44,7 @@ Which movement verb is shown by which Mannequin clip. Guarded by `attimo/tests/s
 
 ## States and nodes
 
-FSM states under `Player/StateMachine`: `Idle`, `Jump`, `LongJump`, `Run`, `Fall`, `Dash`.
+FSM states under `Player/StateMachine`: `Idle`, `Jump`, `LongJump`, `Run`, `Fall`, `Dash`, `WallRun`.
 
 Animation state machine nodes: `Locomotion`, `Jump`, `Jump2`, `LongJump`, `Fall`, `Dash`, `DashLeft`, `DashRight`, `DashBack`, `Slide`. Overlay and layer nodes: `IdleBreak` (`IdleBreakPick`), `Land` (`LandPick`: `LandClip`, `LandHard`, `LandRoll`), `Aim` (`Shoot`, `AimMachine`: `Enter`, `Hold`, `Exit`; `ShootClip`).
 
@@ -117,7 +118,7 @@ Dropped clips:
 
 ## Left out
 
-- Wall-run (MOVE-12) and ledge grab (MOVE-13) have no kit clip and stay out of this phase.
+- Ledge grab (MOVE-13) has no kit clip and stays out. Wall-run (MOVE-12) is in since Phase 04.1 as a composition (the run clip plus a roll lean), see the `WallRun` row.
 - Slide is no verb and no state (D-03). The retargeted `Running_Slide` presentation of the unaimed ground dash (quick 261118-qbt, DEV-04) is dormant since 2026-11-18 (`Dash.SLIDE_PRESENTATION` false, developer decision); the FSM, the timings and the hand-offs are the dash's own either way.
 - There is no sprint input and no sprint state: one run speed; above it only dash and dash-hop momentum blend toward `UAL_Sprint_Loop`.
 
