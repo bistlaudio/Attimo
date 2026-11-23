@@ -55,8 +55,8 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [x] **MECH-01**: Levers, hand-wheel valves, energy cores, clockwork cranks, gear gates, rotating and lift platforms, conveyors, steam nozzles and pendulums exist as reusable mechanism components
 - [x] **MECH-02**: Mechanisms are wired via signals in the editor, including simple logic (AND, OR, timer)
 - [x] **MECH-03**: Moving mechanisms (gears, platforms, conveyors) carry the player correctly
-- [ ] **MECH-04**: Movement mechanisms exist as reusable components with a showcase station and a smoke test each: repulsor field, attractor field, point-symmetric slingshot core, wall-run pad, wall-jump pad, bounce pad, boost ring, pressure plate, crumbling platform, wind tunnel, low-gravity zone
-- [ ] **MECH-05**: Steampunk extras: piston punch wall, pneumatic tube, pressure-valve geyser, paternoster (D-11)
+- [x] **MECH-04**: Movement mechanisms exist as reusable components with a showcase station and a smoke test each: repulsor field, attractor field, point-symmetric slingshot core, wall-run pad, wall-jump pad, bounce pad, boost ring, pressure plate, crumbling platform, wind tunnel, low-gravity zone
+- [x] **MECH-05**: Steampunk extras: piston punch wall, pneumatic tube, pressure-valve geyser, paternoster (D-11)
 
 ### Shooting & Enemies (exact design defined in its phase)
 
@@ -200,8 +200,8 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | MECH-01 | Phase 4 | Complete |
 | MECH-02 | Phase 4 | Complete |
 | MECH-03 | Phase 4 | Complete |
-| MECH-04 | Phase 04.1 | Pending |
-| MECH-05 | Phase 04.1 | Pending |
+| MECH-04 | Phase 04.1 | Complete |
+| MECH-05 | Phase 04.1 | Complete |
 | SHOOT-01 | Phase 6 | Pending |
 | SHOOT-02 | Phase 6 | Pending |
 | SHOOT-03 | Phase 6 | Pending |

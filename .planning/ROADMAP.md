@@ -203,7 +203,7 @@ Plans:
   4. The glow lens on every interactable is a steampunk element (brass bezel or gear ring around a glowing turquoise core) instead of a plain sphere.
   5. Every new mechanism (A-K plus the planner's steampunk extras) has its own showcase station with a lever or self-trigger, moves the player as described, and has a smoke test; wall-run and wall-jump are movement FSM states.
 
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans complete
 
 Plans:
 
@@ -222,7 +222,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 04.1-05-PLAN.md — Spacious 120 x 72 m showcase with nine zones, all 33 stations with "Erwartet:" signs, puzzle-room shift, room-2 FallReset, coplanar ray guard, D-12 load check and end-of-phase feel check (wave 4)
+- [x] 04.1-05-PLAN.md — Spacious 120 x 72 m showcase with nine zones, all 33 stations with "Erwartet:" signs, puzzle-room shift, room-2 FallReset, coplanar ray guard, D-12 load check and end-of-phase feel check (wave 4)
 
 ### Phase 5: Pull/Push & Module Unlocks
 

@@ -4,14 +4,14 @@ milestone: v0.11.0.4
 milestone_name: milestone
 status: executing
 stopped_at: Completed 04.1-01-PLAN.md
-last_updated: "2026-11-23T13:57:31.013Z"
+last_updated: "2026-11-23T14:38:07.921Z"
 last_activity: 2026-11-23
 progress:
   total_phases: 16
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 41
-  completed_plans: 40
-  percent: 25
+  completed_plans: 41
+  percent: 31
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 04.1 (mechanism-kit-extension-hud-polish) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
-Last activity: 2026-11-23 - Completed quick task 261123-l8y: camera auto-follow on by default
+Last activity: 2026-11-23
 
-Progress: [██████████] 98%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -90,6 +90,7 @@ Progress: [██████████] 98%
 | Phase 04 P05 | n/a | 3 tasks | 9 files |
 | Phase 04.1 P01 | 40 min | 3 tasks | 15 files |
 | Phase 04.1 P04 | 75min | 2 tasks | 45 files |
+| Phase 04.1 P05 | 95min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -151,6 +152,7 @@ Recent decisions that affect current work:
 - [Phase 04.1]: Zone gravity factor is a per-tick request (request_gravity_scale, clamped 0.05..1.0, cleared after the move); Dash-owned gravity_scale untouched
 - [Phase 04.1]: Conveyor carry fixed in conveyor.tscn (belt top 0.05 m above node origin), not in PlayerController: belt top was coplanar with the floor tile
 - [Phase 04.1]: MechanismLook hooks on NOTIFICATION_READY (subclasses override _ready without super)
+- [Phase 04.1-05]: D-12 fallback not needed (13 s to 12 s filtered gym run); room 2 stays 120 m x 72 m, nine zones, 33 stations on a 12 m slot grid
 
 ### Pending Todos
 
@@ -191,6 +193,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-23T13:57:27.268Z
+Last session: 2026-11-23T14:38:04.315Z
 Stopped at: Completed 04.1-01-PLAN.md
 Resume file: None
