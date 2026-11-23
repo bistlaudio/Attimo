@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 Phase: 04.1 (mechanism-kit-extension-hud-polish) — EXECUTING
 Plan: 4 of 5
 Status: Ready to execute
-Last activity: 2026-11-23
+Last activity: 2026-11-23 - Completed quick task 261123-l8y: camera auto-follow on by default
 
 Progress: [██████████] 98%
 
@@ -175,6 +175,7 @@ None yet.
 | 261120-d4x | Fix phase 03 review warnings WR-01 to WR-06 | 2026-11-20 | 67ae159 | [261120-d4x-fix-phase-03-review-warnings-wr-01-to-wr](./quick/261120-d4x-fix-phase-03-review-warnings-wr-01-to-wr/) |
 | 261120-dik | Dash lockouts, blocked-dash feedback, no dash in aim, softer dash blends | 2026-11-20 | 6ea364e | [261120-dik-dash-lockouts-and-blocked-dash-feedback-](./quick/261120-dik-dash-lockouts-and-blocked-dash-feedback-/) |
 | 261120-ef9 | Remove dash lockouts for pirouette, landing, takeoff; keep aim block and soft blends | 2026-11-20 | 3b53279 | [261120-ef9-remove-dash-lockouts-for-pirouette-landi](./quick/261120-ef9-remove-dash-lockouts-for-pirouette-landi/) |
+| 261123-l8y | Camera auto-follow on by default (also keyboard and mouse): camera swings behind the character while strafing A/D | 2026-11-23 | 5c550d6 | [261123-l8y-camera-auto-yaw-camerarig-gently-rotates](./quick/261123-l8y-camera-auto-yaw-camerarig-gently-rotates/) |
 
 ### Roadmap Evolution
 
