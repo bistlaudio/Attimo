@@ -30,3 +30,7 @@ signal near_contact_changed(active: bool, point: Vector3)
 signal launched(position: Vector3, direction: Vector3, speed: float)
 ## Emitted by hazards and mechanisms that push the player back (plan 04-04). Listeners: juice, audio.
 signal knocked_back(position: Vector3, impulse: Vector3)
+## Emitted by PlayerController.refill_air_dash (boost ring, plan 04.1-03) when the air dash was given back. Listeners: juice, audio, the HUD.
+signal dash_refilled(position: Vector3)
+## Emitted by PlayerController.boost_along (boost ring, bounce pad) with the speed along `direction` after the boost. Listeners: juice, audio.
+signal boosted(position: Vector3, direction: Vector3, speed: float)

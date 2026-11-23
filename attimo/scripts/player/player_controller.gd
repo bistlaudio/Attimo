@@ -22,6 +22,8 @@ var coyote_timer: float = 0.0
 var jump_buffer_timer: float = 0.0
 ## Seconds left before the next dash may start (D-11). Starts when a dash starts.
 var dash_cooldown_timer: float = 0.0
+## Seconds left in which air control (steering in the air) is off, set by lock_air_control (a piston punch or a boost keeps its speed).
+var air_control_lock_timer: float = 0.0
 ## True while the one air dash of this airtime is unspent. Landing refills it (D-12).
 var air_dash_available: bool = true
 ## Direction of the last dash started, flattened and normalized.
@@ -151,8 +153,11 @@ func accelerate_ground(direction: Vector3, target_speed: float, accel: float, de
 	move_velocity.y = 0.0
 
 
-## Air control (D-02): toward direction * air_speed_cap with air_accel, toward zero with air_decel without input.
+## Air control (D-02): toward direction * air_speed_cap with air_accel, toward zero with air_decel without input. Does nothing while
+## air_control_lock_timer runs (lock_air_control).
 func accelerate_air(direction: Vector3, delta: float) -> void:
+	if air_control_lock_timer > 0.0:
+		return
 	if direction == Vector3.ZERO:
 		move_velocity = move_velocity.move_toward(Vector3.ZERO, config.air_decel * delta)
 	else:
@@ -276,20 +281,60 @@ func start_dash(direction: Vector3, in_air: bool) -> void:
 
 
 ## One-shot launch (steam nozzle jump and cannon, D-20): sets the velocity along `direction` to exactly `speed` and keeps the
-## sideways momentum, so height and distance repeat. Leaves Dash, LongJump and Jump for Fall. The air dash and the landing
-## chain are not touched. Mechanisms call this with call_deferred (never inside the physics flush). A bad vector is ignored.
-func launch_along(direction: Vector3, speed: float) -> void:
+## sideways momentum (`keep_sideways` true), so height and distance repeat. With `keep_sideways` false the velocity becomes
+## exactly direction * speed (a pad that decides the whole path). Leaves Dash, LongJump and Jump for Fall. The air dash and the
+## landing chain are not touched. Mechanisms call this with call_deferred (never inside the physics flush). A bad vector is ignored.
+func launch_along(direction: Vector3, speed: float, keep_sideways: bool = true) -> void:
 	if not direction.is_finite() or not is_finite(speed) or direction.length_squared() < 0.0001:
 		return
 	var dir: Vector3 = direction.normalized()
 	var v: Vector3 = Vector3(move_velocity.x, vertical_speed, move_velocity.z)
-	v = v - dir * v.dot(dir) + dir * speed
+	if keep_sideways:
+		v = v - dir * v.dot(dir) + dir * speed
+	else:
+		v = dir * speed
 	move_velocity = Vector3(v.x, 0.0, v.z)
 	vertical_speed = clampf(v.y, -config.terminal_speed, config.terminal_speed)
 	coyote_timer = 0.0
 	air_speed_cap = maxf(config.run_speed, horizontal_speed())
 	_enter_fall()
 	EventBus.launched.emit(global_position, dir, speed)
+
+
+## One-shot boost (boost ring, bounce pad, D-06): raises the velocity component along `direction` to at least `min_speed` after
+## adding `add` (`maxf(along + add, min_speed)`), so a boost never slows a faster player. The rest of the velocity is kept.
+## Leaves Dash, LongJump and Jump for Fall, lifts the air cap to the new speed and emits EventBus.boosted. Mechanisms call this
+## with call_deferred. A non-finite argument or a zero direction is ignored.
+func boost_along(direction: Vector3, min_speed: float, add: float = 0.0) -> void:
+	if not direction.is_finite() or not is_finite(min_speed) or not is_finite(add) or direction.length_squared() < 0.0001:
+		return
+	var dir: Vector3 = direction.normalized()
+	var v: Vector3 = Vector3(move_velocity.x, vertical_speed, move_velocity.z)
+	var along: float = v.dot(dir)
+	var new_along: float = maxf(along + add, min_speed)
+	v += dir * (new_along - along)
+	move_velocity = Vector3(v.x, 0.0, v.z)
+	vertical_speed = clampf(v.y, -config.terminal_speed, config.terminal_speed)
+	coyote_timer = 0.0
+	air_speed_cap = maxf(config.run_speed, horizontal_speed())
+	_enter_fall()
+	EventBus.boosted.emit(global_position, dir, new_along)
+
+
+## Gives the air dash back (boost ring, D-06): the charge is available and the cooldown is gone, so a dash can start at once.
+## Emits EventBus.dash_refilled. Mechanisms call this with call_deferred.
+func refill_air_dash() -> void:
+	air_dash_available = true
+	dash_cooldown_timer = 0.0
+	EventBus.dash_refilled.emit(global_position)
+
+
+## Switches air control off for `seconds` (a knock or a punch keeps its speed against steering). Several calls keep the longest
+## time. Non-finite or negative seconds are ignored. Air control resumes by itself, no restore call is needed.
+func lock_air_control(seconds: float) -> void:
+	if not is_finite(seconds) or seconds < 0.0:
+		return
+	air_control_lock_timer = maxf(air_control_lock_timer, seconds)
 
 
 ## Continuous push (steam updraft and wall, D-20): moves the velocity component along `direction` toward `target_speed` by
@@ -351,6 +396,9 @@ func _apply_push_requests(delta: float) -> void:
 	_push_directions.clear()
 	_push_targets.clear()
 	_push_accels.clear()
+	# A push that made the player faster in the air raises the air cap, so air control does not drag it back to the old cap.
+	if not is_grounded():
+		air_speed_cap = maxf(air_speed_cap, horizontal_speed())
 	if lifted:
 		coyote_timer = 0.0
 		var state_name: StringName = state_machine.current.name
@@ -408,6 +456,7 @@ func _tick_timers(delta: float) -> void:
 	dash_cooldown_timer = maxf(dash_cooldown_timer - delta, 0.0)
 	dash_jump_grace_timer = maxf(dash_jump_grace_timer - delta, 0.0)
 	dash_twitch_timer = maxf(dash_twitch_timer - delta, 0.0)
+	air_control_lock_timer = maxf(air_control_lock_timer - delta, 0.0)
 	_tick_combo(delta)
 	if Input.is_action_just_pressed(&"jump"):
 		jump_buffer_timer = config.jump_buffer_time
