@@ -1,0 +1,39 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/mechanisms/paternoster.gd" id="1_script"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_back"]
+size = Vector3(10, 10, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_post"]
+size = Vector3(0.4, 10, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_metal"]
+albedo_color = Color(0.4, 0.43, 0.47, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_brass"]
+albedo_color = Color(0.62, 0.5, 0.27, 1)
+metallic = 0.3
+roughness = 0.8
+
+[node name="Paternoster" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="Frame" type="Node3D" parent="."]
+
+[node name="BackPlate" type="MeshInstance3D" parent="Frame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, -1.6)
+mesh = SubResource("BoxMesh_back")
+surface_material_override/0 = SubResource("StandardMaterial3D_metal")
+
+[node name="PostLeft" type="MeshInstance3D" parent="Frame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.6, 4.5, -1.3)
+mesh = SubResource("BoxMesh_post")
+surface_material_override/0 = SubResource("StandardMaterial3D_brass")
+
+[node name="PostRight" type="MeshInstance3D" parent="Frame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.6, 4.5, -1.3)
+mesh = SubResource("BoxMesh_post")
+surface_material_override/0 = SubResource("StandardMaterial3D_brass")
+
+[node name="Decks" type="Node3D" parent="."]
