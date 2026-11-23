@@ -105,7 +105,7 @@ enum InputDevice { KEYBOARD_MOUSE, JOYPAD }
 @export_range(0.0, 30.0, 0.5) var aim_fov_delta: float = 12.0
 ## Metres the camera arm moves to the right shoulder at full aim weight, along Pitch-local X (D-13). There is one
 ## fixed shoulder: no swap.
-@export_range(0.0, 1.5, 0.05) var aim_shoulder_offset: float = 0.6
+@export_range(0.0, 1.5, 0.05) var aim_shoulder_offset: float = 1.1
 ## DEBUG: permanent over-the-shoulder offset outside aim (Pitch-local, x right, y up), so the crosshair is not behind the
 ## character. Aim blends x from here to aim_shoulder_offset. Set to zero for the centered framing (D-14).
 @export var base_shoulder_offset: Vector3 = Vector3(0.6, 0.35, 0.0)

@@ -18,18 +18,18 @@ extends CanvasLayer
 ## Radius of the centre dot in pixels.
 @export var dot_radius: float = 2.0
 ## Radius of the thin ring in pixels.
-@export var ring_radius: float = 18.0
+@export var ring_radius: float = 11.0
 ## Line width of the ring in pixels.
-@export var ring_width: float = 2.5
+@export var ring_width: float = 1.8
 ## Length of the four notches on the ring in pixels.
-@export var notch_length: float = 7.0
+@export var notch_length: float = 4.5
 ## Screen height in pixels at which the pixel sizes below apply 1:1; the HUD scales with height / this.
 @export var ui_reference_height: float = 720.0
 @export_group("Gear ring")
 ## Gap between the reticle ring and the gear ring in pixels.
-@export var gear_gap: float = 9.0
+@export var gear_gap: float = 6.0
 ## Length of the gear teeth in pixels.
-@export var gear_tooth_length: float = 6.0
+@export var gear_tooth_length: float = 4.0
 ## Number of gear teeth.
 @export var gear_teeth: int = 16
 ## Idle rotation of the gear ring in degrees per second.
@@ -47,11 +47,11 @@ extends CanvasLayer
 @export var hud_jolt_time: float = 0.2
 @export_group("Module plate")
 ## Size of the brass module plate in pixels, its distance from the bottom edge and the font size.
-@export var plate_size: Vector2 = Vector2(280.0, 44.0)
+@export var plate_size: Vector2 = Vector2(240.0, 38.0)
 @export var plate_bottom_gap: float = 36.0
-@export var plate_font_size: int = 22
-@export var plate_fill: Color = Color(0.3, 0.21, 0.09, 0.92)
-@export var plate_border: Color = Color(0.78, 0.58, 0.25, 1.0)
+@export var plate_font_size: int = 19
+@export var plate_fill: Color = Color(0.16, 0.12, 0.08, 0.88)
+@export var plate_border: Color = Color(0.62, 0.45, 0.27, 1.0)
 @export_group("")
 ## Radius of the thin idle ring (no goggle HUD) in pixels.
 @export var idle_ring_radius: float = 5.0
@@ -78,7 +78,7 @@ const OUTLINE_EXTRA: float = 2.0
 const NOTCH_ANGLES_DEG: Array[float] = [45.0, 135.0, 225.0, 315.0]
 const OUTER_RING_GAP: float = 5.0
 const CHARGE_RING_GAP: float = 8.0
-const RIVET_RADIUS: float = 3.5
+const RIVET_RADIUS: float = 2.5
 const LENS_SHADER: String = "res://scripts/ui/goggle_lens.gdshader"
 const IDLE_RING_WIDTH: float = 1.05
 const BACK_OVERSHOOT: float = 1.70158
