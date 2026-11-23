@@ -12,11 +12,14 @@ const PENDULUM_SCENE: String = "res://scenes/mechanisms/pendulum.tscn"
 const MECHANISM_DIR: String = "res://scripts/mechanisms"
 const SHIPPED_TPS: int = 60
 
-## A member access that writes one of the player's motion fields: a dot, the field name as a whole word, an optional operator
-## character and an equals sign that is not part of ==. constant_linear_velocity does not match (the dot must precede the name).
-const WRITE_PATTERN: String = "\\.\\s*(move_velocity|vertical_speed|velocity|gravity_scale|air_dash_available|dash_cooldown_timer|air_speed_cap)\\b\\s*[-+*/]?=(?!=)"
+## A member access that writes one of the player's motion, timer, capture or wall fields: a dot, the field name as a whole word, an
+## optional component (.x/.y/.z), an optional operator character and an equals sign that is not part of ==.
+## constant_linear_velocity does not match (the dot must precede the name).
+const WRITE_PATTERN: String = "\\.\\s*(move_velocity|vertical_speed|velocity|gravity_scale|air_dash_available|dash_cooldown_timer|air_speed_cap|coyote_timer|jump_buffer_timer|air_control_lock_timer|capture_\\w+|wall_\\w+)\\b(\\.[xyz])?\\s*[-+*/]?=(?!=)"
+## A player reference (player, _captured, body) whose position or transform is written, or any FSM transition call (WR-07).
+const MOVE_PATTERN: String = "(\\b(player|_captured|body)\\s*\\.\\s*(global_)?(position|transform)\\b(\\.[a-z]+)?\\s*[-+*/]?=(?!=))|transition_to\\("
 ## The same fields written through set / set_deferred with the name as a string.
-const SET_PATTERN: String = "\\.\\s*set(_deferred)?\\(\\s*[&]?[\"'](move_velocity|vertical_speed|velocity|gravity_scale|air_dash_available|dash_cooldown_timer|air_speed_cap)[\"']"
+const SET_PATTERN: String = "\\.\\s*set(_deferred)?\\(\\s*[&]?[\"'](move_velocity|vertical_speed|velocity|gravity_scale|air_dash_available|dash_cooldown_timer|air_speed_cap|coyote_timer|jump_buffer_timer|air_control_lock_timer|capture_\\w+|wall_\\w+)[\"']"
 
 var _knock_speeds: Array[float] = []
 var _knocked_player: PlayerController = null
@@ -180,7 +183,7 @@ func _script_files(path: String) -> Array[String]:
 
 
 ## The 1-based line numbers of `source` that write a player motion field or call move_and_slide, comments excluded.
-func _offending_lines(source: String, write: RegEx, setter: RegEx) -> Array[int]:
+func _offending_lines(source: String, write: RegEx, setter: RegEx, mover: RegEx) -> Array[int]:
 	var hits: Array[int] = []
 	var lines: PackedStringArray = source.split("\n")
 	for index: int in lines.size():
@@ -190,7 +193,7 @@ func _offending_lines(source: String, write: RegEx, setter: RegEx) -> Array[int]
 			code = code.substr(0, comment_at)
 		if code.strip_edges() == "":
 			continue
-		if write.search(code) != null or setter.search(code) != null or code.contains("move_and_slide("):
+		if write.search(code) != null or setter.search(code) != null or mover.search(code) != null or code.contains("move_and_slide("):
 			hits.append(index + 1)
 	return hits
 
@@ -199,16 +202,17 @@ func _offending_lines(source: String, write: RegEx, setter: RegEx) -> Array[int]
 func _source_guard(check: Callable) -> void:
 	var write: RegEx = RegEx.new()
 	var setter: RegEx = RegEx.new()
-	check.call(write.compile(WRITE_PATTERN) == OK and setter.compile(SET_PATTERN) == OK, "the source guard patterns compile")
-	var synthetic: String = "player.move_velocity = Vector3.ZERO\nplayer.vertical_speed += 1.0\nbody.set(\"velocity\", v)\nx.move_and_slide()\n"
-	var clean: String = "# player.velocity = 1\nif player.move_velocity == v:\n\tbelt.constant_linear_velocity = v\n\tplayer.push_toward(d, 1.0, 1.0) # not player.velocity = 2\n"
-	check.call(_offending_lines(synthetic, write, setter).size() == 4, "the guard flags writes, set() and move_and_slide in a synthetic offending string")
-	check.call(_offending_lines(clean, write, setter).is_empty(), "the guard ignores comments, comparisons, constant_linear_velocity and request calls")
+	var mover: RegEx = RegEx.new()
+	check.call(write.compile(WRITE_PATTERN) == OK and setter.compile(SET_PATTERN) == OK and mover.compile(MOVE_PATTERN) == OK, "the source guard patterns compile")
+	var synthetic: String = "player.move_velocity = Vector3.ZERO\nplayer.vertical_speed += 1.0\nbody.set(\"velocity\", v)\nx.move_and_slide()\nplayer.move_velocity.y = 5.0\nplayer.move_velocity.x += 1.0\nplayer.coyote_timer = 0.0\n_captured.wall_run_cooldown_timer = 1.0\nplayer.global_position = p\nplayer.state_machine.transition_to(&\"Fall\")\n"
+	var clean: String = "# player.velocity = 1\nif player.move_velocity == v:\n\tbelt.constant_linear_velocity = v\n\tplayer.push_toward(d, 1.0, 1.0) # not player.velocity = 2\n_head.global_position = p\n_mesh.position = p\nif player.move_velocity.y == 0.0:\n"
+	check.call(_offending_lines(synthetic, write, setter, mover).size() == 10, "the guard flags writes (also per component), timer, capture and wall fields, set(), position writes, FSM transitions and move_and_slide in a synthetic offending string")
+	check.call(_offending_lines(clean, write, setter, mover).is_empty(), "the guard ignores comments, comparisons, constant_linear_velocity, request calls and a mechanism's own node positions")
 	var files: Array[String] = _script_files(MECHANISM_DIR)
 	check.call(files.size() >= 10, "the guard sees the mechanism scripts (%d files)" % files.size())
 	var report: Array[String] = []
 	for path: String in files:
 		var text: String = FileAccess.get_file_as_string(path)
-		for line: int in _offending_lines(text, write, setter):
+		for line: int in _offending_lines(text, write, setter, mover):
 			report.append("%s:%d" % [path, line])
 	check.call(report.is_empty(), "no mechanism script writes the player's velocity fields or calls move_and_slide (%s)" % ", ".join(report))
