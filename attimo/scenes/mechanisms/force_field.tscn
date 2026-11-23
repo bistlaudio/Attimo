@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/mechanisms/force_field.gd" id="1_script"]
 [ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="2_glow"]
+[ext_resource type="PackedScene" path="res://scenes/mechanisms/glow_element.tscn" id="gl_element"]
+[ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="gl_energy"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_volume"]
 radius = 5.0
@@ -48,3 +50,9 @@ surface_material_override/0 = SubResource("StandardMaterial3D_brass")
 transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
 mesh = SubResource("TorusMesh_ring")
 surface_material_override/0 = SubResource("StandardMaterial3D_brass")
+
+[node name="Glow" parent="." instance=ExtResource("gl_element")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+style = 3
+size = 3.0
+material_override = ExtResource("gl_energy")

@@ -1,6 +1,8 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/mechanisms/conveyor.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/mechanisms/glow_element.tscn" id="gl_element"]
+[ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="gl_energy"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_belt"]
 size = Vector3(4, 0.5, 16)
@@ -114,3 +116,9 @@ surface_material_override/0 = SubResource("StandardMaterial3D_slat")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07, 7.5)
 mesh = SubResource("BoxMesh_slat")
 surface_material_override/0 = SubResource("StandardMaterial3D_slat")
+
+[node name="Glow" parent="." instance=ExtResource("gl_element")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
+style = 6
+size = 8.0
+material_override = ExtResource("gl_energy")

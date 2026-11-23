@@ -17,6 +17,13 @@ func _ready() -> void:
 		set_active(true)
 
 
+## The shared material pass (D-07b). Hooked on NOTIFICATION_READY, which reaches this base class even when a subclass
+## overrides _ready without calling super.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_READY:
+		MechanismLook.apply(self)
+
+
 ## Sets the signal. Emits active_changed only when the value changed.
 func set_active(value: bool) -> void:
 	if value == is_active:

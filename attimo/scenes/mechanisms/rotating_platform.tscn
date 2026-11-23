@@ -1,6 +1,8 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/mechanisms/rotating_platform.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/mechanisms/glow_element.tscn" id="gl_element"]
+[ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="gl_energy"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_plate"]
 size = Vector3(8, 0.5, 8)
@@ -27,3 +29,9 @@ shape = SubResource("BoxShape3D_plate")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
 mesh = SubResource("BoxMesh_plate")
 surface_material_override/0 = SubResource("StandardMaterial3D_plate")
+
+[node name="Glow" parent="Body" instance=ExtResource("gl_element")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0)
+style = 2
+size = 5.0
+material_override = ExtResource("gl_energy")

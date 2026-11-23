@@ -1,6 +1,8 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/mechanisms/paternoster.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/mechanisms/glow_element.tscn" id="gl_element"]
+[ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="gl_energy"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_back"]
 size = Vector3(10, 10, 0.2)
@@ -37,3 +39,9 @@ mesh = SubResource("BoxMesh_post")
 surface_material_override/0 = SubResource("StandardMaterial3D_brass")
 
 [node name="Decks" type="Node3D" parent="."]
+
+[node name="Glow" parent="." instance=ExtResource("gl_element")]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 9, -1.45)
+style = 2
+size = 8.0
+material_override = ExtResource("gl_energy")

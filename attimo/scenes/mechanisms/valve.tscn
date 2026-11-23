@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scripts/mechanisms/triggers/valve.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/mechanisms/interactable.gd" id="2_interactable"]
 [ext_resource type="PackedScene" path="res://assets/prototype_bits/Primitive_Pillar.gltf" id="4_pillar"]
+[ext_resource type="PackedScene" path="res://scenes/mechanisms/glow_element.tscn" id="9_glowel"]
 [ext_resource type="Material" path="res://resources/mechanisms/glow_idle.tres" id="5_glow"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_wheel"]
@@ -22,10 +23,6 @@ material = SubResource("Mat_wheel")
 [sub_resource type="BoxMesh" id="BoxMesh_spoke"]
 size = Vector3(0.8, 0.07, 0.07)
 material = SubResource("Mat_wheel")
-
-[sub_resource type="SphereMesh" id="SphereMesh_hub"]
-radius = 0.13
-height = 0.26
 
 [node name="Valve" type="Node3D"]
 script = ExtResource("1_script")
@@ -55,9 +52,10 @@ mesh = SubResource("BoxMesh_spoke")
 transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("BoxMesh_spoke")
 
-[node name="GlowLens" type="MeshInstance3D" parent="Wheel"]
+[node name="GlowLens" parent="Wheel" instance=ExtResource("9_glowel")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.1)
-mesh = SubResource("SphereMesh_hub")
+style = 1
+size = 1.2
 material_override = ExtResource("5_glow")
 
 [node name="AimPoint" type="Marker3D" parent="."]

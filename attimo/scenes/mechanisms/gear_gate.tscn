@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/mechanisms/gear_gate.gd" id="1_gate"]
 [ext_resource type="PackedScene" path="res://scenes/proto/primitive_pillar.tscn" id="2_pillar"]
+[ext_resource type="PackedScene" path="res://scenes/mechanisms/glow_element.tscn" id="gl_element"]
+[ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="gl_energy"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_gate"]
 size = Vector3(4, 4, 0.5)
@@ -52,3 +54,9 @@ collision_mask = 2
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Doorway"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
 shape = SubResource("BoxShape3D_doorway")
+
+[node name="Glow" parent="." instance=ExtResource("gl_element")]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 4.4, 0)
+style = 2
+size = 4.0
+material_override = ExtResource("gl_energy")

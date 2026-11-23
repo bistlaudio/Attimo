@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/mechanisms/piston_wall.gd" id="1_script"]
 [ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="2_glow"]
+[ext_resource type="PackedScene" path="res://scenes/mechanisms/glow_element.tscn" id="gl_element"]
+[ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="gl_energy"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_head"]
 size = Vector3(3, 3, 1)
@@ -69,3 +71,9 @@ visible = false
 [node name="Mesh" type="MeshInstance3D" parent="TelegraphStrip"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, -2)
 surface_material_override/0 = ExtResource("2_glow")
+
+[node name="Glow" parent="Head" instance=ExtResource("gl_element")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.08, 0)
+style = 6
+size = 6.0
+material_override = ExtResource("gl_energy")

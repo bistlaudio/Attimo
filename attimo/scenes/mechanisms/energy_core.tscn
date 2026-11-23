@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scripts/mechanisms/triggers/energy_core.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/mechanisms/interactable.gd" id="2_interactable"]
 [ext_resource type="PackedScene" path="res://assets/prototype_bits/Primitive_Pillar.gltf" id="4_pillar"]
+[ext_resource type="PackedScene" path="res://scenes/mechanisms/glow_element.tscn" id="9_glowel"]
 [ext_resource type="Material" path="res://resources/mechanisms/glow_idle.tres" id="5_glow"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_pip"]
@@ -19,10 +20,6 @@ size = Vector3(0.6, 0.8, 0.6)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_hit"]
 size = Vector3(0.9, 0.9, 0.9)
-
-[sub_resource type="SphereMesh" id="SphereMesh_core"]
-radius = 0.2
-height = 0.4
 
 [sub_resource type="BoxMesh" id="BoxMesh_plate"]
 size = Vector3(0.7, 0.08, 0.7)
@@ -76,9 +73,10 @@ mesh = SubResource("BoxMesh_post")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0.45, -0.3)
 mesh = SubResource("BoxMesh_post")
 
-[node name="GlowLens" type="MeshInstance3D" parent="Lantern"]
+[node name="GlowLens" parent="Lantern" instance=ExtResource("9_glowel")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
-mesh = SubResource("SphereMesh_core")
+style = 3
+size = 1.8
 material_override = ExtResource("5_glow")
 
 [node name="TimerRing" type="Node3D" parent="Lantern"]

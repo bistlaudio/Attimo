@@ -1,6 +1,14 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/mechanisms/logic_or.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/mechanisms/glow_element.tscn" id="gl_element"]
+[ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="gl_energy"]
 
 [node name="LogicOr" type="Node3D"]
 script = ExtResource("1_script")
+
+[node name="Glow" parent="." instance=ExtResource("gl_element")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+style = 0
+size = 2.0
+material_override = ExtResource("gl_energy")

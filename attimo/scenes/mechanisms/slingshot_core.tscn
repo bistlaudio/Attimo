@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/mechanisms/slingshot_core.gd" id="1_script"]
 [ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="2_glow"]
+[ext_resource type="PackedScene" path="res://scenes/mechanisms/glow_element.tscn" id="gl_element"]
+[ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="gl_energy"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_trigger"]
 radius = 2.5
@@ -48,3 +50,9 @@ visible = false
 [node name="Core" type="MeshInstance3D" parent="Glow"]
 mesh = SubResource("SphereMesh_core")
 surface_material_override/0 = ExtResource("2_glow")
+
+[node name="GlowLamp" parent="." instance=ExtResource("gl_element")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+style = 3
+size = 3.0
+material_override = ExtResource("gl_energy")

@@ -248,7 +248,10 @@ func _scenario_scenes(tree: SceneTree, check: Callable) -> void:
 			check.call(false, "%s exists" % path)
 			continue
 		var node: Node = (load(path) as PackedScene).instantiate()
-		check.call(node.find_children("*", "MeshInstance3D", true, false).is_empty(), "%s has no mesh (invisible in game)" % path.get_file())
+		var only_lamp: bool = true
+		for mesh_node: Node in node.find_children("*", "MeshInstance3D", true, false):
+			only_lamp = only_lamp and mesh_node is GlowElement
+		check.call(only_lamp, "%s has no mesh except its GlowElement lamp (04.1-04 look pass)" % path.get_file())
 		node.free()
 	if ResourceLoader.exists(TIMER_SCENE):
 		var timer: LogicTimer = (load(TIMER_SCENE) as PackedScene).instantiate() as LogicTimer
