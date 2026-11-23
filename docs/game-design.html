@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Attimo Game Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one long reading column; Part 1 = presentation block (large panels), Part 2 = full design reference. Single deliberate dark "workshop at night" look. */
+:root {
+  --bg: #12161a;          /* soot */
+  --panel: #1a2026;       /* iron plate */
+  --panel-2: #212930;
+  --line: #2f3a43;
+  --fg: #e7e3da;          /* warm paper light */
+  --muted: #9aa39f;
+  --brass: #d1a35a;       /* steampunk, free */
+  --teal: #3fd6c6;        /* energy */
+  --moss: #8fae6a;        /* nature */
+  --danger: #e0795a;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 16px/1.6 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 40px 96px; display: grid; gap: 56px; }
+h1, h2, h3, h4 { font-family: var(--display); line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(3rem, 9vw, 6.5rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: clamp(1.7rem, 3.6vw, 2.4rem); font-weight: 700; }
+h3 { font-size: 1.3rem; font-weight: 700; }
+h4 { font-size: 1.05rem; font-weight: 700; }
+p { margin: 0; max-width: 68ch; }
+a { color: var(--teal); }
+a:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.eyebrow { font: 600 0.75rem/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.stack { display: grid; gap: 16px; }
+.stack-lg { display: grid; gap: 28px; }
+.muted { color: var(--muted); }
+.brass { color: var(--brass); } .teal { color: var(--teal); } .moss { color: var(--moss); }
+code, .num { font-family: var(--mono); font-size: 0.92em; font-variant-numeric: tabular-nums; }
+
+/* header */
+header.hero { display: grid; gap: 20px; padding-top: 24px; }
+.hero .tag { font-size: clamp(1.1rem, 2.2vw, 1.4rem); max-width: 40ch; color: var(--fg); }
+.hero h1 span { color: var(--teal); }
+nav.toc { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 0.92rem; }
+nav.toc a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+nav.toc a:hover { color: var(--fg); }
+.facts { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font: 500 0.82rem/1 var(--mono); padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); }
+.chip b { color: var(--fg); font-weight: 600; }
+
+/* part dividers */
+.part { display: grid; gap: 8px; border-top: 2px solid var(--line); padding-top: 22px; }
+.part h2 { font-size: clamp(2rem, 5vw, 3.2rem); }
+
+/* presentation panels */
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: clamp(20px, 4vw, 40px); display: grid; gap: 22px; }
+.ee { font-family: var(--display); font-weight: 700; font-size: clamp(1.5rem, 3.6vw, 2.4rem); line-height: 1.25; max-width: 30ch; text-wrap: balance; }
+.ee em { font-style: normal; color: var(--teal); }
+.pillars { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.pillar { background: var(--panel-2); border-radius: 10px; padding: 18px; display: grid; gap: 8px; align-content: start; border-top: 3px solid var(--c, var(--teal)); }
+.pillar .k { font: 600 0.72rem/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--c, var(--teal)); }
+.diagram { overflow-x: auto; }
+.diagram svg { display: block; width: 100%; min-width: 560px; height: auto; }
+.scope { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.scope > div { background: var(--panel-2); border-radius: 10px; padding: 18px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.scope ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.anti { font-family: var(--display); font-size: clamp(1.15rem, 2.4vw, 1.5rem); font-weight: 700; border-left: 3px solid var(--danger); padding-left: 16px; max-width: 46ch; }
+.todo { border: 1px dashed var(--line); border-radius: 10px; padding: 14px 16px; color: var(--muted); font-size: 0.92rem; }
+
+/* reference section */
+section.ref { display: grid; gap: 18px; }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 600 0.74rem/1.3 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); background: var(--panel); }
+tr:last-child td { border-bottom: 0; }
+td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+.grid2 > * { min-width: 0; }
+.rule { font-family: var(--display); font-size: clamp(1.3rem, 3vw, 1.9rem); font-weight: 700; color: var(--fg); padding: 18px 20px; background: var(--panel); border-radius: 12px; border: 1px solid var(--line); }
+.rule span { color: var(--teal); }
+.cores { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.core { width: 54px; height: 54px; border-radius: 50%; border: 3px solid var(--brass); display: grid; place-items: center; font: 600 0.8rem var(--mono); color: var(--bg); background: var(--teal); }
+.core.off { background: transparent; color: var(--muted); }
+.cores .lbl { font: 500 0.85rem var(--mono); color: var(--muted); margin-left: 6px; }
+ol.steps { margin: 0; padding-left: 22px; display: grid; gap: 10px; max-width: 70ch; }
+ul.plain { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 72ch; }
+.layer { display: grid; gap: 12px; padding: 18px; border-radius: 12px; background: var(--panel); border-left: 4px solid var(--c); }
+.layer h3 { color: var(--c); }
+.badge { display: inline-block; font: 600 0.7rem/1 var(--mono); padding: 4px 7px; border-radius: 5px; background: var(--panel-2); color: var(--muted); letter-spacing: 0.04em; }
+footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--line); padding-top: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">Uni prototype · 3D third-person platformer · Godot 4.7</div>
+  <h1>Atti<span>mo</span></h1>
+  <p class="tag">Speed becomes energy. Energy becomes more speed. And when it counts, you freeze the moment and aim.</p>
+  <div class="facts">
+    <span class="chip">Hero <b>Rino</b></span>
+    <span class="chip">Boost state <b>Moto Perpetuo</b></span>
+    <span class="chip">Scope <b>1 level · 1 boss</b></span>
+    <span class="chip">Input <b>KB+M first</b></span>
+  </div>
+  <nav class="toc" aria-label="Contents">
+    <a href="attimo-presentation.html">Open as presentation (fullscreen)</a>
+    <a href="#presentation">Presentation block</a>
+    <a href="#ee">Essential experience</a>
+    <a href="#pillars">Pillars</a>
+    <a href="#loops">Core loops</a>
+    <a href="#scope">Scope</a>
+    <a href="#design">Design decisions</a>
+    <a href="#rule">Governing rule</a>
+    <a href="#resource">Energy</a>
+    <a href="#loader">Loader</a>
+    <a href="#modules">Modules</a>
+    <a href="#kit">Mechanism kit</a>
+    <a href="#roadmap">Roadmap</a>
+  </nav>
+</header>
+
+<!-- ============ PART 1: PRESENTATION BLOCK ============ -->
+<div class="part" id="presentation">
+  <div class="eyebrow">Part 1 · Interim presentation &amp; design notebook</div>
+  <h2>The game in four answers</h2>
+</div>
+
+<div class="todo">Team &amp; roles slide comes before this block in the presentation (names, roles, responsibilities); not part of this document yet.</div>
+
+<section class="panel" id="ee">
+  <div class="eyebrow">Essential experience</div>
+  <p class="ee">Feel like a <em>perpetual motion machine</em>: every bit of speed charges your arm, and every charge throws you faster through an overgrown steampunk ruin, until you stop time, aim, and launch.</p>
+  <p class="muted">Attimo means "the moment". The player should leave with two feelings: the rush of never slowing down, and the calm control of the frozen second in which they decide where all that speed goes.</p>
+</section>
+
+<section class="panel" id="pillars">
+  <div class="eyebrow">Pillars</div>
+  <div class="pillars">
+    <div class="pillar" style="--c: var(--teal)">
+      <span class="k">Pillar 1</span>
+      <h3>Momentum is power</h3>
+      <p>Speed charges Rino's arm, and energy buys more speed. Every move feeds one loop: speed, energy, more speed.</p>
+    </div>
+    <div class="pillar" style="--c: var(--fg)">
+      <span class="k">Pillar 2</span>
+      <h3>Freeze the moment</h3>
+      <p>The Loader stops time on demand: hold to freeze your momentum in slow motion, look around, release to discharge it where you aim.</p>
+    </div>
+    <div class="pillar" style="--c: var(--brass)">
+      <span class="k">Pillar 3</span>
+      <h3>Free base, charged power</h3>
+      <p>Every move works without energy. Energy injects it: higher, longer, further. There is never a "failed" moment, only a stronger option.</p>
+    </div>
+    <div class="pillar" style="--c: var(--moss)">
+      <span class="k">Pillar 4</span>
+      <h3>A world you read at a glance</h3>
+      <p>Brass helps you if you hit its rhythm, turquoise asks you to spend, overgrown nature tries to slow you down.</p>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="loops">
+  <div class="eyebrow">Core loop diagrams</div>
+  <h3>1 · The momentum loop (seconds)</h3>
+  <div class="diagram" role="img" aria-label="Momentum loop: move fast, the arm charges, spend energy on injected moves and the Loader, gain more speed, move fast again. Above 50 energy the player is in Moto Perpetuo.">
+    <svg viewBox="0 0 720 440" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#9aa39f"/></marker>
+        <marker id="aht" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#3fd6c6"/></marker>
+      </defs>
+      <circle cx="360" cy="220" r="150" fill="none" stroke="#2f3a43" stroke-width="2" stroke-dasharray="4 8"/>
+      <!-- center -->
+      <circle cx="360" cy="220" r="74" fill="#212930" stroke="#3fd6c6" stroke-width="2"/>
+      <text x="360" y="210" text-anchor="middle" fill="#3fd6c6" font-family="Bricolage Grotesque, Segoe UI, sans-serif" font-weight="700" font-size="18">Moto Perpetuo</text>
+      <text x="360" y="234" text-anchor="middle" fill="#9aa39f" font-family="JetBrains Mono, Consolas, monospace" font-size="13">energy ≥ 50</text>
+      <text x="360" y="252" text-anchor="middle" fill="#9aa39f" font-family="JetBrains Mono, Consolas, monospace" font-size="13">+10–15 % run speed</text>
+      <!-- nodes -->
+      <g font-family="Inter, Segoe UI, sans-serif" text-anchor="middle">
+        <rect x="270" y="22" width="180" height="56" rx="10" fill="#1a2026" stroke="#e7e3da" stroke-width="1.5"/>
+        <text x="360" y="47" fill="#e7e3da" font-weight="600" font-size="16">Move fast</text>
+        <text x="360" y="66" fill="#9aa39f" font-size="12">run · jump chain · dash hop</text>
+
+        <rect x="530" y="190" width="176" height="60" rx="10" fill="#1a2026" stroke="#3fd6c6" stroke-width="1.5"/>
+        <text x="618" y="215" fill="#e7e3da" font-weight="600" font-size="16">Arm charges</text>
+        <text x="618" y="235" fill="#9aa39f" font-size="12">+3–6 /s above ~12 m/s</text>
+
+        <rect x="250" y="362" width="220" height="60" rx="10" fill="#1a2026" stroke="#3fd6c6" stroke-width="1.5"/>
+        <text x="360" y="387" fill="#e7e3da" font-weight="600" font-size="16">Spend energy</text>
+        <text x="360" y="407" fill="#9aa39f" font-size="12">injected moves · Loader discharge</text>
+
+        <rect x="14" y="190" width="176" height="60" rx="10" fill="#1a2026" stroke="#e7e3da" stroke-width="1.5"/>
+        <text x="102" y="215" fill="#e7e3da" font-weight="600" font-size="16">More speed</text>
+        <text x="102" y="235" fill="#9aa39f" font-size="12">further, higher, faster</text>
+      </g>
+      <!-- arrows along the ring -->
+      <path d="M455 60 Q 590 80 612 184" fill="none" stroke="#3fd6c6" stroke-width="2.2" marker-end="url(#aht)"/>
+      <path d="M612 256 Q 590 360 476 386" fill="none" stroke="#3fd6c6" stroke-width="2.2" marker-end="url(#aht)"/>
+      <path d="M244 386 Q 130 360 108 256" fill="none" stroke="#9aa39f" stroke-width="2.2" marker-end="url(#ah)"/>
+      <path d="M108 184 Q 130 80 264 60" fill="none" stroke="#9aa39f" stroke-width="2.2" marker-end="url(#ah)"/>
+    </svg>
+  </div>
+
+  <h3>2 · The energy economy (minutes)</h3>
+  <div class="diagram" role="img" aria-label="Energy economy: sources (momentum, capsules and broken machines, extracting enemies, shooting enemies into shards, charge button) fill the arm's four cores; the arm spends on Loader, injected moves, shots and mechanisms; this opens routes and speed, which lead to new sources.">
+    <svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="ah2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#9aa39f"/></marker>
+      </defs>
+      <g font-family="Inter, Segoe UI, sans-serif">
+        <!-- sources -->
+        <rect x="10" y="10" width="220" height="234" rx="10" fill="#1a2026" stroke="#2f3a43"/>
+        <text x="26" y="38" fill="#9aa39f" font-family="JetBrains Mono, Consolas, monospace" font-size="12" letter-spacing="1.5">INCOME</text>
+        <g font-size="13" fill="#e7e3da">
+          <text x="26" y="68">Momentum <tspan fill="#9aa39f">+3–6 /s</tspan></text>
+          <text x="26" y="98">Capsule / machine <tspan fill="#9aa39f">+40</tspan></text>
+          <text x="26" y="128">Extract enemy <tspan fill="#9aa39f">+35</tspan></text>
+          <text x="26" y="158">Shoot → shards <tspan fill="#9aa39f">net +15</tspan></text>
+          <text x="26" y="188">Charge button <tspan fill="#9aa39f">+5 /s</tspan></text>
+          <text x="26" y="222" fill="#9aa39f" font-size="12">Extracting = efficient, shooting = fun</text>
+        </g>
+        <!-- arm -->
+        <rect x="290" y="58" width="180" height="138" rx="12" fill="#212930" stroke="#3fd6c6" stroke-width="2"/>
+        <text x="380" y="88" text-anchor="middle" fill="#e7e3da" font-weight="600" font-size="16">Rino's arm</text>
+        <g>
+          <circle cx="323" cy="128" r="15" fill="#3fd6c6" stroke="#d1a35a" stroke-width="2.5"/>
+          <circle cx="358" cy="128" r="15" fill="#3fd6c6" stroke="#d1a35a" stroke-width="2.5"/>
+          <circle cx="393" cy="128" r="15" fill="none" stroke="#d1a35a" stroke-width="2.5"/>
+          <circle cx="428" cy="128" r="15" fill="none" stroke="#d1a35a" stroke-width="2.5"/>
+        </g>
+        <text x="380" y="176" text-anchor="middle" fill="#9aa39f" font-family="JetBrains Mono, Consolas, monospace" font-size="12">0–100 · 4 cores × 25</text>
+        <!-- sinks -->
+        <rect x="530" y="10" width="220" height="234" rx="10" fill="#1a2026" stroke="#2f3a43"/>
+        <text x="546" y="38" fill="#9aa39f" font-family="JetBrains Mono, Consolas, monospace" font-size="12" letter-spacing="1.5">SPENDING</text>
+        <g font-size="13" fill="#e7e3da">
+          <text x="546" y="68">Loader bonus <tspan fill="#9aa39f">25</tspan></text>
+          <text x="546" y="98">Dash hop 2 / 3 <tspan fill="#9aa39f">15 each</tspan></text>
+          <text x="546" y="128">Air dash <tspan fill="#9aa39f">10</tspan></text>
+          <text x="546" y="158">Wall run &gt; 0.6 s <tspan fill="#9aa39f">15 /s</tspan></text>
+          <text x="546" y="188">Shot <tspan fill="#9aa39f">10</tspan></text>
+          <text x="546" y="218">Energy core <tspan fill="#9aa39f">any amount</tspan></text>
+        </g>
+        <!-- arrows -->
+        <path d="M232 127 L 284 127" stroke="#9aa39f" stroke-width="2.2" marker-end="url(#ah2)"/>
+        <path d="M472 127 L 524 127" stroke="#9aa39f" stroke-width="2.2" marker-end="url(#ah2)"/>
+        <!-- return -->
+        <path d="M640 248 L 640 292 L 120 292 L 120 252" fill="none" stroke="#3fd6c6" stroke-width="2.2" stroke-dasharray="6 5" marker-end="url(#ah2)"/>
+        <rect x="246" y="276" width="268" height="32" rx="8" fill="#12161a" stroke="#3fd6c6"/>
+        <text x="380" y="297" text-anchor="middle" fill="#e7e3da" font-size="13">speed + opened routes → new sources</text>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<section class="panel" id="scope">
+  <div class="eyebrow">Scope &amp; anti-scope</div>
+  <p class="anti">Attimo is not a combat game, not an open world and not a story game. It is one level of pure momentum, beaten by moving well.</p>
+  <div class="scope">
+    <div>
+      <h4 class="teal">In scope</h4>
+      <ul>
+        <li>Movement set: run, triple jump, dash, dash hop, wall run</li>
+        <li>Energy arm with 4 cores and Moto Perpetuo</li>
+        <li>Loader (right click) with slow motion and trajectory</li>
+        <li>Extractor and Shot modules on the mouse wheel</li>
+        <li>Mechanism kit: 8 logic blocks, 3 themed layers</li>
+        <li>1–2 simple enemy types, health, checkpoints</li>
+        <li>One level, one boss, title to end screen</li>
+        <li>Final hero, steampunk world, juice, audio</li>
+        <li>Windows build, KB+M first, controller late</li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="brass">Nice to have</h4>
+      <ul>
+        <li>More looks per logic block (variants without new code)</li>
+        <li>More nature objects for the world layer</li>
+        <li>Third hand module</li>
+        <li>Collectibles (hidden gears and cores)</li>
+        <li>Ledge grab</li>
+      </ul>
+    </div>
+    <div>
+      <h4 style="color: var(--danger)">Out of scope</h4>
+      <ul>
+        <li>Multiple levels</li>
+        <li>Dialogue and cutscenes (story only through the world)</li>
+        <li>Full combat system, weapons, many enemy types</li>
+        <li>Pull/push and the old aim mode</li>
+        <li>Skill trees, save slots, localization</li>
+        <li>Custom animation authoring (KayKit clips only)</li>
+        <li>Juice presets or toggles</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PART 2: DESIGN DECISIONS ============ -->
+<div class="part" id="design">
+  <div class="eyebrow">Part 2 · Full design reference</div>
+  <h2>Everything we decided</h2>
+  <p class="muted">Rendered from <code>docs/GAME-DESIGN.md</code>, the single source of truth. All numbers are starting values for the F2 tuning panel, not locked balance.</p>
+</div>
+
+<section class="ref" id="identity">
+  <h3>Identity</h3>
+  <div class="tbl"><table>
+    <tr><th>Item</th><th>Decision</th></tr>
+    <tr><td>Game</td><td><b>Attimo</b> ("the moment"). The Loader's slow-motion hold literally freezes the moment.</td></tr>
+    <tr><td>Premise</td><td>The protagonist caused the apocalypse when something went wrong in their lab, and fights back to it through a destroyed, overgrown world.</td></tr>
+    <tr><td>Character</td><td><b>Rino</b>, with a steampunk prosthetic arm that stores energy in four glowing turquoise cores.</td></tr>
+    <tr><td>Boost state</td><td><b>Moto Perpetuo</b>, energy ≥ 50.</td></tr>
+    <tr><td>Core value</td><td>Fluid, fast movement. If everything else wobbles, this must work.</td></tr>
+    <tr><td>Themes</td><td><span class="brass">Steampunk</span> (incl. clockwork), <span class="teal">arcane energy</span> (turquoise, spacey), <span class="moss">overgrown nature</span>.</td></tr>
+  </table></div>
+</section>
+
+<section class="ref" id="rule">
+  <h3>Governing rule</h3>
+  <div class="rule">The base version is free; <span>the injected version costs energy.</span></div>
+  <div class="tbl"><table>
+    <tr><th>Move</th><th>Free (base)</th><th>Injected (costs energy)</th></tr>
+    <tr><td>Triple jump 1-2-3</td><td>always, normal heights</td><td>at ≥ 50 buffed (higher, faster), no cost</td></tr>
+    <tr><td>Dash</td><td>ground dash, always</td><td>air dash; with an empty arm it does not fire</td></tr>
+    <tr><td>Dash hop</td><td>1 stage</td><td>up to 3 stages, each costs; not spammable</td></tr>
+    <tr><td>Wall run</td><td>~0.6 s; jumping off always free</td><td>longer, costs per second</td></tr>
+    <tr><td>Loader</td><td>redirect only, stored speed, cooldown</td><td>discharge with bonus speed</td></tr>
+  </table></div>
+  <p class="muted">Without enough energy the base version fires automatically, so there is no failed moment. Only the air dash simply does not fire.</p>
+</section>
+
+<section class="ref" id="resource">
+  <h3>The energy resource</h3>
+  <div class="cores" aria-label="Example: two of four cores full, 50 energy, Moto Perpetuo">
+    <span class="core">25</span><span class="core">50</span><span class="core off">75</span><span class="core off">100</span>
+    <span class="lbl">example: 50 → Moto Perpetuo</span>
+  </div>
+  <ul class="plain">
+    <li>Scale 0–100, split into 4 cores of 25, shown diegetically on the arm.</li>
+    <li>Moto Perpetuo from 50: +10–15 % run speed, buffed Jump 3, brighter arm.</li>
+    <li>Respawn and checkpoints: always exactly one core (25). Fair, no soft-lock, no farming.</li>
+  </ul>
+  <div class="grid2">
+    <div class="tbl"><table>
+      <tr><th>Income</th><th>Value</th></tr>
+      <tr><td>Momentum, passive above ~12 m/s</td><td class="n">+3–6 /s</td></tr>
+      <tr><td>Energy capsule / broken machine (extracted)</td><td class="n">+40</td></tr>
+      <tr><td>Extract from an enemy (~2 s, vulnerable)</td><td class="n">+35</td></tr>
+      <tr><td>Shoot, then absorb shards</td><td class="n">−10 / +25</td></tr>
+      <tr><td>Charge button, emergency only</td><td class="n">+5 /s</td></tr>
+    </table></div>
+    <div class="tbl"><table>
+      <tr><th>Spending</th><th>Cost</th></tr>
+      <tr><td>Loader discharge with bonus</td><td class="n">25</td></tr>
+      <tr><td>Dash hop stage 2 / 3</td><td class="n">15 each</td></tr>
+      <tr><td>Air dash</td><td class="n">10</td></tr>
+      <tr><td>Wall run after 0.6 s</td><td class="n">15 /s</td></tr>
+      <tr><td>Shot</td><td class="n">10</td></tr>
+      <tr><td>Fast escape from an attraction field</td><td class="n">20 /s</td></tr>
+      <tr><td>Energy core (mechanism)</td><td class="n">any</td></tr>
+    </table></div>
+  </div>
+  <p class="muted">Extract vs. shoot is a real choice: the Extractor is more efficient (+35 vs. net +15) but slow and risky; shoot-and-absorb stays in the flow and is more fun.</p>
+</section>
+
+<section class="ref" id="loader">
+  <h3>Right click: the Loader <span class="badge">replaces aim mode</span></h3>
+  <ol class="steps">
+    <li><b>Hold:</b> momentum freezes and is stored; Rino brakes hard or hangs in the air. Slow motion ~0.25×, free camera, capped at ~1.2 s real time, then it discharges on its own.</li>
+    <li><b>Release:</b> discharge in the view direction (also up and down) at <code>max(stored speed, minimum push) + bonus</code>, capped.</li>
+    <li><b>Look:</b> the crosshair becomes a charge ring that fills with the stored speed, a dashed trajectory preview, slight desaturation and a turquoise vignette. Empty arm: grey ring, no bonus segment.</li>
+    <li><b>Removed:</b> goggle HUD, zoom, shoulder offset, aim pose, pull and push. The small crosshair and target aim assist stay.</li>
+  </ol>
+</section>
+
+<section class="ref" id="modules">
+  <h3>Left click: two modules on the mouse wheel</h3>
+  <div class="grid2">
+    <div class="layer" style="--c: var(--teal)">
+      <h4>Extractor <span class="badge">hold</span></h4>
+      <p>Cone in front of the hand. Drains enemies, shards, energy capsules and broken machines. Brings energy.</p>
+    </div>
+    <div class="layer" style="--c: var(--teal)">
+      <h4>Shot <span class="badge">tap</span></h4>
+      <p>The Fernauslöser pulse as a projectile. Costs energy, hits targets and enemies. Targets hit from the hip replace levers.</p>
+    </div>
+  </div>
+</section>
+
+<section class="ref" id="kit">
+  <h3>Mechanism kit</h3>
+  <p>Every world object has a profile on three axes: <b>role</b> (platform, environment, obstacle, booster, mechanism), <b>energy relation</b> (free, costs, amplified) and <b>theme</b> (steampunk, energy, nature). The cube is deliberately sparse; empty cells are intended.</p>
+  <div class="tbl"><table>
+    <tr><th>Base rule</th><th>Meaning</th></tr>
+    <tr><td>Coupling</td><td><span class="brass">Steampunk</span> = free and mechanical, it helps you. <span class="teal">Turquoise</span> = energy; anything that costs or is amplified shows turquoise. <span class="moss">Nature</span> = world and danger, never helps you.</td></tr>
+    <tr><td>Platforms are neutral</td><td>They never cost, charge or get amplified; they only interact with the world and themselves (crumble, tilt, sink).</td></tr>
+    <tr><td>Booster rule</td><td>Every energy move has a free counterpart in the world, so a level section can dial how much energy it demands.</td></tr>
+    <tr><td>Only source</td><td>The only energy source in the world is extracting capsules and broken machines.</td></tr>
+  </table></div>
+
+  <div class="tbl"><table>
+    <tr><th>Layer</th><th>Trait</th><th>Asks the player</th></tr>
+    <tr><td class="brass">Steampunk</td><td>Timing</td><td>"Can you hit the rhythm?"</td></tr>
+    <tr><td class="teal">Energy</td><td>Decision</td><td>"Do you spend it?"</td></tr>
+    <tr><td class="moss">Nature</td><td>Resistance</td><td>"Can you keep your speed?"</td></tr>
+  </table></div>
+
+  <div class="layer" style="--c: var(--brass)">
+    <h3>Steampunk · free, mechanical</h3>
+    <div class="tbl"><table>
+      <tr><th>Role</th><th>Objects</th></tr>
+      <tr><td>Platforms</td><td>Clock-hand platform, tilting platform, paternoster, rail cart, piston steps, drawbridge (switched by a target)</td></tr>
+      <tr><td>Environment</td><td>Updraft (continuous), geyser (pulsed), steam stream (horizontal)</td></tr>
+      <tr><td>Obstacles</td><td>Pendulum, piston wall, steam hammer</td></tr>
+      <tr><td>Boosters</td><td>Slingshot core, steam cannon (fixed direction), boost ring, speed pad (steam boost-nozzle look), wall pad (brass and steam look), bounce pad</td></tr>
+      <tr><td>Mechanisms</td><td>The output side: gates, gear gates and platforms switched by targets and energy cores</td></tr>
+    </table></div>
+  </div>
+
+  <div class="layer" style="--c: var(--teal)">
+    <h3>Energy · costs or amplified</h3>
+    <div class="tbl"><table>
+      <tr><th>Role</th><th>Costs</th><th>Amplified</th></tr>
+      <tr><td>Platforms</td><td class="muted">neutral</td><td class="muted">neutral</td></tr>
+      <tr><td>Environment</td><td>Attraction field: slow escape free, fast escape costs</td><td>Gravity zone: float longer with energy</td></tr>
+      <tr><td>Obstacles</td><td>Force-field barrier: breaks only to a charged Loader</td><td class="muted">deliberately empty</td></tr>
+      <tr><td>Boosters</td><td class="muted">deliberately empty (the Loader is the paid booster)</td><td>Bounce pad with core</td></tr>
+      <tr><td>Mechanisms</td><td>Energy core (pay in any amount), target (shot costs)</td><td>Charge gate: opens only if you arrive with ≥ X</td></tr>
+    </table></div>
+    <p class="muted">Source: energy capsule (small, quick) and broken machine (large, slower, more).</p>
+  </div>
+
+  <div class="layer" style="--c: var(--moss)">
+    <h3>Overgrown nature · world and danger</h3>
+    <div class="tbl"><table>
+      <tr><th>Role</th><th>Objects</th></tr>
+      <tr><td>Platforms</td><td>Crumbling platform, sinking debris, tipping trunk</td></tr>
+      <tr><td>Environment</td><td>Leaf storm (pushes against you), resin pool (slows you)</td></tr>
+      <tr><td>Obstacles</td><td>Collapse, falling debris, snap bloom (bites when you get close)</td></tr>
+      <tr><td>Boosters</td><td class="muted">deliberately empty: nature never helps you</td></tr>
+    </table></div>
+  </div>
+
+  <div class="layer" style="--c: var(--brass)">
+    <h3>Slingshot core · the Loader you can touch</h3>
+    <ol class="steps">
+      <li><b>Enter:</b> a brass cage catches Rino with a steam hiss, momentum freezes.</li>
+      <li><b>Hold:</b> same slow motion and free camera as the Loader; a pressure gauge instead of the charge ring, brass trajectory dashes, auto-launch after the max hold.</li>
+      <li><b>Release:</b> steam blast, launch in the view direction at <code>max(entry speed, fixed push)</code>, no energy bonus.</li>
+    </ol>
+    <p class="muted">Same input and timing as the Loader, so it teaches the Loader without a tutorial.</p>
+  </div>
+
+  <h3>Architecture · 8 logic blocks + 4 components + looks</h3>
+  <p>Logic is separated from look. A block is one script with a <code>.tres</code> config; a component is a child node that adds an ability to any block; a look is an inherited scene. New objects are assembled, not coded.</p>
+  <div class="tbl"><table>
+    <tr><th>Logic block</th><th>Objects</th></tr>
+    <tr><td>Force volume</td><td>updraft, geyser, steam stream, gravity zone, attraction field, leaf storm, resin pool</td></tr>
+    <tr><td>Impulse</td><td>speed pad, boost ring, bounce pad (base and with core)</td></tr>
+    <tr><td>Catch &amp; launch</td><td>slingshot core, steam cannon</td></tr>
+    <tr><td>Timed motion</td><td>clock-hand and tilting platform, paternoster, rail cart, piston steps, drawbridge, gates, pendulum, steam hammer, piston wall</td></tr>
+    <tr><td>Reaction to load</td><td>crumbling platform, collapse, sinking debris, tipping trunk, falling debris, snap bloom, force-field barrier</td></tr>
+    <tr><td>Trigger</td><td>target, energy core, charge gate (+ invisible AND / OR / timer logic)</td></tr>
+    <tr><td>Energy source</td><td>energy capsule, broken machine</td></tr>
+    <tr><td>Wall surface</td><td>wall pad</td></tr>
+  </table></div>
+  <div class="tbl"><table>
+    <tr><th>Component</th><th>Does</th><th>Examples</th></tr>
+    <tr><td>Receiver</td><td>switched by a trigger signal</td><td>switched speed pad, drawbridge, gates</td></tr>
+    <tr><td>Damage / push</td><td>hurts or pushes on contact</td><td>pendulum, steam hammer, piston wall, snap bloom</td></tr>
+    <tr><td>Amplification</td><td>reads the arm charge, acts stronger</td><td>bounce pad with core, gravity zone</td></tr>
+    <tr><td>Energy cost</td><td>drains energy while used</td><td>fast escape from the attraction field</td></tr>
+  </table></div>
+  <p class="muted">Parallels between layers come from components: a steampunk object plus amplification becomes its energy counterpart. A look may change freely within its layer but never breaks the coupling.</p>
+</section>
+
+<section class="ref" id="roadmap">
+  <h3>Roadmap mapping</h3>
+  <div class="tbl"><table>
+    <tr><th>Phase</th><th>Delivers</th></tr>
+    <tr><td class="n">5</td><td>Energy Arm &amp; Loader: resource, Moto Perpetuo, income without enemies, energy costs, Loader, aim mode removed</td></tr>
+    <tr><td class="n">05.1</td><td>Kit Rework: kit cube, 8 blocks + 4 components, three layers, showroom regrouped</td></tr>
+    <tr><td class="n">6</td><td>Extractor, Shot, Enemies &amp; Recovery: modules, shards, energy HUD, pickup and teaching rooms</td></tr>
+    <tr><td class="n">7</td><td>Level blockout with the "charge the level" gimmick</td></tr>
+    <tr><td class="n">8</td><td>Boss beaten through Loader discharges and shots on weak points</td></tr>
+  </table></div>
+</section>
+
+<footer>Attimo · generated from <code>docs/GAME-DESIGN.md</code> on 2026-11-23. When the design doc changes, update this page too.</footer>
+</div>
+</body>
+</html>

@@ -1,7 +1,7 @@
 # Attimo: Game Design
 
 > **Living document. This is the single source of truth for what carries the game.**
-> Whenever a design decision is made or changed (in a discuss session, a phase, a playtest or a quick chat), update this file in the same session and add a line to the change log at the bottom. Phase CONTEXT/PLAN files may refine details, but if they change a rule here, this file is updated too. All numbers are starting values for the F2 tuning panel, not locked balance; tuned values live in `MovementConfig` and `docs/MOVEMENT-METRICS.md`.
+> Whenever a design decision is made or changed (in a discuss session, a phase, a playtest or a quick chat), update this file in the same session and add a line to the change log at the bottom. Its two HTML views, the site `docs/game-design.html` and the fullscreen deck `docs/attimo-presentation.html`, are updated together with this file, and checked at the end of every phase. Phase CONTEXT/PLAN files may refine details, but if they change a rule here, this file is updated too. All numbers are starting values for the F2 tuning panel, not locked balance; tuned values live in `MovementConfig` and `docs/MOVEMENT-METRICS.md`.
 
 ## 0. Identity
 
@@ -44,12 +44,12 @@ When the player lacks energy for an injected move, the base version fires automa
 | Source | How | Starting value |
 |---|---|---|
 | Momentum (passive) | charges while above dash exit speed (~12 m/s) | +3-6/s, scales with speed |
-| Arcane energy capsules | broken, glowing machines and gadgets placed in the world, drained with the Siphon (replaces the earlier "energy rifts" idea) | +40 per capsule, then empty |
-| Siphon (Moira-style drain) | drain an enemy at close range | up to +35 per enemy, ~2 s, player is vulnerable while draining |
-| Shoot -> absorb | shooting costs energy, the enemy bursts into shards, the player siphons the shards | shot -10, shards +25, net +15 |
+| Arcane energy capsules | broken, glowing machines and gadgets placed in the world, drained with the Extractor (replaces the earlier "energy rifts" idea) | +40 per capsule, then empty |
+| Extractor (Moira-style drain) | drain an enemy at close range | up to +35 per enemy, ~2 s, player is vulnerable while draining |
+| Shoot -> absorb | shooting costs energy, the enemy bursts into shards, the player extracts the shards | shot -10, shards +25, net +15 |
 | Charge button ("Super Saiyan" charge) | stand still and hold, very slow | +5/s, emergency fallback only |
 
-**Siphon vs. shoot (intended balance):** the Siphon is more *efficient* (+35 vs. net +15 per enemy) but slow and risky; shoot-and-absorb yields less but is fast, stays in the flow and is more *fun*. A real choice, not an efficiency race.
+**Extract vs. shoot (intended balance):** the Extractor is more *efficient* (+35 vs. net +15 per enemy) but slow and risky; shoot-and-absorb yields less but is fast, stays in the flow and is more *fun*. A real choice, not an efficiency race.
 
 ### Spending
 
@@ -76,7 +76,7 @@ The old Phase 5 (Pull/Push) is replaced by this mechanic. Pull and push are drop
 
 ## 5. Left click: two modules, switched with the mouse wheel
 
-- **Siphon** (hold): cone in front of the hand; drains enemies, shards and energy capsules. Brings energy.
+- **Extractor** (hold): cone in front of the hand; drains enemies, shards and energy capsules. Brings energy.
 - **Shot** (tap): the existing Fernauslöser pulse as a projectile. Costs energy; hits targets and enemies. Targets activated by hip-fire shots replace levers.
 
 Both run on the Phase 4 hand module framework (one folder + one registry entry per module).
@@ -99,7 +99,7 @@ Every world object gets a profile on three axes. Role defines the chapters; ener
 | Boosters | What gives me movement for free? |
 | Mechanisms | What do I actively interact with? |
 
-**Axis 2: Energy relation (tag):** Free / Costs / Amplified (works stronger when the arm is charged). There is **no "charges" column**: the only energy source in the world is siphoning broken machines and energy capsules (special case, see 6.4).
+**Axis 2: Energy relation (tag):** Free / Costs / Amplified (works stronger when the arm is charged). There is **no "charges" column**: the only energy source in the world is extracting broken machines and energy capsules (special case, see 6.4).
 
 **Axis 3: Theme (tag):** Steampunk (incl. clockwork), Energy (arcane / spacey, turquoise), Overgrown nature.
 
@@ -128,7 +128,7 @@ Every world object gets a profile on three axes. Role defines the chapters; ener
 | Boosters | deliberately empty (the Loader itself is the paid booster) | **Bounce pad with core**: higher/further when the arm is charged |
 | Mechanisms | **Energy core** (pay in any amount; more energy -> more parkour spawns or a farther door), **Target** (shot costs energy) | **Charge gate**: opens only while you arrive with >= X charge; checks, does not consume |
 
-**Only energy source:** **energy capsule** (small, quick siphon) and **broken machine** (large, slower siphon, more energy).
+**Only energy source:** **energy capsule** (small, quick extraction) and **broken machine** (large, slower extraction, more energy).
 
 ### 6.5 Layer 1: Steampunk (free, mechanical)
 
@@ -176,7 +176,7 @@ Professional pattern: logic separated from look, and cross-cutting abilities as 
 | 4 | Timed motion | path or rotation, always on / cyclic / switched | clock-hand platform, tilting platform, paternoster, rail cart, piston steps, drawbridge, gates, pendulum, steam hammer, piston wall |
 | 5 | Reaction to load | crumble / sink / tip / fall; triggered by weight, proximity or impact (charged Loader) | crumbling platform, collapse, sinking debris, tipping trunk, falling debris, snap bloom (proximity), force-field barrier (impact) |
 | 6 | Trigger | sends a signal; invisible AND / OR / timer logic combines signals | target, energy core, charge gate |
-| 7 | Energy source | amount, siphon duration | energy capsule, broken machine |
+| 7 | Energy source | amount, extraction duration | energy capsule, broken machine |
 | 8 | Wall surface | wall-run surface | wall pad |
 
 **Components: what it can do additionally** (child nodes, attachable to any block)
@@ -207,6 +207,14 @@ Professional pattern: logic separated from look, and cross-cutting abilities as 
 
 Look rule: a look may change freely **within its layer**, but must never break the coupling. A free booster never gets a nature look, and anything that costs or is amplified always keeps a turquoise signal.
 
+**Architecture guardrails** (from the lecture review, `docs/reference/LECTURE-PRINCIPLES.md` section 3):
+
+1. No flag soup inside a block: variants of timed motion and force volume are one selected profile, not combinable booleans; a variant that needs much special code becomes its own block.
+2. Runtime state lives on the node, never in the shared `.tres` config (or `duplicate()` it first).
+3. A component exists only once it has two users; until then the energy cost is a force-volume parameter.
+4. Each block documents its interface (config, signals in and out) and has a contract test; each object keeps its smoke test.
+5. EventBus facts carry values (ids, positions, amounts), not node references.
+
 ### 6.9 Old showroom stations: verdict
 
 - **Keep:** updraft, geyser, slingshot core, boost ring, piston wall, pendulum, crumbling platform, paternoster, wall pad, tilting platform, gravity zone.
@@ -221,7 +229,7 @@ Look rule: a look may change freely **within its layer**, but must never break t
 |---|---|
 | 5 Energy Arm & Loader | sections 2-4: resource, Moto Perpetuo, income without enemies, energy costs, Loader, removal of aim mode |
 | 05.1 Kit Rework | section 6: kit cube, 8 logic blocks + 4 components, the three layers, showroom regroup |
-| 6 Siphon & Shot | section 5 and the enemy income from section 3 |
+| 6 Extractor & Shot | section 5 and the enemy income from section 3 |
 | 7 Level | the "charge the level" gimmick, built from the kit |
 | 8 Boss | beaten through Loader discharges and shots on weak points |
 
@@ -230,3 +238,5 @@ Look rule: a look may change freely **within its layer**, but must never break t
 | Date | Change |
 |---|---|
 | 2026-11-23 | Created from the energy-momentum design session (note `.planning/notes/2026-11-23-energy-momentum-core-mechanic.md`): core loop, governing rule, resource, Loader, modules, mechanism kit (Block 6). |
+| 2026-11-23 | Left-click drain module renamed from Siphon to **Extractor** (verb: extract). Gym rule: every gameplay phase ends with the movement gym reworked and extended (ROADMAP rules). HTML view `docs/game-design.html` added. |
+| 2026-11-23 | Lecture review (C&D II + III) added as `docs/reference/LECTURE-PRINCIPLES.md` with the project skill `attimo-design-principles`; architecture guardrails added to 6.8; fullscreen deck `docs/attimo-presentation.html` added next to the site. |

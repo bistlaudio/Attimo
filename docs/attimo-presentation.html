@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Attimo Presentation</title>
+<style>
+/* ===== Deck engine (keep) ===== */
+:root {
+  --stage-w: 1920; --stage-h: 1080;
+  /* ===== Theme tokens (change per deck) ===== */
+  --bg: #12161a; --surface: #1a2026; --surface-2: #212930; --line: #2f3a43;
+  --fg: #e7e3da; --muted: #9aa39f; --accent: #3fd6c6; --accent-2: #d1a35a;
+  --display: "Segoe UI", system-ui, sans-serif;
+  --body: "Segoe UI", system-ui, sans-serif;
+  --mono: Consolas, "Courier New", monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+body { font-family: var(--body); color: var(--fg); }
+#viewport { position: fixed; inset: 0; display: grid; place-items: center; background: #000; }
+#stage { width: calc(var(--stage-w) * 1px); height: calc(var(--stage-h) * 1px); position: relative; transform-origin: center center; flex: none; }
+.slide { position: absolute; inset: 0; background: var(--bg); padding: 96px 120px; display: none; flex-direction: column; gap: 40px; overflow: hidden; font-size: 32px; line-height: 1.45; }
+.slide.active { display: flex; }
+.slide h1, .slide h2, .slide h3 { font-family: var(--display); margin: 0; line-height: 1.1; text-wrap: balance; }
+.slide h1 { font-size: 140px; font-weight: 800; letter-spacing: -0.02em; }
+.slide h2 { font-size: 72px; font-weight: 700; }
+.slide h3 { font-size: 40px; font-weight: 700; }
+.slide p { margin: 0; max-width: 60ch; }
+.eyebrow { font: 600 22px/1 var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+/* chrome */
+#bar { position: fixed; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(255,255,255,0.08); z-index: 5; }
+#bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .25s ease; }
+#controls { position: fixed; right: max(14px, env(safe-area-inset-right, 0px)); bottom: 14px; display: flex; gap: 8px; align-items: center; z-index: 6; opacity: .35; transition: opacity .2s; font: 14px var(--mono); color: #ccc; }
+#controls:hover, #controls:focus-within { opacity: 1; }
+#controls button { font: inherit; color: inherit; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.25); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+#controls button:focus-visible { outline: 2px solid var(--accent); }
+#count { min-width: 64px; text-align: center; }
+body.fs #controls { opacity: 0; }
+body.fs #controls:hover { opacity: 1; }
+/* overview grid (O key) */
+body.overview #viewport { overflow: auto; display: block; padding: 24px; }
+body.overview #stage { transform: none !important; width: auto; height: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+body.overview .slide { display: flex; position: relative; inset: auto; width: 1920px; height: 1080px; transform: scale(.166); transform-origin: top left; margin-bottom: -900px; margin-right: -1600px; cursor: pointer; outline: 6px solid transparent; }
+body.overview .slide.active { outline-color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { #bar i { transition: none; } }
+@media print { html, body { overflow: visible; height: auto; } #viewport { position: static; display: block; } #stage { transform: none !important; } .slide { display: flex; position: relative; page-break-after: always; } #controls, #bar { display: none; } }
+/* ===== Deck-specific styles below ===== */
+:root { --moss: #8fae6a; --danger: #e0795a; }
+.t { color: var(--accent); } .b { color: var(--accent-2); } .m { color: var(--moss); } .r { color: var(--danger); } .mu { color: var(--muted); }
+.title-slide { justify-content: center; }
+.title-slide h1 { font-size: 220px; }
+.h1s { font-size: 150px !important; }
+.section-slide { justify-content: center; border-left: 16px solid var(--accent); }
+.lead { font-size: 44px; max-width: 34ch !important; }
+.chips { display: flex; gap: 16px; flex-wrap: wrap; }
+.chips span { font: 24px var(--mono); color: var(--muted); border: 2px solid var(--line); border-radius: 999px; padding: 10px 20px; }
+.placeholder { flex: 1; border: 3px dashed var(--line); border-radius: 20px; display: grid; place-items: center; color: var(--muted); font-size: 36px; }
+.ee { font-family: var(--display); font-weight: 700; font-size: 70px; line-height: 1.2; max-width: 26ch !important; margin-top: 60px !important; }
+.ee em { font-style: normal; color: var(--accent); }
+.sub { color: var(--muted); font-size: 30px; max-width: 70ch !important; }
+.pillars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; margin-top: 40px; }
+.pillar { background: var(--surface); border-radius: 18px; padding: 36px; display: flex; flex-direction: column; gap: 18px; border-top: 8px solid var(--c); }
+.pillar .k { font: 700 64px/1 var(--mono); color: var(--c); }
+.pillar p { font-size: 28px; color: var(--fg); }
+.diagram { flex: 1; min-height: 0; display: flex; justify-content: center; }
+.diagram svg { height: 100%; width: auto; max-width: 100%; }
+.cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; }
+.cols3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px; }
+.cols2.tight { gap: 28px; }
+.box { background: var(--surface); border-radius: 18px; padding: 36px; display: flex; flex-direction: column; gap: 16px; border-left: 8px solid var(--c); }
+.box .big { font-family: var(--display); font-size: 60px; font-weight: 800; }
+.slide ul { margin: 0; padding-left: 36px; display: grid; gap: 12px; }
+.cols3 ul { font-size: 28px; }
+.anti { font-family: var(--display); font-size: 46px; font-weight: 700; border-left: 8px solid var(--danger); padding-left: 28px; max-width: 40ch !important; }
+table { border-collapse: collapse; width: 100%; font-size: 30px; }
+table.small { font-size: 28px; }
+th, td { text-align: left; padding: 16px 20px; border-bottom: 2px solid var(--line); vertical-align: top; }
+th { font: 600 20px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: var(--surface); }
+td.n { font-family: var(--mono); white-space: nowrap; }
+.cores { display: flex; gap: 18px; align-items: center; }
+.core { width: 96px; height: 96px; border-radius: 50%; border: 6px solid var(--accent-2); display: grid; place-items: center; font: 700 26px var(--mono); color: var(--bg); background: var(--accent); }
+.core.off { background: transparent; color: var(--muted); }
+.cores .lbl { font-size: 28px; color: var(--muted); margin-left: 16px; max-width: 30ch; }
+ol.steps { margin: 0; padding-left: 50px; display: grid; gap: 28px; font-size: 40px; }
+code { font-family: var(--mono); font-size: .9em; color: var(--accent); }
+
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+  <section class="slide title-slide" data-title="Title">
+    <div class="eyebrow">Interim presentation · Concept &amp; Design</div>
+    <h1>Atti<span class="t">mo</span></h1>
+    <p class="lead">Speed becomes energy. Energy becomes more speed. And when it counts, you freeze the moment and aim.</p>
+    <div class="chips"><span>3D third-person platformer</span><span>Godot 4.7</span><span>1 level · 1 boss</span><span>Hero: Rino</span></div>
+  </section>
+
+  <section class="slide" data-title="Team">
+    <div class="eyebrow">Team &amp; roles</div>
+    <h2>Who builds Attimo</h2>
+    <div class="placeholder">Team members, roles and responsibilities go here.</div>
+  </section>
+
+  <section class="slide" data-title="Essential experience">
+    <div class="eyebrow">Essential experience</div>
+    <p class="ee">Feel like a <em>perpetual motion machine</em>: every bit of speed charges your arm, and every charge throws you faster through an overgrown steampunk ruin, until you stop time, aim, and launch.</p>
+    <p class="sub">Attimo means "the moment": the rush of never slowing down, and the calm control of the frozen second in which you decide where all that speed goes.</p>
+  </section>
+
+  <section class="slide" data-title="Pillars">
+    <div class="eyebrow">Pillars</div>
+    <h2>Four pillars</h2>
+    <div class="pillars">
+      <div class="pillar" style="--c: var(--accent)"><span class="k">1</span><h3>Momentum is power</h3><p>Speed charges Rino's arm, energy buys more speed. Every move feeds one loop.</p></div>
+      <div class="pillar" style="--c: var(--fg)"><span class="k">2</span><h3>Freeze the moment</h3><p>Hold to freeze your momentum in slow motion, look around, release to discharge it where you aim.</p></div>
+      <div class="pillar" style="--c: var(--accent-2)"><span class="k">3</span><h3>Free base, charged power</h3><p>Every move works without energy. Energy makes it higher, longer, further. Never a failed moment.</p></div>
+      <div class="pillar" style="--c: var(--moss)"><span class="k">4</span><h3>Read the world at a glance</h3><p>Brass helps if you hit its rhythm, turquoise asks you to spend, nature tries to slow you down.</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-title="Momentum loop">
+    <div class="eyebrow">Core loop 1 · seconds</div>
+    <h2>The momentum loop</h2>
+    <div class="diagram">
+    <svg viewBox="0 0 720 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Move fast, arm charges, spend energy, more speed, move fast. Center: Moto Perpetuo at energy 50 or more.">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#9aa39f"/></marker>
+        <marker id="aht" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#3fd6c6"/></marker>
+      </defs>
+      <circle cx="360" cy="220" r="150" fill="none" stroke="#2f3a43" stroke-width="2" stroke-dasharray="4 8"/>
+      <circle cx="360" cy="220" r="74" fill="#212930" stroke="#3fd6c6" stroke-width="2"/>
+      <text x="360" y="210" text-anchor="middle" fill="#3fd6c6" font-family="Segoe UI, sans-serif" font-weight="700" font-size="18">Moto Perpetuo</text>
+      <text x="360" y="234" text-anchor="middle" fill="#9aa39f" font-family="Consolas, monospace" font-size="13">energy ≥ 50</text>
+      <text x="360" y="252" text-anchor="middle" fill="#9aa39f" font-family="Consolas, monospace" font-size="13">+10–15 % run speed</text>
+      <g font-family="Segoe UI, sans-serif" text-anchor="middle">
+        <rect x="270" y="22" width="180" height="56" rx="10" fill="#1a2026" stroke="#e7e3da" stroke-width="1.5"/>
+        <text x="360" y="47" fill="#e7e3da" font-weight="600" font-size="16">Move fast</text>
+        <text x="360" y="66" fill="#9aa39f" font-size="12">run · jump chain · dash hop</text>
+        <rect x="530" y="190" width="176" height="60" rx="10" fill="#1a2026" stroke="#3fd6c6" stroke-width="1.5"/>
+        <text x="618" y="215" fill="#e7e3da" font-weight="600" font-size="16">Arm charges</text>
+        <text x="618" y="235" fill="#9aa39f" font-size="12">+3–6 /s above ~12 m/s</text>
+        <rect x="250" y="362" width="220" height="60" rx="10" fill="#1a2026" stroke="#3fd6c6" stroke-width="1.5"/>
+        <text x="360" y="387" fill="#e7e3da" font-weight="600" font-size="16">Spend energy</text>
+        <text x="360" y="407" fill="#9aa39f" font-size="12">injected moves · Loader discharge</text>
+        <rect x="14" y="190" width="176" height="60" rx="10" fill="#1a2026" stroke="#e7e3da" stroke-width="1.5"/>
+        <text x="102" y="215" fill="#e7e3da" font-weight="600" font-size="16">More speed</text>
+        <text x="102" y="235" fill="#9aa39f" font-size="12">further, higher, faster</text>
+      </g>
+      <path d="M455 60 Q 590 80 612 184" fill="none" stroke="#3fd6c6" stroke-width="2.2" marker-end="url(#aht)"/>
+      <path d="M612 256 Q 590 360 476 386" fill="none" stroke="#3fd6c6" stroke-width="2.2" marker-end="url(#aht)"/>
+      <path d="M244 386 Q 130 360 108 256" fill="none" stroke="#9aa39f" stroke-width="2.2" marker-end="url(#ah)"/>
+      <path d="M108 184 Q 130 80 264 60" fill="none" stroke="#9aa39f" stroke-width="2.2" marker-end="url(#ah)"/>
+    </svg>
+    </div>
+  </section>
+
+  <section class="slide" data-title="Energy economy">
+    <div class="eyebrow">Core loop 2 · minutes</div>
+    <h2>The energy economy</h2>
+    <div class="diagram">
+    <svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Income fills the arm's four cores, the arm spends energy, speed and opened routes lead to new income.">
+      <defs><marker id="ah2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#9aa39f"/></marker></defs>
+      <g font-family="Segoe UI, sans-serif">
+        <rect x="10" y="10" width="220" height="234" rx="10" fill="#1a2026" stroke="#2f3a43"/>
+        <text x="26" y="38" fill="#9aa39f" font-family="Consolas, monospace" font-size="12" letter-spacing="1.5">INCOME</text>
+        <g font-size="13" fill="#e7e3da">
+          <text x="26" y="68">Momentum <tspan fill="#9aa39f">+3–6 /s</tspan></text>
+          <text x="26" y="98">Capsule / machine <tspan fill="#9aa39f">+40</tspan></text>
+          <text x="26" y="128">Extract enemy <tspan fill="#9aa39f">+35</tspan></text>
+          <text x="26" y="158">Shoot → shards <tspan fill="#9aa39f">net +15</tspan></text>
+          <text x="26" y="188">Charge button <tspan fill="#9aa39f">+5 /s</tspan></text>
+          <text x="26" y="222" fill="#9aa39f" font-size="12">Extracting = efficient, shooting = fun</text>
+        </g>
+        <rect x="290" y="58" width="180" height="138" rx="12" fill="#212930" stroke="#3fd6c6" stroke-width="2"/>
+        <text x="380" y="88" text-anchor="middle" fill="#e7e3da" font-weight="600" font-size="16">Rino's arm</text>
+        <circle cx="323" cy="128" r="15" fill="#3fd6c6" stroke="#d1a35a" stroke-width="2.5"/>
+        <circle cx="358" cy="128" r="15" fill="#3fd6c6" stroke="#d1a35a" stroke-width="2.5"/>
+        <circle cx="393" cy="128" r="15" fill="none" stroke="#d1a35a" stroke-width="2.5"/>
+        <circle cx="428" cy="128" r="15" fill="none" stroke="#d1a35a" stroke-width="2.5"/>
+        <text x="380" y="176" text-anchor="middle" fill="#9aa39f" font-family="Consolas, monospace" font-size="12">0–100 · 4 cores × 25</text>
+        <rect x="530" y="10" width="220" height="234" rx="10" fill="#1a2026" stroke="#2f3a43"/>
+        <text x="546" y="38" fill="#9aa39f" font-family="Consolas, monospace" font-size="12" letter-spacing="1.5">SPENDING</text>
+        <g font-size="13" fill="#e7e3da">
+          <text x="546" y="68">Loader bonus <tspan fill="#9aa39f">25</tspan></text>
+          <text x="546" y="98">Dash hop 2 / 3 <tspan fill="#9aa39f">15 each</tspan></text>
+          <text x="546" y="128">Air dash <tspan fill="#9aa39f">10</tspan></text>
+          <text x="546" y="158">Wall run &gt; 0.6 s <tspan fill="#9aa39f">15 /s</tspan></text>
+          <text x="546" y="188">Shot <tspan fill="#9aa39f">10</tspan></text>
+          <text x="546" y="218">Energy core <tspan fill="#9aa39f">any amount</tspan></text>
+        </g>
+        <path d="M232 127 L 284 127" stroke="#9aa39f" stroke-width="2.2" marker-end="url(#ah2)"/>
+        <path d="M472 127 L 524 127" stroke="#9aa39f" stroke-width="2.2" marker-end="url(#ah2)"/>
+        <path d="M640 248 L 640 292 L 120 292 L 120 252" fill="none" stroke="#3fd6c6" stroke-width="2.2" stroke-dasharray="6 5" marker-end="url(#ah2)"/>
+        <rect x="246" y="276" width="268" height="32" rx="8" fill="#12161a" stroke="#3fd6c6"/>
+        <text x="380" y="297" text-anchor="middle" fill="#e7e3da" font-size="13">speed + opened routes → new sources</text>
+      </g>
+    </svg>
+    </div>
+  </section>
+
+  <section class="slide" data-title="Loop relationships">
+    <div class="eyebrow">System view</div>
+    <h2>What drives the loop, what holds it back</h2>
+    <div class="cols2">
+      <div class="box" style="--c: var(--accent)">
+        <h3>Reinforcing</h3>
+        <ul>
+          <li>More speed → more passive charge → more speed</li>
+          <li>Moto Perpetuo at 50 makes running faster, which charges faster</li>
+          <li>Opened routes lead to new capsules and enemies</li>
+        </ul>
+      </div>
+      <div class="box" style="--c: var(--accent-2)">
+        <h3>Balancing</h3>
+        <ul>
+          <li>Injected moves and the Loader cost energy</li>
+          <li>Hard cap at 100; respawn always with one core</li>
+          <li>Nature slows you down (resin pool, leaf storm), so you charge less</li>
+          <li>Extracting is efficient but slow and leaves you vulnerable</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-title="Scope">
+    <div class="eyebrow">Scope &amp; anti-scope</div>
+    <p class="anti">Not a combat game, not an open world, not a story game. One level of pure momentum, beaten by moving well.</p>
+    <div class="cols3">
+      <div><h3 class="t">In scope</h3><ul>
+        <li>Run, triple jump, dash, dash hop, wall run</li>
+        <li>Energy arm, 4 cores, Moto Perpetuo</li>
+        <li>Loader with slow motion and trajectory</li>
+        <li>Extractor and Shot modules</li>
+        <li>Mechanism kit in 3 themed layers</li>
+        <li>1–2 enemy types, one level, one boss</li>
+      </ul></div>
+      <div><h3 class="b">Nice to have</h3><ul>
+        <li>More looks per logic block</li>
+        <li>More nature objects</li>
+        <li>Third hand module</li>
+        <li>Collectibles</li>
+        <li>Ledge grab</li>
+      </ul></div>
+      <div><h3 class="r">Out of scope</h3><ul>
+        <li>Multiple levels</li>
+        <li>Dialogue and cutscenes</li>
+        <li>Full combat system</li>
+        <li>Pull/push, old aim mode</li>
+        <li>Skill trees, save slots</li>
+        <li>Custom animation authoring</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section class="slide section-slide" data-title="Design decisions">
+    <div class="eyebrow">Part 2</div>
+    <h1 class="h1s">Design decisions</h1>
+    <p class="lead">How the energy-momentum core works in detail.</p>
+  </section>
+
+  <section class="slide" data-title="Governing rule">
+    <div class="eyebrow">Governing rule</div>
+    <h2>The base version is free; <span class="t">the injected version costs energy.</span></h2>
+    <table>
+      <tr><th>Move</th><th>Free (base)</th><th>Injected (costs energy)</th></tr>
+      <tr><td>Triple jump</td><td>always, normal heights</td><td>at ≥ 50 buffed, no cost</td></tr>
+      <tr><td>Dash</td><td>ground dash</td><td>air dash; does not fire when empty</td></tr>
+      <tr><td>Dash hop</td><td>1 stage</td><td>up to 3 stages, each costs</td></tr>
+      <tr><td>Wall run</td><td>~0.6 s, jump-off always free</td><td>longer, costs per second</td></tr>
+      <tr><td>Loader</td><td>redirect only, cooldown</td><td>discharge with bonus speed</td></tr>
+    </table>
+  </section>
+
+  <section class="slide" data-title="Energy">
+    <div class="eyebrow">The resource</div>
+    <h2>0–100 energy in four cores</h2>
+    <div class="cores"><span class="core">25</span><span class="core">50</span><span class="core off">75</span><span class="core off">100</span><span class="lbl">50 → Moto Perpetuo: +10–15 % run speed, buffed Jump 3, brighter arm</span></div>
+    <div class="cols2 tight">
+      <table><tr><th>Income</th><th></th></tr>
+        <tr><td>Momentum above ~12 m/s</td><td class="n">+3–6 /s</td></tr>
+        <tr><td>Capsule / broken machine</td><td class="n">+40</td></tr>
+        <tr><td>Extract an enemy (~2 s)</td><td class="n">+35</td></tr>
+        <tr><td>Shoot, absorb shards</td><td class="n">−10 / +25</td></tr>
+        <tr><td>Charge button</td><td class="n">+5 /s</td></tr></table>
+      <table><tr><th>Spending</th><th></th></tr>
+        <tr><td>Loader bonus</td><td class="n">25</td></tr>
+        <tr><td>Dash hop stage 2 / 3</td><td class="n">15 each</td></tr>
+        <tr><td>Air dash</td><td class="n">10</td></tr>
+        <tr><td>Wall run after 0.6 s</td><td class="n">15 /s</td></tr>
+        <tr><td>Shot</td><td class="n">10</td></tr></table>
+    </div>
+  </section>
+
+  <section class="slide" data-title="Loader">
+    <div class="eyebrow">Right click · replaces aim mode</div>
+    <h2>The Loader</h2>
+    <ol class="steps">
+      <li><b>Hold</b> · momentum freezes, slow motion ~0.25×, free camera, max ~1.2 s</li>
+      <li><b>Look</b> · charge ring fills with the stored speed, dashed trajectory, turquoise vignette</li>
+      <li><b>Release</b> · discharge in the view direction: <code>max(stored, min push) + bonus</code></li>
+      <li><b>Empty arm</b> · redirect only, grey ring, cooldown</li>
+    </ol>
+  </section>
+
+  <section class="slide" data-title="Modules">
+    <div class="eyebrow">Left click · mouse wheel switches</div>
+    <h2>Two modules</h2>
+    <div class="cols2">
+      <div class="box" style="--c: var(--accent)"><h3>Extractor · hold</h3><p>Cone in front of the hand. Drains enemies, shards, capsules and broken machines. Efficient, slow, risky.</p></div>
+      <div class="box" style="--c: var(--accent)"><h3>Shot · tap</h3><p>The pulse as a projectile. Costs 10, hits targets and enemies; enemies burst into shards. Targets replace levers.</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-title="Kit layers">
+    <div class="eyebrow">Mechanism kit</div>
+    <h2>Three layers, three questions</h2>
+    <div class="cols3">
+      <div class="box" style="--c: var(--accent-2)"><h3 class="b">Steampunk</h3><p class="big">Timing</p><p>"Can you hit the rhythm?" Free, mechanical, helps you.</p></div>
+      <div class="box" style="--c: var(--accent)"><h3 class="t">Energy</h3><p class="big">Decision</p><p>"Do you spend it?" Costs or amplified, always turquoise.</p></div>
+      <div class="box" style="--c: var(--moss)"><h3 class="m">Nature</h3><p class="big">Resistance</p><p>"Can you keep your speed?" World and danger, never helps.</p></div>
+    </div>
+    <p class="sub">Platforms are neutral. Every energy move has a free counterpart in the world. The only energy source is extracting capsules and broken machines.</p>
+  </section>
+
+  <section class="slide" data-title="Steampunk layer">
+    <div class="eyebrow">Layer · steampunk</div>
+    <h2 class="b">Free and mechanical</h2>
+    <table class="small">
+      <tr><th>Role</th><th>Objects</th></tr>
+      <tr><td>Platforms</td><td>clock-hand, tilting, paternoster, rail cart, piston steps, drawbridge</td></tr>
+      <tr><td>Environment</td><td>updraft, geyser, steam stream</td></tr>
+      <tr><td>Obstacles</td><td>pendulum, piston wall, steam hammer</td></tr>
+      <tr><td>Boosters</td><td>slingshot core, steam cannon, boost ring, speed pad, wall pad, bounce pad</td></tr>
+      <tr><td>Mechanisms</td><td>gates and platforms switched by targets and cores</td></tr>
+    </table>
+  </section>
+
+  <section class="slide" data-title="Energy layer">
+    <div class="eyebrow">Layer · energy</div>
+    <h2 class="t">Costs or amplified</h2>
+    <table class="small">
+      <tr><th>Role</th><th>Costs</th><th>Amplified</th></tr>
+      <tr><td>Environment</td><td>attraction field (fast escape costs)</td><td>gravity zone</td></tr>
+      <tr><td>Obstacles</td><td>force-field barrier (charged Loader)</td><td class="mu">empty</td></tr>
+      <tr><td>Boosters</td><td class="mu">empty (Loader)</td><td>bounce pad with core</td></tr>
+      <tr><td>Mechanisms</td><td>energy core, target</td><td>charge gate</td></tr>
+      <tr><td>Source</td><td colspan="2">energy capsule, broken machine</td></tr>
+    </table>
+  </section>
+
+  <section class="slide" data-title="Nature layer">
+    <div class="eyebrow">Layer · overgrown nature</div>
+    <h2 class="m">World and danger</h2>
+    <table class="small">
+      <tr><th>Role</th><th>Objects</th></tr>
+      <tr><td>Platforms</td><td>crumbling platform, sinking debris, tipping trunk</td></tr>
+      <tr><td>Environment</td><td>leaf storm (pushes), resin pool (slows)</td></tr>
+      <tr><td>Obstacles</td><td>collapse, falling debris, snap bloom</td></tr>
+      <tr><td>Boosters</td><td class="mu">none: nature never helps you</td></tr>
+    </table>
+  </section>
+
+  <section class="slide" data-title="Slingshot core">
+    <div class="eyebrow">Teaching the Loader without a tutorial</div>
+    <h2>Slingshot core</h2>
+    <ol class="steps">
+      <li><b>Enter</b> · a brass cage catches Rino with a steam hiss</li>
+      <li><b>Hold</b> · same slow motion as the Loader, pressure gauge instead of the ring</li>
+      <li><b>Release</b> · steam blast, launch where you look, no energy bonus</li>
+    </ol>
+    <p class="sub">Same input and timing as the Loader; only the look says "free and mechanical".</p>
+  </section>
+
+  <section class="slide" data-title="Architecture">
+    <div class="eyebrow">Architecture</div>
+    <h2>8 logic blocks + 4 components + looks</h2>
+    <div class="cols2 tight">
+      <table class="small"><tr><th>Logic block</th></tr>
+        <tr><td>Force volume · Impulse</td></tr>
+        <tr><td>Catch &amp; launch · Timed motion</td></tr>
+        <tr><td>Reaction to load · Trigger</td></tr>
+        <tr><td>Energy source · Wall surface</td></tr></table>
+      <table class="small"><tr><th>Component</th></tr>
+        <tr><td>Receiver (switched by a trigger)</td></tr>
+        <tr><td>Damage / push</td></tr>
+        <tr><td>Amplification (reads arm charge)</td></tr>
+        <tr><td>Energy cost</td></tr></table>
+    </div>
+    <p class="sub">Values in <code>.tres</code> resources, looks as inherited scenes. New object = block + components + look, usually no new code.</p>
+  </section>
+
+  <section class="slide" data-title="Roadmap">
+    <div class="eyebrow">Next</div>
+    <h2>Roadmap</h2>
+    <table class="small">
+      <tr><th>Phase</th><th>Delivers</th></tr>
+      <tr><td class="n">5</td><td>Energy arm &amp; Loader, aim mode removed</td></tr>
+      <tr><td class="n">05.1</td><td>Kit rework: blocks, components, three layers</td></tr>
+      <tr><td class="n">6</td><td>Extractor, Shot, enemies, energy HUD</td></tr>
+      <tr><td class="n">7</td><td>Level with "charge the level"</td></tr>
+      <tr><td class="n">8</td><td>Boss beaten by Loader and shots</td></tr>
+    </table>
+  </section>
+
+  <section class="slide title-slide" data-title="Questions">
+    <div class="eyebrow">Discussion</div>
+    <h1 class="h1s">Questions?</h1>
+  </section>
+
+</div></div>
+<div id="bar"><i></i></div>
+<div id="controls" role="toolbar" aria-label="Presentation controls">
+  <button id="prev" type="button" aria-label="Previous slide">&#8592;</button>
+  <span id="count" aria-live="polite">1 / 1</span>
+  <button id="next" type="button" aria-label="Next slide">&#8594;</button>
+  <button id="ov" type="button" title="Overview (O)">Overview</button>
+  <button id="fsbtn" type="button" title="Fullscreen (F)">Fullscreen</button>
+</div>
+<script>
+(function () {
+  var stage = document.getElementById('stage');
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var bar = document.querySelector('#bar i');
+  var count = document.getElementById('count');
+  var fsbtn = document.getElementById('fsbtn');
+  var i = 0;
+  function fit() {
+    if (document.body.classList.contains('overview')) return;
+    var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    stage.style.transform = 'scale(' + s + ')';
+  }
+  function show(n, push) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach(function (el, k) { el.classList.toggle('active', k === i); });
+    bar.style.width = ((i + 1) / slides.length * 100) + '%';
+    count.textContent = (i + 1) + ' / ' + slides.length;
+    if (push !== false) { try { history.replaceState(null, '', '#' + (i + 1)); } catch (e) {} }
+  }
+  function isFs() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  function toggleFs() {
+    var el = document.documentElement;
+    try {
+      if (!isFs()) { (el.requestFullscreen || el.webkitRequestFullscreen).call(el); }
+      else { (document.exitFullscreen || document.webkitExitFullscreen).call(document); }
+    } catch (e) {}
+  }
+  function onFs() { document.body.classList.toggle('fs', isFs()); fsbtn.textContent = isFs() ? 'Exit fullscreen' : 'Fullscreen'; setTimeout(fit, 50); }
+  function toggleOverview() { document.body.classList.toggle('overview'); if (!document.body.classList.contains('overview')) { fit(); slides[i].scrollIntoView && 0; } else { stage.style.transform = 'none'; } }
+  document.addEventListener('fullscreenchange', onFs);
+  document.addEventListener('webkitfullscreenchange', onFs);
+  document.addEventListener('keydown', function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    var k = e.key;
+    if (k === 'ArrowRight' || k === 'PageDown' || k === ' ' || k === 'Enter') { e.preventDefault(); show(i + 1); }
+    else if (k === 'ArrowLeft' || k === 'PageUp' || k === 'Backspace') { e.preventDefault(); show(i - 1); }
+    else if (k === 'Home') { show(0); }
+    else if (k === 'End') { show(slides.length - 1); }
+    else if (k === 'f' || k === 'F') { toggleFs(); }
+    else if (k === 'o' || k === 'O' || (k === 'Escape' && document.body.classList.contains('overview'))) { toggleOverview(); }
+  });
+  slides.forEach(function (el, k) { el.addEventListener('click', function () { if (document.body.classList.contains('overview')) { toggleOverview(); show(k); } }); });
+  document.getElementById('prev').addEventListener('click', function () { show(i - 1); });
+  document.getElementById('next').addEventListener('click', function () { show(i + 1); });
+  document.getElementById('ov').addEventListener('click', toggleOverview);
+  fsbtn.addEventListener('click', toggleFs);
+  var tx = null;
+  document.addEventListener('touchstart', function (e) { tx = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', function (e) { if (tx === null) return; var d = e.changedTouches[0].clientX - tx; if (Math.abs(d) > 50) show(i + (d < 0 ? 1 : -1)); tx = null; });
+  window.addEventListener('resize', fit);
+  window.addEventListener('hashchange', function () { var n = parseInt(location.hash.slice(1), 10); if (n) show(n - 1, false); });
+  fit();
+  var start = parseInt(location.hash.slice(1), 10);
+  show(start ? start - 1 : 0, false);
+})();
+</script>
+</body>
+</html>

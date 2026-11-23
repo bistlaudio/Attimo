@@ -269,7 +269,7 @@ Architecture not yet mapped. Follow existing patterns found in the codebase.
 
 ## Project Skills
 
-No project skills found. Add skills to any of: `.claude/skills/`, `.agents/skills/`, `.cursor/skills/`, `.github/skills/`, or `.codex/skills/` with a `SKILL.md` index file.
+- `attimo-design-principles` (`.claude/skills/attimo-design-principles/SKILL.md`): lecture-based planning checklist and kit architecture guardrails; load before discussing, planning, executing or verifying a phase.
 <!-- GSD:skills-end -->
 
 <!-- GSD:workflow-start source:GSD defaults -->
@@ -307,4 +307,6 @@ Do not make direct repo edits outside a GSD workflow unless the user explicitly 
 ## Game Design Doc
 
 - `docs/GAME-DESIGN.md` is the living single source of truth for the game design (identity, core loop, energy resource, Loader, modules, mechanism kit).
-- Whenever a design decision is made or changed, update that file in the same session and add a change-log line at its bottom. Read it before discussing or planning any phase.
+- It has two HTML views that always match it: `docs/game-design.html` (site, full reference) and `docs/attimo-presentation.html` (fullscreen slide deck, built with the global `html-presentation` skill).
+- Whenever a design decision is made or changed, update all three in the same session and add a change-log line in GAME-DESIGN.md. At the end of every phase, check whether the phase changed the design and update all three if so.
+- Planning is always based first on our own up-to-date research into current best practice; the lecture principles in `docs/reference/LECTURE-PRINCIPLES.md` are a second lens on top (project skill `attimo-design-principles`). Read GAME-DESIGN.md before discussing or planning any phase.
