@@ -68,6 +68,7 @@ const STATE_TO_ANIM: Dictionary[StringName, StringName] = {
 	&"Dash": &"Dash",
 	&"WallRun": &"Locomotion",
 	&"WallJump": &"Jump",
+	&"Capture": &"Fall",
 }
 
 ## States that count as airborne for the landing check (Landing into Idle plays the Land overlay).
