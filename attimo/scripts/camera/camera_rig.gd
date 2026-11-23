@@ -113,6 +113,11 @@ enum InputDevice { KEYBOARD_MOUSE, JOYPAD }
 @export_range(0.01, 1.0, 0.01) var aim_blend_time: float = 0.18
 ## Factor on the look sensitivity while aiming, scaled in with the aim weight (D-15).
 @export_range(0.1, 1.5, 0.05) var aim_sensitivity_factor: float = 0.8
+## Goggle snap: a short decaying jolt when aim starts. Amplitude in m (arm offset), FOV punch in degrees (widens, then
+## settles) and duration in seconds. Set the amplitude and the punch to zero to switch it off.
+@export_range(0.0, 0.3, 0.005) var snap_shake_amplitude: float = 0.06
+@export_range(0.0, 10.0, 0.1) var snap_fov_punch: float = 4.0
+@export_range(0.05, 1.0, 0.01) var snap_time: float = 0.22
 @export_group("")
 
 @export_group("Crosshair ray")
@@ -149,6 +154,7 @@ var _aim_target: float = 0.0
 var _aim_linear: float = 0.0
 ## True while the &"aim" FOV and offset sources are registered by this rig.
 var _aim_sources_written: bool = false
+var _snap_left: float = 0.0
 
 ## Rotation added by auto-follow since steering was last re-based (A40).
 var _auto_offset: float = 0.0
@@ -274,6 +280,7 @@ func _process(delta: float) -> void:
 	rotation.y = yaw
 	pitch_node.rotation.x = pitch
 	_update_aim(delta)
+	_update_snap(delta)
 	_max_arm_length = lerpf(_max_arm_length, zoom_distance, 1.0 - exp(-zoom_rate * delta))
 	spring_arm.position = base_shoulder_offset + _offset_total()
 	camera.fov = get_fov_total()
@@ -300,12 +307,29 @@ func _update_aim(delta: float) -> void:
 		_aim_sources_written = false
 
 
+## Decaying jolt on the &"goggle_snap" sources, cleared when it ends. Stacks with aim and any other kick.
+func _update_snap(delta: float) -> void:
+	if _snap_left <= 0.0:
+		return
+	_snap_left = maxf(_snap_left - delta, 0.0)
+	if _snap_left <= 0.0:
+		clear_offset(&"goggle_snap")
+		clear_fov_offset(&"goggle_snap")
+		return
+	var decay: float = _snap_left / maxf(snap_time, 0.01)
+	decay *= decay
+	var phase: float = (snap_time - _snap_left) * 80.0
+	set_offset(&"goggle_snap", Vector3(sin(phase * 1.3), cos(phase * 1.7) * 0.7, 0.0) * snap_shake_amplitude * decay)
+	set_fov_offset(&"goggle_snap", snap_fov_punch * decay)
+
+
 ## On aim enter the steering offset is dropped and a running recenter stops, so steering_yaw() equals yaw (Pitfall 9).
 func _on_aim_changed(active: bool) -> void:
 	_aim_target = 1.0 if active else 0.0
 	if active:
 		_auto_offset = 0.0
 		_recentering = false
+		_snap_left = snap_time
 
 
 ## Where the crosshair ray starts: the camera `origin` pushed along `forward` to the plane through `pivot` (level with

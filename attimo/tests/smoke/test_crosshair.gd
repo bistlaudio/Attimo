@@ -61,4 +61,22 @@ func run(tree: SceneTree, check: Callable) -> void:
 	bus.aim_changed.emit(false)
 	check.call(crosshair.visible and not crosshair.hud_visible, "the goggle HUD is off again when aim ends (hud_visible false)")
 
+	# Goggle lens overlay: hidden without aim, visible and fully open shortly after aim starts, ignores the mouse, gone again
+	# after aim ends. The brass plate and the gear need no state beyond the module name.
+	var lens: ColorRect = crosshair.get_node_or_null("Lens") as ColorRect
+	check.call(lens != null, "the goggle lens overlay exists")
+	if lens != null:
+		check.call(lens.mouse_filter == Control.MOUSE_FILTER_IGNORE, "the lens overlay ignores the mouse")
+		for _i: int in 30:
+			await tree.process_frame
+		check.call(not lens.visible, "the lens overlay is hidden without aim")
+		bus.aim_changed.emit(true)
+		for _i: int in 30:
+			await tree.process_frame
+		check.call(lens.visible, "the lens overlay is shown while aiming")
+		bus.aim_changed.emit(false)
+		for _i: int in 30:
+			await tree.process_frame
+		check.call(not lens.visible, "the lens overlay is hidden again after aim ends")
+
 	crosshair.free()

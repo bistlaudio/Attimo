@@ -23,9 +23,25 @@ var _rig: CameraRig
 func run(tree: SceneTree, check: Callable) -> void:
 	await tree.process_frame
 	await _scenario_blend(tree, check)
+	await _scenario_snap(tree, check)
 	await _scenario_sensitivity(tree, check)
 	await _scenario_recenter_and_follow(tree, check)
 	await _scenario_no_swap(tree, check)
+
+
+# (a2) the goggle snap: aim press adds a decaying jolt on the &"goggle_snap" sources that is gone after snap_time.
+func _scenario_snap(tree: SceneTree, check: Callable) -> void:
+	await _begin(tree)
+	_rig.snap_fov_punch = 4.0
+	_rig.snap_shake_amplitude = 0.06
+	Fixtures.send_action_event(&"aim", true)
+	await Fixtures.wait_physics(tree, TICK_FRAMES)
+	check.call(_rig._fov_sources.has(&"goggle_snap"), "(a2) aim press starts the goggle snap fov punch")
+	check.call(_rig._offset_sources.has(&"goggle_snap"), "(a2) aim press starts the goggle snap shake")
+	await Fixtures.wait_physics(tree, ceili(_rig.snap_time * 60.0) * TICK_FRAMES + TICK_FRAMES)
+	check.call(not _rig._fov_sources.has(&"goggle_snap") and not _rig._offset_sources.has(&"goggle_snap"), "(a2) the goggle snap sources are cleared after snap_time")
+	Fixtures.send_action_event(&"aim", false)
+	await Fixtures.wait_physics(tree, TICK_FRAMES)
 
 
 # (a) the blend: timing by tick count, full-weight FOV and offset, stacking with a kick, and the way back.
@@ -33,6 +49,9 @@ func _scenario_blend(tree: SceneTree, check: Callable) -> void:
 	await _begin(tree)
 	var steps_full: int = ceili(_rig.aim_blend_time * 60.0)
 	check.call(_rig.aim_weight == 0.0, "(a) aim_weight is 0 before the hold")
+	# This scenario measures the pure aim blend, so the goggle snap jolt (own test below) is off.
+	_rig.snap_fov_punch = 0.0
+	_rig.snap_shake_amplitude = 0.0
 	# The rig stops processing before the hold, so only the hand-counted steps below move the blend.
 	_rig.set_process(false)
 	Fixtures.send_action_event(&"aim", true)

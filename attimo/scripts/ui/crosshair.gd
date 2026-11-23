@@ -1,10 +1,13 @@
 class_name Crosshair
 extends CanvasLayer
-## Reticle and goggle HUD (D-13, D-01, D-02, CAM-02, CAM-04, CAM-06): thin white lines drawn in code, no image asset.
+## Reticle and goggle HUD (D-13, D-01, D-02, CAM-02, CAM-04, CAM-06): lines drawn in code plus one lens shader.
 ## The reticle is always on: outside aim mode only a small centre dot and a thin ring. While the aim button is held
-## (hud_visible, driven by EventBus.aim_changed, gameplay never calls it) the goggle HUD adds the rim arcs with rivets at
-## the left and right screen edges, the four gear notches, a charge arc while the big pulse charges, and a module frame
-## at the bottom centre with the active module name.
+## (hud_visible, driven by EventBus.aim_changed, gameplay never calls it) the goggle HUD shows a full-screen lens overlay
+## (goggle_lens.gdshader: two round lenses, dark vignette outside, thick brass rim with rivets) that snaps in with a
+## small overshoot and a HUD jolt, a big reticle ring with notches and a slowly rotating gear ring (faster while the big
+## pulse charges), a charge arc, and a brass module plate at the bottom centre with the active module name.
+## Everything is sized from the screen height (ui_reference_height), so it keeps its proportions at any resolution.
+## The camera jolt on aim press lives in CameraRig (goggle snap), not here.
 ## The reticle is cream with no target, turquoise on a valid target (a second outer ring when the target needs the big
 ## pulse) and dimmed with a diagonal stroke for an invalid or out-of-range target. It dims during the shot cooldown.
 ## The NearPrompt child is a cream "E" keycap over HandController.prompt_target (the nearest grabbable lever or crank in
@@ -15,9 +18,41 @@ extends CanvasLayer
 ## Radius of the centre dot in pixels.
 @export var dot_radius: float = 2.0
 ## Radius of the thin ring in pixels.
-@export var ring_radius: float = 8.0
+@export var ring_radius: float = 18.0
 ## Line width of the ring in pixels.
-@export var ring_width: float = 1.5
+@export var ring_width: float = 2.5
+## Length of the four notches on the ring in pixels.
+@export var notch_length: float = 7.0
+## Screen height in pixels at which the pixel sizes below apply 1:1; the HUD scales with height / this.
+@export var ui_reference_height: float = 720.0
+@export_group("Gear ring")
+## Gap between the reticle ring and the gear ring in pixels.
+@export var gear_gap: float = 9.0
+## Length of the gear teeth in pixels.
+@export var gear_tooth_length: float = 6.0
+## Number of gear teeth.
+@export var gear_teeth: int = 16
+## Idle rotation of the gear ring in degrees per second.
+@export var gear_speed_deg: float = 25.0
+## Extra rotation speed at full charge in degrees per second.
+@export var gear_charge_speed_deg: float = 420.0
+@export_group("Lens")
+## Seconds the lens overlay takes to snap in (overshoot included) and to snap out.
+@export var lens_open_time: float = 0.18
+@export var lens_close_time: float = 0.1
+## Overlay scale at the start of the snap-in (1.0 = no zoom).
+@export var lens_intro_scale: float = 1.15
+## HUD jolt on aim press: amplitude in pixels and duration in seconds.
+@export var hud_jolt_pixels: float = 9.0
+@export var hud_jolt_time: float = 0.2
+@export_group("Module plate")
+## Size of the brass module plate in pixels, its distance from the bottom edge and the font size.
+@export var plate_size: Vector2 = Vector2(280.0, 44.0)
+@export var plate_bottom_gap: float = 36.0
+@export var plate_font_size: int = 22
+@export var plate_fill: Color = Color(0.3, 0.21, 0.09, 0.92)
+@export var plate_border: Color = Color(0.78, 0.58, 0.25, 1.0)
+@export_group("")
 ## Radius of the thin idle ring (no goggle HUD) in pixels.
 @export var idle_ring_radius: float = 5.0
 ## Alpha of the idle reticle outside aim mode.
@@ -40,17 +75,13 @@ var module_name: String = ""
 
 const RING_POINTS: int = 48
 const OUTLINE_EXTRA: float = 2.0
-const NOTCH_LENGTH: float = 3.0
 const NOTCH_ANGLES_DEG: Array[float] = [45.0, 135.0, 225.0, 315.0]
 const OUTER_RING_GAP: float = 5.0
-const CHARGE_RING_GAP: float = 9.0
-const RIM_RADIUS_FACTOR: float = 0.62
-const RIM_INSET: float = 28.0
-const RIM_HALF_SPAN_DEG: float = 24.0
-const RIVET_RADIUS: float = 2.5
-const FRAME_SIZE: Vector2 = Vector2(160.0, 26.0)
-const FRAME_BOTTOM_GAP: float = 24.0
-const FRAME_FONT_SIZE: int = 14
+const CHARGE_RING_GAP: float = 8.0
+const RIVET_RADIUS: float = 3.5
+const LENS_SHADER: String = "res://scripts/ui/goggle_lens.gdshader"
+const IDLE_RING_WIDTH: float = 1.05
+const BACK_OVERSHOOT: float = 1.70158
 const COOLDOWN_ALPHA: float = 0.5
 const INVALID_ALPHA: float = 0.35
 const PROMPT_LIFT: float = 0.35
@@ -58,6 +89,13 @@ const PROMPT_FONT_SIZE: int = 16
 
 var _cooldown_dim: bool = false
 var _prompt_style: StyleBoxFlat
+var _lens: ColorRect
+var _lens_material: ShaderMaterial
+var _open_t: float = 0.0
+var _gear_angle: float = 0.0
+var _jolt_left: float = 0.0
+var _jolt_clock: float = 0.0
+var _u: float = 1.0
 
 @onready var _reticle: Control = $Reticle
 @onready var _prompt: Control = $NearPrompt
@@ -73,10 +111,12 @@ func _ready() -> void:
 	_prompt.visible = false
 	_prompt.draw.connect(_draw_prompt)
 	_reticle.draw.connect(_draw_reticle)
+	_build_lens()
 	EventBus.aim_changed.connect(_on_aim_changed)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_update_lens(delta)
 	var hand: HandController = get_tree().get_first_node_in_group(&"hand_controller") as HandController
 	_update_prompt(hand)
 	if hand == null:
@@ -136,7 +176,54 @@ func set_module_name(text: String) -> void:
 
 func _on_aim_changed(active: bool) -> void:
 	hud_visible = active
+	if active:
+		_jolt_left = hud_jolt_time
+		_jolt_clock = 0.0
 	_reticle.queue_redraw()
+
+
+## The lens overlay is a full-screen ColorRect with the goggle shader, behind the reticle, ignoring the mouse.
+func _build_lens() -> void:
+	_lens = ColorRect.new()
+	_lens.name = "Lens"
+	_lens.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_lens.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_lens.visible = false
+	_lens_material = ShaderMaterial.new()
+	_lens_material.shader = load(LENS_SHADER) as Shader
+	_lens.material = _lens_material
+	add_child(_lens)
+	move_child(_lens, 0)
+
+
+## Snap-in (back ease, small overshoot) and snap-out of the lens, the HUD jolt and the gear rotation.
+func _update_lens(delta: float) -> void:
+	var goal: float = 1.0 if hud_visible else 0.0
+	var time: float = lens_open_time if hud_visible else lens_close_time
+	_open_t = move_toward(_open_t, goal, delta / maxf(time, 0.01))
+	var eased: float = _open_t * _open_t
+	if hud_visible:
+		var shifted: float = _open_t - 1.0
+		eased = 1.0 + (BACK_OVERSHOOT + 1.0) * shifted * shifted * shifted + BACK_OVERSHOOT * shifted * shifted
+	var jolt: Vector2 = Vector2.ZERO
+	if _jolt_left > 0.0:
+		_jolt_left = maxf(_jolt_left - delta, 0.0)
+		_jolt_clock += delta
+		var decay: float = _jolt_left / maxf(hud_jolt_time, 0.01)
+		jolt = Vector2(sin(_jolt_clock * 71.0), cos(_jolt_clock * 93.0)) * hud_jolt_pixels * decay * decay
+	_reticle.position = jolt
+	if _lens == null:
+		return
+	_lens.visible = _open_t > 0.0
+	if not _lens.visible or _lens.size.y <= 0.0:
+		return
+	_lens_material.set_shader_parameter(&"open", eased)
+	_lens_material.set_shader_parameter(&"aspect", _lens.size.x / _lens.size.y)
+	_lens_material.set_shader_parameter(&"shake", jolt / _lens.size.y)
+	_lens_material.set_shader_parameter(&"intro_scale", lens_intro_scale)
+	if hud_visible:
+		_gear_angle += deg_to_rad(gear_speed_deg + gear_charge_speed_deg * charge * charge) * delta
+		_reticle.queue_redraw()
 
 
 ## Places the E keycap over HandController.prompt_target, hidden without a finite point in front of the camera.
@@ -159,6 +246,7 @@ func _draw_prompt() -> void:
 
 func _draw_reticle() -> void:
 	var size: Vector2 = _reticle.size
+	_u = clampf(size.y / maxf(ui_reference_height, 1.0), 0.75, 3.0)
 	var centre: Vector2 = size * 0.5
 	var tint: Color = lock_color if locked else color
 	if state == Targeting.State.INVALID:
@@ -169,57 +257,65 @@ func _draw_reticle() -> void:
 		var idle: Color = Color(color.r, color.g, color.b, color.a * idle_alpha)
 		_reticle.draw_circle(centre, dot_radius + OUTLINE_EXTRA * 0.5, outline_color)
 		_reticle.draw_circle(centre, dot_radius, idle)
-		_arc(centre, idle_ring_radius, 0.0, TAU, idle, ring_width * 0.7)
+		_arc(centre, idle_ring_radius, 0.0, TAU, idle, IDLE_RING_WIDTH)
 		return
-	_draw_rim(size)
 	_draw_ring(centre, tint)
+	_draw_gear(centre, tint)
 	if charge > 0.0:
-		_arc(centre, ring_radius + CHARGE_RING_GAP, -PI * 0.5, -PI * 0.5 + TAU * charge, lock_color, ring_width)
-	_draw_module_frame(size)
+		var charge_radius: float = (ring_radius + gear_gap + gear_tooth_length + CHARGE_RING_GAP) * _u
+		_arc(centre, charge_radius, -PI * 0.5, -PI * 0.5 + TAU * charge, lock_color, ring_width * _u)
+	_draw_module_plate(size)
 
 
 func _draw_ring(centre: Vector2, tint: Color) -> void:
-	_reticle.draw_circle(centre, dot_radius + OUTLINE_EXTRA * 0.5, outline_color)
-	_reticle.draw_circle(centre, dot_radius, tint)
-	_arc(centre, ring_radius, 0.0, TAU, tint, ring_width)
+	var radius: float = ring_radius * _u
+	var width: float = ring_width * _u
+	_reticle.draw_circle(centre, (dot_radius * 1.5 + OUTLINE_EXTRA * 0.5) * _u, outline_color)
+	_reticle.draw_circle(centre, dot_radius * 1.5 * _u, tint)
+	_arc(centre, radius, 0.0, TAU, tint, width)
 	for angle_deg: float in NOTCH_ANGLES_DEG:
 		var direction: Vector2 = Vector2.from_angle(deg_to_rad(angle_deg))
-		_line(centre + direction * ring_radius, centre + direction * (ring_radius + NOTCH_LENGTH), tint, ring_width)
+		_line(centre + direction * radius, centre + direction * (radius + notch_length * _u), tint, width)
 	if state == Targeting.State.VALID_BIG:
-		_arc(centre, ring_radius + OUTER_RING_GAP, 0.0, TAU, tint, ring_width * 0.7)
+		_arc(centre, radius + OUTER_RING_GAP * _u, 0.0, TAU, tint, width * 0.7)
 	if state == Targeting.State.INVALID:
-		var reach: float = ring_radius + NOTCH_LENGTH
-		_line(centre + Vector2(-reach, reach), centre + Vector2(reach, -reach), tint, ring_width)
+		var reach: float = radius + notch_length * _u
+		_line(centre + Vector2(-reach, reach), centre + Vector2(reach, -reach), tint, width)
 
 
-## Two thin arcs hugging the left and right screen edges, with three rivets each.
-func _draw_rim(size: Vector2) -> void:
-	var radius: float = size.y * RIM_RADIUS_FACTOR
-	var span: float = deg_to_rad(RIM_HALF_SPAN_DEG)
-	var left_centre: Vector2 = Vector2(RIM_INSET - radius, size.y * 0.5)
-	var right_centre: Vector2 = Vector2(size.x - RIM_INSET + radius, size.y * 0.5)
-	_arc(left_centre, radius, -span, span, color, ring_width)
-	_arc(right_centre, radius, PI - span, PI + span, color, ring_width)
-	for fraction: float in [-0.8, 0.0, 0.8]:
-		_rivet(left_centre + Vector2.from_angle(span * fraction) * radius)
-		_rivet(right_centre + Vector2.from_angle(PI + span * fraction) * radius)
+## Gear ring around the reticle: a thin circle with short radial teeth that turns (faster while charging).
+func _draw_gear(centre: Vector2, tint: Color) -> void:
+	var radius: float = (ring_radius + gear_gap) * _u
+	var tooth: float = gear_tooth_length * _u
+	_arc(centre, radius, 0.0, TAU, tint, ring_width * 0.6 * _u)
+	var count: int = maxi(gear_teeth, 1)
+	for i: int in count:
+		var direction: Vector2 = Vector2.from_angle(_gear_angle + TAU * float(i) / float(count))
+		_line(centre + direction * radius, centre + direction * (radius + tooth), tint, ring_width * 1.4 * _u)
 
 
 func _rivet(at: Vector2) -> void:
-	_reticle.draw_circle(at, RIVET_RADIUS + OUTLINE_EXTRA * 0.5, outline_color)
-	_reticle.draw_circle(at, RIVET_RADIUS, color)
+	_reticle.draw_circle(at, (RIVET_RADIUS + OUTLINE_EXTRA * 0.5) * _u, outline_color)
+	_reticle.draw_circle(at, RIVET_RADIUS * _u, plate_border)
 
 
-func _draw_module_frame(size: Vector2) -> void:
+## Brass plate at the bottom centre with the active module name.
+func _draw_module_plate(size: Vector2) -> void:
 	if module_name.is_empty():
 		return
-	var rect: Rect2 = Rect2(Vector2((size.x - FRAME_SIZE.x) * 0.5, size.y - FRAME_BOTTOM_GAP - FRAME_SIZE.y), FRAME_SIZE)
-	_reticle.draw_rect(rect, outline_color, false, ring_width + OUTLINE_EXTRA)
-	_reticle.draw_rect(rect, color, false, ring_width)
+	var plate: Vector2 = plate_size * _u
+	var rect: Rect2 = Rect2(Vector2((size.x - plate.x) * 0.5, size.y - plate_bottom_gap * _u - plate.y), plate)
+	_reticle.draw_rect(rect.grow(2.0 * _u), outline_color, true)
+	_reticle.draw_rect(rect, plate_fill, true)
+	_reticle.draw_rect(rect, plate_border, false, 3.0 * _u)
+	_reticle.draw_rect(rect.grow(-6.0 * _u), plate_border.darkened(0.45), false, 1.0 * _u)
+	_rivet(rect.position + Vector2(plate.y * 0.5, plate.y * 0.5))
+	_rivet(rect.position + Vector2(plate.x - plate.y * 0.5, plate.y * 0.5))
 	var font: Font = ThemeDB.fallback_font
-	var baseline: Vector2 = Vector2(rect.position.x, rect.position.y + FRAME_SIZE.y * 0.5 + FRAME_FONT_SIZE * 0.35)
-	_reticle.draw_string_outline(font, baseline, module_name, HORIZONTAL_ALIGNMENT_CENTER, FRAME_SIZE.x, FRAME_FONT_SIZE, 3, outline_color)
-	_reticle.draw_string(font, baseline, module_name, HORIZONTAL_ALIGNMENT_CENTER, FRAME_SIZE.x, FRAME_FONT_SIZE, color)
+	var font_size: int = int(plate_font_size * _u)
+	var baseline: Vector2 = Vector2(rect.position.x, rect.position.y + plate.y * 0.5 + font_size * 0.35)
+	_reticle.draw_string_outline(font, baseline, module_name, HORIZONTAL_ALIGNMENT_CENTER, plate.x, font_size, 4, outline_color)
+	_reticle.draw_string(font, baseline, module_name, HORIZONTAL_ALIGNMENT_CENTER, plate.x, font_size, color)
 
 
 ## A line with a dark outline under it.
