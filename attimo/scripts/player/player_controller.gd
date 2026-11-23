@@ -200,13 +200,18 @@ func face_now(direction: Vector3) -> void:
 	visual_root.rotation.y = atan2(direction.x, direction.z)
 
 
-## Places the body, zeroes all motion and clears the interpolation streak (call order matters).
+## Places the body, zeroes all motion, hands the FSM to Fall and clears the interpolation streak (call order matters).
+## The Fall hand-over ends a running Capture, WallRun or Dash through its exit() (gravity_scale restored), so a respawn
+## does not keep steering, sliding or dashing (WR-02).
 func teleport(new_position: Vector3) -> void:
 	global_position = new_position
-	move_velocity = Vector3.ZERO
-	vertical_speed = 0.0
 	velocity = Vector3.ZERO
 	_was_on_floor = false
+	if state_machine != null and state_machine.current != null:
+		_enter_fall()
+	# After the Fall hand-over: exit() hooks may touch the motion.
+	move_velocity = Vector3.ZERO
+	vertical_speed = 0.0
 	reset_physics_interpolation()
 
 

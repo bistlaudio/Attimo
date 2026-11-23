@@ -16,6 +16,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	Engine.physics_ticks_per_second = SHIPPED_TPS
 	await _scenario_run_basics(tree, check)
 	await _scenario_run_entry_from_jump(tree, check)
+	await _scenario_teleport_ends_run(tree, check)
 	await _scenario_run_end_and_cooldown(tree, check)
 	await _scenario_rejections(tree, check)
 	await _scenario_dash_and_landing(tree, check)
@@ -108,6 +109,19 @@ func _scenario_run_entry_from_jump(tree: SceneTree, check: Callable) -> void:
 		await tree.physics_frame
 		apex = maxf(apex, player.global_position.y)
 	check.call(apex - entry_y < 1.0, "the wall-run from a jump climbs %.2f m (under 1 m, no super-jump)" % (apex - entry_y))
+	await _free(tree, parts)
+
+
+## WR-02: a teleport (respawn) during WallRun hands the FSM to Fall and restores gravity_scale, so the run does not continue.
+func _scenario_teleport_ends_run(tree: SceneTree, check: Callable) -> void:
+	var parts: Array = await _setup(tree, 0, -7.0)
+	var player: PlayerController = parts[3] as PlayerController
+	_launch_at_pad(player, 10.0)
+	var waited: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"WallRun", 20)
+	check.call(waited >= 0, "teleport scenario: WallRun starts (%d)" % waited)
+	player.teleport(Vector3(-7.0, 3.0, 6.0))
+	check.call(player.state_machine.current.name == &"Fall" and player.gravity_scale == 1.0, "a teleport during WallRun hands over to Fall with gravity_scale 1.0 (%s, %.2f)" % [player.state_machine.current.name, player.gravity_scale])
+	check.call(player.move_velocity == Vector3.ZERO and player.vertical_speed == 0.0, "the teleport leaves no motion behind")
 	await _free(tree, parts)
 
 
