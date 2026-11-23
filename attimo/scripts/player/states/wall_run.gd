@@ -20,7 +20,8 @@ func enter(_previous: StringName) -> void:
 	var entry_speed: float = Vector2(actor.wall_pre_velocity.x, actor.wall_pre_velocity.z).length()
 	_speed = maxf(entry_speed, config.wall_run_speed)
 	actor.gravity_scale = config.wall_run_gravity_scale
-	actor.vertical_speed = maxf(actor.vertical_speed, config.wall_run_entry_rise)
+	# A wall-run starts with a defined rise, never with the take-off speed of a jump (a held jump would turn the pad into a launcher).
+	actor.vertical_speed = config.wall_run_entry_rise
 	actor.air_speed_cap = maxf(actor.air_speed_cap, _speed)
 	actor.face_now(_tangent)
 	EventBus.wall_run_started.emit(actor.global_position, _normal)

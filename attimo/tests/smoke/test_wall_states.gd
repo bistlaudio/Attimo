@@ -15,6 +15,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await tree.process_frame
 	Engine.physics_ticks_per_second = SHIPPED_TPS
 	await _scenario_run_basics(tree, check)
+	await _scenario_run_entry_from_jump(tree, check)
 	await _scenario_run_end_and_cooldown(tree, check)
 	await _scenario_rejections(tree, check)
 	await _scenario_dash_and_landing(tree, check)
@@ -85,6 +86,28 @@ func _scenario_run_basics(tree: SceneTree, check: Callable) -> void:
 	check.call(player.gravity_scale == 1.0, "gravity_scale is 1.0 after the exit (%.2f)" % player.gravity_scale)
 	check.call(started[0] == 1, "wall_run_started fired once per run (%d)" % started[0])
 	EventBus.wall_run_started.disconnect(on_started)
+	await _free(tree, parts)
+
+
+## CR-01: a wall-run entered from a jump take-off (vertical speed near jump_speed) starts with wall_run_entry_rise, not with the
+## jump's rise, so the pad does not launch the player over its top.
+func _scenario_run_entry_from_jump(tree: SceneTree, check: Callable) -> void:
+	var parts: Array = await _setup(tree, 0, -7.0)
+	var player: PlayerController = parts[3] as PlayerController
+	player.teleport(Vector3(-7.0, 1.0, 1.0))
+	await Fixtures.wait_physics(tree, 2)
+	var take_off: Vector3 = Vector3(6.0, 11.0, -8.0)
+	player.launch_along(take_off.normalized(), take_off.length(), false)
+	var waited: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"WallRun", 20)
+	check.call(waited >= 0, "a jump-speed take-off at a wall-run pad enters WallRun (%d)" % waited)
+	var rise: float = player.config.wall_run_entry_rise
+	check.call(player.vertical_speed <= rise + 0.01, "the first WallRun tick rises at most wall_run_entry_rise (%.2f m/s, cap %.2f)" % [player.vertical_speed, rise])
+	var entry_y: float = player.global_position.y
+	var apex: float = entry_y
+	for i: int in int(player.config.wall_run_time * SHIPPED_TPS) + 20:
+		await tree.physics_frame
+		apex = maxf(apex, player.global_position.y)
+	check.call(apex - entry_y < 1.0, "the wall-run from a jump climbs %.2f m (under 1 m, no super-jump)" % (apex - entry_y))
 	await _free(tree, parts)
 
 
