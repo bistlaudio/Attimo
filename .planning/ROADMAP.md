@@ -203,10 +203,26 @@ Plans:
   4. The glow lens on every interactable is a steampunk element (brass bezel or gear ring around a glowing turquoise core) instead of a plain sphere.
   5. Every new mechanism (A-K plus the planner's steampunk extras) has its own showcase station with a lever or self-trigger, moves the player as described, and has a smoke test; wall-run and wall-jump are movement FSM states.
 
-**Plans:** 0 plans
+**Plans:** 5 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 04.1 to break down)
+
+**Wave 1**
+
+- [ ] 04.1-01-PLAN.md — Tracer: low-gravity zone end to end (request_gravity_scale, station with "Erwartet:" sign), request APIs for the phase (refill_air_dash, boost_along, lock_air_control), conveyor carry fix with guard test, D-06 influence audit (wave 1)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 04.1-02-PLAN.md — WallRun, WallJump and Capture FSM states with wall pads, Schleuderkern and Rohrpost, scope docs (MOVE-12 into v1, new IDs, HAND-08 renumbering) (wave 2)
+- [ ] 04.1-03-PLAN.md — Abstoß-/Anziehungsfeld, Windkanal, Sprungpolster, Boost-Ring, Druckplatte, Bröckel-Plattform, Kolbenwand, Druckventil-Geysir, Paternoster (wave 2)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 04.1-04-PLAN.md — Always-on crosshair with aim-only goggle HUD, E near-contact prompt, look pass with steampunk GlowElement styles on every mechanism (wave 3)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 04.1-05-PLAN.md — Spacious 120 x 72 m showcase with nine zones, all 33 stations with "Erwartet:" signs, puzzle-room shift, room-2 FallReset, coplanar ray guard, D-12 load check and end-of-phase feel check (wave 4)
 
 ### Phase 5: Pull/Push & Module Unlocks
 
