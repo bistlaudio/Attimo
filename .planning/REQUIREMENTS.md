@@ -45,8 +45,9 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [x] **HAND-01**: Hand module framework: a module is a definition resource + behaviour scene; adding a module = one folder + one registry entry; arm mesh never changes
 - [x] **HAND-02**: Interactables declare which modules they accept; modules only talk to the Interactable contract
 - [x] **HAND-03**: Module 1 "Fernauslöser": player aims and fires a turquoise pulse (tap = small, hold = big) that triggers mechanisms at range
-- [ ] **HAND-04**: Module 2 "Pull/Push": player can pull themselves toward an anchor point and carry the momentum on, and can push/repulse with steam (exact design confirmed in its phase)
+- [ ] **HAND-04**: Right-click Loader: holding freezes and stores momentum in slow motion with a free camera, charge ring and trajectory preview; releasing discharges in the view direction (bonus costs one core, empty arm only redirects). Replaces aim mode and Pull/Push (docs/GAME-DESIGN.md section 4)
 - [ ] **HAND-05**: Picking up a module is a clear moment (pickup feedback, HUD icon) and unlocks the module permanently
+- [ ] **SIPH-01**: Siphon module (hold, cone in front of the hand) drains enemies, shards, energy capsules and broken machines for energy; switched with the Shot via the mouse wheel
 - [ ] **HAND-06**: Each module has a teaching room: safe first use, then a test, then a twist
 - [x] **HAND-07**: Every interactable's glow element is a steampunk primitive element (brass bezel or gear ring around a faceted turquoise core) shaped to fit its mechanic, built from shared primitives and materials; the glow stages still switch on the core
 
@@ -58,9 +59,24 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [x] **MECH-04**: Movement mechanisms exist as reusable components with a showcase station and a smoke test each: repulsor field, attractor field, point-symmetric slingshot core, wall-run pad, wall-jump pad, bounce pad, boost ring, pressure plate, crumbling platform, wind tunnel, low-gravity zone
 - [x] **MECH-05**: Steampunk extras: piston punch wall, pneumatic tube, pressure-valve geyser, paternoster (D-11)
 
+### Energy (docs/GAME-DESIGN.md sections 2-3)
+
+- [ ] **ENRG-01**: The arm stores 0-100 energy in 4 cores of 25, readable on the arm; from 50 the player is in Moto Perpetuo (faster run, buffed Jump 3, brighter arm); respawn always with one core
+- [ ] **ENRG-02**: Energy income without enemies: passive charge while moving above about dash exit speed, energy capsules and broken machines, and a slow charge button
+- [ ] **ENRG-03**: Base moves are free and injected versions cost energy (air dash, dash hop stages 2-3, wall run after the free window); without energy the base version fires automatically, the air dash does not fire
+- [ ] **ENRG-04**: Removal of aim mode (goggle HUD, zoom, shoulder offset, aim pose, pull/push); the always-on crosshair and target aim assist stay
+- [ ] **ENRG-05**: Energy HUD next to health (diegetic arm cores plus a minimal readout)
+
+### Mechanism Kit (docs/GAME-DESIGN.md section 6)
+
+- [ ] **KIT-01**: The kit runs on 8 logic blocks and 4 attachable components; values in `.tres` configs, looks as inherited scenes
+- [ ] **KIT-02**: All objects of the steampunk, energy and nature layers exist as block + components + look, honouring the coupling rule
+- [ ] **KIT-03**: The slingshot core plays like the Loader in a steampunk look; targets replace levers, pressure plates, valves and cranks
+- [ ] **KIT-04**: Cut stations removed, reworked stations replaced, showroom regrouped by layer and role with a station and smoke test per object
+
 ### Shooting & Enemies (exact design defined in its phase)
 
-- [ ] **SHOOT-01**: The hand pulse can also shoot: hits deal damage/impulse to objects and enemies
+- [ ] **SHOOT-01**: The Shot module (tap, the pulse as a projectile) costs energy and hits targets, objects and enemies; shot enemies burst into shards the player can siphon
 - [ ] **SHOOT-02**: Destructible/reactive objects (e.g. barrels, crates, pipes) react to pulse hits
 - [ ] **SHOOT-03**: 1–2 simple enemy types (e.g. small machines turned evil) with simple behaviour (patrol, notice, attack), defeated by the pulse
 - [ ] **SHOOT-04**: Hits on objects and enemies give clear feedback (hit reaction, VFX, hit-stop)
@@ -76,13 +92,14 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 
 - [ ] **LEVEL-01**: One vertical-slice level, built on a grid that matches the kit pieces
 - [ ] **LEVEL-02**: Level gates paths by ability (lock shown before key), so each module opens previously seen areas
+- [ ] **LEVEL-04**: Level gimmick "charge the level": the player feeds energy into the level and mechanisms activate depending on the charge
 - [ ] **LEVEL-03**: Story is told only through world and look (lab destination visible, ruins, overgrowth), no dialogue or cutscenes
 
 ### Boss
 
 - [ ] **BOSS-01**: One object-boss (an object turned evil by the catastrophe) with 2–3 phases
 - [ ] **BOSS-02**: Every boss attack is telegraphed and has a recovery window
-- [ ] **BOSS-03**: Boss is damaged through the hand modules and arena mechanisms (weak points are interactables), no separate combat system
+- [ ] **BOSS-03**: Boss is damaged through Loader discharges and shots on its weak points plus arena mechanisms, no separate combat system
 - [ ] **BOSS-04**: Boss health is readable (e.g. glowing cores going out)
 
 ### Feel & Juice
@@ -94,7 +111,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [ ] **FEEL-05**: Juice is tuned to one fixed, strong level (no presets or toggles)
 - [x] **FEEL-06**: Input-to-response latency is measured; target ≤ 66 ms, hard limit 100 ms
 - [ ] **FEEL-08**: Juice catalogue lives as data (cues per action with empty SFX slots so audio plugs in last without code changes)
-- [ ] **FEEL-10**: Pull/momentum metrics table (range, speed cap, carry-over, release boost) documented and tuned
+- [ ] **FEEL-10**: Loader metrics table (minimum push, bonus, cap, hold time, slow-motion factor, energy rates) documented and tuned
 
 ### Polish
 
@@ -106,7 +123,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [ ] **ART-01**: Final Meshy hero replaces the Mannequin: rigged onto KayKit Rig_Medium as rigid segments (~6–9k tris), all existing KayKit clip mappings keep working
 - [ ] **ART-02**: Steampunk prop/environment kit in the palette atlas, within poly budgets, consistent with KayKit style
 - [ ] **ART-03**: Lighting and atmosphere: warm directional light, turquoise emissive glow, fog, steam particles
-- [ ] **ART-04**: Hand-module poses are composed from kit clips (pull: Ranged_Magic_Raise upper body over Jump_Idle/Dodge_Forward; push: Ranged_Magic_Shoot/Throw; pulse: Ranged_1H_Aiming/Ranged_Magic_Shoot) via AnimationTree upper-body layer, no new clips
+- [ ] **ART-04**: Loader, Siphon and Shot poses are composed from kit clips via the AnimationTree upper-body layer, no new clips
 
 ### Menus & UX
 
@@ -194,8 +211,18 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | HAND-02 | Phase 4 | Complete |
 | HAND-03 | Phase 4 | Complete |
 | HAND-04 | Phase 5 | Pending |
-| HAND-05 | Phase 5 | Pending |
-| HAND-06 | Phase 5 | Pending |
+| HAND-05 | Phase 6 | Pending |
+| HAND-06 | Phase 6 | Pending |
+| SIPH-01 | Phase 6 | Pending |
+| ENRG-01 | Phase 5 | Pending |
+| ENRG-02 | Phase 5 | Pending |
+| ENRG-03 | Phase 5 | Pending |
+| ENRG-04 | Phase 5 | Pending |
+| ENRG-05 | Phase 6 | Pending |
+| KIT-01 | Phase 05.1 | Pending |
+| KIT-02 | Phase 05.1 | Pending |
+| KIT-03 | Phase 05.1 | Pending |
+| KIT-04 | Phase 05.1 | Pending |
 | HAND-07 | Phase 04.1 | Complete |
 | MECH-01 | Phase 4 | Complete |
 | MECH-02 | Phase 4 | Complete |
@@ -212,6 +239,7 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | PROG-04 | Phase 6 | Pending |
 | LEVEL-01 | Phase 7 | Pending |
 | LEVEL-02 | Phase 7 | Pending |
+| LEVEL-04 | Phase 7 | Pending |
 | LEVEL-03 | Phase 10 | Pending |
 | BOSS-01 | Phase 8 | Pending |
 | BOSS-02 | Phase 8 | Pending |
@@ -230,7 +258,7 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | ART-01 | Phase 9 | Pending |
 | ART-02 | Phase 10 | Pending |
 | ART-03 | Phase 10 | Pending |
-| ART-04 | Phase 5 | Pending |
+| ART-04 | Phase 6 | Pending |
 | UX-01 | Phase 7 | Pending |
 | UX-02 | Phase 7 | Pending |
 | UX-03 | Phase 7 | Pending |
@@ -244,10 +272,10 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | REL-03 | Phase 15 | Pending |
 
 **Coverage:**
-- v1 requirements: 76 total
-- Mapped to phases: 76
+- v1 requirements: 87 total
+- Mapped to phases: 87
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-11-02*
-*Last updated: 2026-11-23 after Phase 04.1 insertion (MOVE-12 into scope, MECH-04/05, CAM-06, HAND-07; v2 third module renumbered HAND-08)*
+*Last updated: 2026-11-23 after the energy-momentum rework (Phase 5 rescoped to Energy Arm & Loader, Phase 05.1 Kit Rework inserted; HAND-04, FEEL-10, ART-04, SHOOT-01, BOSS-03 reworded; ENRG-01..05, SIPH-01, KIT-01..04, LEVEL-04 added; source docs/GAME-DESIGN.md)*

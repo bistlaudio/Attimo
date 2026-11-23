@@ -303,3 +303,8 @@ Do not make direct repo edits outside a GSD workflow unless the user explicitly 
 ## Communication
 
 - The user writes in German; answer in German. Planning docs stay in English.
+
+## Game Design Doc
+
+- `docs/GAME-DESIGN.md` is the living single source of truth for the game design (identity, core loop, energy resource, Loader, modules, mechanism kit).
+- Whenever a design decision is made or changed, update that file in the same session and add a change-log line at its bottom. Read it before discussing or planning any phase.

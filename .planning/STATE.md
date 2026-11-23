@@ -1,17 +1,19 @@
 ---
-gsd_state_version: 1.0
+gsd_state_version: "1.0"
 milestone: v0.11.0.4
-milestone_name: milestone
+current_phase: "04.1"
+current_phase_name: mechanism-kit-extension-hud-polish
 status: executing
 stopped_at: Completed 04.1-01-PLAN.md
-last_updated: "2026-11-23T14:38:07.921Z"
+last_updated: "2026-11-23T21:30:36.848Z"
 last_activity: 2026-11-23
+state_head: 0e579d8621ae04231e1ff7d5af28bf60101a8863
 progress:
-  total_phases: 16
+  total_phases: 17
   completed_phases: 5
   total_plans: 41
   completed_plans: 41
-  percent: 31
+milestone_name: milestone
 ---
 
 # Project State
@@ -182,6 +184,11 @@ None yet.
 ### Roadmap Evolution
 
 - Phase 04.1 inserted after Phase 4: Mechanism kit extension (movement mechanisms A-K + steampunk extras, wall-run MOVE-12 into scope, conveyor carry fix) and HUD polish (always-on crosshair, E prompt, expectation signs, showcase sub-zones, lens restyle) (URGENT)
+- Phase 5 edited: rescoped to Energy Arm & Loader (docs/GAME-DESIGN.md); edited fields: title, goal, requirements, success_criteria, notes
+- Phase 05.1 inserted after Phase 5: Kit Rework: 8 logic blocks + 4 components + looks, three layers (docs/GAME-DESIGN.md section 6)
+- Phase 6 edited: adapted to the energy-momentum design (docs/GAME-DESIGN.md)
+- Phase 7 edited: adapted to the energy-momentum design (docs/GAME-DESIGN.md)
+- Phase 8 edited: adapted to the energy-momentum design (docs/GAME-DESIGN.md)
 
 ## Deferred Items
 

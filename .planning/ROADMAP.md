@@ -35,9 +35,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Movement Core & Follow Camera** - Run, variable jump with a Jump 1-2-3 chain, ground and air dash, the dash-hop long jump, platforms, and a jitter-free mouse-look camera, signed off without juice (completed 2026-11-06)
 - [x] **Phase 3: Animated Mannequin & Aim Mode** - The Mannequin animates with every movement state from kit clips, plus aim mode with crosshair (completed 2026-11-20)
 - [x] **Phase 4: Fernauslöser & Mechanism Kit** - Hand module framework, turquoise highlight with aim assist, Module 1 remote-trigger pulse, and the greybox D-15/D-16 mechanism kit (levers, valves, energy cores, cranks, gear gates, rotating and lift platforms, conveyors, steam nozzles, pendulums) with AND, OR and timer logic (completed 2026-11-23)
-- [ ] **Phase 5: Pull/Push & Module Unlocks** - Module 2 with a momentum test room, module pickup, hand poses from kit clips, and a teaching room per module
-- [ ] **Phase 6: Shooting, Enemies & Recovery** - Pulse shooting at reactive Prototype Bits objects, 1-2 greybox enemy types, player health, checkpoints and near-instant respawn
-- [ ] **Phase 7: Level Blockout & Game Flow** - The full Prototype Bits level with ability gating and reset paths, plus title, pause and settings menus
+- [ ] **Phase 5: Energy Arm & Loader** - Energy resource in 4 arm cores with Moto Perpetuo, passive and capsule income, energy costs for injected moves, the right-click Loader with charge ring and trajectory preview, aim mode removed
+- [ ] **Phase 05.1: Kit Rework** (INSERTED) - Mechanism kit rebuilt as 8 logic blocks + 4 components + looks in steampunk, energy and nature layers, showroom regrouped
+- [ ] **Phase 6: Siphon, Shot, Enemies & Recovery** - Siphon and Shot modules on the mouse wheel, shards, 1-2 greybox enemy types, energy HUD next to health, module pickup and teaching rooms, checkpoints and near-instant respawn
+- [ ] **Phase 7: Level Blockout & Game Flow** - The full Prototype Bits level with ability gating, the "charge the level" gimmick and reset paths, plus title, pause and settings menus
 - [ ] **Phase 8: Boss & Ending** - A greybox object-boss with 2-3 telegraphed phases, beaten through hand modules and arena mechanisms, followed by the end screen
 
 ### Group B: Produktion (Phases 9-15)
@@ -45,7 +46,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 9: Style Contract & Final Hero** - Style contract first, then the final Meshy hero on Rig_Medium replaces the Mannequin
 - [ ] **Phase 10: Steampunk World Building** - Steampunk prop/environment kit, the level, arena and boss rebuilt with it, warm lighting, fog and steam, and storytelling through the world alone
 - [ ] **Phase 11: Movement & Camera Juice** - Data-driven cue catalogue, squash/stretch, dust and steam on every move, FOV kicks, camera shake and hit-stop at one fixed, strong level
-- [ ] **Phase 12: Hand & Combat Juice + Polish** - Feedback for pulse, pull, push, mechanisms and hits, then a polish pass that retunes all mechanics together and fixes rough spots
+- [ ] **Phase 12: Hand & Combat Juice + Polish** - Feedback for Loader, Siphon, Shot, energy, mechanisms and hits, then a polish pass that retunes all mechanics together and fixes rough spots
 - [ ] **Phase 13: Controller Support** - Gamepad bindings for everything, plus stick look and aim assist tuned for controller
 - [ ] **Phase 14: Audio** - Sound effects through the catalogue SFX slots, level and boss music, and a hit-stop/shake retune with sound
 - [ ] **Phase 15: Windows Release & Performance** - Standalone Windows build, profiling on a weaker laptop at 60 fps, and debug tools stripped
@@ -224,42 +225,61 @@ Plans:
 
 - [x] 04.1-05-PLAN.md — Spacious 120 x 72 m showcase with nine zones, all 33 stations with "Erwartet:" signs, puzzle-room shift, room-2 FallReset, coplanar ray guard, D-12 load check and end-of-phase feel check (wave 4)
 
-### Phase 5: Pull/Push & Module Unlocks
+### Phase 5: Energy Arm & Loader
 
 **Group:** A (Prototyp)
-**Goal:** As a player, I want to pick up Pull/Push and zip to anchors with momentum, so that the hand becomes part of my movement.
+**Goal:** As a player, I want my arm to store energy from speed and to stop, aim and discharge my momentum with the right-click Loader, so that speed turns into energy and energy into more speed.
 **Mode:** mvp
 **Depends on**: Phase 4
-**Requirements**: HAND-04, HAND-05, HAND-06, FEEL-10, ART-04
+**Requirements**: HAND-04, FEEL-10, ENRG-01, ENRG-02, ENRG-03, ENRG-04
 **Success Criteria** (what must be TRUE):
 
-  1. The player can pull themselves toward an anchor and fly on with the carried momentum, with a plain rope line to the anchor. The player can also push. The exact push use (objects, self-push, or both) is confirmed at the start of the phase.
-  2. A momentum test room exists, and the pull metrics table (range, speed cap, carry-over, release boost) is recorded and tuned. Pulling into a wall at maximum speed never tunnels or gets stuck.
-  3. Pulse, pull and push each show a readable Mannequin pose, composed from kit clips on an upper-body layer.
-  4. Picking up a module plays the kit PickUp clip and shows the module's HUD icon. The module then stays unlocked for good and cannot be used before pickup.
-  5. Each module has a teaching room: safe first use, then a test, then a twist. A fresh player gets through each room without any text.
+  1. The arm holds 0-100 energy in 4 cores of 25, readable on the arm. From 50 the player is in Moto Perpetuo (faster run, buffed Jump 3, brighter arm). After a respawn the arm holds exactly one core (25).
+  2. Energy comes in without enemies: passively while moving above about dash exit speed, from energy capsules and broken machines (placeholder drain via hold-interact until the Siphon module lands in Phase 6), and very slowly from the charge button.
+  3. Base moves stay free and the injected versions cost energy: ground dash free, air dash costs and does not fire when empty; dash hop stage 1 free, stages 2-3 cost; wall run free for about 0.6 s, then costs; jumping off is always free. Without energy the base version fires automatically (except the air dash).
+  4. Holding right click freezes and stores momentum in slow motion (about 0.25x, capped about 1.2 s) with a free camera, a charge ring and a dashed trajectory preview; releasing discharges in the view direction at max(stored speed, minimum push) plus a bonus that costs one core. With an empty arm it only redirects, with a cooldown and a grey ring.
+  5. Aim mode is gone (goggle HUD, zoom, shoulder offset, aim pose, pull/push); the small always-on crosshair and target aim assist stay. A Loader test room exists and the Loader metrics table (minimum push, bonus, cap, hold time, slow-motion factor, energy rates) is recorded and tuned.
 
 **Plans**: TBD
 **UI hint**: yes
-**Notes**: Needs a focused pull/push prototype first, because the literature is thin and this is the highest risk to the core value. Starting values are in GAME-FEEL.md Section 5. The hand poses (ART-04) are built here on the Mannequin, not in Phase 9, for two reasons. First, the Mannequin and the final hero share Rig_Medium, so the poses carry over unchanged. Second, building them now checks that each module design fits the kit clips while the design is still cheap to change. The steam cone, rope ripple, hook sparks and pickup freeze come in Phase 12.
+**Notes**: Rescoped 2026-11-23 from "Pull/Push & Module Unlocks" after the energy-momentum design session. Design source of truth: `docs/GAME-DESIGN.md` sections 1-4. Pull and push are dropped. Module pickup and teaching rooms (HAND-05, HAND-06) and the hand poses (ART-04) move to Phase 6 with the Siphon and Shot modules. The Loader needs a focused prototype first, because it is the highest risk to the core value.
 
-### Phase 6: Shooting, Enemies & Recovery
+### Phase 05.1: Kit Rework (INSERTED)
 
 **Group:** A (Prototyp)
-**Goal:** As a player, I want to shoot objects and enemies and recover quickly after dying, so that danger has stakes without frustration.
+**Goal:** As a level designer, I want the mechanism kit rebuilt as a few logic blocks with attachable components and looks, sorted into steampunk, energy and nature layers, so that the world reads at a glance and new objects are assembled instead of coded.
 **Mode:** mvp
-**Depends on**: Phase 5
-**Requirements**: SHOOT-01, SHOOT-02, SHOOT-03, PROG-01, PROG-03, PROG-04
+**Depends on:** Phase 5
+**Requirements**: KIT-01, KIT-02, KIT-03, KIT-04
 **Success Criteria** (what must be TRUE):
 
-  1. Pulse shots hit Prototype Bits barrels, crates and targets, and these react visibly (tip, burst into pieces or break).
-  2. 1-2 simple greybox enemy types (small machines turned evil, built from Prototype Bits) patrol, notice the player and attack. The pulse defeats them.
-  3. The player has 3-5 health points, shown in a minimal HUD or diegetically. Taking damage is obvious from a kit Hit clip and the health display. At 0 health the player respawns at the last checkpoint.
-  4. Reaching a checkpoint visibly changes its state and saves progress, including unlocked modules. After a death or a fall into a kill zone, the player is back in control at the checkpoint within about 1 second.
+  1. The kit runs on 8 logic blocks (force volume, impulse, catch & launch, timed motion, reaction to load, trigger, energy source, wall surface) and 4 components (receiver, damage/push, amplification, energy cost); each block keeps its values in a `.tres` config and its look in an inherited scene.
+  2. Every object of the three layers in `docs/GAME-DESIGN.md` section 6 exists as block + components + look, and the coupling holds: steampunk is free, anything that costs or is amplified shows turquoise, nature never helps the player.
+  3. The slingshot core plays exactly like the Loader (same input and timing) in a steampunk look (brass cage, pressure gauge, brass trajectory, steam blast); targets replace levers, pressure plates, valves and cranks.
+  4. The cut stations are removed, the reworked ones replace their old versions, and the showroom is regrouped by layer and role with a station and smoke test per object.
 
 **Plans**: TBD
 **UI hint**: yes
-**Notes**: The exact shooting and enemy designs are confirmed at the start of the phase. Here a hit shows only through the target's own reaction. Sparks, hit VFX and hit-stop (SHOOT-04) come in Phases 11-12. Added 2026-11-23 (user request): a dash readout belongs in the HUD next to health (dash cooldown, air dash available, dash-hop long-jump combo stage). Open design question for discuss-phase 6: a real stamina resource that limits dashing, or only visualising the existing limits (charges and cooldown)? A draining resource may fight the core value of fast, fluid movement. Compare HUD pips or a bar with the arm-core emission as a diegetic indicator (GAME-FEEL.md: dim when spent, flash on refill).
+**Notes**: Design source of truth: `docs/GAME-DESIGN.md` section 6 (kit cube, base rules, layers, architecture, showroom verdict). Known fixes: the steam wall jump must feel like the normal wall jump (currently it flings Rino away), the wall run on it runs with the head to the wall, clock-hand platform floor bugs. Final looks are designed in Group B; greybox looks per layer are enough here.
+
+### Phase 6: Siphon, Shot, Enemies & Recovery
+
+**Group:** A (Prototyp)
+**Goal:** As a player, I want to drain or shoot enemies for energy and recover quickly after dying, so that danger feeds the energy loop without frustration.
+**Mode:** mvp
+**Depends on**: Phase 05.1
+**Requirements**: SHOOT-01, SHOOT-02, SHOOT-03, SIPH-01, ENRG-05, HAND-05, HAND-06, ART-04, PROG-01, PROG-03, PROG-04
+**Success Criteria** (what must be TRUE):
+
+  1. Left click runs two modules switched with the mouse wheel: the Siphon (hold, cone in front of the hand) drains enemies (up to +35 over about 2 s, player vulnerable), shards, energy capsules and broken machines; the Shot (tap, the Fernauslöser pulse as a projectile) costs energy and hits targets, objects and enemies.
+  2. Shot enemies burst into shards the player siphons (shot -10, shards +25), so the Siphon is more efficient and shooting is faster and more fun. Prototype Bits barrels, crates and targets react visibly to shots.
+  3. 1-2 simple greybox enemy types (small machines turned evil, built from Prototype Bits) patrol, notice the player and attack.
+  4. The player has 3-5 health points; an energy HUD sits next to health (diegetic cores on the arm plus a minimal readout). Taking damage is obvious from a kit Hit clip. At 0 health the player respawns at the last checkpoint with one core.
+  5. Reaching a checkpoint visibly changes its state and saves progress, including unlocked modules. After a death or a fall into a kill zone, the player is back in control within about 1 second. Picking up a module plays the kit PickUp clip, shows its HUD icon and unlocks it for good; each module has a teaching room (safe use, test, twist). Loader, Siphon and Shot each show a readable pose from kit clips.
+
+**Plans**: TBD
+**UI hint**: yes
+**Notes**: The exact shooting and enemy designs are confirmed at the start of the phase. Here a hit shows only through the target's own reaction. Sparks, hit VFX and hit-stop (SHOOT-04) come in Phases 11-12. Added 2026-11-23 (user request): a dash readout belongs in the HUD next to health (dash cooldown, air dash available, dash-hop long-jump combo stage). The stamina question is resolved by the energy resource (`docs/GAME-DESIGN.md` section 3): energy is a real resource, but base moves stay free. Design source for the modules: `docs/GAME-DESIGN.md` section 5.
 
 ### Phase 7: Level Blockout & Game Flow
 
@@ -267,7 +287,7 @@ Plans:
 **Goal:** As a player, I want to start from a title screen and play the full prototype level, so that I can experience the whole route.
 **Mode:** mvp
 **Depends on**: Phase 6
-**Requirements**: LEVEL-01, LEVEL-02, PROG-02, UX-01, UX-02, UX-03
+**Requirements**: LEVEL-01, LEVEL-02, LEVEL-04, PROG-02, UX-01, UX-02, UX-03
 **Success Criteria** (what must be TRUE):
 
   1. From the title screen, the player starts the game and plays the Prototype Bits level from start to the boss arena gate. The level is built on the grid of the kit pieces.
@@ -275,15 +295,16 @@ Plans:
   3. Every puzzle can be reset, and no sequence of player actions leaves the player soft-locked.
   4. The pause menu offers resume, restart from checkpoint and quit. The mouse is released while paused and recaptured on resume.
   5. The settings menu changes mouse sensitivity and invert-Y with immediate effect, offers a VSync on/off option and stores the volume. All values persist after a restart.
+  6. The level gimmick "charge the level" works: the player feeds energy into the level and mechanisms activate depending on the charge.
 
 **Plans**: TBD
 **UI hint**: yes
-**Notes**: Gates use the measured movement and pull metrics plus a margin. Do a sequence-break pass. Keep the grid compatible with the steampunk kit planned for Phase 10, so pieces swap in place. The volume value drives the audio buses and becomes audible in Phase 14.
+**Notes**: Gates use the measured movement and Loader metrics plus a margin, and the kit from Phase 05.1. Do a sequence-break pass. Keep the grid compatible with the steampunk kit planned for Phase 10, so pieces swap in place. The volume value drives the audio buses and becomes audible in Phase 14.
 
 ### Phase 8: Boss & Ending
 
 **Group:** A (Prototyp)
-**Goal:** As a player, I want to defeat an object-boss using my hand modules, so that the slice has a climax and an ending.
+**Goal:** As a player, I want to defeat an object-boss with Loader discharges and shots, so that the slice has a climax and an ending.
 **Mode:** mvp
 **Depends on**: Phase 7
 **Requirements**: BOSS-01, BOSS-02, BOSS-03, BOSS-04, UX-04
@@ -291,7 +312,7 @@ Plans:
 
   1. At the end of the level, the player fights one greybox object-boss, an object turned evil by the catastrophe, through 2-3 distinct phases.
   2. Every boss attack is announced by a readable telegraph (pose, motion or colour change, no particles) and followed by a recovery window the player can use.
-  3. The boss takes damage only when the player hits its weak-point interactables with hand modules or arena mechanisms. There is no separate combat system.
+  3. The boss takes damage only through Loader discharges and shots on its weak points, plus arena mechanisms. There is no separate combat system.
   4. Boss health can be read at a glance from its glowing cores going out.
   5. Defeating the boss leads to an end screen. The whole slice plays from title to ending in the prototype look, and all mechanics are signed off. This closes Group A.
 
@@ -359,9 +380,9 @@ Plans:
 **Requirements**: FEEL-03, SHOOT-04, POLISH-01, POLISH-02
 **Success Criteria** (what must be TRUE):
 
-  1. Pulse, pull, push and mechanism activation each show distinct visual feedback: pulse flash and impact, an amber rope and hook, a steam cone, and the mechanism activation pulse. Module pickup is a clear moment, with a brief freeze and the HUD icon popping in.
+  1. Loader, Siphon, Shot, energy gain and spend, and mechanism activation each show distinct visual feedback: Loader charge and discharge burst, siphon stream, shot flash and impact, core fill and drain, and the mechanism activation pulse. Module pickup is a clear moment, with a brief freeze and the HUD icon popping in.
   2. Every hit on an object or enemy gives clear feedback: a hit reaction on the next frame, sparks and a short hit-stop. Big moments (module pickup, boss hit, death) feel stronger than small ones (jump, landing).
-  3. Movement, camera, both modules, shooting, enemies, mechanisms and the boss are retuned together over full playthroughs. The movement and pull metrics tables are updated to the final values.
+  3. Movement, camera, both modules, shooting, enemies, mechanisms and the boss are retuned together over full playthroughs. The movement and Loader metrics tables are updated to the final values.
   4. Rough spots found while playing the full slice (stuck spots, unclear moments, timing problems) are logged and fixed. A final playthrough from title to end screen finds none left open.
 
 **Plans**: TBD
@@ -420,7 +441,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 (end of Group A) → 9 → 10 → 11 → 12 → 13 → 14 → 15
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 04.1 → 5 → 05.1 → 6 → 7 → 8 (end of Group A) → 9 → 10 → 11 → 12 → 13 → 14 → 15
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -428,8 +449,9 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 (en
 | 2. Movement Core & Follow Camera | 14/14 | Complete    | 2026-11-06 |
 | 3. Animated Mannequin & Aim Mode | 10/10 | Complete    | 2026-11-20 |
 | 4. Fernauslöser & Mechanism Kit | 5/5 | Complete   | 2026-11-23 |
-| 5. Pull/Push & Module Unlocks | 0/TBD | Not started | - |
-| 6. Shooting, Enemies & Recovery | 0/TBD | Not started | - |
+| 5. Energy Arm & Loader | 0/TBD | Not started | - |
+| 05.1. Kit Rework | 0/TBD | Not started | - |
+| 6. Siphon, Shot, Enemies & Recovery | 0/TBD | Not started | - |
 | 7. Level Blockout & Game Flow | 0/TBD | Not started | - |
 | 8. Boss & Ending | 0/TBD | Not started | - |
 | 9. Style Contract & Final Hero | 0/TBD | Not started | - |
