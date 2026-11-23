@@ -213,7 +213,10 @@ func _check_reach(room: Node3D, check: Callable) -> void:
 			continue
 		var from_box: AABB = _surface(from_node)
 		var to_box: AABB = _surface(to_node)
-		check.call(from_box.size != Vector3.ZERO and to_box.size != Vector3.ZERO, "%s: both have a World surface" % label)
+		var via_name: StringName = spec.get("via", &"") as StringName
+		# A nozzle has no standing surface of its own: its volume position is the take-off point.
+		var from_is_nozzle: bool = via_name == &"nozzle_apex" or via_name == &"updraft_jump" or via_name == &"cannon"
+		check.call((from_box.size != Vector3.ZERO or from_is_nozzle) and to_box.size != Vector3.ZERO, "%s: both have a World surface" % label)
 		var from_top: float = from_box.end.y + float(spec.get("from_dy", 0.0))
 		var to_top: float = to_box.end.y + float(spec.get("to_dy", 0.0))
 		var gap: float = _gap(from_box, to_box) + float(spec.get("gap_extra", 0.0))
@@ -299,7 +302,7 @@ func _fire(trigger: Node, size: int) -> bool:
 		return false
 	if size < 0:
 		var began: bool = interactable.near_begin()
-		interactable.near_hold(0.1)
+		interactable.near_hold(0.5)
 		interactable.near_end()
 		return began
 	return interactable.try_trigger(_hit(size))

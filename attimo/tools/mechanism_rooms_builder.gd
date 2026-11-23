@@ -5,7 +5,8 @@ extends RefCounted
 ## typed handle has no such methods). Coordinates are on the 1 m grid with 2 m / 4 m modules.
 ##
 ## Plan view (x east, z south): the hall east wall sits at x 42.5. The door (Zahnrad-Tor) is its z 0 cell, the tracer lever
-## stands on the hall side at (38, -3). Room 2 is the shell east of the door, x 43..75, z -16..16.
+## stands on the hall side at (38, -3). Room 2 is the shell east of the door, x 43..115, z -16..16 (grown in 04-04); the puzzle rooms
+## of tools/puzzle_rooms_builder.gd follow behind its east wall.
 
 const GATE_SCENE: String = "res://scenes/mechanisms/gear_gate.tscn"
 const LEVER_SCENE: String = "res://scenes/mechanisms/lever.tscn"
@@ -36,12 +37,25 @@ const ROOM_X_MIN: float = 43.0
 const ROOM_X_MAX: float = 115.0
 const ROOM_Z_HALF: float = 16.0
 const TILE: float = 4.0
+## Index of the east wall cell (z 0..4) that stays open for the puzzle room doorway.
+const EAST_DOOR_ROW: int = 4
 
 
 func build_into(zone: Node3D, builder: RefCounted) -> void:
 	_build_room_shell(zone, builder)
 	_build_door(zone, builder)
 	build_showcase_stations(zone, builder)
+	_build_puzzle_rooms(zone, builder)
+
+
+## The three puzzle rooms (04-05) start behind room 2's east wall, in their own worker.
+func _build_puzzle_rooms(zone: Node3D, builder: RefCounted) -> void:
+	var script: GDScript = load("res://tools/puzzle_rooms_builder.gd") as GDScript
+	if script == null or not script.can_instantiate():
+		builder.set(&"failure", "cannot load res://tools/puzzle_rooms_builder.gd")
+		return
+	var worker: RefCounted = script.new() as RefCounted
+	worker.call(&"build_into", zone, builder)
 
 
 ## Showcase stations along the room walls (04-03: triggers and logic; 04-04 and 04-05 add the moving mechanisms).
@@ -157,6 +171,9 @@ func _build_room_shell(zone: Node3D, builder: RefCounted) -> void:
 		builder.call(&"_wall", zone, "Room2WallNorth_%d" % column, x, -ROOM_Z_HALF - 0.5, 0.0, 0.0)
 		builder.call(&"_wall", zone, "Room2WallSouth_%d" % column, x, ROOM_Z_HALF + 0.5, 0.0, 0.0)
 	for row: int in rows:
+		# The z 0..4 cell (row 4) is the doorway into the puzzle rooms (EntryGate of puzzle_rooms_builder).
+		if row == EAST_DOOR_ROW:
+			continue
 		var z: float = -ROOM_Z_HALF + TILE * 0.5 + TILE * row
 		builder.call(&"_wall", zone, "Room2WallEast_%d" % row, ROOM_X_MAX + 0.5, z, 90.0, 0.0)
 	# The hall floor ends at x 42 and room 2 starts at x 43: a 1 m threshold closes the wall cell between them.

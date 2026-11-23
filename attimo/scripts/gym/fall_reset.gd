@@ -8,6 +8,9 @@ extends Area3D
 @export var respawn: Node3D
 ## Optional: snapped to the player right after the teleport.
 @export var camera_rig: CameraRig
+## Optional (puzzle rooms): after the teleport every node of the group `mechanism` below this node gets reset(), so a room
+## starts again from its load state. Null keeps the plain respawn.
+@export var reset_root: Node3D
 
 
 func _ready() -> void:
@@ -22,5 +25,16 @@ func _on_body_entered(body: Node3D) -> void:
 	if player == null or respawn == null:
 		return
 	player.call_deferred(&"teleport", respawn.global_position)
+	if reset_root != null:
+		call_deferred(&"_sweep_room")
 	if camera_rig != null:
 		camera_rig.call_deferred(&"snap_to_target")
+
+
+## reset() on every mechanism node under reset_root (deferred, after the overlap callback; the order is the tree order).
+func _sweep_room() -> void:
+	if reset_root == null or not is_instance_valid(reset_root):
+		return
+	for node: Node in get_tree().get_nodes_in_group(&"mechanism"):
+		if reset_root.is_ancestor_of(node) and node.has_method(&"reset"):
+			node.call(&"reset")

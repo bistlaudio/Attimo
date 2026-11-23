@@ -5,11 +5,16 @@ extends Node3D
 
 signal active_changed(active: bool)
 
+## Per-instance option: a plain SignalSource that is on from the start and after every reset (an always-on driver, e.g. a pendulum).
+@export var start_active: bool = false
+
 var is_active: bool = false
 
 
 func _ready() -> void:
 	add_to_group(&"mechanism")
+	if start_active:
+		set_active(true)
 
 
 ## Sets the signal. Emits active_changed only when the value changed.
@@ -20,6 +25,6 @@ func set_active(value: bool) -> void:
 	active_changed.emit(value)
 
 
-## Virtual: back to the load state (inactive). Called by the reset sweep.
+## Virtual: back to the load state (start_active, off by default). Called by the reset sweep.
 func reset() -> void:
-	set_active(false)
+	set_active(start_active)

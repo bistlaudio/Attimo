@@ -8,6 +8,8 @@ const HANDLE_SPEED: float = 8.0
 
 ## Per-instance option: once on, the lever stays on.
 @export var stays_on: bool = false
+## Per-instance option: only near contact (hold E beside it) toggles the lever, the shot is refused.
+@export var near_only: bool = false
 
 @onready var _interactable: Interactable = $Interactable
 @onready var _handle: Node3D = $Handle
@@ -15,6 +17,9 @@ const HANDLE_SPEED: float = 8.0
 
 func _ready() -> void:
 	super._ready()
+	if near_only:
+		_interactable.accepts_near = true
+		_interactable.accepts_shot = false
 	_interactable.triggered.connect(_on_triggered)
 	_interactable.near_started.connect(_toggle)
 	_handle.rotation.x = _target_angle()
