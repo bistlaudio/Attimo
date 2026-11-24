@@ -4,13 +4,13 @@ milestone: v0.11.0.4
 milestone_name: milestone
 status: executing
 stopped_at: Phase 5 context gathered
-last_updated: "2026-11-24T18:55:13.865Z"
+last_updated: "2026-11-24T19:17:52.255Z"
 last_activity: 2026-11-24
 progress:
   total_phases: 17
   completed_phases: 5
   total_plans: 46
-  completed_plans: 44
+  completed_plans: 45
   percent: 29
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 05 (energy-arm-loader) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-11-24
 
-Progress: [██████████] 96%
+Progress: [██████████] 98%
 
 ## Performance Metrics
 
@@ -91,6 +91,7 @@ Progress: [██████████] 96%
 | Phase 04.1 P01 | 40 min | 3 tasks | 15 files |
 | Phase 04.1 P04 | 75min | 2 tasks | 45 files |
 | Phase 04.1 P05 | 95min | 3 tasks | 9 files |
+| Phase 05 P05-04 | single session | 3 tasks | 30 files |
 
 ## Accumulated Context
 
@@ -153,6 +154,7 @@ Recent decisions that affect current work:
 - [Phase 04.1]: Conveyor carry fixed in conveyor.tscn (belt top 0.05 m above node origin), not in PlayerController: belt top was coplanar with the floor tile
 - [Phase 04.1]: MechanismLook hooks on NOTIFICATION_READY (subclasses override _ready without super)
 - [Phase 04.1-05]: D-12 fallback not needed (13 s to 12 s filtered gym run); room 2 stays 120 m x 72 m, nine zones, 33 stations on a 12 m slot grid
+- [Phase 05]: 05-04: shot bends toward the locked target instead of a snapped ray; pulse_fired fires at projectile impact, shot_fired at launch
 
 ### Pending Todos
 
@@ -198,6 +200,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-24T18:55:13.854Z
+Last session: 2026-11-24T19:17:48.826Z
 Stopped at: Phase 5 context gathered
 Resume file: None
