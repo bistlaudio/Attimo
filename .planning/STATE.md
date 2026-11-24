@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.11.0.4
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05.1-01-PLAN.md
-last_updated: "2026-11-24T23:03:03.455Z"
-last_activity: 2026-11-25 -- Plan 05.1-01 complete (slingshot as Loader, kit skeleton)
+stopped_at: Completed 05.1-02-PLAN.md
+last_updated: "2026-11-24T23:29:34.897Z"
+last_activity: 2026-11-25 -- Plan 05.1-02 complete (steam cannon FIXED, Capture / tube / puzzle rooms removed)
 progress:
   total_phases: 17
   completed_phases: 6
   total_plans: 66
-  completed_plans: 47
+  completed_plans: 48
   percent: 35
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 05.1
-Plan: 2 of 20 (05.1-01 complete)
-Status: Executing
-Last activity: 2026-11-25 -- Plan 05.1-01 complete (slingshot as Loader, kit skeleton)
+Plan: 3 of 20 (05.1-01, 05.1-02 complete)
+Status: Ready to execute
+Last activity: 2026-11-25 -- Plan 05.1-02 complete (steam cannon FIXED, Capture / tube / puzzle rooms removed)
 
-Progress: [███████░░░] 71%
+Progress: [███████░░░] 73%
 
 ## Performance Metrics
 
@@ -94,6 +94,7 @@ Progress: [███████░░░] 71%
 | Phase 04.1 P05 | 95min | 3 tasks | 9 files |
 | Phase 05 P05-04 | single session | 3 tasks | 30 files |
 | Phase 05.1 P01 | 40min | 3 tasks | 24 files |
+| Phase 05.1 P02 | 55min | 3 tasks | 30 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,9 @@ Progress: [███████░░░] 71%
 Decisions are logged in the PROJECT.md Key Decisions table.
 Recent decisions that affect current work:
 
+- [Phase 05.1-02]: Cannon path LoaderState FIXED (35 code lines, under the 40-line fallback); the Capture state is deleted
+- [Phase 05.1-02]: The FIXED discharge emits launched, refills only the Loader use and never calls TimeFx (no slow motion, no hitstop)
+- [Phase 05.1-02]: Phase 4 puzzle rooms removed (D-29); gym station SteamCannon (kind kit, yaw only), Slingshot moved to Werfen slot (1,1)
 - [Phase 05.1-01]: The cage press latch counts is_action_just_released too, so a same-tick tap fires at once
 - [Phase 05.1-01]: KitBlock joins groups mechanism and kit_block in NOTIFICATION_READY (survives a subclass _ready without super)
 - [Phase 05.1-01]: New gym station kind 'kit' (block + sign, no Driver source) because KitBlock has no source (D-13)
@@ -205,6 +209,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-24T23:02:59.614Z
-Stopped at: Completed 05.1-01-PLAN.md
+Last session: 2026-11-24T23:29:32.444Z
+Stopped at: Completed 05.1-02-PLAN.md
 Resume file: None
