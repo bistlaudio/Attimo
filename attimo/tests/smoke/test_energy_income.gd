@@ -19,6 +19,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	_scenario_run_speed(check, player)
 	await _scenario_vertical_ignored(tree, check)
 	await _scenario_hop_run(tree, check, player)
+	await _scenario_charge_button(tree, check, player)
 	player.queue_free()
 	_floor.queue_free()
 	await player.tree_exited
@@ -90,3 +91,48 @@ func _scenario_hop_run(tree: SceneTree, check: Callable, player: PlayerControlle
 	Input.action_release(&"move_forward")
 	await Fixtures.wait_physics(tree, 4)
 	check.call(gained > 0.0, "(h1) a dash-hop run charges the arm (%.2f gained from %.1f)" % [gained, before])
+
+
+# The charge button (D-06): R held in Idle with no move input adds energy_charge_rate per second; anything else stops it at once.
+func _scenario_charge_button(tree: SceneTree, check: Callable, player: PlayerController) -> void:
+	var arm: ArmEnergy = player.arm_energy
+	var config: MovementConfig = player.config
+	player.teleport(Vector3(0.0, 0.0, 0.0))
+	await Fixtures.wait_physics(tree, 6)
+	# Direct ticks with the player's own physics paused make the count exact.
+	player.set_physics_process(false)
+	var gained: Array[Dictionary] = []
+	var on_gained: Callable = func(amount: float, source: StringName) -> void: gained.append({"amount": amount, "source": source})
+	EventBus.energy_gained.connect(on_gained)
+	arm.reset_to(0.0)
+	Input.action_press(&"charge")
+	for i: int in SHIPPED_TPS:
+		arm.tick(1.0 / SHIPPED_TPS, 0.0, &"Idle", true)
+	check.call(absf(arm.value - config.energy_charge_rate) < TOLERANCE and arm.charging, "(k1) 60 ticks of charge in Idle add energy_charge_rate %.1f (got %.3f)" % [config.energy_charge_rate, arm.value])
+	var before: float = arm.value
+	arm.tick(1.0 / SHIPPED_TPS, 0.0, &"Idle", false)
+	check.call(arm.value == before and not arm.charging, "(k2) a move input stops the charge on that tick")
+	check.call(gained.size() == 1 and gained[0]["source"] == &"charge" and absf(float(gained[0]["amount"]) - config.energy_charge_rate) < TOLERANCE, "(k2) one energy_gained(total, charge) fact when it stops (got %s)" % [gained])
+	for state_name: StringName in [&"Jump", &"Dash", &"Run", &"Fall"]:
+		arm.tick(1.0 / SHIPPED_TPS, 0.0, state_name, true)
+		check.call(arm.value == before and not arm.charging, "(k3) no charge in %s" % state_name)
+	Input.action_release(&"charge")
+	arm.tick(1.0 / SHIPPED_TPS, 0.0, &"Idle", true)
+	check.call(arm.value == before and not arm.charging, "(k4) a released button does not charge")
+	arm.reset_to(100.0)
+	Input.action_press(&"charge")
+	arm.tick(1.0 / SHIPPED_TPS, 0.0, &"Idle", true)
+	check.call(arm.value == 100.0, "(k5) a full arm stays at 100")
+	Input.action_release(&"charge")
+	EventBus.energy_gained.disconnect(on_gained)
+	player.set_physics_process(true)
+	# Live: standing in the real Idle state the held button charges.
+	arm.reset_to(0.0)
+	Input.action_press(&"charge")
+	await Fixtures.wait_physics(tree, 30)
+	check.call(arm.value > 1.0 and arm.charging, "(k6) holding charge in the real Idle state charges the arm (%.2f)" % arm.value)
+	Input.action_press(&"move_forward")
+	await Fixtures.wait_physics(tree, 3)
+	check.call(not arm.charging, "(k6) walking stops the charge")
+	Input.action_release(&"move_forward")
+	Input.action_release(&"charge")

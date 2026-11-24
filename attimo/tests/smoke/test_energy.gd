@@ -9,8 +9,10 @@ const SHIPPED_TPS: int = 60
 var _bus: Node
 var _changed: Array[float] = []
 var _refused: Array[StringName] = []
+var _moto: Array[bool] = []
 var _on_changed: Callable
 var _on_refused: Callable
+var _on_moto: Callable
 
 
 func run(tree: SceneTree, check: Callable) -> void:
@@ -26,13 +28,19 @@ func run(tree: SceneTree, check: Callable) -> void:
 	_on_refused = func(reason: StringName, _needed: float) -> void: _refused.append(reason)
 	_bus.connect(&"energy_changed", _on_changed)
 	_bus.connect(&"energy_refused", _on_refused)
+	_moto = []
+	_on_moto = func(active: bool) -> void: _moto.append(active)
+	_bus.connect(&"moto_changed", _on_moto)
 
 	_scenario_core_fill(check, arm)
 	_scenario_clamps(check, arm)
 	_scenario_non_finite(check, arm)
 	await _scenario_quantised(tree, check, arm)
 	await _scenario_respawn(tree, check, player)
+	_scenario_moto_hysteresis(check, arm)
+	await _scenario_moto_buffs(tree, check, player)
 
+	_bus.disconnect(&"moto_changed", _on_moto)
 	_bus.disconnect(&"energy_changed", _on_changed)
 	_bus.disconnect(&"energy_refused", _on_refused)
 	player.queue_free()
@@ -135,3 +143,65 @@ func _scenario_respawn(tree: SceneTree, check: Callable, player: PlayerControlle
 	player.respawn(Vector3(0.0, 0.0, 0.0))
 	check.call(is_equal_approx(arm.value, 25.0), "(r1) respawn from 100 gives exactly 25 (got %.2f)" % arm.value)
 	await Fixtures.wait_physics(tree, 2)
+
+
+# Moto Perpetuo: on at >= moto_threshold, off only below moto_threshold - moto_exit_margin, moto_changed only on flips.
+func _scenario_moto_hysteresis(check: Callable, arm: ArmEnergy) -> void:
+	var config: MovementConfig = (arm.get_parent() as PlayerController).config
+	check.call(is_equal_approx(config.moto_threshold, 50.0) and is_equal_approx(config.moto_exit_margin, 2.5), "(m0) the shipped Moto numbers are 50 and 2.5")
+	arm.reset_to(0.0)
+	_moto.clear()
+	arm.reset_to(49.9)
+	check.call(not arm.is_moto() and _moto.is_empty(), "(m1) 49.9 stays off")
+	arm.gain(0.2, &"test")
+	check.call(arm.is_moto() and _moto == [true], "(m2) crossing 50 turns Moto on with one moto_changed(true) (got %s)" % [_moto])
+	arm.reset_to(47.6)
+	check.call(arm.is_moto() and _moto == [true], "(m3) 47.6 stays on (hysteresis)")
+	arm.reset_to(47.4)
+	check.call(not arm.is_moto() and _moto == [true, false], "(m4) 47.4 turns off with one moto_changed(false) (got %s)" % [_moto])
+	arm.reset_to(50.0)
+	check.call(arm.is_moto(), "(m5) exactly 50.0 turns on")
+	arm.reset_to(0.0)
+	_moto.clear()
+	arm.reset_to(49.0)
+	for i: int in 20:
+		arm.reset_to(51.0 if i % 2 == 0 else 49.0)
+	check.call(_moto.size() <= 2, "(m6) oscillating between 49 and 51 flips at most twice (got %d)" % _moto.size())
+	arm.reset_to(0.0)
+	check.call(not arm.is_moto(), "(m7) an empty arm is off")
+	_moto.clear()
+	arm.reset_to(100.0)
+	arm.drain(100.0, &"test")
+	check.call(_moto == [true, false], "(m8) a drain through the threshold flips off once (got %s)" % [_moto])
+
+
+# Moto buffs: ground run target speed, Jump 3 height and the gravity scale restored after the jump.
+func _scenario_moto_buffs(tree: SceneTree, check: Callable, player: PlayerController) -> void:
+	var arm: ArmEnergy = player.arm_energy
+	var config: MovementConfig = player.config
+	arm.reset_to(0.0)
+	check.call(is_equal_approx(player.ground_target_speed(Vector3.FORWARD), config.run_speed), "(b1) the run target speed is run_speed without Moto")
+	arm.reset_to(60.0)
+	check.call(is_equal_approx(player.ground_target_speed(Vector3.FORWARD), config.run_speed * (1.0 + config.moto_run_bonus)), "(b1) the run target speed is run_speed * (1 + moto_run_bonus) in Moto (got %.3f)" % player.ground_target_speed(Vector3.FORWARD))
+	# Jump 3 in Moto: held jump from a standing start reaches moto_jump_height and leaves gravity_scale at 1.0.
+	player.teleport(Vector3(0.0, 0.0, 0.0))
+	await Fixtures.wait_physics(tree, 6)
+	arm.reset_to(60.0)
+	player.chain_stage = 2
+	player.combo_timer = 1.0
+	var start_y: float = player.global_position.y
+	Fixtures.send_action_event(&"jump", true)
+	var apex: float = start_y
+	var saw_scale: bool = false
+	for i: int in 120:
+		await tree.physics_frame
+		apex = maxf(apex, player.global_position.y)
+		if player.state_machine.current.name == &"Jump" and is_equal_approx(player.gravity_scale, config.moto_jump_gravity_scale):
+			saw_scale = true
+		if player.vertical_speed < -1.0:
+			break
+	Fixtures.send_action_event(&"jump", false)
+	check.call(saw_scale, "(b2) Jump 3 in Moto runs with moto_jump_gravity_scale")
+	check.call(absf((apex - start_y) - config.moto_jump_height) < 0.15, "(b2) Jump 3 in Moto reaches moto_jump_height %.2f (got %.3f)" % [config.moto_jump_height, apex - start_y])
+	await Fixtures.wait_until(tree, func() -> bool: return player.is_grounded(), 240)
+	check.call(player.gravity_scale == 1.0, "(b3) gravity_scale is 1.0 after the Moto jump (got %.3f)" % player.gravity_scale)

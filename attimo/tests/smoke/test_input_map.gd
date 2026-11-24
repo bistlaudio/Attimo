@@ -5,7 +5,7 @@ extends RefCounted
 const ACTIONS: Array[StringName] = [
 	&"move_forward", &"move_back", &"move_left", &"move_right",
 	&"look_left", &"look_right", &"look_up", &"look_down",
-	&"jump", &"dash", &"loader", &"use_hand", &"interact",
+	&"jump", &"dash", &"loader", &"charge", &"use_hand", &"interact",
 	&"module_next", &"module_prev", &"pause", &"debug_event_log",
 	&"camera_recenter", &"debug_tuning", &"debug_metrics", &"debug_tick_rate",
 ]
@@ -70,6 +70,8 @@ func _check_specific_bindings(check: Callable) -> void:
 	check.call(_has_physical_key(&"move_back", KEY_S), "move_back maps to S")
 	check.call(_has_physical_key(&"move_left", KEY_A), "move_left maps to A")
 	check.call(_has_physical_key(&"move_right", KEY_D), "move_right maps to D")
+	check.call(_has_physical_key(&"charge", KEY_R), "charge maps to R (D-06)")
+	check.call(InputMap.has_action(&"charge") and InputMap.action_get_events(&"charge").size() == 1, "charge is keyboard only (one event)")
 	check.call(_has_mouse_button(&"loader", MOUSE_BUTTON_RIGHT), "loader maps to right mouse button (D-15)")
 	check.call(_has_mouse_button(&"use_hand", MOUSE_BUTTON_LEFT), "use_hand maps to left mouse button")
 	check.call(_has_mouse_button(&"module_next", MOUSE_BUTTON_WHEEL_DOWN), "module_next maps to wheel down")
