@@ -85,10 +85,10 @@ Display, compositor and USB latency are outside the software measurement (D-22).
 
 | Action | Accumulated input on: median (ms) | on: max (ms) | off: median (ms) | off: max (ms) | Verdict |
 |---|---|---|---|---|---|
-| Latency jump 60 TPS | 13.22 | 19.05 | 13.63 | 19.68 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency jump 120 TPS | 6.32 | 13.77 | 6.74 | 14.29 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 60 TPS | 18.78 | 19.84 | 18.21 | 22.85 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 120 TPS | 6.16 | 13.38 | 5.89 | 12.88 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 60 TPS | 13.36 | 19.65 | 13.17 | 20.26 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 120 TPS | 5.81 | 7.37 | 6.49 | 15.36 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 60 TPS | 12.13 | 20.85 | 13.06 | 19.33 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 120 TPS | 5.88 | 13.89 | 6.36 | 13.72 | Target met (median <= 66 ms, max <= 100 ms) |
 
 ## Grid cross-check
 
@@ -161,6 +161,15 @@ Every MovementConfig float of res://resources/player/movement_default.tres at ge
 | `energy_passive_rate_min` | 3.000 |
 | `energy_passive_rate_max` | 6.000 |
 | `air_dash_cost` | 10.000 |
+| `long_jump_cost` | 15.000 |
+| `wall_run_free_time` | 0.600 |
+| `wall_run_cost_per_second` | 15.000 |
+| `energy_charge_rate` | 5.000 |
+| `moto_threshold` | 50.000 |
+| `moto_exit_margin` | 2.500 |
+| `moto_run_bonus` | 0.120 |
+| `moto_jump_height` | 5.000 |
+| `moto_jump_gravity_scale` | 1.450 |
 | `wall_run_min_speed` | 7.000 |
 | `wall_run_speed` | 10.000 |
 | `wall_run_time` | 1.100 |

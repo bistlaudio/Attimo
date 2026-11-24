@@ -46,6 +46,8 @@ func _setup(tree: SceneTree, mode: int, x: float) -> Array:
 	source.set_active(true)
 	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(x, 2.0, START_Z))
 	await Fixtures.wait_physics(tree, 3)
+	# These scenarios measure the injected wall run, not its cost: enough for a full run, below Moto Perpetuo (50).
+	Fixtures.set_energy(player, 40.0)
 	return [floor_body, source, pad, player]
 
 

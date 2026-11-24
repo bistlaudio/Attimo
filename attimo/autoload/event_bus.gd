@@ -59,6 +59,9 @@ signal energy_gained(amount: float, source: StringName)
 ## Emitted by ArmEnergy.refuse when a move that does not fire (the air dash, the shot) is refused for lack of energy. `reason` names the
 ## move, `needed` the energy it would have cost. A base move that falls back never emits it (D-12). Listeners: the arm flicker, audio.
 signal energy_refused(reason: StringName, needed: float)
+## Emitted by ArmEnergy when Moto Perpetuo turns on (true) or off (false), only on a flip (the off edge has a hysteresis margin). Listeners:
+## the arm and body glow, the HUD, juice, audio.
+signal moto_changed(active: bool)
 ## Emitted by HandController when the shot module becomes usable (true) or unusable (false), once per change and once after an equip.
 ## Listeners: Interactable glow (stage SHOT_READY), the HUD.
 signal shot_ready_changed(ready: bool)

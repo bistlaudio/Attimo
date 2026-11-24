@@ -187,6 +187,9 @@ func _scenario_moto_buffs(tree: SceneTree, check: Callable, player: PlayerContro
 	player.teleport(Vector3(0.0, 0.0, 0.0))
 	await Fixtures.wait_physics(tree, 6)
 	arm.reset_to(60.0)
+	# Standing still resets the chain, so the buffed Jump 3 is taken from a run.
+	Input.action_press(&"move_forward")
+	await Fixtures.wait_physics(tree, 40)
 	player.chain_stage = 2
 	player.combo_timer = 1.0
 	var start_y: float = player.global_position.y
@@ -201,6 +204,7 @@ func _scenario_moto_buffs(tree: SceneTree, check: Callable, player: PlayerContro
 		if player.vertical_speed < -1.0:
 			break
 	Fixtures.send_action_event(&"jump", false)
+	Input.action_release(&"move_forward")
 	check.call(saw_scale, "(b2) Jump 3 in Moto runs with moto_jump_gravity_scale")
 	check.call(absf((apex - start_y) - config.moto_jump_height) < 0.15, "(b2) Jump 3 in Moto reaches moto_jump_height %.2f (got %.3f)" % [config.moto_jump_height, apex - start_y])
 	await Fixtures.wait_until(tree, func() -> bool: return player.is_grounded(), 240)

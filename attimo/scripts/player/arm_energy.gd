@@ -23,6 +23,11 @@ const MIN_SPAN: float = 0.01
 ## Current energy, 0 .. MAX_ENERGY. Starts as one core (the respawn value).
 var value: float = CORE_SIZE
 
+## True while the arm is held in the charge posture: the charge button is down in Idle without move input (D-06).
+var charging: bool = false
+
+var _moto: bool = false
+var _charge_total: float = 0.0
 var _last_floor: int = int(CORE_SIZE)
 var _emit_frame: int = -1
 var _pending_emit: bool = false
@@ -108,13 +113,23 @@ func passive_rate(horizontal_speed: float, config: MovementConfig) -> float:
 	return lerpf(config.energy_passive_rate_min, config.energy_passive_rate_max, t)
 
 
-## Per physics tick, called by PlayerController before the states run: the passive charge from the horizontal speed. It pauses in the
-## Loader and Capture states (the speed there is stored or carried, not earned).
-func tick(delta: float, horizontal_speed: float, state_name: StringName, _still: bool) -> void:
-	if state_name != &"Loader" and state_name != &"Capture":
-		var config: MovementConfig = _config()
-		if config != null:
-			gain(passive_rate(horizontal_speed, config) * delta, &"passive")
+## Per physics tick, called by PlayerController before the states run: the passive charge from the horizontal speed (paused in the
+## Loader and Capture states: the speed there is stored or carried, not earned) and the charge button. The button adds
+## energy_charge_rate while it is held in Idle with no move input (`still`); anything else stops it at once, and the total of one
+## charge run is reported once as energy_gained(total, &"charge") when it stops.
+func tick(delta: float, horizontal_speed: float, state_name: StringName, still: bool) -> void:
+	var config: MovementConfig = _config()
+	if config != null and state_name != &"Loader" and state_name != &"Capture":
+		gain(passive_rate(horizontal_speed, config) * delta, &"passive")
+	var wants_charge: bool = config != null and state_name == &"Idle" and still and Input.is_action_pressed(&"charge")
+	if wants_charge and value < MAX_ENERGY:
+		_charge_total += gain(config.energy_charge_rate * delta, &"charge")
+		charging = true
+	else:
+		charging = false
+		if _charge_total > 0.0:
+			EventBus.energy_gained.emit(_charge_total, &"charge")
+			_charge_total = 0.0
 	if _pending_emit:
 		_announce(false)
 
@@ -124,9 +139,25 @@ func _config() -> MovementConfig:
 	return null if player == null else player.config
 
 
-## The single write path of `value`.
+## True while Moto Perpetuo is on: from moto_threshold up, off only below moto_threshold - moto_exit_margin (hysteresis, A9).
+func is_moto() -> bool:
+	return _moto
+
+
+## The single write path of `value`. Also settles Moto Perpetuo, so a flip is emitted at once, only on a flip.
 func _write(new_value: float) -> void:
 	value = clampf(new_value, 0.0, MAX_ENERGY)
+	var config: MovementConfig = _config()
+	if config == null:
+		return
+	var wanted: bool = _moto
+	if not _moto and value >= config.moto_threshold:
+		wanted = true
+	elif _moto and value < config.moto_threshold - config.moto_exit_margin:
+		wanted = false
+	if wanted != _moto:
+		_moto = wanted
+		EventBus.moto_changed.emit(_moto)
 
 
 ## Emits energy_changed when the whole number changed (or `force` after a discrete spend or reset), at most once per physics frame;

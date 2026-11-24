@@ -82,6 +82,8 @@ func _begin(tree: SceneTree, position: Vector3 = Vector3(0.0, 0.0, 70.0)) -> Pla
 	_floor = Fixtures.spawn_floor(tree.root, Vector3(60.0, 1.0, 160.0))
 	var player: PlayerController = Fixtures.spawn_player(tree.root, position)
 	await Fixtures.wait_physics(tree, 8)
+	# These scenarios measure the hop stack, not its cost (stages 2 and 3 pay 15 each): enough for both, below Moto Perpetuo (50).
+	Fixtures.set_energy(player, 40.0)
 	return player
 
 

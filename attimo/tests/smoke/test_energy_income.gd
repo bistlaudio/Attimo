@@ -71,12 +71,13 @@ func _scenario_vertical_ignored(tree: SceneTree, check: Callable) -> void:
 	await falling.tree_exited
 
 
-# A live run with dash hops (dash speed above 10 m/s) ends above where it started.
+# A live run with dash hops (dash speed above 10 m/s) ends above where it started. It starts below the stage 2 cost, so every hop is
+# the free stage 1 and the passive charge shows without a hop paying for itself.
 func _scenario_hop_run(tree: SceneTree, check: Callable, player: PlayerController) -> void:
 	var arm: ArmEnergy = player.arm_energy
 	player.teleport(Vector3(0.0, 0.0, 90.0))
 	await Fixtures.wait_physics(tree, 6)
-	arm.reset_to(25.0)
+	arm.reset_to(5.0)
 	var before: float = arm.value
 	Input.action_press(&"move_forward")
 	await Fixtures.wait_physics(tree, 30)

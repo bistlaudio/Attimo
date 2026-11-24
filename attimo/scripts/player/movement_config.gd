@@ -1,8 +1,8 @@
 class_name MovementConfig
 extends Resource
 ## The one tunable movement resource (MOVE-10, D-23). Every movement number lives here.
-## Thirteen groups in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
-## Long jump (dash hop), Timing windows, Floor and platforms, Loader, Energy, Wall, Pose, Clip playback. Gravity is set directly
+## Fourteen groups in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
+## Long jump (dash hop), Timing windows, Floor and platforms, Loader, Energy, Moto Perpetuo, Wall, Pose, Clip playback. Gravity is set directly
 ## (rise_gravity, fall_multiplier); jump speeds are derived from the heights, so editing a
 ## height never changes the fall feel. Every divisor field has a strictly positive minimum (T-02-02).
 
@@ -129,6 +129,26 @@ extends Resource
 @export_range(0.0, 20.0, 0.1) var energy_passive_rate_max: float = 6.0
 ## Energy an air dash costs (the ground dash is free, D-12); raise it to make the air dash rarer.
 @export_range(0.0, 100.0, 1.0) var air_dash_cost: float = 10.0
+## Energy the dash hop pays from stage 2 on (stage 1 is free; without it the hop silently stays stage 1); raise it to make the hop stack rarer.
+@export_range(0.0, 100.0, 1.0) var long_jump_cost: float = 15.0
+## Seconds a wall run is free before it starts to drain; raise it for a longer free run.
+@export_range(0.0, 2.0, 0.05) var wall_run_free_time: float = 0.6
+## Energy per second a wall run drains after the free time, up to wall_run_time; a dry arm ends the run into Fall. Raise it to make long runs costlier.
+@export_range(0.0, 100.0, 1.0) var wall_run_cost_per_second: float = 15.0
+## Energy per second the charge button (R) adds while standing still in Idle (D-06); raise it for a faster refill.
+@export_range(0.0, 30.0, 0.5) var energy_charge_rate: float = 5.0
+
+@export_group("Moto Perpetuo")
+## Energy from which Moto Perpetuo turns on (two cores); raise it to demand a fuller arm.
+@export_range(25.0, 100.0, 1.0) var moto_threshold: float = 50.0
+## Energy below the threshold at which Moto Perpetuo turns off again (hysteresis, A9), so a spend at the edge does not flicker; raise it for a stickier state.
+@export_range(0.0, 10.0, 0.5) var moto_exit_margin: float = 2.5
+## Extra share of the ground run speed in Moto Perpetuo (GAME-DESIGN +10 to 15 percent); raise it for a faster Moto run.
+@export_range(0.0, 0.3, 0.01) var moto_run_bonus: float = 0.12
+## Height in m of Jump 3 in Moto Perpetuo, kept above jump_3_height; raise it for a higher buffed pirouette jump.
+@export_range(4.0, 8.0, 0.1) var moto_jump_height: float = 5.0
+## Gravity factor of the buffed Jump 3 (1 = normal); the take-off speed follows from this and moto_jump_height, so apex height and apex time (Pittman) stay a pair. Raise it for a snappier, shorter jump.
+@export_range(1.0, 2.5, 0.05) var moto_jump_gravity_scale: float = 1.45
 
 @export_group("Wall")
 ## Smallest horizontal speed in m/s that starts a wall-run on contact with a wall-run pad (MOVE-12); raise it to demand a faster approach.

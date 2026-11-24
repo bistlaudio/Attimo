@@ -142,9 +142,11 @@ func input_direction() -> Vector3:
 	return right * input.x - forward * input.y
 
 
-## The ground run target speed for `direction` (a world-space input direction): run_speed. There is one run speed; plan 05-03 adds the
-## Moto Perpetuo factor here.
+## The ground run target speed for `direction` (a world-space input direction): run_speed, times (1 + moto_run_bonus) while Moto
+## Perpetuo is on. There is one run speed; the Moto factor is the only change to it.
 func ground_target_speed(_direction: Vector3) -> float:
+	if arm_energy.is_moto():
+		return config.run_speed * (1.0 + config.moto_run_bonus)
 	return config.run_speed
 
 
@@ -540,8 +542,12 @@ func advance_chain_for_ground_jump() -> int:
 ## Called by LongJump on enter. Returns the long-jump stage 1..3: one above the stack while it lives (a clean
 ## repeat), otherwise 1. The combo ends after stage 3: the stack is spent, so the next hop starts again at 1 (like
 ## the ground jump chain after Jump 3). Resets the ground-jump chain and closes the landing window; it reopens on landing.
+## Stage 1 is free; stage 2 and 3 pay long_jump_cost. Without the energy the hop silently becomes stage 1, the base version: no
+## refusal fact, no dash_blocked, no cue (D-12, ENRG-03).
 func advance_long_jump_stage() -> int:
 	var stage: int = long_jump_stage + 1 if long_jump_stage == 1 or long_jump_stage == 2 else 1
+	if stage >= 2 and not arm_energy.try_spend(config.long_jump_cost, &"dash_hop"):
+		stage = 1
 	long_jump_stage = stage
 	combo_timer = 0.0
 	_set_chain_stage(0)

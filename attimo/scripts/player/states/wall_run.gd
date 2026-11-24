@@ -4,6 +4,8 @@ extends State
 ## Dash it owns its velocity for the duration: move_velocity is rewritten every tick, gravity_scale is restored in exit().
 ## Exits in order: jump -> WallJump, Loader press -> Loader, dash press -> Dash, floor contact -> Run or Idle, wall_run_time up or the wall contact lost for
 ## longer than wall_contact_grace (the pad ended) -> Fall. Every exit starts wall_run_cooldown, so a pad cannot be re-grabbed at once.
+## Energy (D-12): the run is free for wall_run_free_time, after that it drains wall_run_cost_per_second; when the arm runs dry the run
+## ends into Fall like the timeout, with no refusal fact (the base version of the move is the free window). A jump off is always free.
 ## Presentation: the run clip plus the ProceduralPose roll lean toward the wall (no new clip, MOVE-11 composition).
 
 var _timer: float = 0.0
@@ -52,6 +54,10 @@ func physics_update(delta: float) -> StringName:
 		if actor.input_direction() != Vector3.ZERO:
 			return &"Run"
 		return &"Idle"
+	if _timer > config.wall_run_free_time:
+		var wanted: float = config.wall_run_cost_per_second * delta
+		if actor.arm_energy.drain(wanted, &"wall_run") < wanted - 1e-6:
+			return &"Fall"
 	# wall_surface folds in wall_contact_grace and re-checks the group every tick: a plain wall or a pad switched off ends the run.
 	if _timer >= config.wall_run_time or not actor.wall_surface(&"wall_run_surface"):
 		return &"Fall"
