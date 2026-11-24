@@ -11,7 +11,10 @@ const X_WEST: float = -239.0
 const TRACK_MIN_LENGTH: float = 100.0
 const FLOOR_TOLERANCE: float = 0.1
 ## Stations of Zone_Energy (every one a direct child with a sign and an "Erwartet:" line).
-const STATIONS: Array[String] = ["Energy_Track", "Energy_Capsule"]
+const STATIONS: Array[String] = [
+	"Energy_Track", "Energy_Capsule", "Energy_BoostLine", "Energy_Machine", "Energy_ChargeSpot", "Energy_Drain",
+	"Energy_AirDash", "Energy_DashHop", "Energy_WallRun", "Shot_TapVsFull", "Shot_Moving",
+]
 ## Injected-move stations: a drain plate (the base version) and a capsule (the injected version) next to each.
 const INJECTED: Array[String] = ["Energy_AirDash", "Energy_DashHop", "Energy_WallRun"]
 ## Shot stations of Zone_Energy.
@@ -45,6 +48,12 @@ func run(tree: SceneTree, check: Callable) -> void:
 		await _live_walk(tree, check)
 		await _live_track(tree, check)
 		await _live_capsule(tree, check)
+		_check_capsules_near_shots(check)
+		_check_signs(check)
+		await _live_drain(tree, check)
+		await _live_air_dash(tree, check, 0.0)
+		await _live_air_dash(tree, check, 100.0)
+		await _live_tap_vs_full(tree, check)
 	_release_inputs()
 	Fixtures.restore_time()
 	_gym.queue_free()
@@ -106,6 +115,44 @@ func _check_stations(check: Callable) -> void:
 		var expect: Label3D = station.get_node_or_null("Label_%s_Expect" % tag) as Label3D
 		check.call(sign_label != null and sign_label.text != "", "%s has a sign" % tag)
 		check.call(expect != null and expect.text.begins_with("Erwartet:"), "%s has an 'Erwartet:' line" % tag)
+	var plates: int = 0
+	for node: Node in _gym.find_children("*", "Area3D", true, false):
+		if node is EnergyDrainPlate:
+			plates += 1
+	check.call(plates >= 4, "Zone_Energy has a lone drain plate and one per injected-move station (got %d)" % plates)
+	for tag: String in INJECTED:
+		var station: Node3D = _zone.get_node_or_null(tag) as Node3D
+		if station == null:
+			continue
+		var marker: Marker3D = station.get_node_or_null("Start") as Marker3D
+		check.call(marker != null, "%s has a Start marker" % tag)
+		check.call(_nearest_plate(station) != null, "%s has a drain plate" % tag)
+		if marker != null:
+			var capsule: EnergySource = _nearest_capsule(marker.global_position)
+			check.call(capsule != null and capsule.respawn_time > 0.0 and capsule.global_position.distance_to(marker.global_position) <= CAPSULE_REACH, "%s has a respawning capsule within %.0f m of its start" % [tag, CAPSULE_REACH])
+	for tag: String in SHOT_STATIONS:
+		var station: Node3D = _zone.get_node_or_null(tag) as Node3D
+		if station == null:
+			continue
+		var marker: Marker3D = station.get_node_or_null("Start") as Marker3D
+		check.call(marker != null, "%s has a Start marker" % tag)
+		if marker != null:
+			var capsule: EnergySource = _nearest_capsule(marker.global_position)
+			check.call(capsule != null and capsule.respawn_time > 0.0 and capsule.global_position.distance_to(marker.global_position) <= CAPSULE_REACH, "%s has a respawning capsule within %.0f m" % [tag, CAPSULE_REACH])
+
+
+func _nearest_plate(station: Node3D) -> EnergyDrainPlate:
+	var marker: Marker3D = station.get_node_or_null("Start") as Marker3D
+	if marker == null:
+		return null
+	var best: EnergyDrainPlate = null
+	var best_distance: float = CAPSULE_REACH
+	for node: Node in _gym.find_children("*", "Area3D", true, false):
+		var plate: EnergyDrainPlate = node as EnergyDrainPlate
+		if plate != null and plate.global_position.distance_to(marker.global_position) <= best_distance:
+			best = plate
+			best_distance = plate.global_position.distance_to(marker.global_position)
+	return best
 
 
 func _nearest_capsule(point: Vector3) -> EnergySource:
@@ -220,6 +267,136 @@ func _live_capsule(tree: SceneTree, check: Callable) -> void:
 	_release_inputs()
 
 
+## Every shot station has a respawning capsule within reach: the Auslöser stations that need a shot, the entry of each puzzle room,
+## the Loader room's gap and super jump, and (above) the Zone_Energy shot stations.
+func _check_capsules_near_shots(check: Callable) -> void:
+	var mech: Node3D = _gym.get_node("Zone_MechanismRooms") as Node3D
+	for entry: Variant in mech.get_meta(&"stations", []) as Array:
+		var data: Dictionary = entry as Dictionary
+		if str(data.get("zone", "")) != "Ausloeser" or not ["Valve", "EnergyCore", "LogicAnd", "LogicOr", "LogicTimer"].has(str(data.get("tag", ""))):
+			continue
+		var at: Vector3 = data["at"] as Vector3
+		var capsule: EnergySource = _nearest_capsule(at)
+		check.call(capsule != null and capsule.respawn_time > 0.0 and capsule.global_position.distance_to(at) <= CAPSULE_REACH, "Auslöser station %s has a respawning capsule within %.0f m" % [data["tag"], CAPSULE_REACH])
+	for room: Node in _gym.find_children("PuzzleRoom_*", "Node3D", true, false):
+		var capsule_name: StringName = StringName(room.get_meta(&"capsule", &""))
+		var capsule: EnergySource = room.get_node_or_null(NodePath(str(capsule_name))) as EnergySource
+		var respawn: Marker3D = room.get_node("Respawn") as Marker3D
+		check.call(capsule != null and capsule.respawn_time > 0.0 and capsule.global_position.distance_to(respawn.global_position) <= CAPSULE_REACH, "%s has its capsule (meta capsule) within %.0f m of its entry" % [room.name, CAPSULE_REACH])
+	var loader: Node3D = _gym.get_node("Zone_Loader") as Node3D
+	for tag: String in ["Loader_Gap", "Loader_SuperJump"]:
+		var launch: Marker3D = loader.get_node("%s/Launch" % tag) as Marker3D
+		var capsule: EnergySource = _nearest_capsule(launch.global_position)
+		check.call(capsule != null and capsule.respawn_time > 0.0 and capsule.global_position.distance_to(launch.global_position) <= CAPSULE_REACH, "%s has a respawning capsule within %.0f m" % [tag, CAPSULE_REACH])
+
+
+## D-20: no sign names the aiming mode or the old pulse sizes by hold time; the shot signs speak of tapping and charging.
+func _check_signs(check: Callable) -> void:
+	var stale: PackedStringArray = PackedStringArray()
+	var labels: int = 0
+	for node: Node in _gym.find_children("*", "Label3D", true, false):
+		var text: String = (node as Label3D).text
+		labels += 1
+		for word: String in STALE_WORDS:
+			if text.contains(word):
+				stale.append("%s: %s" % [node.name, text])
+	check.call(stale.is_empty(), "no sign names aiming or the old pulse sizes (%s)" % [stale])
+	var shot: Label3D = _zone.get_node("Shot_TapVsFull/Label_Shot_TapVsFull") as Label3D
+	check.call(shot.text.contains("tippen") and shot.text.contains("laden"), "the shot station sign speaks of tapping and charging (%s)" % shot.text)
+	var valve_sign: Label3D = _gym.find_child("Label_Valve", true, false) as Label3D
+	check.call(valve_sign != null and valve_sign.text.contains("voll geladener Schuss"), "the Valve sign names the fully charged shot")
+	var expects: int = 0
+	for node: Node in _gym.find_children("Label_*_Expect", "Label3D", true, false):
+		if (node as Label3D).text.begins_with("Erwartet:"):
+			expects += 1
+	check.call(expects >= 48, "the gym has at least 48 'Erwartet:' lines (got %d)" % expects)
+	check.call(labels >= 40, "at least 40 labels (%d)" % labels)
+
+
+## Stepping on a drain plate empties the arm (through the owner's request API).
+func _live_drain(tree: SceneTree, check: Callable) -> void:
+	var plate: Node3D = _zone.get_node("Energy_Drain/Plate") as Node3D
+	_player.call(&"respawn", plate.global_position + Vector3(0.0, 0.0, 4.0))
+	Fixtures.set_energy(_player, 60.0)
+	await Fixtures.wait_physics(tree, 20)
+	check.call(is_equal_approx(_player.arm_energy.value, 60.0), "the arm holds 60 before the plate")
+	_player.call(&"respawn", plate.global_position)
+	Fixtures.set_energy(_player, 60.0)
+	await Fixtures.wait_physics(tree, 10)
+	check.call(_player.arm_energy.value == 0.0, "stepping on the drain plate sets the arm to 0 (got %.2f)" % _player.arm_energy.value)
+
+
+## At the air dash pit an empty arm is refused the air dash and falls into the pit; with energy the dash carries over the gap.
+func _live_air_dash(tree: SceneTree, check: Callable, energy: float) -> void:
+	var station: Node3D = _zone.get_node("Energy_AirDash") as Node3D
+	var start: Vector3 = (station.get_node("Start") as Marker3D).global_position
+	var edge_x: float = float(station.get_meta(&"platform_edge_x"))
+	var far_x: float = float(station.get_meta(&"far_edge_x"))
+	_player.call(&"respawn", start)
+	Fixtures.set_energy(_player, energy)
+	await Fixtures.wait_physics(tree, 20)
+	_face_west()
+	var saw_dash: bool = false
+	Input.action_press(&"move_forward")
+	await Fixtures.wait_until(tree, func() -> bool: return _player.global_position.x <= edge_x - 0.3, 120)
+	Input.action_press(&"jump")
+	await Fixtures.wait_physics(tree, 2)
+	Input.action_release(&"jump")
+	await Fixtures.wait_physics(tree, 6)
+	Input.action_press(&"dash")
+	for i: int in 6:
+		await tree.physics_frame
+		saw_dash = saw_dash or _player.state_machine.current.name == &"Dash"
+	Input.action_release(&"dash")
+	var landed: int = await Fixtures.wait_until(tree, func() -> bool: return _player.is_on_floor() and _player.global_position.x < far_x + 4.0, 150)
+	await Fixtures.wait_physics(tree, 20)
+	Input.action_release(&"move_forward")
+	if energy <= 0.0:
+		check.call(not saw_dash, "with an empty arm the air dash press is refused (no Dash state)")
+		check.call(_player.global_position.x > far_x or _player.global_position.y < -1.0 or landed < 0, "with an empty arm the pit is not crossed (x %.2f)" % _player.global_position.x)
+	else:
+		check.call(saw_dash, "with energy the air dash press starts the Dash state")
+		check.call(landed >= 0 and _player.global_position.x < far_x, "with energy the air dash crosses the pit (x %.2f, far edge %.2f)" % [_player.global_position.x, far_x])
+	_release_inputs()
+
+
+## A tap shot (range 15 m) does not reach the far lever, a full charge does and also turns the valve.
+func _live_tap_vs_full(tree: SceneTree, check: Callable) -> void:
+	var station: Node3D = _zone.get_node("Shot_TapVsFull") as Node3D
+	var start: Vector3 = (station.get_node("Start") as Marker3D).global_position
+	var lever: SignalSource = station.get_node("LeverFar") as SignalSource
+	var valve: SignalSource = station.get_node("Valve") as SignalSource
+	var lever_distance: float = lever.global_position.distance_to(start)
+	check.call(lever_distance > float(station.get_meta(&"tap_range")) and lever_distance < float(station.get_meta(&"full_range")), "the far lever (%.1f m) is beyond a tap shot and within a full charge" % lever_distance)
+	_player.call(&"respawn", start)
+	Fixtures.set_energy(_player, 100.0)
+	await Fixtures.wait_physics(tree, 20)
+	await Fixtures.tap_action(tree, &"module_1", 2)
+	await _aim_at(tree, lever.global_position + Vector3(0.0, 0.5, 0.0))
+	await Fixtures.tap_action(tree, &"use_hand", 3)
+	await Fixtures.wait_physics(tree, 90)
+	check.call(not lever.is_active, "a tap shot does not reach the far lever")
+	Fixtures.set_energy(_player, 100.0)
+	await Fixtures.hold_action(tree, &"use_hand", 1.2)
+	await Fixtures.wait_physics(tree, 90)
+	check.call(lever.is_active, "a full-charge shot reaches the far lever")
+	await _aim_at(tree, valve.global_position + Vector3(0.0, 1.0, 0.0))
+	Fixtures.set_energy(_player, 100.0)
+	await Fixtures.hold_action(tree, &"use_hand", 1.2)
+	await Fixtures.wait_physics(tree, 90)
+	check.call(valve.is_active, "a full-charge shot turns the valve")
+	_release_inputs()
+
+
+## Turns the camera rig to look at `point` from the player (yaw from the horizontal offset, pitch from the height).
+func _aim_at(tree: SceneTree, point: Vector3) -> void:
+	var offset: Vector3 = point - _player.global_position
+	_rig.yaw = atan2(-offset.x, -offset.z)
+	_rig.rotation.y = _rig.yaw
+	_rig.pitch = 0.0
+	await Fixtures.wait_physics(tree, 20)
+
+
 func _release_inputs() -> void:
-	for action: StringName in [&"move_forward", &"dash", &"jump", &"use_hand", &"module_2", &"loader"]:
+	for action: StringName in [&"move_forward", &"dash", &"jump", &"use_hand", &"module_1", &"module_2", &"loader"]:
 		Input.action_release(action)

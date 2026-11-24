@@ -79,6 +79,11 @@ const HEADER_FONT_SIZE: int = 128
 const HEADER_HEIGHT: float = 7.5
 ## Room-2 respawn near the west door and the reset volume east of the hall reset (x 80).
 const RESPAWN_ROOM2: Vector3 = Vector3(47.0, 0.0, 0.0)
+const CAPSULE_SCENE: String = "res://scenes/mechanisms/energy_capsule.tscn"
+## Auslöser stations whose source is a shot: a capsule stands next to each one (D-18, D-24), so a bonus try never needs a far trip.
+const SHOT_STATION_TAGS: Array[String] = ["Valve", "EnergyCore", "LogicAnd", "LogicOr", "LogicTimer"]
+const CAPSULE_OFFSET: Vector3 = Vector3(-4.0, 0.0, 2.0)
+const CAPSULE_RESPAWN: float = 6.0
 
 
 ## The ZONES row of room `tag`, or an empty Dictionary.
@@ -133,8 +138,8 @@ func _build_puzzle_rooms(zone: Node3D, builder: RefCounted) -> void:
 ## props (properties set on the mechanism).
 const STATIONS: Array[Dictionary] = [
 	# Auslöser & Logik
-	{"tag": "Valve", "zone": "Ausloeser", "slots": [Vector2i(0, 0)], "kind": "valve", "scene": VALVE_SCENE, "text": "Handrad-Ventil (großer Puls)", "expect": "Erwartet: Großer Puls dreht das Rad, das Tor öffnet"},
-	{"tag": "EnergyCore", "zone": "Ausloeser", "slots": [Vector2i(1, 0)], "kind": "core", "scene": CORE_SCENE, "text": "Energiekern (Zeit)", "expect": "Erwartet: Puls lädt den Kern, das Tor ist kurz offen", "sign_h": 6.6},
+	{"tag": "Valve", "zone": "Ausloeser", "slots": [Vector2i(0, 0)], "kind": "valve", "scene": VALVE_SCENE, "text": "Handrad-Ventil (voll geladener Schuss)", "expect": "Erwartet: Ein voll geladener Schuss dreht das Rad, das Tor öffnet"},
+	{"tag": "EnergyCore", "zone": "Ausloeser", "slots": [Vector2i(1, 0)], "kind": "core", "scene": CORE_SCENE, "text": "Energiekern (Zeit)", "expect": "Erwartet: Ein Schuss lädt den Kern, das Tor ist kurz offen", "sign_h": 6.6},
 	{"tag": "Crank", "zone": "Ausloeser", "slots": [Vector2i(2, 0)], "kind": "crank", "scene": CRANK_SCENE, "text": "Uhrwerk-Kurbel (E halten)", "expect": "Erwartet: E halten öffnet das Tor, loslassen schließt es"},
 	{"tag": "PressurePlate", "zone": "Ausloeser", "slots": [Vector2i(0, 1)], "kind": "plate", "scene": PLATE_SCENE, "text": "Druckplatte", "expect": "Erwartet: Tor offen, solange du draufstehst"},
 	{"tag": "LogicAnd", "zone": "Ausloeser", "slots": [Vector2i(1, 1)], "kind": "and", "scene": AND_SCENE, "text": "UND: beide Hebel", "expect": "Erwartet: Tor nur offen, wenn beide Hebel an sind", "gate": Vector3(0.0, 0.0, 4.0)},
@@ -184,6 +189,9 @@ func build_showcase_stations(zone: Node3D, builder: RefCounted) -> void:
 		var at: Vector3 = _station_point(row)
 		_place_station(zone, builder, row, at)
 		_station_extras(zone, builder, String(row["tag"]), at)
+		if SHOT_STATION_TAGS.has(String(row["tag"])):
+			var capsule: Node3D = builder.call(&"_instance", zone, CAPSULE_SCENE, "Capsule_%s" % String(row["tag"]), at + CAPSULE_OFFSET) as Node3D
+			capsule.set("respawn_time", CAPSULE_RESPAWN)
 		entries.append({"tag": StringName(String(row["tag"])), "at": at, "zone": StringName(String(row["zone"]))})
 	zone.set_meta(&"stations", entries)
 

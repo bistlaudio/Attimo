@@ -336,6 +336,8 @@ func _scripted_solve(tree: SceneTree, room: Node3D, check: Callable) -> void:
 	var order: Array = room.get_meta(&"solve_order", []) as Array
 	var sizes: Array = room.get_meta(&"solve_sizes", []) as Array
 	check.call(order.size() >= 1 and order.size() == sizes.size(), "%s stores solve_order and solve_sizes of equal length" % room.name)
+	var capsule: EnergySource = room.get_node_or_null(NodePath(str(room.get_meta(&"capsule", &"")))) as EnergySource
+	check.call(capsule != null and capsule.respawn_time > 0.0, "%s stores the name of its respawning energy capsule in meta capsule (05-05, D-24)" % room.name)
 	var gate: GearGate = room.get_node_or_null("ExitGate") as GearGate
 	if gate == null or order.is_empty() or order.size() != sizes.size():
 		return

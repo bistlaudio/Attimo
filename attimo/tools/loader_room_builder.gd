@@ -43,6 +43,11 @@ const GAP_MARKER_INSET: float = 0.5
 ## Super jump: the discharge tilts this far from the vertical toward the ledge (the camera pitch limit of D-29 is 75 degrees).
 const LEDGE_TILT_DEG: float = 15.0
 const LEDGE_MARKER: Vector3 = Vector3(-55.0, 0.0, -16.0)
+## Capsules next to the gap launch and the super jump marker, so bonus tries do not need the pit (5 s respawn).
+const CAPSULE_SCENE: String = "res://scenes/mechanisms/energy_capsule.tscn"
+const CAPSULE_RESPAWN: float = 5.0
+const GAP_CAPSULE: Vector3 = Vector3(-91.0, 0.0, 14.0)
+const LEDGE_CAPSULE: Vector3 = Vector3(-51.0, 0.0, -16.0)
 const LEDGE_CENTRE: Vector3 = Vector3(-60.0, 0.0, -16.0)
 
 var _config: MovementConfig
@@ -63,6 +68,7 @@ func build_into(zone: Node3D, builder: RefCounted) -> void:
 	_build_air(zone, builder)
 	_build_gap(zone, builder, gap)
 	_build_super_jump(zone, builder)
+	_build_capsules(zone, builder)
 
 
 # --- numbers from the config ----------------------------------------------------------------------------------
@@ -216,3 +222,9 @@ func _build_super_jump(zone: Node3D, builder: RefCounted) -> void:
 		builder.call(&"_floor_tile", station, "Ledge_%d" % slab, LEDGE_CENTRE.x, top, LEDGE_CENTRE.z)
 		top -= 1.0
 		slab += 1
+
+
+func _build_capsules(zone: Node3D, builder: RefCounted) -> void:
+	for entry: Array in [["Capsule_Gap", GAP_CAPSULE], ["Capsule_SuperJump", LEDGE_CAPSULE]]:
+		var capsule: Node3D = builder.call(&"_instance", zone, CAPSULE_SCENE, String(entry[0]), entry[1] as Vector3) as Node3D
+		capsule.set("respawn_time", CAPSULE_RESPAWN)

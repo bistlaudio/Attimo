@@ -29,6 +29,10 @@ const PENDULUM_SCENE: String = "res://scenes/mechanisms/pendulum.tscn"
 const BEAM_SCENE: String = "res://scenes/proto/primitive_beam.tscn"
 const PILLAR_SCENE: String = "res://scenes/proto/primitive_pillar.tscn"
 
+const CAPSULE_SCENE: String = "res://scenes/mechanisms/energy_capsule.tscn"
+## A capsule near each room's entry (the shots there cost energy, D-18, D-24); it refills after this many seconds.
+const CAPSULE_RESPAWN: float = 6.0
+
 const HALF: float = 12.0
 const TILE: float = 4.0
 ## z of the doorway cell centre (the cell z 0..4) in every east wall.
@@ -139,7 +143,10 @@ func _sources(items: Array) -> Array[SignalSource]:
 
 
 ## The respawn marker and the FallReset volume under the whole room (x_in..x_end). It resets every mechanism of the room.
-func _finish(room: Node3D, builder: RefCounted, x_in: float, x_end: float, respawn: Vector3, solve: Array, sizes: Array, checks: Array) -> void:
+func _finish(room: Node3D, builder: RefCounted, x_in: float, x_end: float, respawn: Vector3, solve: Array, sizes: Array, checks: Array, capsule_at: Vector3) -> void:
+	var capsule: Node3D = builder.call(&"_instance", room, CAPSULE_SCENE, "Capsule", capsule_at) as Node3D
+	capsule.set("respawn_time", CAPSULE_RESPAWN)
+	room.set_meta(&"capsule", &"Capsule")
 	var marker: Marker3D = Marker3D.new()
 	builder.call(&"_adopt", room, marker, "Respawn", respawn)
 	var rig: Node3D = (builder.get(&"_root") as Node).get_node("CameraRig") as Node3D
@@ -177,7 +184,7 @@ func _reach(from: String, to: String, via: StringName, extra: Dictionary = {}) -
 
 
 ## The pulse room. A lever on an 8 m pillar stack is out of any jump, a valve on the island is 16 m across the pit (small pulse range
-## 15 m, big pulse 25 m); both feed an AND that raises the piston lift to the 6 m ledge (more than the highest jump). On the ledge a
+## 15 m, full-charge shot 25 m); both feed an AND that raises the piston lift to the 6 m ledge (more than the highest jump). On the ledge a
 ## shot wakes the energy core (8 s), and the player drops to the island and runs through the ExitGate before it closes.
 func _build_room_1(puzzle: Node3D, builder: RefCounted) -> void:
 	var x_in: float = 116.0
@@ -207,7 +214,7 @@ func _build_room_1(puzzle: Node3D, builder: RefCounted) -> void:
 		_reach("Lift", "LedgeFloor_134_2", &"lift_top"),
 		_reach("LedgeFloor_142_2", "IslandFloor_146_2", &"jump"),
 	]
-	_finish(room, builder, x_in, x_out, Vector3(119.0, 0.0, DOOR_Z), ["LeverFar", "Valve", "EnergyCore"], [0, 1, 0], checks)
+	_finish(room, builder, x_in, x_out, Vector3(119.0, 0.0, DOOR_Z), ["LeverFar", "Valve", "EnergyCore"], [0, 1, 0], checks, Vector3(120.0, 0.0, 8.0))
 
 
 # --- room 2: Uhrwerk ------------------------------------------------------------------------------------------
@@ -251,7 +258,7 @@ func _build_room_2(puzzle: Node3D, builder: RefCounted) -> void:
 		_reach("Gear", "IslandFloor_181_4", &"jump"),
 		_needs("IslandFloor_181_4", "DividerTop_2"),
 	]
-	_finish(room, builder, x_in, x_out, Vector3(156.0, 0.0, DOOR_Z), ["Crank", "LeverExit"], [-1, 0], checks)
+	_finish(room, builder, x_in, x_out, Vector3(156.0, 0.0, DOOR_Z), ["Crank", "LeverExit"], [-1, 0], checks, Vector3(159.0, 0.0, 8.0))
 
 
 # --- room 3: Dampf --------------------------------------------------------------------------------------------
@@ -324,4 +331,4 @@ func _build_room_3(puzzle: Node3D, builder: RefCounted) -> void:
 		_reach("LiftChain", "Ledge4Floor_282_2", &"lift_top"),
 		_reach("LiftChain", "EndFloor_290_2", &"jump"),
 	]
-	_finish(room, builder, x_in, x_end, Vector3(203.0, 0.0, DOOR_Z), ["LeverA", "LeverB", "LeverC", "LeverD", "LeverCannon", "LeverLift", "ExitShot", "LeverNear"], [0, 0, 0, 0, 0, 0, 0, -1], checks)
+	_finish(room, builder, x_in, x_end, Vector3(203.0, 0.0, DOOR_Z), ["LeverA", "LeverB", "LeverC", "LeverD", "LeverCannon", "LeverLift", "ExitShot", "LeverNear"], [0, 0, 0, 0, 0, 0, 0, -1], checks, Vector3(205.0, 0.0, 8.0))
