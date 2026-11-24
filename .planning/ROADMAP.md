@@ -281,7 +281,29 @@ Plans:
   4. The cut stations are removed, the reworked ones replace their old versions, and the showroom is regrouped by layer and role with a station and smoke test per object.
   5. The movement gym is rebuilt around the new kit: one area per layer (steampunk, energy, nature), each object with a station and an "Erwartet:" sign, plus a mixed course that combines the layers.
 
-**Plans**: TBD
+**Plans**: 20 plans (sequential waves 1-20; D-33 deviation, see 05.1-01-PLAN.md)
+
+Plans:
+- [ ] 05.1-01-PLAN.md — Kit skeleton (KitBlock, config pattern, coupling + contract tests) and slingshot as Loader (CAGE source)
+- [ ] 05.1-02-PLAN.md — Steam cannon FIXED profile (deterministic arc); Capture, pneumatic tube and puzzle rooms removed
+- [ ] 05.1-03-PLAN.md — Wall surface block, plain/steam looks, head clearance clamp, twin-pad layout fix
+- [ ] 05.1-04-PLAN.md — Timed motion SWEEP/TILT always on, clock-hand floor-snap / clearance fix, take-off vertical carry
+- [ ] 05.1-05-PLAN.md — Slingshot presentation (pressure gauge, brass dashes, steam cues) and F2 Kit section
+- [ ] 05.1-06-PLAN.md — Gym cutover: steampunk / energy / nature layer areas; old rooms, lift, crank, plate deleted
+- [ ] 05.1-07-PLAN.md — Trigger block: atomic SignalSource rename, logic nodes extend Trigger
+- [ ] 05.1-08-PLAN.md — Gear-disc targets and heavy preset; logic nodes moved into the kit
+- [ ] 05.1-09-PLAN.md — Force volume block: updraft, geyser, steam stream; old nozzle / geyser / wind tunnel deleted
+- [ ] 05.1-10-PLAN.md — Nature look pass, DRAG profile: leaf storm, resin pool
+- [ ] 05.1-11-PLAN.md — Energy source block: capsule and broken machine moved, in-place path swaps
+- [ ] 05.1-12-PLAN.md — EnergyCost component: energy core pay-in, attraction-field trap; old core and force field deleted
+- [ ] 05.1-13-PLAN.md — Lever/valve retired: test port, Zone_Energy in-place target swaps
+- [ ] 05.1-14-PLAN.md — Receiver component: gear gate, drawbridge, charge gate, AND/OR/timer stations
+- [ ] 05.1-15-PLAN.md — Steampunk platforms: paternoster, rail cart, piston steps
+- [ ] 05.1-16-PLAN.md — Impulse block: speed pads (one switched), boost ring, bounce pad; conveyor cut
+- [ ] 05.1-17-PLAN.md — Amplification component: bounce pad with core, gravity zone
+- [ ] 05.1-18-PLAN.md — DamagePush + player_hit: pendulum, piston wall, steam hammer
+- [ ] 05.1-19-PLAN.md — Reaction to load: nature objects and force-field barrier
+- [ ] 05.1-20-PLAN.md — Mixed course, final cleanup, kit metrics, design-doc sync
 **UI hint**: yes
 **Notes**: Design source of truth: `docs/GAME-DESIGN.md` section 6 (kit cube, base rules, layers, architecture, showroom verdict). Known fixes: the steam wall jump must feel like the normal wall jump (currently it flings Rino away), the wall run on it runs with the head to the wall, clock-hand platform floor bugs. Final looks are designed in Group B; greybox looks per layer are enough here.
 
@@ -474,7 +496,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 04.1 → 5 → 05.1 →
 | 3. Animated Mannequin & Aim Mode | 10/10 | Complete    | 2026-11-20 |
 | 4. Fernauslöser & Mechanism Kit | 5/5 | Complete   | 2026-11-23 |
 | 5. Energy Arm & Loader | 5/5 | Complete   | 2026-11-24 |
-| 05.1. Kit Rework | 0/TBD | Not started | - |
+| 05.1. Kit Rework | 0/20 | Not started | - |
 | 6. Extractor, Shot, Enemies & Recovery | 0/TBD | Not started | - |
 | 7. Level Blockout & Game Flow | 0/TBD | Not started | - |
 | 8. Boss & Ending | 0/TBD | Not started | - |
