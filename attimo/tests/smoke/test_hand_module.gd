@@ -15,7 +15,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	if registry == null:
 		return
 	var ids: Array[StringName] = registry.ids()
-	check.call(ids.has(&"remote_trigger") and ids.has(&"dummy"), "the registry lists remote_trigger and dummy")
+	check.call(ids == [&"remote_trigger", &"extractor", &"dummy"], "the registry order is remote_trigger, extractor, dummy (%s)" % str(ids))
 	check.call(registry.find(&"nope") == null, "find returns null for an unknown id")
 	for def: HandModuleDef in registry.modules:
 		var instance: Node = def.scene.instantiate() if def.scene != null else null
@@ -44,10 +44,20 @@ func run(tree: SceneTree, check: Callable) -> void:
 	check.call(not hand.equip(&"nope"), "equip of an unknown id fails")
 	check.call(hand.active_def.id == &"dummy", "a failed equip keeps the active module")
 	check.call(hand.equip(&"remote_trigger"), "equip(remote_trigger) succeeds")
+	check.call(hand.cycle_ids() == [&"remote_trigger", &"extractor"], "cycle_ids lists the wheel modules without the debug-only dummy")
 	hand.cycle(1)
-	check.call(hand.active_def.id == &"dummy", "cycle(1) from remote_trigger reaches the dummy")
+	check.call(hand.active_def.id == &"extractor", "cycle(1) from remote_trigger reaches the extractor")
 	hand.cycle(1)
-	check.call(hand.active_def.id == &"remote_trigger", "cycle wraps around")
+	check.call(hand.active_def.id == &"remote_trigger", "cycle(1) from the extractor skips the dummy and wraps to remote_trigger")
+	hand.cycle(-1)
+	check.call(hand.active_def.id == &"extractor", "cycle(-1) wraps backwards past the dummy")
+	check.call(hand.equip(&"dummy") and hand.active_module is DummyModule, "equip(dummy) still works in a debug build")
+	await Fixtures.tap_action(tree, &"module_1", 2)
+	await Fixtures.wait_physics(tree, 2)
+	check.call(hand.active_def.id == &"remote_trigger", "module_1 equips the remote trigger")
+	await Fixtures.tap_action(tree, &"module_2", 2)
+	await Fixtures.wait_physics(tree, 2)
+	check.call(hand.active_def.id == &"extractor" and hand.active_module is Extractor, "module_2 equips the extractor")
 
 	hand.equip(&"dummy")
 	var pulses: Array = []
@@ -59,6 +69,14 @@ func run(tree: SceneTree, check: Callable) -> void:
 	var dummy: DummyModule = hand.active_module as DummyModule
 	check.call(dummy != null and dummy.use_count == 1, "a tap reaches the dummy without any hold (use_count %d)" % (dummy.use_count if dummy != null else -1))
 	check.call(pulses.is_empty(), "the dummy emits no pulse_fired")
+	check.call(dummy.press_count == 1 and dummy.log.size() >= 3 and dummy.log[0] == &"pressed" and dummy.log[dummy.log.size() - 1] == &"released", "pressed, held, released reach the module in that order (%s)" % str(dummy.log))
+	check.call(dummy.held_ticks >= 1, "on_use_held runs while the button is down (%d ticks)" % dummy.held_ticks)
+	Input.action_press(&"use_hand")
+	await Fixtures.wait_physics(tree, 3)
+	hand.equip(&"remote_trigger")
+	check.call(dummy.deactivated, "switching modules mid-hold calls deactivate")
+	var untouched: bool = hand.active_module is RemoteTrigger
+	check.call(untouched, "the new module is active after the switch")
 	Input.action_release(&"use_hand")
 	bus.disconnect(&"pulse_fired", on_pulse)
 	floor_body.queue_free()

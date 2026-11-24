@@ -29,6 +29,10 @@ signal module_changed(def: HandModuleDef)
 @export_range(0.5, 5.0, 0.1) var hand_near_range: float = 2.2
 ## Seconds the arm stays out after a pulse (presentation only).
 @export_range(0.0, 1.0, 0.05) var hand_shot_arm_time: float = 0.25
+## Reach in m of the Extractor, measured from the chest to the energy source (ENRG-02).
+@export_range(1.0, 10.0, 0.5) var hand_extract_range: float = 4.0
+## Cone half angle in degrees around the crosshair direction inside which the Extractor finds a source.
+@export_range(5.0, 90.0, 1.0) var hand_extract_angle: float = 35.0
 
 var active_def: HandModuleDef = null
 var active_module: HandModule = null
@@ -53,7 +57,7 @@ var prompt_target: Interactable = null
 var _shot_arm_left: float = 0.0
 var _player: PlayerController = null
 var _context: HandContext = HandContext.new()
-var _charge_time: float = 0.0
+var _use_active: bool = false
 
 
 func _ready() -> void:
@@ -84,6 +88,7 @@ func equip(id: StringName) -> bool:
 	if module == null:
 		return false
 	if active_module != null:
+		_use_active = false
 		active_module.deactivate()
 		remove_child(active_module)
 		active_module.queue_free()
@@ -96,12 +101,14 @@ func equip(id: StringName) -> bool:
 	module_changed.emit(def)
 	EventBus.hand_module_changed.emit(def.id)
 	_update_shot_ready()
+	if targeting != null and not module.uses_targeting():
+		targeting.release()
 	return true
 
 
-## Equips the module `step` places along available_ids(), wrapping around.
+## Equips the module `step` places along cycle_ids(), wrapping around. A debug-only module is never reached by cycling (T-05-13).
 func cycle(step: int) -> void:
-	var ids: Array[StringName] = available_ids()
+	var ids: Array[StringName] = cycle_ids()
 	if ids.is_empty():
 		return
 	var index: int = ids.find(active_def.id) if active_def != null else -1
@@ -120,17 +127,42 @@ func available_ids() -> Array[StringName]:
 	return result
 
 
+## Registry ids the wheel and the module keys reach: available_ids() without the debug-only defs (Pitfall 6).
+func cycle_ids() -> Array[StringName]:
+	var result: Array[StringName] = []
+	if registry == null:
+		return result
+	for def: HandModuleDef in registry.modules:
+		if def != null and not def.debug_only:
+			result.append(def.id)
+	return result
+
+
+## Starts the shot cooldown for `seconds` (modules call it when they fire).
+func start_cooldown(seconds: float) -> void:
+	if is_finite(seconds):
+		cooldown_left = maxf(cooldown_left, seconds)
+
+
 func _physics_process(delta: float) -> void:
 	cooldown_left = maxf(cooldown_left - delta, 0.0)
 	_update_shot_ready()
 	_context.rig = _player.camera_rig()
 	# The assist runs first, so a shot decided on this tick reads this tick's target (Pitfall 7).
-	if targeting != null:
-		targeting.update(delta)
+	if targeting != null and active_module != null:
+		if active_module.uses_targeting():
+			targeting.update(delta)
+		else:
+			targeting.release()
 	_tick_near(delta)
 	_shot_arm_left = maxf(_shot_arm_left - delta, 0.0)
 	var loader_hold: bool = _player.loader_active()
-	arm_out = near_target != null or _shot_arm_left > 0.0 or loader_hold
+	var module_arm: bool = active_module != null and active_module.holds_arm_out()
+	arm_out = near_target != null or _shot_arm_left > 0.0 or loader_hold or module_arm
+	if module_arm and near_target == null and not loader_hold:
+		var module_point: Vector3 = active_module.arm_point()
+		if module_point.is_finite():
+			arm_out_point = module_point
 	if loader_hold and near_target == null and _context.rig != null:
 		# The Loader hold points the arm along the crosshair, where the discharge goes.
 		arm_out_point = _context.rig.aim_target_point()
@@ -138,23 +170,35 @@ func _physics_process(delta: float) -> void:
 		cycle(1)
 	elif Input.is_action_just_pressed(&"module_prev"):
 		cycle(-1)
+	_pick_module_key()
 	if active_module == null:
 		return
-	if not charging and cooldown_left <= 0.0 and Input.is_action_just_pressed(&"use_hand"):
-		charging = true
-		_charge_time = 0.0
-	if not charging:
+	_route_use(delta)
+	charge_ratio = active_module.charge_ratio()
+	charging = _use_active and charge_ratio > 0.0
+
+
+## Routes the use button to the active module: pressed once (not during the cooldown), held every tick, released once.
+func _route_use(delta: float) -> void:
+	if not _use_active and cooldown_left <= 0.0 and Input.is_action_just_pressed(&"use_hand"):
+		_use_active = true
+		active_module.on_use_pressed()
+	if not _use_active:
 		return
-	if active_module.wants_charge():
-		_charge_time += delta
-		charge_ratio = clampf(_charge_time / hand_charge_threshold, 0.0, 1.0)
-	if Input.is_action_just_released(&"use_hand"):
-		# D-05: the shot happens on release, there is no auto-fire at the threshold.
-		var big: bool = active_module.wants_charge() and _charge_time >= hand_charge_threshold
-		_reset_charge()
-		cooldown_left = hand_cooldown
-		shots_fired += 1
-		active_module.on_use_released(big)
+	if Input.is_action_just_released(&"use_hand") or not Input.is_action_pressed(&"use_hand"):
+		_use_active = false
+		active_module.on_use_released()
+		return
+	active_module.on_use_held(delta)
+
+
+## Keys 1 and 2 equip the first and second wheel module.
+func _pick_module_key() -> void:
+	var ids: Array[StringName] = cycle_ids()
+	if Input.is_action_just_pressed(&"module_1") and ids.size() > 0:
+		equip(ids[0])
+	elif Input.is_action_just_pressed(&"module_2") and ids.size() > 1:
+		equip(ids[1])
 
 
 ## Recomputes shot_ready (the shot module is the active one) and announces a change once.
@@ -169,7 +213,6 @@ func _update_shot_ready() -> void:
 func _reset_charge() -> void:
 	charging = false
 	charge_ratio = 0.0
-	_charge_time = 0.0
 
 
 ## Near contact (D-08, D-09, D-10): interact next to an Interactable that accepts it starts the contact, holding interact

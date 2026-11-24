@@ -6,7 +6,7 @@ const ACTIONS: Array[StringName] = [
 	&"move_forward", &"move_back", &"move_left", &"move_right",
 	&"look_left", &"look_right", &"look_up", &"look_down",
 	&"jump", &"dash", &"loader", &"charge", &"use_hand", &"interact",
-	&"module_next", &"module_prev", &"pause", &"debug_event_log",
+	&"module_1", &"module_2", &"module_next", &"module_prev", &"pause", &"debug_event_log",
 	&"camera_recenter", &"debug_tuning", &"debug_metrics", &"debug_tick_rate",
 ]
 const LOOK_ACTIONS: Array[StringName] = [&"look_left", &"look_right", &"look_up", &"look_down"]
@@ -74,6 +74,8 @@ func _check_specific_bindings(check: Callable) -> void:
 	check.call(InputMap.has_action(&"charge") and InputMap.action_get_events(&"charge").size() == 1, "charge is keyboard only (one event)")
 	check.call(_has_mouse_button(&"loader", MOUSE_BUTTON_RIGHT), "loader maps to right mouse button (D-15)")
 	check.call(_has_mouse_button(&"use_hand", MOUSE_BUTTON_LEFT), "use_hand maps to left mouse button")
+	check.call(_has_physical_key(&"module_1", KEY_1) and _has_physical_key(&"module_2", KEY_2), "module_1 maps to key 1 and module_2 to key 2")
+	check.call(InputMap.action_get_events(&"module_1").size() == 1 and InputMap.action_get_events(&"module_2").size() == 1, "module_1 and module_2 are keyboard only")
 	check.call(_has_mouse_button(&"module_next", MOUSE_BUTTON_WHEEL_DOWN), "module_next maps to wheel down")
 	check.call(_has_mouse_button(&"module_prev", MOUSE_BUTTON_WHEEL_UP), "module_prev maps to wheel up")
 	check.call(_has_mouse_button(&"camera_recenter", MOUSE_BUTTON_MIDDLE), "camera_recenter maps to the middle mouse button")

@@ -48,6 +48,12 @@ func update(delta: float) -> void:
 	_select(rig, delta)
 
 
+## Drops the lock and shows no reticle state: called while the equipped module does not use the assist.
+func release() -> void:
+	_release_target()
+	state = State.NONE
+
+
 func _process(delta: float) -> void:
 	# One target at a time, so animating the shared brightest material is safe (D-12).
 	_time += delta

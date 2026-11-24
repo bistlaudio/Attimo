@@ -9,7 +9,7 @@ const ACTIONS: Array[String] = [
 	"move_forward", "move_back", "move_left", "move_right",
 	"look_left", "look_right", "look_up", "look_down",
 	"jump", "dash", "loader", "use_hand", "interact",
-	"module_next", "module_prev", "pause", "debug_event_log",
+	"module_1", "module_2", "module_next", "module_prev", "pause", "debug_event_log",
 	"camera_recenter", "debug_tuning", "debug_metrics", "debug_tick_rate",
 ]
 const FOLDERS: Array[String] = [

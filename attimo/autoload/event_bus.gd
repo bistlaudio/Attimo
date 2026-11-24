@@ -56,6 +56,9 @@ signal energy_spent(amount: float, reason: StringName)
 ## Emitted by an energy source at the end of a continuous gain (the charge button when it stops; capsules and machines in plan 05-04).
 ## `amount` is the total gained, `source` names the income. The passive charge never emits it (it would flood the log).
 signal energy_gained(amount: float, source: StringName)
+## Emitted by an EnergySource (capsule, broken machine) when its last energy was taken. `position` is where it stands, `amount` what it held.
+## Listeners: juice, audio, the debug event log.
+signal energy_source_emptied(position: Vector3, amount: float)
 ## Emitted by ArmEnergy.refuse when a move that does not fire (the air dash, the shot) is refused for lack of energy. `reason` names the
 ## move, `needed` the energy it would have cost. A base move that falls back never emits it (D-12). Listeners: the arm flicker, audio.
 signal energy_refused(reason: StringName, needed: float)

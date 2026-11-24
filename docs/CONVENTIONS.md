@@ -92,6 +92,7 @@ Rules:
 | `interactable` | now (Phase 4) | Every `Interactable` component: anything the hand can target |
 | `mechanism` | now (Phase 4) | Every `SignalSource` and `Mechanism`; the reset sweep walks it |
 | `hand_controller` | now (Phase 4) | The `HandController` under the Player |
+| `energy_source` | now (Phase 5) | Every `EnergySource` (capsule, broken machine): the Extractor's candidates; also in `mechanism` |
 | `carrying_platform` | now (Phase 4) | Rotating platforms with chord carry (plan 04-04) |
 | `wall_run_surface` | now (Phase 04.1) | The `Panel` body of an active `WallPad` in WALL_RUN mode; the player wall-runs on it (MOVE-12, D-09) |
 | `wall_jump_surface` | now (Phase 04.1) | The `Panel` body of an active `WallPad` in WALL_JUMP mode; a jump press against it is a wall-jump (D-09) |
@@ -128,8 +129,10 @@ Keys are stored as physical keys (layout independent) with device -1 (all device
 | `charge` | R | none (keyboard only) | Hold (D-06, Phase 5). The charge button: adds `energy_charge_rate` while held in Idle with no move input; moving, jumping or dashing stops it at once. |
 | `use_hand` | Left mouse button | R2 / RT | Fire or trigger the module. |
 | `interact` | E | X / Square | |
+| `module_1` | Key 1 | none (keyboard only) | Equips the first wheel module (the shot, plan 05-04). |
+| `module_2` | Key 2 | none (keyboard only) | Equips the second wheel module (the Extractor). |
 | `module_next` | Mouse wheel down | Right bumper | Switches the hand module (D-16, D-26: the wheel no longer zooms the camera). |
-| `module_prev` | Mouse wheel up | Left bumper | Number-key slot selects become separate actions in Phase 5. |
+| `module_prev` | Mouse wheel up | Left bumper | The wheel and the number keys reach only `HandController.cycle_ids()`, never a debug-only module (T-05-13). |
 | `pause` | Escape | Start | |
 | `camera_recenter` | Middle mouse button | R3 | Turns the camera behind the character (D-17). R3 is reserved for Phase 13. |
 | `debug_event_log` | F3 and Backtick (QuoteLeft) | none | Debug-only, outside the player-facing list. F3 may need Fn on macOS, hence the second key. |
@@ -177,6 +180,7 @@ Exception 2: placeholder hit puffs in `scripts/debug` + `scenes/debug/hit_puff.t
 | `energy_changed` | `value: float` | `ArmEnergy` after a whole-number change or a discrete spend or reset, at most once per physics tick (the passive charge never floods the log); `value` is the new energy, 0 to 100 |
 | `energy_spent` | `amount: float, reason: StringName` | `ArmEnergy.try_spend` and `drain` after a payment; `reason` is `loader`, `air_dash`, `dash_hop` or `wall_run` |
 | `energy_gained` | `amount: float, source: StringName` | An energy source at the end of a continuous gain (the charge button when it stops; capsules and machines in plan 05-04). The passive charge never emits it |
+| `energy_source_emptied` | `position: Vector3, amount: float` | `EnergySource` (capsule, broken machine) when its last energy was taken (plan 05-04); once per drain to empty |
 | `moto_changed` | `active: bool` | `ArmEnergy` when Moto Perpetuo turns on (value at or above `moto_threshold`) or off (below `moto_threshold - moto_exit_margin`), only on a flip |
 | `energy_refused` | `reason: StringName, needed: float` | `ArmEnergy.refuse`, only for a move that does not fire (the air dash, the shot) |
 
@@ -227,6 +231,8 @@ Listeners: the debug event log now, juice (Phases 11-12), audio (Phase 14). A ne
 - Glow stages (D-11, D-12, D-28): `resources/mechanisms/glow_idle.tres`, `glow_shot_ready.tres`, `glow_target.tres` are the only turquoise emissive materials of mechanisms (`Interactable.GlowStage` IDLE, SHOT_READY, TARGET). `Interactable.set_glow_stage` assigns the shared instance to every mesh in `glow_meshes`; nothing that is not an Interactable uses them. SHOT_READY follows `EventBus.shot_ready_changed` from `HandController.shot_ready` (the shot module is equipped; plan 05-04 adds the energy condition); the locked target keeps TARGET. The hand's own palm and arm light (`HandPresentation`, D-07b) is the one other turquoise energy.
 - Reticle (D-01, D-02, D-15): the `Crosshair` reticle (centre dot and thin ring) is always on and has one small look; the goggle HUD, lens overlay and module plate left with aim mode. The E prompt (`NearPrompt`) shows over `HandController.prompt_target`, the nearest grabbable lever or crank in reach. It polls the `hand_controller` group read-only.
 - Near contact (D-08..D-10): `interact` within `hand_near_range` of an Interactable with `accepts_near` calls `near_begin`, `near_hold(delta)` every tick while held and `near_end` on release or when out of range. `HandController.arm_out` (near contact, shortly after a pulse, the Loader hold) and `arm_out_point` are read-only presentation state: `MannequinAnimator` uses them for the AimMachine edge, the Aim layer weight and the `AimPoseModifier` target (D-27); the strafe, backward locomotion and aimed dash nodes are dormant. The Shoot OneShot plays on `EventBus.pulse_fired`, not on the use press.
+- Hand module callbacks (plan 05-04): `HandModule` has `on_use_pressed()` (once on the press, ignored during the cooldown), `on_use_held(delta)` (every physics tick while the button is down), `on_use_released()`, `charge_ratio()`, `holds_arm_out()`, `arm_point()` and `uses_targeting()`; all default to empty. `HandController` routes the use button (`_route_use`), skips `Targeting` while the module does not use it (`Targeting.release()`), exposes `start_cooldown(seconds)` and `cycle_ids()` (the wheel and keys 1 and 2, no debug-only defs). A module changes the arm only through `ArmEnergy.gain`, `try_spend`, `drain` and `refuse`, never by writing `value` (T-05-14).
+- Energy source block (kit block "energy source", GAME-DESIGN 6.8): `EnergySource` (group `energy_source` and `mechanism`) exports `amount`, `duration`, `respawn_time` (0 never refills), `glow_meshes`, `core`; `extract(delta, limit)`, `is_available()`, `target_point()`, `reset()`; it holds its own remaining energy and refill timer and never touches the player. Scenes: `scenes/mechanisms/energy_capsule.tscn` (+40 in 0.5 s) and `broken_machine.tscn` (+60 in 2 s). The `Extractor` module (hold the use button, range `hand_extract_range`, cone `hand_extract_angle` around the crosshair direction) takes from it and gains into the arm. Contract test: `tests/smoke/test_extractor.gd`.
 - The F2 panel has a Hand section for the `hand_*` range floats of the `HandController`; they are never saved.
 
 ## Settings and debug

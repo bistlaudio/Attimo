@@ -8,14 +8,38 @@ const CHEST_HEIGHT: float = 1.3
 const RAY_MARGIN: float = 10.0
 
 
-func wants_charge() -> bool:
+var _held: float = 0.0
+
+
+func on_use_pressed() -> void:
+	_held = 0.0
+
+
+func on_use_held(delta: float) -> void:
+	_held += delta
+
+
+func charge_ratio() -> float:
+	if ctx == null or ctx.controller == null:
+		return 0.0
+	return clampf(_held / ctx.controller.hand_charge_threshold, 0.0, 1.0) if _held > 0.0 else 0.0
+
+
+func holds_arm_out() -> bool:
+	return false
+
+
+func uses_targeting() -> bool:
 	return true
 
 
-func on_use_released(big: bool) -> void:
+func on_use_released() -> void:
 	if ctx == null or ctx.player == null or ctx.controller == null:
 		return
 	var controller: HandController = ctx.controller
+	var big: bool = _held >= controller.hand_charge_threshold
+	_held = 0.0
+	controller.start_cooldown(controller.hand_cooldown)
 	var player: PlayerController = ctx.player
 	var size: PulseHit.Size = PulseHit.Size.BIG if big else PulseHit.Size.SMALL
 	var reach: float = controller.hand_big_range if big else controller.hand_small_range
