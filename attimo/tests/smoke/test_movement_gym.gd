@@ -194,7 +194,7 @@ func _check_overlays(gym: Node, check: Callable) -> void:
 	check.call(metrics != null and not metrics.visible, "the MetricsOverlay is present and hidden")
 	check.call(tuning != null and not tuning.visible, "the TuningPanel is present and hidden")
 	var crosshair: Crosshair = gym.get_node_or_null("Crosshair") as Crosshair
-	check.call(crosshair != null and crosshair.visible and not crosshair.hud_visible, "the Crosshair is present, visible, and its goggle HUD is off")
+	check.call(crosshair != null and crosshair.visible, "the Crosshair is present and visible")
 
 
 func _play_through(tree: SceneTree, gym: Node, player: PlayerController, check: Callable) -> void:

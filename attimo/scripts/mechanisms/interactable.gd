@@ -5,13 +5,14 @@ extends Node
 ## modules only call try_trigger. Add it as a child of the thing and point hit_body at its collision body.
 
 const GLOW_IDLE_MATERIAL: StandardMaterial3D = preload("res://resources/mechanisms/glow_idle.tres")
-const GLOW_AIM_MATERIAL: StandardMaterial3D = preload("res://resources/mechanisms/glow_aim.tres")
+const GLOW_SHOT_READY_MATERIAL: StandardMaterial3D = preload("res://resources/mechanisms/glow_shot_ready.tres")
 const GLOW_TARGET_MATERIAL: StandardMaterial3D = preload("res://resources/mechanisms/glow_target.tres")
 ## Emission energy of the brightest stage before Targeting adds its pulse.
 const GLOW_TARGET_ENERGY: float = 3.0
 
-## Glow stages of the shared turquoise materials (D-11): faint always, stronger while aiming, brightest when targeted.
-enum GlowStage { IDLE, AIM, TARGET }
+## Glow stages of the shared turquoise materials (D-11, D-28): faint always, stronger while the shot module is equipped and the arm can
+## shoot (SHOT_READY, driven by EventBus.shot_ready_changed), brightest when targeted.
+enum GlowStage { IDLE, SHOT_READY, TARGET }
 
 signal triggered(hit: PulseHit)
 signal near_started()
@@ -37,7 +38,11 @@ var glow_stage: int = GlowStage.IDLE
 func _ready() -> void:
 	add_to_group(&"interactable")
 	set_glow_stage(GlowStage.IDLE)
-	EventBus.aim_changed.connect(_on_aim_changed)
+	EventBus.shot_ready_changed.connect(_on_shot_ready_changed)
+	# An Interactable that enters after the shot module was equipped starts at the stage the others already show.
+	var hand: HandController = get_tree().get_first_node_in_group(&"hand_controller") as HandController
+	if hand != null and hand.shot_ready:
+		set_glow_stage(GlowStage.SHOT_READY)
 	if hit_body != null:
 		hit_body.collision_layer = PhysicsLayers.INTERACTABLE
 		hit_body.collision_mask = 0
@@ -49,8 +54,8 @@ func set_glow_stage(stage: int) -> void:
 	glow_stage = stage
 	var material: StandardMaterial3D = GLOW_IDLE_MATERIAL
 	match stage:
-		GlowStage.AIM:
-			material = GLOW_AIM_MATERIAL
+		GlowStage.SHOT_READY:
+			material = GLOW_SHOT_READY_MATERIAL
 		GlowStage.TARGET:
 			material = GLOW_TARGET_MATERIAL
 	for mesh: MeshInstance3D in glow_meshes:
@@ -58,10 +63,10 @@ func set_glow_stage(stage: int) -> void:
 			mesh.material_override = material
 
 
-func _on_aim_changed(active: bool) -> void:
+func _on_shot_ready_changed(ready: bool) -> void:
 	if glow_stage == GlowStage.TARGET:
 		return
-	set_glow_stage(GlowStage.AIM if active else GlowStage.IDLE)
+	set_glow_stage(GlowStage.SHOT_READY if ready else GlowStage.IDLE)
 
 
 func accepts_module(id: StringName) -> bool:

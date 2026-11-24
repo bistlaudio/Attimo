@@ -1,14 +1,13 @@
 extends RefCounted
-## CAM-02 / D-15 / T-03-09: the reticle is always visible, the goggle HUD (hud_visible) follows aim_changed, it never takes
-## mouse input, covers the full screen rect and draws below the debug overlays (layers 100-102). It carries a reserved
-## lock state for Phase 4.
+## CAM-02 / D-01 / D-15 / T-03-09: the reticle is always visible with one small look (no aim hold, no goggle lens overlay, no module
+## plate), it never takes mouse input, covers the full screen rect and draws below the debug overlays (layers 100-102). It carries the
+## lock state, the Targeting state and the shot charge.
 
 const CROSSHAIR_SCENE: String = "res://scenes/ui/crosshair.tscn"
 const MAX_LAYER: int = 99
 
 
 func run(tree: SceneTree, check: Callable) -> void:
-	var bus: Node = tree.root.get_node("EventBus")
 	var packed: PackedScene = load(CROSSHAIR_SCENE) as PackedScene
 	check.call(packed != null, "crosshair.tscn loads")
 	if packed == null:
@@ -20,12 +19,13 @@ func run(tree: SceneTree, check: Callable) -> void:
 	tree.root.add_child(crosshair)
 	await tree.process_frame
 
-	check.call(crosshair.visible and not crosshair.hud_visible, "the reticle is always on and the goggle HUD is off after one process frame (D-01)")
-	bus.aim_changed.emit(true)
-	check.call(crosshair.visible and crosshair.hud_visible, "aim_changed(true) switches the goggle HUD on, the reticle stays visible")
-	await tree.process_frame
-	bus.aim_changed.emit(false)
-	check.call(crosshair.visible and not crosshair.hud_visible, "aim_changed(false) switches the goggle HUD off, the reticle stays visible")
+	check.call(crosshair.visible, "the reticle is always on after one process frame (D-01)")
+	check.call(crosshair.idle_alpha > 0.0 and crosshair.idle_alpha < 1.0, "the reticle with no target is drawn at the idle alpha (%.2f)" % crosshair.idle_alpha)
+	check.call(crosshair.get_node_or_null("Lens") == null, "there is no lens overlay")
+	check.call(not crosshair.has_method(&"set_module_name"), "there is no module plate")
+	for _i: int in 5:
+		await tree.process_frame
+	check.call(crosshair.visible, "the reticle stays on over time")
 
 	var reticle: Control = crosshair.get_node("Reticle") as Control
 	check.call(reticle.mouse_filter == Control.MOUSE_FILTER_IGNORE, "the Reticle ignores the mouse (T-03-09)")
@@ -38,7 +38,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	crosshair.set_locked(false)
 	check.call(not crosshair.locked, "set_locked(false) restores it")
 
-	# Goggle HUD (Phase 4, D-13): the reticle state, the charge arc and the module frame.
+	# The reticle state, the charge arc and the cooldown dim (Phase 4, D-13).
 	crosshair.set_state(Targeting.State.VALID)
 	check.call(crosshair.state == Targeting.State.VALID and crosshair.locked, "set_state(VALID) switches to the lock colour and keeps locked true")
 	crosshair.set_state(Targeting.State.VALID_BIG)
@@ -54,29 +54,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	crosshair.set_charge(0.0)
 	crosshair.set_cooldown_dim(true)
 	crosshair.set_cooldown_dim(false)
-	crosshair.set_module_name("Fernauslöser")
-	check.call(crosshair.module_name == "Fernauslöser", "set_module_name stores the name")
-	bus.aim_changed.emit(true)
 	await tree.process_frame
-	bus.aim_changed.emit(false)
-	check.call(crosshair.visible and not crosshair.hud_visible, "the goggle HUD is off again when aim ends (hud_visible false)")
-
-	# Goggle lens overlay: hidden without aim, visible and fully open shortly after aim starts, ignores the mouse, gone again
-	# after aim ends. The brass plate and the gear need no state beyond the module name.
-	var lens: ColorRect = crosshair.get_node_or_null("Lens") as ColorRect
-	check.call(lens != null, "the goggle lens overlay exists")
-	if lens != null:
-		check.call(lens.mouse_filter == Control.MOUSE_FILTER_IGNORE, "the lens overlay ignores the mouse")
-		for _i: int in 30:
-			await tree.process_frame
-		check.call(not lens.visible, "the lens overlay is hidden without aim")
-		bus.aim_changed.emit(true)
-		for _i: int in 30:
-			await tree.process_frame
-		check.call(lens.visible, "the lens overlay is shown while aiming")
-		bus.aim_changed.emit(false)
-		for _i: int in 30:
-			await tree.process_frame
-		check.call(not lens.visible, "the lens overlay is hidden again after aim ends")
+	check.call(crosshair.visible, "the reticle is still on after every state change")
 
 	crosshair.free()

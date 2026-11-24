@@ -158,34 +158,23 @@ func _scenario_save_button(tree: SceneTree, check: Callable) -> void:
 	await _free_all(tree, nodes)
 
 
-func _expected_aim_rows(rig: CameraRig) -> int:
-	var count: int = 0
-	for info: Dictionary in rig.get_property_list():
-		if String(info.name).begins_with("aim_") and info.type == TYPE_FLOAT and (info.usage & PROPERTY_USAGE_EDITOR) != 0 and info.hint == PROPERTY_HINT_RANGE:
-			count += 1
-	return count
-
-
-# (7) the generated "Aim camera" section: one row per aim_* range float of the rig, live, never saved (T-03-07).
+# (7) aim mode is gone: no "Aim camera" section, no aim_row_count, no set_aim_value, and no aim_ key in the saved camera settings
+# (T-03-07). The hand section still lists the hand_* floats.
 func _scenario_aim_rows(tree: SceneTree, check: Callable) -> void:
 	var nodes: Array[Node] = await _spawn(tree)
-	var rig: CameraRig = nodes[2] as CameraRig
 	var panel: TuningPanel = nodes[3] as TuningPanel
-	var expected: int = _expected_aim_rows(rig)
-	check.call(expected == 4, "(7) the rig has four aim_* range floats (%d)" % expected)
-	check.call(panel.aim_row_count() == expected, "(7) aim_row_count %d equals the rig's aim_* range floats %d" % [panel.aim_row_count(), expected])
-	check.call(panel.row_count() == _expected_rows(), "(7) the movement row_count is unchanged by the aim section (%d)" % panel.row_count())
-	var has_header: bool = false
+	check.call(not panel.has_method(&"aim_row_count") and not panel.has_method(&"set_aim_value"), "(7) the panel has no aim section API")
+	check.call(panel.row_count() == _expected_rows(), "(7) the movement row_count is unchanged (%d)" % panel.row_count())
+	var has_aim_header: bool = false
+	var has_hand_header: bool = false
 	for label: Node in panel.find_children("*", "Label", true, false):
-		if (label as Label).text.contains("Aim camera"):
-			has_header = true
-	check.call(has_header, "(7) the panel shows an 'Aim camera' header")
-	panel.set_aim_value(&"aim_fov_delta", 8.0)
-	check.call(is_equal_approx(rig.aim_fov_delta, 8.0), "(7) set_aim_value changes the rig's aim_fov_delta to 8.0 (got %.2f)" % rig.aim_fov_delta)
-	panel.set_aim_value(&"aim_shoulder_offset", 0.9)
-	check.call(is_equal_approx(rig.aim_shoulder_offset, 0.9), "(7) set_aim_value changes aim_shoulder_offset to 0.9 (got %.2f)" % rig.aim_shoulder_offset)
-	panel.set_aim_value(&"not_a_property", 1.0)
-	check.call(panel.aim_row_count() == expected, "(7) an unknown aim property is ignored")
+		var text: String = (label as Label).text
+		if text.contains("Aim camera"):
+			has_aim_header = true
+		if text.contains("Hand"):
+			has_hand_header = true
+	check.call(not has_aim_header, "(7) the panel shows no 'Aim camera' header")
+	check.call(has_hand_header and panel.hand_row_count() > 0, "(7) the hand section still lists the hand_* floats (%d)" % panel.hand_row_count())
 	# Save the camera settings: the file must carry no aim_ key.
 	panel.set_sensitivity(1.5)
 	check.call(FileAccess.file_exists(TEST_SETTINGS_PATH), "(7) the camera settings were saved to the temporary path")

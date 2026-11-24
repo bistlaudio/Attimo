@@ -4,8 +4,6 @@ extends CanvasLayer
 ## resource of the first node in group "player", so a change acts on the running player at once. Release builds
 ## drop it (REL-03). debug_tuning (F2 / 8) toggles it, hidden at start; showing it frees the mouse and hiding it
 ## recaptures the mouse (never in a headless run).
-## A generated "Aim camera" section below the movement rows tunes the CameraRig's aim_* range floats live (D-14).
-## Those numbers are CameraRig exports: the panel never saves them, so no aim_ key reaches user://settings.cfg (T-03-07).
 ## A generated "Hand" section tunes the HandController's hand_* range floats the same way (D-05, D-14); they are never saved.
 ## Gameplay code never calls the panel. The panel never writes anything to user://, and it never saves the
 ## shared res:// config outside the editor (T-02-16).
@@ -21,9 +19,6 @@ var _config: MovementConfig
 var _rig: CameraRig
 var _sliders: Dictionary[StringName, HSlider] = {}
 var _value_labels: Dictionary[StringName, Label] = {}
-var _aim_rows: VBoxContainer
-var _aim_sliders: Dictionary[StringName, HSlider] = {}
-var _aim_value_labels: Dictionary[StringName, Label] = {}
 var _hand: HandController
 var _hand_rows: VBoxContainer
 var _hand_sliders: Dictionary[StringName, HSlider] = {}
@@ -41,9 +36,7 @@ var _sensitivity_dragging: bool = false
 
 func _ready() -> void:
 	visible = false
-	# The aim camera rows live in their own container after the movement rows, so build order does not matter.
-	_aim_rows = VBoxContainer.new()
-	_rows.get_parent().add_child(_aim_rows)
+	# The hand rows live in their own container after the movement rows, so build order does not matter.
 	_hand_rows = VBoxContainer.new()
 	_rows.get_parent().add_child(_hand_rows)
 	# The camera controls take their range and choices from CameraSettings, so panel and settings cannot disagree.
@@ -78,11 +71,6 @@ func set_value(property: StringName, value: float) -> void:
 	_apply(slider.value, property, _config, _value_labels)
 
 
-## Number of aim camera sliders: one per CameraRig float named aim_* with an editor range hint.
-func aim_row_count() -> int:
-	return _aim_sliders.size()
-
-
 ## Number of hand sliders: one per HandController float named hand_* with an editor range hint.
 func hand_row_count() -> int:
 	return _hand_sliders.size()
@@ -96,16 +84,6 @@ func set_hand_value(property: StringName, value: float) -> void:
 		return
 	slider.set_value_no_signal(value)
 	_apply(slider.value, property, _hand, _hand_value_labels)
-
-
-## Moves the slider of the aim camera `property` (clamped to its range) and with it the live CameraRig value.
-## An unknown property is ignored. Never saved.
-func set_aim_value(property: StringName, value: float) -> void:
-	var slider: HSlider = _aim_sliders.get(property) as HSlider
-	if slider == null or _rig == null:
-		return
-	slider.set_value_no_signal(value)
-	_apply(slider.value, property, _rig, _aim_value_labels)
 
 
 ## Sets the mouse sensitivity multiplier (clamped to the CameraSettings range), applies it to the rig and saves it.
@@ -187,8 +165,6 @@ func _bind() -> void:
 	if _rig == null:
 		_rig = _find_rig()
 		_sync_camera_controls()
-		if _rig != null:
-			_build_aim_rows()
 	if _hand == null:
 		_hand = get_tree().get_first_node_in_group(&"hand_controller") as HandController
 		if _hand != null:
@@ -270,20 +246,6 @@ func _build_rows() -> void:
 		_add_row(_config, info.name as StringName, info.hint_string as String, _rows, _sliders, _value_labels)
 
 
-## The "Aim camera" section: one row per CameraRig float named aim_* with an editor range hint (D-14).
-func _build_aim_rows() -> void:
-	var header: Label = Label.new()
-	header.text = "- Aim camera -"
-	_aim_rows.add_child(header)
-	for info: Dictionary in _rig.get_property_list():
-		var property: StringName = info.name as StringName
-		if info.type != TYPE_FLOAT or (info.usage & PROPERTY_USAGE_EDITOR) == 0 or info.hint != PROPERTY_HINT_RANGE:
-			continue
-		if not String(property).begins_with("aim_"):
-			continue
-		_add_row(_rig, property, info.hint_string as String, _aim_rows, _aim_sliders, _aim_value_labels)
-
-
 ## The "Hand" section: one row per HandController float named hand_* with an editor range hint.
 func _build_hand_rows() -> void:
 	var header: Label = Label.new()
@@ -331,7 +293,7 @@ func _add_row(target: Object, property: StringName, hint_string: String, parent:
 	labels[property] = value_label
 
 
-## Writes `value` into the live `target` (D-23: one tunable resource, or the CameraRig for the aim rows) and
+## Writes `value` into the live `target` (D-23: one tunable resource, or the HandController for the hand rows) and
 ## refreshes the value label.
 func _apply(value: float, property: StringName, target: Object, labels: Dictionary[StringName, Label]) -> void:
 	target.set(property, value)

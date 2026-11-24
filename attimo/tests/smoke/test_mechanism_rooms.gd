@@ -46,6 +46,8 @@ func run(tree: SceneTree, check: Callable) -> void:
 	tree.root.add_child(gym)
 	await Fixtures.wait_physics(tree, 30)
 
+	_check_hip_fire_signs(gym, check)
+
 	var zone: Node = gym.get_node_or_null("Zone_MechanismRooms/Zone_PuzzleRooms")
 	check.call(zone != null, "Zone_PuzzleRooms exists inside Zone_MechanismRooms")
 	if zone != null:
@@ -68,6 +70,18 @@ func run(tree: SceneTree, check: Callable) -> void:
 
 	gym.queue_free()
 	await gym.tree_exited
+
+
+## D-20: the signs are written for hip fire. The Fernausloeser sign says LMB tap only, and no sign names the removed aim hold.
+func _check_hip_fire_signs(gym: Node, check: Callable) -> void:
+	var tracer: Label3D = gym.find_child("Label_Tracer", true, false) as Label3D
+	check.call(tracer != null and tracer.text == "Fernauslöser: LMB tippen", "the Fernausloeser sign reads 'Fernauslöser: LMB tippen' (got %s)" % [tracer.text if tracer != null else "none"])
+	var stale: Array[String] = []
+	for node: Node in gym.find_children("*", "Label3D", true, false):
+		var text: String = (node as Label3D).text
+		if text.contains("RMB halten") or text.to_lower().contains("aim halten"):
+			stale.append(text)
+	check.call(stale.is_empty(), "no gym sign names the removed aim hold (%s)" % [stale])
 
 
 ## The doorway into puzzle room 1 stands in room 2's east wall plane (the puzzle group is shifted east, 04.1-05).

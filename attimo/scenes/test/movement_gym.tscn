@@ -7318,7 +7318,7 @@ script = ExtResource("19_dysgk")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 2.4, -3)
 pixel_size = 0.01
 billboard = 1
-text = "Fernauslöser: RMB halten, LMB tippen"
+text = "Fernauslöser: LMB tippen"
 font_size = 64
 
 [node name="Label_Room2" type="Label3D" parent="Zone_MechanismRooms"]

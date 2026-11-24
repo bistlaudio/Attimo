@@ -4,7 +4,7 @@ extends Node
 ## the pulse will hit: the one under the crosshair, else the best one inside hand_assist_angle with line of sight. The current
 ## target is kept with hysteresis, so it does not flicker between two close neighbours. It never rotates the camera and never
 ## slows the mouse (the sticky aim slowdown is gone).
-## It reports the reticle State, the target and the glow stage (TARGET on the target, AIM on the rest). It is created by
+## It reports the reticle State, the target and the glow stage (TARGET on the target, SHOT_READY on the rest while the shot is ready). It is created by
 ## the HandController, which calls update() every physics tick before it decides a shot.
 
 enum State { NONE, VALID, VALID_BIG, INVALID }
@@ -160,14 +160,19 @@ func _set_target(next: Interactable) -> void:
 		target = next
 		return
 	if previous != null:
-		previous.set_glow_stage(Interactable.GlowStage.AIM)
+		previous.set_glow_stage(_rest_stage())
 	target = next
 	if next != null:
 		next.set_glow_stage(Interactable.GlowStage.TARGET)
 	target_changed.emit(next)
 
 
-## Drops the target when the rig is gone: the old one falls back to the idle glow.
+## The glow stage a target falls back to when it loses the lock: SHOT_READY while the shot is ready, else IDLE (D-28).
+func _rest_stage() -> int:
+	return Interactable.GlowStage.SHOT_READY if _controller != null and _controller.shot_ready else Interactable.GlowStage.IDLE
+
+
+## Drops the target when the rig is gone: the old one falls back to its resting glow.
 func _release_target() -> void:
 	_lost_time = 0.0
 	target_angle_deg = 0.0
@@ -176,7 +181,7 @@ func _release_target() -> void:
 	var previous: Interactable = target if is_instance_valid(target) else null
 	target = null
 	if previous != null:
-		previous.set_glow_stage(Interactable.GlowStage.IDLE)
+		previous.set_glow_stage(_rest_stage())
 	target_changed.emit(null)
 
 

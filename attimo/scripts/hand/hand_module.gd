@@ -20,6 +20,6 @@ func wants_charge() -> bool:
 	return false
 
 
-## The use button was released while aiming. `big` is true when the charge passed the threshold.
+## The use button was released. `big` is true when the charge passed the threshold.
 func on_use_released(_big: bool) -> void:
 	pass

@@ -1,6 +1,7 @@
 extends RefCounted
 ## CAM-06 / D-02: an "E" keycap (Crosshair/NearPrompt) floats over the nearest near-contact Interactable in reach. It
-## hides during near contact, out of range and for non-accepting interactables, shows while aiming, and ignores the mouse.
+## hides during near contact, out of range and for non-accepting interactables, follows HandController.prompt_target, and ignores the mouse.
+## The reticle itself is always drawn (no aim hold, no goggle HUD, D-15).
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
@@ -49,12 +50,6 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.wait_process(tree, 2)
 	check.call(_hand.prompt_target != null and _prompt.visible, "(2) the prompt is back after the release")
 
-	# (3) aiming keeps it.
-	_bus_aim(tree, true)
-	await Fixtures.wait_process(tree, 2)
-	check.call(_prompt.visible and _crosshair.hud_visible, "(3) the prompt also shows while aiming")
-	_bus_aim(tree, false)
-
 	# (4) out of range.
 	lever.global_position = Vector3(0.0, 0.0, 4.0)
 	await Fixtures.wait_physics(tree, 4)
@@ -78,10 +73,6 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _settle(tree)
 	check.call(_hand.prompt_target == null and not _prompt.visible, "(6) an Interactable without near contact has no prompt")
 	await _end(tree)
-
-
-func _bus_aim(tree: SceneTree, active: bool) -> void:
-	tree.root.get_node("EventBus").aim_changed.emit(active)
 
 
 func _begin(tree: SceneTree) -> void:
@@ -113,7 +104,7 @@ func _lever(tree: SceneTree, position: Vector3) -> Lever:
 
 
 func _end(tree: SceneTree) -> void:
-	for action: StringName in [&"aim", &"interact"]:
+	for action: StringName in [&"interact"]:
 		Input.action_release(action)
 	for node: Node in _nodes:
 		if is_instance_valid(node):

@@ -71,10 +71,10 @@ Display, compositor and USB latency are outside the software measurement (D-22).
 
 | Action | Accumulated input on: median (ms) | on: max (ms) | off: median (ms) | off: max (ms) | Verdict |
 |---|---|---|---|---|---|
-| Latency jump 60 TPS | 14.67 | 20.82 | 9.55 | 14.51 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency jump 120 TPS | 6.19 | 13.32 | 5.78 | 13.16 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 60 TPS | 13.56 | 22.54 | 13.02 | 20.06 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 120 TPS | 6.52 | 13.11 | 5.96 | 14.23 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 60 TPS | 14.03 | 20.24 | 12.51 | 21.52 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 120 TPS | 6.27 | 13.32 | 7.13 | 14.29 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 60 TPS | 15.96 | 20.46 | 13.77 | 21.96 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 120 TPS | 6.11 | 13.69 | 6.53 | 15.45 | Target met (median <= 66 ms, max <= 100 ms) |
 
 ## Grid cross-check
 

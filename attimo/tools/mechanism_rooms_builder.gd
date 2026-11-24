@@ -355,7 +355,7 @@ func _build_door(zone: Node3D, builder: RefCounted) -> void:
 	var gate: Node3D = builder.call(&"_instance", zone, GATE_SCENE, "ZahnradTor", Vector3(WALL_X, 0.0, 0.0), builder.call(&"_yaw", 90.0)) as Node3D
 	var lever: Node3D = builder.call(&"_instance", zone, LEVER_SCENE, "TracerLever", Vector3(38.0, 0.0, -3.0)) as Node3D
 	gate.set("source", lever)
-	builder.call(&"_label", zone, "Label_Tracer", "Fernauslöser: RMB halten, LMB tippen", Vector3(38.0, 2.4, -3.0))
+	builder.call(&"_label", zone, "Label_Tracer", "Fernauslöser: LMB tippen", Vector3(38.0, 2.4, -3.0))
 	builder.call(&"_label", zone, "Label_Room2", "Raum 2", Vector3(WALL_X, 5.0, 0.0))
 
 

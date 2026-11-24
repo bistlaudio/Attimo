@@ -42,6 +42,9 @@ var targeting: Targeting = null
 var arm_out: bool = false
 ## The world point the stretched arm points at (the near target, else the last pulse point).
 var arm_out_point: Vector3 = Vector3.ZERO
+## True while the shot module is equipped (plan 05-04 adds the energy condition): Interactables glow SHOT_READY. Changes emit
+## EventBus.shot_ready_changed.
+var shot_ready: bool = false
 ## The Interactable held by near contact, or null.
 var near_target: Interactable = null
 ## The nearest near-contact Interactable in reach while no contact is held (the HUD E prompt), else null (D-02).
@@ -92,6 +95,7 @@ func equip(id: StringName) -> bool:
 	module.activate(_context)
 	module_changed.emit(def)
 	EventBus.hand_module_changed.emit(def.id)
+	_update_shot_ready()
 	return true
 
 
@@ -118,6 +122,7 @@ func available_ids() -> Array[StringName]:
 
 func _physics_process(delta: float) -> void:
 	cooldown_left = maxf(cooldown_left - delta, 0.0)
+	_update_shot_ready()
 	_context.rig = _player.camera_rig()
 	# The assist runs first, so a shot decided on this tick reads this tick's target (Pitfall 7).
 	if targeting != null:
@@ -150,6 +155,15 @@ func _physics_process(delta: float) -> void:
 		cooldown_left = hand_cooldown
 		shots_fired += 1
 		active_module.on_use_released(big)
+
+
+## Recomputes shot_ready (the shot module is the active one) and announces a change once.
+func _update_shot_ready() -> void:
+	var ready: bool = active_def != null and active_def.id == &"remote_trigger"
+	if ready == shot_ready:
+		return
+	shot_ready = ready
+	EventBus.shot_ready_changed.emit(ready)
 
 
 func _reset_charge() -> void:

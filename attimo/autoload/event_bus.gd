@@ -10,10 +10,9 @@ signal movement_state_changed(from_state: StringName, to_state: StringName)
 signal long_jumped(position: Vector3, stage: int)
 ## Emitted by PlayerController when the ground-jump chain stage changes: 1..3 for Jump 1, 2, 3 (the pirouette jump), 0 on reset.
 signal chain_stage_changed(stage: int)
-## Emitted by PlayerController when the aim hold starts (true) or ends (false), once per change (CAM-02). Listeners: CameraRig, the crosshair and the animator.
-signal aim_changed(active: bool)
-## Emitted by PlayerController when a dash press is refused while aiming (quick 261120-dik, reduced by 261120-ef9): `reason` is &"aim"
-## (the only lockout). Once per press, no dash starts and the cooldown and the air dash stay unspent. Listeners: later juice and audio.
+## Emitted by PlayerController when a dash press is refused: `reason` is the StringName lockout reason (plan 05-03 uses &"energy" for an
+## unaffordable air dash; there is no lockout before it). Once per press, no dash starts and the cooldown and the air dash stay
+## unspent. Listeners: later juice and audio.
 signal dash_blocked(position: Vector3, reason: StringName)
 ## Emitted by the Fernausloeser module on every shot, valid or not (D-06). `size` is a PulseHit.Size, `hit_valid` is true when an
 ## accepting Interactable was triggered. Listeners: later juice, audio and the debug event log.
@@ -54,3 +53,6 @@ signal loader_released(position: Vector3, direction: Vector3, speed: float, bonu
 signal energy_changed(value: float)
 ## Emitted by ArmEnergy when an amount was paid. `reason` names the cost (&"loader" for the Loader bonus). Listeners: the arm cores, juice, audio.
 signal energy_spent(amount: float, reason: StringName)
+## Emitted by HandController when the shot module becomes usable (true) or unusable (false), once per change and once after an equip.
+## Listeners: Interactable glow (stage SHOT_READY), the HUD.
+signal shot_ready_changed(ready: bool)

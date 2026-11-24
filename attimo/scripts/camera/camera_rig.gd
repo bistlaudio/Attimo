@@ -5,7 +5,7 @@ extends Node3D
 ## The rig is a top-level SIBLING of its target, never a child: it runs in _process, reads the
 ## interpolated target transform and has physics interpolation switched off, so it stays smooth at
 ## any tick rate. FOV and arm-origin offsets are additive per-source channels (D-18): later phases
-## (aim, camera kick) register a source by name and the rig sums them.
+## (the Loader pull-back, camera kick) register a source by name and the rig sums them.
 ##
 ## Framing (quick 261118-qbt, DEV-05): the view is centered behind the character and looks at a pivot slightly above the
 ## shoulders, 3.6 m out, so the standing character reads in the lower part of the screen. The follow is tight and the rig
@@ -97,25 +97,9 @@ enum InputDevice { KEYBOARD_MOUSE, JOYPAD }
 ## Seconds a recenter (camera_recenter, D-17) takes to turn the camera behind the character.
 @export var recenter_time: float = 0.15
 
-@export_group("Aim")
-## Degrees the field of view narrows at full aim weight (D-14).
-@export_range(0.0, 30.0, 0.5) var aim_fov_delta: float = 12.0
-## Metres the camera arm moves to the right shoulder at full aim weight, along Pitch-local X (D-13). There is one
-## fixed shoulder: no swap.
-@export_range(0.0, 1.5, 0.05) var aim_shoulder_offset: float = 1.1
-## DEBUG: permanent over-the-shoulder offset outside aim (Pitch-local, x right, y up), so the crosshair is not behind the
-## character. Aim blends x from here to aim_shoulder_offset. Set to zero for the centered framing (D-14).
+## DEBUG: permanent over-the-shoulder offset (Pitch-local, x right, y up), so the crosshair is not behind the character. Set to
+## zero for the centered framing (D-14). The old aim shoulder offset is gone with aim mode (phase 05).
 @export var base_shoulder_offset: Vector3 = Vector3(0.6, 0.35, 0.0)
-## Seconds a full aim blend takes, in and out (D-14). The 0.01 minimum keeps the blend rate finite.
-@export_range(0.01, 1.0, 0.01) var aim_blend_time: float = 0.18
-## Factor on the look sensitivity while aiming, scaled in with the aim weight (D-15).
-@export_range(0.1, 1.5, 0.05) var aim_sensitivity_factor: float = 0.8
-## Goggle snap: a short decaying jolt when aim starts. Amplitude in m (arm offset), FOV punch in degrees (widens, then
-## settles) and duration in seconds. Set the amplitude and the punch to zero to switch it off.
-@export_range(0.0, 0.3, 0.005) var snap_shake_amplitude: float = 0.06
-@export_range(0.0, 10.0, 0.1) var snap_fov_punch: float = 4.0
-@export_range(0.05, 1.0, 0.01) var snap_time: float = 0.22
-@export_group("")
 
 @export_group("Crosshair ray")
 ## Length in m of the ray from the camera through the screen-centre crosshair; the end point is the aim target when
@@ -142,16 +126,6 @@ var last_aim_collider: Object = null
 ## The point the last aim_target_point() query returned.
 var last_aim_point: Vector3 = Vector3.ZERO
 
-## Eased aim blend, 0 (no aim) to 1 (full aim). Read-only for other code; driven by EventBus.aim_changed.
-var aim_weight: float = 0.0
-
-## Aim blend goal: 1.0 while aim is held, else 0.0.
-var _aim_target: float = 0.0
-## Linear blend progress before smoothstep.
-var _aim_linear: float = 0.0
-## True while the &"aim" FOV and offset sources are registered by this rig.
-var _aim_sources_written: bool = false
-var _snap_left: float = 0.0
 
 ## Rotation added by auto-follow since steering was last re-based (A40).
 var _auto_offset: float = 0.0
@@ -200,7 +174,6 @@ func _ready() -> void:
 	spring_arm.collision_mask = 0
 	settings = CameraSettings.load_from()
 	snap_to_target()
-	EventBus.aim_changed.connect(_on_aim_changed)
 	if require_mouse_capture and DisplayServer.get_name() != "headless":
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -229,14 +202,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		if motion.relative != Vector2.ZERO:
 			notify_look_activity()
-		var scale: float = base_sensitivity * settings.sensitivity * lerpf(1.0, aim_sensitivity_factor, aim_weight)
+		var scale: float = base_sensitivity * settings.sensitivity
 		var vertical: float = motion.relative.y * scale
 		if settings.invert_y:
 			vertical = -vertical
 		yaw -= motion.relative.x * scale
 		pitch = clampf(pitch - vertical, pitch_min, pitch_max)
 		return
-	if event.is_action_pressed(&"camera_recenter") and _aim_target <= 0.0 and (not require_mouse_capture or Input.mouse_mode == Input.MOUSE_MODE_CAPTURED):
+	if event.is_action_pressed(&"camera_recenter") and (not require_mouse_capture or Input.mouse_mode == Input.MOUSE_MODE_CAPTURED):
 		recenter()
 		return
 	if event.is_action_pressed(&"pause") and require_mouse_capture:
@@ -275,8 +248,6 @@ func _process(delta: float) -> void:
 	pitch = clampf(pitch, pitch_min, pitch_max)
 	rotation.y = yaw
 	pitch_node.rotation.x = pitch
-	_update_aim(real)
-	_update_snap(real)
 	_max_arm_length = lerpf(_max_arm_length, zoom_distance, 1.0 - exp(-zoom_rate * real))
 	spring_arm.position = base_shoulder_offset + _offset_total()
 	camera.fov = get_fov_total()
@@ -286,46 +257,6 @@ func _process(delta: float) -> void:
 ## Moves the chosen zoom distance by `amount` m (negative is closer), clamped to zoom_min .. zoom_max.
 func zoom_by(amount: float) -> void:
 	zoom_distance = clampf(zoom_distance + amount, zoom_min, zoom_max)
-
-
-## Eases aim_weight toward the aim goal and writes it through the additive &"aim" sources (D-14), so a camera
-## kick still stacks on top. While aim was never active the sources are left alone (tests set them by hand).
-func _update_aim(delta: float) -> void:
-	_aim_linear = move_toward(_aim_linear, _aim_target, delta / maxf(aim_blend_time, 0.01))
-	aim_weight = smoothstep(0.0, 1.0, _aim_linear)
-	if aim_weight > 0.0:
-		set_fov_offset(&"aim", -aim_fov_delta * aim_weight)
-		set_offset(&"aim", Vector3(maxf(aim_shoulder_offset - base_shoulder_offset.x, 0.0) * aim_weight, 0.0, 0.0))
-		_aim_sources_written = true
-	elif _aim_sources_written:
-		clear_fov_offset(&"aim")
-		clear_offset(&"aim")
-		_aim_sources_written = false
-
-
-## Decaying jolt on the &"goggle_snap" sources, cleared when it ends. Stacks with aim and any other kick.
-func _update_snap(delta: float) -> void:
-	if _snap_left <= 0.0:
-		return
-	_snap_left = maxf(_snap_left - delta, 0.0)
-	if _snap_left <= 0.0:
-		clear_offset(&"goggle_snap")
-		clear_fov_offset(&"goggle_snap")
-		return
-	var decay: float = _snap_left / maxf(snap_time, 0.01)
-	decay *= decay
-	var phase: float = (snap_time - _snap_left) * 80.0
-	set_offset(&"goggle_snap", Vector3(sin(phase * 1.3), cos(phase * 1.7) * 0.7, 0.0) * snap_shake_amplitude * decay)
-	set_fov_offset(&"goggle_snap", snap_fov_punch * decay)
-
-
-## On aim enter the steering offset is dropped and a running recenter stops, so steering_yaw() equals yaw (Pitfall 9).
-func _on_aim_changed(active: bool) -> void:
-	_aim_target = 1.0 if active else 0.0
-	if active:
-		_auto_offset = 0.0
-		_recentering = false
-		_snap_left = snap_time
 
 
 ## Where the crosshair ray starts: the camera `origin` pushed along `forward` to the plane through `pivot` (level with
@@ -479,7 +410,7 @@ func notify_look_activity() -> void:
 ## Turns the camera behind the character's facing within recenter_time (D-17, A29). The rotation is added to the
 ## steering offset like auto-follow's, so a held direction keeps its heading. Mouse look cancels it.
 func recenter() -> void:
-	if target == null or _aim_target > 0.0:
+	if target == null:
 		return
 	var facing: Vector2 = Vector2.ZERO
 	var visual: Node3D = target.get(&"visual_root") as Node3D
@@ -546,7 +477,7 @@ func _target_heading(delta: float) -> Vector2:
 ## added to the yaw and to _auto_offset, so the held key keeps its world heading and the error converges to 0.
 func _apply_auto_follow(delta: float) -> void:
 	var heading: Vector2 = _target_heading(delta)
-	if _aim_target > 0.0 or _recentering or not auto_follow_active() or time_since_look <= auto_follow_delay:
+	if _recentering or not auto_follow_active() or time_since_look <= auto_follow_delay:
 		return
 	if heading.length() <= auto_follow_min_speed:
 		return
