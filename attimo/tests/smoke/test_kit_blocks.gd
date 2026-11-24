@@ -15,6 +15,10 @@ const BLOCKS: Dictionary = {
 		"preset": "res://resources/kit/catch_launch/slingshot_default.tres",
 		"scene": "res://scenes/kit/steampunk/slingshot_core.tscn",
 		"probe": "radius",
+		# Plan 05.1-02: timer and divisor fields of the FIXED profile need a strictly positive minimum (T-05.1-06), and the steam
+		# cannon preset is a FIXED profile.
+		"positive": ["fixed_hold", "fixed_speed", "radius", "rearm_time"],
+		"profile_presets": {"res://resources/kit/catch_launch/steam_cannon_default.tres": "FIXED"},
 	},
 }
 ## Source fragments a block script must not contain: direct writes of the player's motion (D-17).
@@ -82,10 +86,28 @@ func _check_block(tree: SceneTree, check: Callable, block: String, spec: Diction
 		var profiles: Dictionary = config_script.get_script_constant_map().get("Profile", {}) as Dictionary
 		for value: String in spec["profiles"] as Array:
 			check.call(profiles.has(value), "%s: the Profile enum has %s (%s)" % [block, value, profiles])
+		_check_positive(check, block, config_script, spec.get("positive", []) as Array)
+		var presets: Dictionary = spec.get("profile_presets", {}) as Dictionary
+		for preset_path: String in presets:
+			var preset: Resource = load(preset_path) as Resource if ResourceLoader.exists(preset_path) else null
+			var wanted: int = int(profiles.get(String(presets[preset_path]), -1))
+			check.call(preset != null and int(preset.get("profile")) == wanted, "%s: preset %s uses profile %s" % [block, preset_path, presets[preset_path]])
 	var source: String = script.source_code
 	for fragment: String in FORBIDDEN_WRITES:
 		check.call(not source.contains(fragment), "%s writes no player motion itself (no '%s', D-17)" % [block, fragment])
 	await _check_no_shared_write(tree, check, block, spec)
+
+
+## Every named config field has an @export_range whose minimum is strictly positive (no zero timer or divisor).
+func _check_positive(check: Callable, block: String, config_script: GDScript, fields: Array) -> void:
+	for field: Variant in fields:
+		var found: bool = false
+		var minimum: float = 0.0
+		for property: Dictionary in config_script.get_script_property_list():
+			if String(property["name"]) == String(field) and int(property["hint"]) == PROPERTY_HINT_RANGE:
+				found = true
+				minimum = String(property["hint_string"]).split(",")[0].to_float()
+		check.call(found and minimum > 0.0, "%s: config field %s has a positive range minimum (%s, %.3f)" % [block, field, found, minimum])
 
 
 ## D-12: two instances of a scene that uses the preset; a runtime change on one stays on that one, the other and the file keep theirs.

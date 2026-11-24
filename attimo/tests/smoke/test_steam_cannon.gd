@@ -158,7 +158,14 @@ func _entry_run(tree: SceneTree, check: Callable, direction: Vector3, dash: bool
 	await tree.physics_frame
 	player.launch_along(direction, speed, false)
 	_launches.clear()
-	var entered: int = await Fixtures.wait_until(tree, func() -> bool: return _is_loader(player), 40)
+	# Without move input the ground states brake the slide, so the drive is held at the entry speed every tick until the catch.
+	var entered: int = -1
+	for i: int in 40:
+		if _is_loader(player):
+			entered = i
+			break
+		player.move_velocity = direction * speed
+		await tree.physics_frame
 	check.call(entered >= 0, "(%s) entering the breech catches Rino into the Loader (state %s)" % [name, player.state_machine.current.name])
 	if entered < 0:
 		await _despawn(tree, nodes)

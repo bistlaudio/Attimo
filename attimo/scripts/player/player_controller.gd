@@ -651,8 +651,8 @@ func _integrate(delta: float) -> void:
 	# Speed-scaled floor snap, held inside the D-13 band (A35).
 	var snap: float = horizontal_speed() * delta * tan(floor_max_angle) + 0.1
 	floor_snap_length = clampf(snap, config.snap_min, maxf(config.snap_min, config.snap_max))
-	if state_machine.current.name == &"Capture":
-		# A captured body is carried along a path: the floor snap must not pull it back down.
+	if state_machine.current.name == &"Capture" or (loader_active() and loader_profile != null and loader_profile.source == LoaderProfile.Source.FIXED):
+		# A captured body (or one pulled to the cannon mouth) is carried along a path: the floor snap must not pull it back down.
 		floor_snap_length = 0.0
 	move_and_slide()
 	vertical_speed = maxf(vertical_speed - g * delta * 0.5, -config.terminal_speed)

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CatchLaunchConfig" format=3]
+
+[ext_resource type="Script" path="res://scripts/kit/configs/catch_launch_config.gd" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+profile = 1
+radius = 1.2
+rearm_time = 1.0
+fixed_hold = 0.2
+fixed_speed = 14.0
+fixed_pitch_deg = 45.0
+muzzle_offset = 1.2

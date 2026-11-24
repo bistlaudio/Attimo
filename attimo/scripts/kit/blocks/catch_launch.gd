@@ -1,13 +1,16 @@
 class_name CatchLaunch
 extends KitBlock
-## Catch & launch block (Phase 05.1, KIT-03, D-01..D-04, D-17): a trigger sphere that catches a player who enters it and hands the
+## Catch & launch block (Phase 05.1, KIT-03, D-01..D-05, D-17): a trigger sphere that catches a player who enters it and hands the
 ## hold to the player's own Loader state. FREE_AIM (slingshot cage) asks PlayerController.catch_into_loader with a CAGE LoaderProfile
 ## whose min_push is read from the player's MovementConfig at catch time (never copied), so the cage plays exactly like the Loader:
-## same slow world, cap, free camera and throw math, minus bonus, energy and redirect cooldown. FIXED (steam cannon) is plan 05.1-02.
-## The overlap callback runs inside the physics flush, so the request goes through call_deferred; the block never writes the
-## player's velocity. Arming: ARMED -> CAPTURING (while the caught hold runs) -> COOLDOWN (rearm_time, and not while a player is
-## inside the radius) -> ARMED; MAX_WAIT ends a stuck CAPTURING (T-05.1-02). A player already in a Loader hold is not caught
-## (T-05.1-04).
+## same slow world, cap, free camera and throw math, minus bonus, energy and redirect cooldown. FIXED (steam cannon, D-05) asks for a
+## FIXED LoaderProfile: Rino is pulled to the barrel mouth (muzzle_offset along the barrel), held fixed_hold with no slow motion and
+## no input, and launched along the barrel at fixed_speed whatever the entry. The barrel direction is the block's yaw-only forward
+## pitched up by fixed_pitch_deg; the trigger is never pitched (the old nozzle cannon tilted its volume with the barrel), and an
+## optional `Barrel` child is pitched to match. The overlap callback runs inside the physics flush, so the request goes through
+## call_deferred; the block never writes the player's velocity. Arming: ARMED -> CAPTURING (while the caught hold runs) -> COOLDOWN
+## (rearm_time, and not while a player is inside the radius) -> ARMED; MAX_WAIT ends a stuck CAPTURING (T-05.1-02, T-05.1-06). A
+## player already in a Loader hold is not caught (T-05.1-04).
 
 enum Phase { ARMED, CAPTURING, COOLDOWN }
 
@@ -22,6 +25,8 @@ const START_GRACE: float = 0.1
 var _phase: Phase = Phase.ARMED
 var _timer: float = 0.0
 var _captured: PlayerController = null
+## The LoaderProfile source this block's last catch asked for (CAGE or FIXED).
+var _issued: LoaderProfile.Source = LoaderProfile.Source.CAGE
 
 @onready var _trigger: Area3D = $Trigger
 
@@ -37,6 +42,9 @@ func _ready() -> void:
 	sphere.radius = config.radius
 	shape_node.shape = sphere
 	_trigger.body_entered.connect(_on_body_entered)
+	var barrel: Node3D = get_node_or_null(^"Barrel") as Node3D
+	if barrel != null and config.profile == CatchLaunchConfig.Profile.FIXED:
+		barrel.rotation = Vector3(deg_to_rad(config.fixed_pitch_deg), 0.0, 0.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -65,29 +73,53 @@ func reset() -> void:
 	_captured = null
 
 
-## The profile handed to the player for this block's catch (FREE_AIM: a CAGE hold with the player's loader_min_push).
+## The profile handed to the player for this block's catch: FREE_AIM a CAGE hold with the player's loader_min_push, FIXED a hold at
+## the barrel mouth that launches along the barrel at fixed_speed after fixed_hold.
 func profile_for(player: PlayerController) -> LoaderProfile:
-	return LoaderProfile.cage(player.config.loader_min_push)
+	if config.profile != CatchLaunchConfig.Profile.FIXED:
+		return LoaderProfile.cage(player.config.loader_min_push)
+	var profile: LoaderProfile = LoaderProfile.new()
+	profile.source = LoaderProfile.Source.FIXED
+	profile.direction = barrel_direction()
+	profile.anchor = muzzle_point()
+	profile.speed = config.fixed_speed
+	profile.hold = config.fixed_hold
+	return profile
+
+
+## FIXED: the unit launch direction, the block's yaw-only forward (-Z) pitched up by fixed_pitch_deg.
+func barrel_direction() -> Vector3:
+	var forward: Vector3 = -global_basis.z
+	forward.y = 0.0
+	if not forward.is_finite() or forward.length_squared() < 0.0001:
+		forward = Vector3.FORWARD
+	var pitch: float = deg_to_rad(config.fixed_pitch_deg)
+	return (forward.normalized() * cos(pitch) + Vector3.UP * sin(pitch)).normalized()
+
+
+## FIXED: the world point Rino's origin is pulled to and launched from (the barrel mouth).
+func muzzle_point() -> Vector3:
+	return global_position + barrel_direction() * config.muzzle_offset
 
 
 func _on_body_entered(body: Node3D) -> void:
 	var player: PlayerController = body as PlayerController
 	if player == null or _phase != Phase.ARMED or player.loader_active():
 		return
-	if config.profile != CatchLaunchConfig.Profile.FREE_AIM:
-		return
+	var profile: LoaderProfile = profile_for(player)
 	_phase = Phase.CAPTURING
 	_timer = 0.0
 	_captured = player
-	player.call_deferred(&"catch_into_loader", profile_for(player))
+	_issued = profile.source
+	player.call_deferred(&"catch_into_loader", profile)
 
 
-## True while the caught player is in a Loader hold that this block started (a CAGE source).
+## True while the caught player is in a Loader hold of the source this block asked for.
 func _holding() -> bool:
 	if _captured == null or not is_instance_valid(_captured) or not _captured.loader_active():
 		return false
 	var state: LoaderState = _captured.loader_state()
-	return state != null and state.source() == LoaderProfile.Source.CAGE
+	return state != null and state.source() == _issued
 
 
 func _player_inside() -> bool:
