@@ -567,21 +567,25 @@ The camera's `pitch_max 0.75 rad` (about 43 degrees, [VERIFIED: camera_rig.gd:71
 | A11 | MultiMesh dashes are visually acceptable as the "dashed preview" | Pattern | Cosmetic; swap for ImmediateMesh later |
 | A12 | The Swink PDF is absent on this machine, so no Swink page citations were made | Lecture | None for correctness |
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+All seven questions were resolved on 2026-11-24 during plan-phase; see 05-CONTEXT.md "Plan-phase follow-up" (D-26..D-29) and the accepted researcher defaults.
 
 1. **Camera wheel zoom vs module switch (D-16).**
    - Known: `camera_rig.gd:249-250` zooms on the wheel outside aim; `module_next/prev` are bound to wheel down/up.
    - Unclear: which gets the wheel.
    - Recommendation: drop wheel zoom (fixed `zoom_distance`, exports stay on the F2 panel); the 1/2 keys are the alternative for modules. Needs user confirmation because it removes a feature added 2026-11-18.
+   - **RESOLVED:** D-26, wheel zoom dropped; wheel and 1/2 switch modules.
 2. **What replaces the Aim animation layer for near contact and the shot arm?**
    - Known: `arm_out` (near contact, shot flash, aiming) raises the Aim layer and the `AimPoseModifier` solver today; hand poses (ART-04) are Phase 6; CONTEXT says "removed or disabled".
    - Unclear: whether near-contact/shot arm presentation may regress until Phase 6.
    - Recommendation: remove aim hold, aim strafe, aim dashes and `player.aiming`, but **keep** the upper-body layer and solver driven only by `HandController.arm_out` (disabled path stays dormant) so E and the shot still show an arm. Deleting `aim_pose_modifier.gd` outright needs the `rotation_between` relocation (tools).
-3. **Bonus below one core.** Recommendation A7 (needs a full core). Confirm.
-4. **`Interactable.GlowStage.AIM`.** With no aim, the stage has no trigger. Recommendation: reuse it as "shot module equipped and arm can afford 10" (a useful energy readability cue) or delete it with `glow_aim.tres`.
-5. **`base_shoulder_offset (0.6, 0.35, 0)`** is a DEBUG permanent over-the-shoulder offset [VERIFIED: camera_rig.gd:111], not the aim offset. D-15 removes the *aim* shoulder offset; CLAUDE.md says framing is centred. Recommendation: leave it as is this phase, decide in the gym check.
-6. **Where in the gym do the Loader room and the energy area go?** Hall is x -42..42, z -50..34; room 2 is x 43..219; puzzle rooms behind x 219 (shifted). Recommendation: new zones `Zone_Loader` (open, with its own `FallReset`) and `Zone_Energy`, built by `tools/energy_area_builder.gd`, appended after the puzzle rooms or south of the hall; the planner picks coordinates with the existing grid helpers.
-7. **Loader pitch range during the hold** (camera `pitch_max` about 43 degrees). Tuning decision for the room.
+   - **RESOLVED:** D-27, layer and solver kept dormant, driven by `arm_out`.
+3. **Bonus below one core.** Recommendation A7 (needs a full core). Confirm. **RESOLVED:** accepted default, the bonus needs a full core (25).
+4. **`Interactable.GlowStage.AIM`.** With no aim, the stage has no trigger. Recommendation: reuse it as "shot module equipped and arm can afford 10" (a useful energy readability cue) or delete it with `glow_aim.tres`. **RESOLVED:** D-28, reused as "shot ready".
+5. **`base_shoulder_offset (0.6, 0.35, 0)`** is a DEBUG permanent over-the-shoulder offset [VERIFIED: camera_rig.gd:111], not the aim offset. D-15 removes the *aim* shoulder offset; CLAUDE.md says framing is centred. Recommendation: leave it as is this phase, decide in the gym check. **RESOLVED:** accepted default, left untouched.
+6. **Where in the gym do the Loader room and the energy area go?** Hall is x -42..42, z -50..34; room 2 is x 43..219; puzzle rooms behind x 219 (shifted). Recommendation: new zones `Zone_Loader` (open, with its own `FallReset`) and `Zone_Energy`, built by `tools/energy_area_builder.gd`, appended after the puzzle rooms or south of the hall; the planner picks coordinates with the existing grid helpers. **RESOLVED:** accepted default, new builder-generated gym zones (Zone_Loader, Zone_Energy).
+7. **Loader pitch range during the hold** (camera `pitch_max` about 43 degrees). Tuning decision for the room. **RESOLVED:** D-29, pitch-up limit about 75 degrees while holding.
 
 ## Environment Availability
 

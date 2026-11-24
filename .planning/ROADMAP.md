@@ -245,7 +245,24 @@ Plans:
 
   6. The movement gym is reworked for the new core: aim-mode stations and pull/push leftovers are gone, and a Loader and energy area (charge track, capsules, injected-move stations with energy readout) is added.
 
-**Plans**: TBD
+**Plans:** 5 plans
+
+Plans:
+**Wave 1**
+- [ ] 05-01-PLAN.md — Tracer: Loader core end to end (RMB `loader` action, TimeFx time owner, LoaderState, LoaderMath, minimal ArmEnergy bonus spend, real-time camera), then aim mode removed completely (aiming flag and readers, aim fact, goggle HUD, aim camera, wheel zoom, glow stage SHOT_READY, static guard) (wave 1)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 05-02-PLAN.md — Tracer: Loader room in the gym with double ring and dashed preview sized from metrics and respawn with one core (feel stop), then "geladen" cues (vignette, desaturation, pull-back, hitstop, hum), super jump pitch raise and the FEEL-10 Loader metrics rows (wave 2)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 05-03-PLAN.md — Tracer: passive charge fills the HUD chambers and the air dash pays or is refused, then hop and wall-run costs with silent fallback, Moto Perpetuo, charge button, and the arm cores, Moto glow and full energy HUD with momentum readout (wave 3)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 05-04-PLAN.md — Tracer: Extractor drains a capsule (energy source block, module folder, keys 1/2), then the energy-priced projectile shot with hybrid charge and energy payload, stronger snap with bend, energy-gated glow, notched shot ring and broken machine (wave 4)
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [ ] 05-05-PLAN.md — Tracer: Zone_Energy charge track and capsule station, then all energy and shot stations with drain plates and capsules next to every shot puzzle, sign rewrite, FEEL-10 energy rows and the design-doc, roadmap and requirements updates (wave 5)
+
 **UI hint**: yes
 **Notes**: Rescoped 2026-11-23 from "Pull/Push & Module Unlocks" after the energy-momentum design session. Design source of truth: `docs/GAME-DESIGN.md` sections 1-4. Pull and push are dropped. Module pickup and teaching rooms (HAND-05, HAND-06) and the hand poses (ART-04) move to Phase 6 with the Extractor and Shot modules. The Loader needs a focused prototype first, because it is the highest risk to the core value. Research sources for this phase (see `docs/reference/LECTURE-PRINCIPLES.md` section 4): Swink, *Game Feel* (local full text) for the Loader feel; John Nesky, "50 Game Camera Mistakes" (GDC 2014) for the Loader free camera; Kyle Pittman, "Building a Better Jump" (GDC 2016) for the buffed Moto Perpetuo jump.
 

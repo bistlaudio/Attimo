@@ -1,0 +1,1 @@
+No external API integration: Phase 5 is offline Godot 4.7.2 gameplay code only (Loader state, TimeFx, ArmEnergy, hand modules, HUD, gym builders); the detector matched the word "API" in the internal ArmEnergy class interface (drain, gain, refuse), not an external service, SDK or endpoint.
