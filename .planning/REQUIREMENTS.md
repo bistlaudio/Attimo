@@ -111,7 +111,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [ ] **FEEL-05**: Juice is tuned to one fixed, strong level (no presets or toggles)
 - [x] **FEEL-06**: Input-to-response latency is measured; target ≤ 66 ms, hard limit 100 ms
 - [ ] **FEEL-08**: Juice catalogue lives as data (cues per action with empty SFX slots so audio plugs in last without code changes)
-- [ ] **FEEL-10**: Loader metrics table (minimum push, bonus, cap, hold time, slow-motion factor, energy rates) documented and tuned
+- [x] **FEEL-10**: Loader metrics table (minimum push, bonus, cap, hold time, slow-motion factor, energy rates) documented and tuned
 
 ### Polish
 
@@ -252,7 +252,7 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | FEEL-05 | Phase 11 | Pending |
 | FEEL-06 | Phase 2 | Complete |
 | FEEL-08 | Phase 11 | Pending |
-| FEEL-10 | Phase 5 | Pending |
+| FEEL-10 | Phase 5 | Complete |
 | POLISH-01 | Phase 12 | Pending |
 | POLISH-02 | Phase 12 | Pending |
 | ART-01 | Phase 9 | Pending |
