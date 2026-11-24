@@ -38,7 +38,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Movement Core & Follow Camera** - Run, variable jump with a Jump 1-2-3 chain, ground and air dash, the dash-hop long jump, platforms, and a jitter-free mouse-look camera, signed off without juice (completed 2026-11-06)
 - [x] **Phase 3: Animated Mannequin & Aim Mode** - The Mannequin animates with every movement state from kit clips, plus aim mode with crosshair (completed 2026-11-20)
 - [x] **Phase 4: Fernauslöser & Mechanism Kit** - Hand module framework, turquoise highlight with aim assist, Module 1 remote-trigger pulse, and the greybox D-15/D-16 mechanism kit (levers, valves, energy cores, cranks, gear gates, rotating and lift platforms, conveyors, steam nozzles, pendulums) with AND, OR and timer logic (completed 2026-11-23)
-- [ ] **Phase 5: Energy Arm & Loader** - Energy resource in 4 arm cores with Moto Perpetuo, passive and capsule income, energy costs for injected moves, the right-click Loader with charge ring and trajectory preview, aim mode removed
+- [x] **Phase 5: Energy Arm & Loader** - Energy resource in 4 arm cores with Moto Perpetuo, passive and capsule income, energy costs for injected moves, the right-click Loader with charge ring and trajectory preview, aim mode removed (completed 2026-11-24)
 - [ ] **Phase 05.1: Kit Rework** (INSERTED) - Mechanism kit rebuilt as 8 logic blocks + 4 components + looks in steampunk, energy and nature layers, showroom regrouped
 - [ ] **Phase 6: Extractor, Shot, Enemies & Recovery** - Extends the Phase 5 Extractor, shot and energy HUD to enemies and shards, shards, 1-2 greybox enemy types, energy HUD next to health, module pickup and teaching rooms, checkpoints and near-instant respawn
 - [ ] **Phase 7: Level Blockout & Game Flow** - The full Prototype Bits level with ability gating, the "charge the level" gimmick and reset paths, plus title, pause and settings menus
@@ -245,7 +245,7 @@ Plans:
 
   6. The movement gym is reworked for the new core: aim-mode stations and pull/push leftovers are gone, and a Loader and energy area (charge track, capsules, injected-move stations with energy readout) is added.
 
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans complete
 
 Plans:
 **Wave 1**
@@ -261,7 +261,7 @@ Plans:
 - [x] 05-04-PLAN.md — Tracer: Extractor drains a capsule (energy source block, module folder, keys 1/2), then the energy-priced projectile shot with hybrid charge and energy payload, stronger snap with bend, energy-gated glow, notched shot ring and broken machine (wave 4)
 
 **Wave 5** *(blocked on Wave 4 completion)*
-- [ ] 05-05-PLAN.md — Tracer: Zone_Energy charge track and capsule station, then all energy and shot stations with drain plates and capsules next to every shot puzzle, sign rewrite, FEEL-10 energy rows and the design-doc, roadmap and requirements updates (wave 5)
+- [x] 05-05-PLAN.md — Tracer: Zone_Energy charge track and capsule station, then all energy and shot stations with drain plates and capsules next to every shot puzzle, sign rewrite, FEEL-10 energy rows and the design-doc, roadmap and requirements updates (wave 5)
 
 **UI hint**: yes
 **Notes**: Rescoped 2026-11-23 from "Pull/Push & Module Unlocks" after the energy-momentum design session. Design source of truth: `docs/GAME-DESIGN.md` sections 1-4. Pull and push are dropped. Module pickup and teaching rooms (HAND-05, HAND-06) and the hand poses (ART-04) move to Phase 6 with the Extractor and Shot modules. The Loader needs a focused prototype first, because it is the highest risk to the core value. Research sources for this phase (see `docs/reference/LECTURE-PRINCIPLES.md` section 4): Swink, *Game Feel* (local full text) for the Loader feel; John Nesky, "50 Game Camera Mistakes" (GDC 2014) for the Loader free camera; Kyle Pittman, "Building a Better Jump" (GDC 2016) for the buffed Moto Perpetuo jump.
@@ -473,7 +473,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 04.1 → 5 → 05.1 →
 | 2. Movement Core & Follow Camera | 14/14 | Complete    | 2026-11-06 |
 | 3. Animated Mannequin & Aim Mode | 10/10 | Complete    | 2026-11-20 |
 | 4. Fernauslöser & Mechanism Kit | 5/5 | Complete   | 2026-11-23 |
-| 5. Energy Arm & Loader | 4/5 | In Progress|  |
+| 5. Energy Arm & Loader | 5/5 | Complete   | 2026-11-24 |
 | 05.1. Kit Rework | 0/TBD | Not started | - |
 | 6. Extractor, Shot, Enemies & Recovery | 0/TBD | Not started | - |
 | 7. Level Blockout & Game Flow | 0/TBD | Not started | - |

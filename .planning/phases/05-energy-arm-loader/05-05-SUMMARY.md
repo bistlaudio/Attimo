@@ -85,7 +85,7 @@ The gym now shows the whole energy core: from the Loader room the player runs th
 
 **8. [Process] Task 2 and Task 3 have no separate RED commits.** Only Task 1 got a `test(...)` RED commit; Task 2 tests and code were committed together, the Task 3 row labels and metrics code too. Plan 05-04 took the same deviation.
 
-**9. test_showcase_layout and test_movement_gym count thresholds unchanged.** They still pass (33 stations stay in the `stations` meta, 504 labels, at least 40); only CONTRACT_NODES gained `Zone_Energy`. The 48 "Erwartet:" lines are asserted in test_energy_gym.
+**9. test_showcase_layout and test_movement_gym count thresholds unchanged.** They still pass (33 stations stay in the `stations` meta, Label3D count stays above 40); only CONTRACT_NODES gained `Zone_Energy`. The 48 "Erwartet:" lines are asserted in test_energy_gym.
 
 ## Verification
 
