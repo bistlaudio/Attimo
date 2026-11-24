@@ -1,109 +1,118 @@
 class_name RemoteTrigger
 extends HandModule
-## Fernausloeser (HAND-03): an instant pulse along the crosshair ray. It builds a PulseHit and calls
-## Interactable.try_trigger synchronously (D-04). World geometry occludes because the first hit wins (D-06).
-## An empty or invalid shot still fires and emits the fact.
+## Der Schuss (HAND-03, D-17, D-18; id stays remote_trigger so every Interactable's accepted_modules keeps working). A flying
+## projectile, never a beam. The press pays hand_shot_cost_min (a tap); below that the shot is refused and the arm flickers grey.
+## Holding past hand_shot_tap_time drains energy up to hand_shot_cost_max in hand_shot_charge_time (a Samus-style charge) and tells
+## shot_fully_charged once; running dry keeps what was spent so far. The release fires: range grows with the charge, the payload is the
+## energy spent, and a locked target bends the shot in (D-19). The size derives from the energy (PulseHit.size_for_energy).
 
 const CHEST_HEIGHT: float = 1.3
-const RAY_MARGIN: float = 10.0
+const PROJECTILE_SCENE: PackedScene = preload("res://scenes/hand/shot_projectile.tscn")
 
-
+var _active: bool = false
+var _spent: float = 0.0
 var _held: float = 0.0
+var _dry: bool = false
+var _full: bool = false
 
 
 func on_use_pressed() -> void:
+	_active = false
+	if ctx == null or ctx.player == null or ctx.controller == null:
+		return
+	var controller: HandController = ctx.controller
+	var arm: ArmEnergy = ctx.player.arm_energy
+	if not arm.try_spend(controller.hand_shot_cost_min, &"shot"):
+		# D-18: below the minimum the shot does not fire; only this path makes the lack visible.
+		arm.refuse(&"shot", controller.hand_shot_cost_min)
+		return
+	_active = true
+	_spent = controller.hand_shot_cost_min
 	_held = 0.0
+	_dry = false
+	_full = false
 
 
 func on_use_held(delta: float) -> void:
+	if not _active or _dry or ctx == null or ctx.controller == null:
+		return
+	var controller: HandController = ctx.controller
 	_held += delta
+	if _held < controller.hand_shot_tap_time or _spent >= controller.hand_shot_cost_max:
+		return
+	var rate: float = (controller.hand_shot_cost_max - controller.hand_shot_cost_min) / maxf(controller.hand_shot_charge_time, 0.01)
+	var want: float = minf(rate * delta, controller.hand_shot_cost_max - _spent)
+	var taken: float = ctx.player.arm_energy.drain(want, &"shot")
+	_spent += taken
+	if taken < want - 0.0001:
+		_dry = true
+	if _spent >= controller.hand_shot_cost_max - 0.0001:
+		_spent = controller.hand_shot_cost_max
+		if not _full:
+			_full = true
+			EventBus.shot_fully_charged.emit(ctx.player.global_position + Vector3.UP * CHEST_HEIGHT)
+
+
+func on_use_released() -> void:
+	if not _active:
+		return
+	_active = false
+	_fire()
+
+
+func deactivate() -> void:
+	_active = false
 
 
 func charge_ratio() -> float:
-	if ctx == null or ctx.controller == null:
+	if not _active or ctx == null or ctx.controller == null:
 		return 0.0
-	return clampf(_held / ctx.controller.hand_charge_threshold, 0.0, 1.0) if _held > 0.0 else 0.0
+	return _ratio(ctx.controller)
 
 
 func holds_arm_out() -> bool:
-	return false
+	return _active and ctx != null and ctx.controller != null and _held >= ctx.controller.hand_shot_tap_time
+
+
+func arm_point() -> Vector3:
+	if ctx != null and ctx.rig != null and ctx.rig.camera != null:
+		return ctx.rig.aim_target_point()
+	return super.arm_point()
 
 
 func uses_targeting() -> bool:
 	return true
 
 
-func on_use_released() -> void:
-	if ctx == null or ctx.player == null or ctx.controller == null:
-		return
+func _ratio(controller: HandController) -> float:
+	return clampf((_spent - controller.hand_shot_cost_min) / maxf(controller.hand_shot_cost_max - controller.hand_shot_cost_min, 0.01), 0.0, 1.0)
+
+
+## Launches the projectile along the crosshair; the locked target (if any) bends it in.
+func _fire() -> void:
 	var controller: HandController = ctx.controller
-	var big: bool = _held >= controller.hand_charge_threshold
+	var player: PlayerController = ctx.player
+	var chest: Vector3 = player.global_position + Vector3.UP * CHEST_HEIGHT
+	var direction: Vector3 = player.visual_root.global_basis.z.normalized()
+	if ctx.rig != null and ctx.rig.camera != null:
+		direction = ctx.rig.aim_direction_from(chest)
+	var ratio: float = _ratio(controller)
+	var reach: float = lerpf(controller.hand_small_range, controller.hand_big_range, ratio)
+	var target: Interactable = null
+	var targeting: Targeting = controller.targeting
+	if targeting != null and is_instance_valid(targeting.target) and (targeting.state == Targeting.State.VALID or targeting.state == Targeting.State.VALID_BIG):
+		target = targeting.target
+	var spent: float = _spent
+	_spent = 0.0
 	_held = 0.0
 	controller.start_cooldown(controller.hand_cooldown)
-	var player: PlayerController = ctx.player
-	var size: PulseHit.Size = PulseHit.Size.BIG if big else PulseHit.Size.SMALL
-	var reach: float = controller.hand_big_range if big else controller.hand_small_range
-	var mask: int = PhysicsLayers.WORLD | PhysicsLayers.INTERACTABLE
-	var chest: Vector3 = player.global_position + Vector3.UP * CHEST_HEIGHT
-	var forward: Vector3 = player.visual_root.global_basis.z.normalized()
-	var hit: Dictionary = {}
-	if ctx.rig != null:
-		forward = -ctx.rig.camera.global_basis.z.normalized()
-		hit = ctx.rig.aim_ray(mask, controller.hand_big_range + RAY_MARGIN)
-	else:
-		var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(chest, chest + forward * (controller.hand_big_range + RAY_MARGIN), mask)
-		query.collide_with_areas = false
-		hit = player.get_world_3d().direct_space_state.intersect_ray(query)
-	# Aim assist (CAM-05): a valid snapped target is hit exactly, if the line from the chest still reaches it (Pitfall 8).
-	var snapped_hit: Dictionary = _snapped_hit(controller, player, chest, mask)
-	if not snapped_hit.is_empty():
-		hit = snapped_hit
-	var point: Vector3 = chest + forward * reach
-	var collider: Object = null
-	if not hit.is_empty() and (hit["position"] as Vector3).is_finite():
-		point = hit["position"] as Vector3
-		collider = hit["collider"] as Object
-	if not point.is_finite():
-		point = chest + Vector3.UP * 0.001
-	var offset: Vector3 = point - chest
-	var pulse: PulseHit = PulseHit.new()
-	pulse.size = size
-	pulse.kind = PulseHit.Kind.SHOT
-	pulse.module_id = controller.active_def.id if controller.active_def != null else &""
-	pulse.origin = chest
-	pulse.point = point
-	pulse.direction = offset.normalized() if offset.length() > 0.0001 else forward
-	pulse.collider = collider
-	pulse.distance = player.global_position.distance_to(point)
-	var target: Interactable = Interactable.from_collider(collider)
-	var valid: bool = target != null and pulse.distance <= reach and target.can_accept(PulseHit.Kind.SHOT, size) and target.accepts_module(pulse.module_id)
-	if valid:
-		valid = target.try_trigger(pulse)
-	EventBus.pulse_fired.emit(chest, point, int(size), valid)
-
-
-## The ray result from the chest at the assist target, or {} without a valid target or without line of sight. It aims at
-## the target point first and at the hit body centre second, so a point on the body surface cannot slip past the shape.
-func _snapped_hit(controller: HandController, player: PlayerController, chest: Vector3, mask: int) -> Dictionary:
-	var targeting: Targeting = controller.targeting
-	if targeting == null or not is_instance_valid(targeting.target):
-		return {}
-	if targeting.state != Targeting.State.VALID and targeting.state != Targeting.State.VALID_BIG:
-		return {}
-	var chosen: Interactable = targeting.target
-	var points: Array[Vector3] = [chosen.target_point()]
-	if chosen.hit_body != null:
-		points.append(chosen.hit_body.global_position)
-	for aim_at: Vector3 in points:
-		var offset: Vector3 = aim_at - chest
-		if not aim_at.is_finite() or offset.length_squared() < 0.000001:
-			continue
-		var end: Vector3 = chest + offset.normalized() * (controller.hand_big_range + RAY_MARGIN)
-		var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(chest, end, mask)
-		query.collide_with_areas = false
-		var result: Dictionary = player.get_world_3d().direct_space_state.intersect_ray(query)
-		if result.is_empty() or not (result["position"] as Vector3).is_finite():
-			continue
-		if Interactable.from_collider(result["collider"] as Object) == chosen:
-			return result
-	return {}
+	var projectile: ShotProjectile = PROJECTILE_SCENE.instantiate() as ShotProjectile
+	var parent: Node = player.get_parent()
+	if projectile == null or parent == null or not direction.is_finite():
+		if projectile != null:
+			projectile.free()
+		return
+	parent.add_child(projectile)
+	var module_id: StringName = controller.active_def.id if controller.active_def != null else &"remote_trigger"
+	projectile.setup(chest, direction, spent, controller.hand_shot_speed, reach, target, controller.hand_shot_turn_rate, module_id, controller.hand_shot_big_energy, player, ratio)
+	EventBus.shot_fired.emit(chest, direction, spent)

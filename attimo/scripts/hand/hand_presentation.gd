@@ -1,9 +1,8 @@
 class_name HandPresentation
 extends Node
 ## Presentation of the prosthetic hand's energy (D-07b, D-04, D-08, D-10). Reads the HandController and the EventBus,
-## never drives the hand. The palm of hand.r glows (brighter while charging), flashes on every pulse and pulses while near
-## contact holds; a thin streak shows the pulse from the palm to the hit point for a moment; the forearm light glows on
-## near contact. Everything hangs on the Mannequin skeleton through BoneAttachment3D. No particles, no animation player.
+## never drives the hand. The palm of hand.r glows (brighter while charging), flashes on every shot (the shot itself is a flying ball, never a beam, D-17) and pulses while near
+## contact holds; the forearm light glows on near contact. Everything hangs on the Mannequin skeleton through BoneAttachment3D. No particles, no animation player.
 
 ## Turquoise of the hand energy (the same language as the glow stages, D-07b).
 const ENERGY_COLOR: Color = Color(0.25, 0.9, 0.85, 1.0)
@@ -14,8 +13,6 @@ const BASE_ENERGY: float = 0.4
 const CHARGE_ENERGY: float = 2.0
 const FLASH_ENERGY: float = 5.0
 const FLASH_TIME: float = 0.12
-const STREAK_TIME: float = 0.08
-const STREAK_WIDTH: float = 0.03
 const NEAR_PULSE_HZ: float = 6.0
 const NEAR_ENERGY: float = 2.0
 const NEAR_SWING: float = 1.0
@@ -30,9 +27,7 @@ var _palm: MeshInstance3D
 var _palm_material: StandardMaterial3D
 var _palm_light: OmniLight3D
 var _arm_light: OmniLight3D
-var _streak: MeshInstance3D
 var _flash: float = 0.0
-var _streak_left: float = 0.0
 var _time: float = 0.0
 
 
@@ -64,19 +59,7 @@ func _ready() -> void:
 	var arm_attachment: BoneAttachment3D = BoneAttach.attach(skeleton, forearm_name)
 	_arm_light = _make_light(&"ArmLight")
 	arm_attachment.add_child(_arm_light)
-	var streak_material: StandardMaterial3D = StandardMaterial3D.new()
-	streak_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	streak_material.albedo_color = ENERGY_COLOR
-	var box: BoxMesh = BoxMesh.new()
-	box.size = Vector3(STREAK_WIDTH, STREAK_WIDTH, 1.0)
-	_streak = MeshInstance3D.new()
-	_streak.name = &"Streak"
-	_streak.mesh = box
-	_streak.material_override = streak_material
-	_streak.top_level = true
-	_streak.visible = false
-	hand_attachment.add_child(_streak)
-	EventBus.pulse_fired.connect(_on_pulse_fired)
+	EventBus.shot_fired.connect(_on_shot_fired)
 
 
 func _process(delta: float) -> void:
@@ -95,29 +78,11 @@ func _process(delta: float) -> void:
 	_palm_material.emission_energy_multiplier = energy
 	_palm_light.light_energy = energy * LIGHT_SCALE
 	_arm_light.light_energy = arm_energy * LIGHT_SCALE
-	if _streak_left > 0.0:
-		_streak_left -= delta
-		if _streak_left <= 0.0:
-			_streak.visible = false
 
 
-## Flash and streak on a fired pulse (D-04, presentation only).
-func _on_pulse_fired(_origin: Vector3, point: Vector3, _size: int, _hit_valid: bool) -> void:
+## Palm flash on a fired shot (D-04, presentation only).
+func _on_shot_fired(_origin: Vector3, _direction: Vector3, _energy: float) -> void:
 	_flash = FLASH_ENERGY
-	if _streak == null or not point.is_finite():
-		return
-	var start: Vector3 = _palm.global_position
-	var offset: Vector3 = point - start
-	var distance: float = offset.length()
-	if distance < 0.01:
-		return
-	var direction: Vector3 = offset / distance
-	var up: Vector3 = Vector3.UP if absf(direction.dot(Vector3.UP)) < 0.99 else Vector3.RIGHT
-	_streak.global_position = start + offset * 0.5
-	_streak.look_at(point, up)
-	_streak.scale = Vector3(1.0, 1.0, distance)
-	_streak.visible = true
-	_streak_left = STREAK_TIME
 
 
 func _make_light(light_name: StringName) -> OmniLight3D:

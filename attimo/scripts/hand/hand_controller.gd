@@ -8,13 +8,11 @@ signal module_changed(def: HandModuleDef)
 
 @export var registry: ModuleRegistry
 @export var default_module_id: StringName = &"remote_trigger"
-## Seconds the use button must be held for a big pulse (D-05).
-@export_range(0.05, 2.0, 0.05) var hand_charge_threshold: float = 0.4
 ## Seconds after a shot before the next charge may start (D-07).
 @export_range(0.0, 2.0, 0.05) var hand_cooldown: float = 0.25
-## Reach in m of a small pulse, measured from the player origin to the hit point (D-03).
+## Reach in m of a tap shot (the shortest range; it grows with the charge up to hand_big_range, D-17).
 @export_range(1.0, 60.0, 0.5) var hand_small_range: float = 15.0
-## Reach in m of a big pulse.
+## Reach in m of a fully charged shot.
 @export_range(1.0, 60.0, 0.5) var hand_big_range: float = 25.0
 
 ## Cone half angle in degrees within which a valid Interactable snaps the pulse (D-14, CAM-05).
@@ -29,6 +27,20 @@ signal module_changed(def: HandModuleDef)
 @export_range(0.5, 5.0, 0.1) var hand_near_range: float = 2.2
 ## Seconds the arm stays out after a pulse (presentation only).
 @export_range(0.0, 1.0, 0.05) var hand_shot_arm_time: float = 0.25
+## Energy a tap shot costs; below it the shot is refused and the arm flickers grey (D-18).
+@export_range(1.0, 50.0, 0.5) var hand_shot_cost_min: float = 10.0
+## Energy a fully charged shot costs in total (D-17).
+@export_range(1.0, 100.0, 0.5) var hand_shot_cost_max: float = 25.0
+## Seconds the charge takes from hand_shot_cost_min to hand_shot_cost_max once it started.
+@export_range(0.1, 3.0, 0.05) var hand_shot_charge_time: float = 0.8
+## Seconds the button must be held before the charge starts draining (a shorter press is a tap).
+@export_range(0.0, 0.5, 0.01) var hand_shot_tap_time: float = 0.12
+## Flight speed of the shot in m/s.
+@export_range(5.0, 120.0, 1.0) var hand_shot_speed: float = 40.0
+## Degrees per second the shot turns toward a locked target (the bend, D-19).
+@export_range(0.0, 2000.0, 10.0) var hand_shot_turn_rate: float = 540.0
+## The shot is BIG (opens heavy mechanisms) from this much energy spent (D-24).
+@export_range(1.0, 100.0, 0.5) var hand_shot_big_energy: float = 25.0
 ## Reach in m of the Extractor, measured from the chest to the energy source (ENRG-02).
 @export_range(1.0, 10.0, 0.5) var hand_extract_range: float = 4.0
 ## Cone half angle in degrees around the crosshair direction inside which the Extractor finds a source.
@@ -69,7 +81,7 @@ func _ready() -> void:
 	if _player == null:
 		set_physics_process(false)
 		return
-	EventBus.pulse_fired.connect(_on_pulse_fired)
+	EventBus.shot_fired.connect(_on_shot_fired)
 	_context.player = _player
 	_context.controller = self
 	equip(default_module_id)
@@ -270,7 +282,12 @@ func _in_near_range(candidate: Interactable) -> bool:
 	return point.is_finite() and _player.global_position.distance_to(point) <= hand_near_range
 
 
-func _on_pulse_fired(_origin: Vector3, point: Vector3, _size: int, _hit_valid: bool) -> void:
+func _on_shot_fired(origin: Vector3, direction: Vector3, _energy: float) -> void:
 	_shot_arm_left = hand_shot_arm_time
-	if near_target == null and point.is_finite():
-		arm_out_point = point
+	shots_fired += 1
+	if near_target != null:
+		return
+	if _context.rig != null:
+		arm_out_point = _context.rig.aim_target_point()
+	elif origin.is_finite() and direction.is_finite():
+		arm_out_point = origin + direction * hand_small_range

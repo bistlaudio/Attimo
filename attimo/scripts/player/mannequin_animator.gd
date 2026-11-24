@@ -6,7 +6,7 @@ extends Node
 ## (upper-body layer) -> output. The state machine has one dash node per Dodge clip; dash_node_for() picks it (the aimed nodes are dormant).
 ## The upper-body layer is the arm (quick 261118-qi3, driven by HandController.arm_out since phase 05, D-27): when the hand reports
 ## the arm stretched out (near contact, a shot, the Loader hold) the AimMachine starts at Enter on the same physics frame, Hold
-## loops while the arm is out, a pulse_fired fires the Shoot OneShot, the arm coming back travels to Exit and the layer fades
+## loops while the arm is out, a shot_fired fires the Shoot OneShot, the arm coming back travels to Exit and the layer fades
 ## out after the Exit clip. There is no aim hold any more; the layer stays until the Phase 6 hand poses replace it.
 ## Idle breaks (quick 261118-qi3): standing still in Idle for a rolled delay (MovementConfig idle_break_delay_min/max)
 ## fires the IdleBreak OneShot with a clip picked by a VariantPicker (never the same one twice in a row). Any gameplay
@@ -181,7 +181,7 @@ func _ready() -> void:
 	_hand = player.get_node_or_null(^"HandController") as HandController
 	state_machine.state_changed.connect(_on_state_changed)
 	EventBus.landed.connect(_on_landed)
-	EventBus.pulse_fired.connect(_on_pulse_fired)
+	EventBus.shot_fired.connect(_on_shot_fired)
 	var tree_root: AnimationNodeBlendTree = animation_tree.tree_root as AnimationNodeBlendTree
 	if tree_root != null and tree_root.has_node(&"StateMachine"):
 		var machine: AnimationNodeStateMachine = tree_root.get_node(&"StateMachine") as AnimationNodeStateMachine
@@ -261,8 +261,8 @@ func _update_aim_edge(delta: float) -> void:
 	_was_arm_out = arm_out
 
 
-## The shot of the hand happened (EventBus.pulse_fired, on release after charge and cooldown): fire the Shoot OneShot.
-func _on_pulse_fired(_origin: Vector3, _point: Vector3, _size: int, _hit_valid: bool) -> void:
+## The shot of the hand left (EventBus.shot_fired, on release after the charge): fire the Shoot OneShot.
+func _on_shot_fired(_origin: Vector3, _direction: Vector3, _energy: float) -> void:
 	play_hand_shot()
 
 

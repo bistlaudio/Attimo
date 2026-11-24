@@ -25,5 +25,10 @@ func on_use_released() -> void:
 	log.append(&"released")
 
 
+## The dummy keeps the assist on, so a lever it does not accept still reads INVALID on the reticle.
+func uses_targeting() -> bool:
+	return true
+
+
 func deactivate() -> void:
 	deactivated = true

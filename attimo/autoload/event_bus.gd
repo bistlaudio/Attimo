@@ -14,9 +14,15 @@ signal chain_stage_changed(stage: int)
 ## arm cannot pay, D-12; there is no other lockout). Once per press, no dash starts and the cooldown and the air dash stay
 ## unspent. Listeners: later juice and audio.
 signal dash_blocked(position: Vector3, reason: StringName)
-## Emitted by the Fernausloeser module on every shot, valid or not (D-06). `size` is a PulseHit.Size, `hit_valid` is true when an
-## accepting Interactable was triggered. Listeners: later juice, audio and the debug event log.
+## Emitted by a ShotProjectile when it ends: at its impact or when it expires at its range (D-17), valid or not. `point` is the impact or
+## range end, `size` is a PulseHit.Size, `hit_valid` is true when an accepting Interactable was triggered. Listeners: juice, audio, the debug event log.
 signal pulse_fired(origin: Vector3, point: Vector3, size: int, hit_valid: bool)
+## Emitted by the shot module when a projectile leaves the hand. `energy` is the energy the shot cost. Listeners: the arm presentation, the shoot
+## animation, juice, audio.
+signal shot_fired(origin: Vector3, direction: Vector3, energy: float)
+## Emitted once by the shot module when the charge reaches the full cost (hand_shot_cost_max): the shot is now heavy enough for heavy
+## mechanisms. Listeners: the crosshair flash, the palm flash, the placeholder beep.
+signal shot_fully_charged(position: Vector3)
 ## Emitted by Interactable when it accepted a hit. `node` is the owner of the Interactable, `kind` a PulseHit.Kind. Listeners: juice, audio.
 signal interactable_triggered(node: Node, kind: int)
 ## Emitted by Mechanism when its signal changed. `active` is the new signal state. Listeners: juice, audio, the debug event log.

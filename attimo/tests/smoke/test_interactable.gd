@@ -44,6 +44,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	var kept: PulseHit = received[0] as PulseHit if received.size() == 1 else null
 	check.call(kept != null and kept.size == PulseHit.Size.BIG and kept.point == Vector3(4.0, 5.0, 6.0) and kept.collider == body and is_equal_approx(kept.distance, 7.5), "size, point, collider and distance are intact")
 	check.call(triggered_events == [int(PulseHit.Kind.SHOT)], "EventBus.interactable_triggered fired once with kind SHOT")
+	check.call(is_zero_approx(good.energy), "a hand-built hit leaves the energy payload at 0 and still passes (size is a settable field, D-17)")
 
 	target.accepts_shot = false
 	check.call(not target.can_accept(PulseHit.Kind.SHOT, PulseHit.Size.BIG), "accepts_shot false rejects SHOT")

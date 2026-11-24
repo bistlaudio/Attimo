@@ -220,8 +220,8 @@ func _scenario_hand_rows(tree: SceneTree, check: Callable) -> void:
 		if (label as Label).text.contains("Hand"):
 			has_header = true
 	check.call(has_header, "(9) the panel shows a 'Hand' header")
-	panel.set_hand_value(&"hand_charge_threshold", 0.9)
-	check.call(is_equal_approx(hand.hand_charge_threshold, 0.9), "(9) set_hand_value changes hand_charge_threshold (got %.2f)" % hand.hand_charge_threshold)
+	panel.set_hand_value(&"hand_shot_charge_time", 0.9)
+	check.call(is_equal_approx(hand.hand_shot_charge_time, 0.9), "(9) set_hand_value changes hand_shot_charge_time (got %.2f)" % hand.hand_shot_charge_time)
 	panel.set_hand_value(&"not_a_property", 1.0)
 	check.call(panel.row_count() == _expected_rows(), "(9) the movement rows are unchanged by the Hand section")
 	panel.set_sensitivity(1.2)
