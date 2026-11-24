@@ -7,7 +7,7 @@ extends RefCounted
 ##
 ## Plan view (x east, z south, floor tiles on the 4 m lattice, x -43..-115, z -26..26):
 ##   west door (hall WallWest_0 is open)  -> DoorLanding tile (x -40), threshold beam (x -42.5), then the room
-##   walk lane z -2..2 (x -43..-115, plain floor y 0; 05-05 extends it into Zone_Energy through the west wall)
+##   walk lane z -2..2 (x -43..-115, plain floor y 0; it continues through the open west wall cell into Zone_Energy)
 ##   Loader_Redirect  x -55, z 12     open flat floor, hold and throw
 ##   Loader_Air       x -70, z 12     2 m platform with a 1 m step, hold in the air
 ##   Loader_Gap       x -95 .. -115, z 6..14   launch platform, pit, far island; gap = mid of base and bonus reach
@@ -24,6 +24,7 @@ const COLUMNS: int = 18
 const ROWS_HALF: int = 6
 const X_EAST_EDGE: float = -43.0
 const X_WEST_EDGE: float = -115.0
+const X_EAST_EDGE_RESET: float = -42.0
 const Z_HALF: float = 26.0
 const DOOR_X: float = -42.5
 const RESPAWN: Vector3 = Vector3(-47.0, 0.0, 0.0)
@@ -117,8 +118,11 @@ func _build_walls(zone: Node3D, builder: RefCounted) -> void:
 		var x: float = X_FIRST - TILE * column
 		builder.call(&"_wall", zone, "LoaderWallNorth_%d" % roundi(x), x, -Z_HALF - 0.5, 0.0, 0.0)
 		builder.call(&"_wall", zone, "LoaderWallSouth_%d" % roundi(x), x, Z_HALF + 0.5, 0.0, 0.0)
-	# The west wall is built per 4 m cell (named LoaderWallWest_<j>) so plan 05-05 can leave the z -2..2 cell (j 0) open.
+	# The west wall is built per 4 m cell (named LoaderWallWest_<j>). The z -2..2 cell (j 0) stays open: it is the doorway into Zone_Energy
+	# (tools/energy_area_builder.gd), whose floor starts flush at the wall line x -115 and runs under the doorway.
 	for j: int in range(-ROWS_HALF, ROWS_HALF + 1):
+		if j == 0:
+			continue
 		builder.call(&"_wall", zone, "LoaderWallWest_%s" % _cell_name(j), X_WEST_EDGE - 0.5, j * TILE, 90.0, 0.0)
 
 
@@ -134,8 +138,9 @@ func _build_reset(zone: Node3D, builder: RefCounted) -> void:
 	var marker: Marker3D = Marker3D.new()
 	builder.call(&"_adopt", zone, marker, "Respawn_Loader", RESPAWN)
 	var rig: Node3D = (builder.get(&"_root") as Node).get_node("CameraRig") as Node3D
-	var width: float = X_EAST_EDGE - X_WEST_EDGE + 2.0
-	var centre: Vector3 = Vector3((X_EAST_EDGE + X_WEST_EDGE) * 0.5, FALL_Y, 0.0)
+	# x -115..-42: it ends on the shared wall line x -115 so it never overlaps FallResetEnergy of Zone_Energy.
+	var width: float = X_EAST_EDGE_RESET - X_WEST_EDGE
+	var centre: Vector3 = Vector3((X_EAST_EDGE_RESET + X_WEST_EDGE) * 0.5, FALL_Y, 0.0)
 	var area: FallReset = builder.call(&"_fall_reset", "FallResetLoader", centre, Vector3(width, 4.0, Z_HALF * 2.0 + 4.0), marker, rig) as FallReset
 	builder.call(&"_adopt", zone, area, "FallResetLoader", centre)
 	builder.call(&"_owner_children", area)

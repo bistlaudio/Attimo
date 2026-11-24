@@ -138,6 +138,7 @@ func _check_route(check: Callable) -> void:
 
 func _face_west() -> void:
 	_rig.yaw = PI * 0.5
+	_rig.pitch = 0.0
 	_rig.rotation.y = _rig.yaw
 
 
@@ -184,6 +185,7 @@ func _live_track(tree: SceneTree, check: Callable) -> void:
 		if _player.is_grounded():
 			Input.action_press(&"dash")
 			Input.action_press(&"jump")
+			await tree.physics_frame
 			await tree.physics_frame
 			Input.action_release(&"dash")
 			Input.action_release(&"jump")
