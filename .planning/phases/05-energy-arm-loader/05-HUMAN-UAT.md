@@ -64,12 +64,16 @@ result: [pending]
 expected: No energy lost; tapped Moto Jump 3 not lower than normal
 result: [pending]
 
+### 14. WR-02 fix check at Loader_Gap: ground throw -> over ledge -> air Loader; ground throw -> jump -> air Loader; ground throw -> (Moto) run -> late walk-off -> air Loader
+expected: first refused; second and third still work
+result: [pending]
+
 ## Summary
 
-total: 13
+total: 14
 passed: 0
 issues: 0
-pending: 13
+pending: 14
 skipped: 0
 blocked: 0
 

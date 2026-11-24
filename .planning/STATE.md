@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v0.11.0.4
 milestone_name: milestone
-status: verifying
-stopped_at: Phase 5 context gathered
-last_updated: "2026-11-24T19:43:47.676Z"
+status: ready_to_plan
+stopped_at: Phase 05 complete (5/5) — ready to discuss Phase 05.1
+last_updated: 2026-11-24T21:13:26.211Z
 last_activity: 2026-11-24
 progress:
   total_phases: 17
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-02)
 
 **Core value:** Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprint, Sprung und Dash fühlen sich smooth an, und die Hand verbindet sich nahtlos damit.
-**Current focus:** Phase 05 — energy-arm-loader
+**Current focus:** Phase 05.1 — kit rework
 
 ## Current Position
 
-Phase: 05 (energy-arm-loader) — EXECUTING
-Plan: 5 of 5
-Status: Phase complete — ready for verification
+Phase: 05.1
+Plan: Not started
+Status: Ready to plan
 Last activity: 2026-11-24
 
 Progress: [██████████] 100%
@@ -36,7 +36,7 @@ Progress: [██████████] 100%
 
 **Velocity:**
 
-- Total plans completed: 36
+- Total plans completed: 41
 - Average duration: -
 - Total execution time: 0.0 hours
 
@@ -48,6 +48,7 @@ Progress: [██████████] 100%
 | 02 | 14 | - | - |
 | 03 | 10 | - | - |
 | 04 | 5 | - | - |
+| 05 | 5 | - | - |
 
 **Recent Trend:**
 
