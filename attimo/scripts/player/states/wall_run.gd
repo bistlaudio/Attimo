@@ -2,7 +2,7 @@ extends State
 ## WallRun (MOVE-12, D-09): the player runs along an active wall-run pad (group wall_run_surface) at max(entry speed, wall_run_speed)
 ## with gravity scaled to wall_run_gravity_scale and a small press into the wall (wall_run_stick_speed) that keeps the contact. Like
 ## Dash it owns its velocity for the duration: move_velocity is rewritten every tick, gravity_scale is restored in exit().
-## Exits in order: jump -> WallJump, dash press -> Dash, floor contact -> Run or Idle, wall_run_time up or the wall contact lost for
+## Exits in order: jump -> WallJump, Loader press -> Loader, dash press -> Dash, floor contact -> Run or Idle, wall_run_time up or the wall contact lost for
 ## longer than wall_contact_grace (the pad ended) -> Fall. Every exit starts wall_run_cooldown, so a pad cannot be re-grabbed at once.
 ## Presentation: the run clip plus the ProceduralPose roll lean toward the wall (no new clip, MOVE-11 composition).
 
@@ -44,6 +44,8 @@ func physics_update(delta: float) -> StringName:
 	actor.move_velocity.y = 0.0
 	if actor.wants_jump():
 		return &"WallJump"
+	if actor.loader_press_starts_loader():
+		return &"Loader"
 	if actor.dash_press_starts_dash():
 		return &"Dash"
 	if actor.is_grounded() and actor.vertical_speed <= 0.0:

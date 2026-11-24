@@ -53,6 +53,9 @@ func exit() -> void:
 
 
 func physics_update(delta: float) -> StringName:
+	# A Loader press cuts the dash short (D-01); the dash speed is then the stored speed.
+	if actor.loader_press_starts_loader():
+		return &"Loader"
 	_timer += delta
 	if _timer >= actor.config.dash_time:
 		return _finish()

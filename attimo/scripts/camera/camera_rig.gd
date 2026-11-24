@@ -257,13 +257,15 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	if target == null:
 		return
-	time_since_look += delta
+	# Real time: the world may run in slow motion (the Loader hold, TimeFx), the free camera must not (Pitfall 2).
+	var real: float = TimeFx.unscaled(delta)
+	time_since_look += real
 	_update_steering_latch()
-	_advance_recenter(delta)
-	_apply_auto_follow(delta)
+	_advance_recenter(real)
+	_apply_auto_follow(real)
 	var anchor: Vector3 = target.get_global_transform_interpolated().origin + Vector3.UP * pivot_height
-	var horizontal_weight: float = 1.0 - exp(-follow_rate * delta)
-	var vertical_weight: float = 1.0 - exp(-vertical_follow_rate * delta)
+	var horizontal_weight: float = 1.0 - exp(-follow_rate * real)
+	var vertical_weight: float = 1.0 - exp(-vertical_follow_rate * real)
 	var current: Vector3 = global_position
 	current.x = lerpf(current.x, anchor.x, horizontal_weight)
 	current.z = lerpf(current.z, anchor.z, horizontal_weight)
@@ -279,12 +281,12 @@ func _process(delta: float) -> void:
 	pitch = clampf(pitch, pitch_min, pitch_max)
 	rotation.y = yaw
 	pitch_node.rotation.x = pitch
-	_update_aim(delta)
-	_update_snap(delta)
-	_max_arm_length = lerpf(_max_arm_length, zoom_distance, 1.0 - exp(-zoom_rate * delta))
+	_update_aim(real)
+	_update_snap(real)
+	_max_arm_length = lerpf(_max_arm_length, zoom_distance, 1.0 - exp(-zoom_rate * real))
 	spring_arm.position = base_shoulder_offset + _offset_total()
 	camera.fov = get_fov_total()
-	_update_arm(delta)
+	_update_arm(real)
 
 
 ## Moves the chosen zoom distance by `amount` m (negative is closer), clamped to zoom_min .. zoom_max.

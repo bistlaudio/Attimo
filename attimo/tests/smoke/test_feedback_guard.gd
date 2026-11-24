@@ -12,6 +12,10 @@ const STATE_MACHINE_PATH: String = "res://scripts/core/state_machine.gd"
 ## from EventBus facts only. Every other scene with a particle node still fails, and gameplay code must not name it.
 const PARTICLE_SCENE_ALLOWLIST: Array[String] = ["res://scenes/debug/hit_puff.tscn"]
 const PUFF_TOKENS: Array[String] = ["hit_puff", "HitPuff"]
+## The one sanctioned writer of the world time scale (plan 05-01): TimeFx owns Engine.time_scale so a slow world has one source
+## and one restore. Only that token is exempt in that file; every other forbidden token still fails there.
+const TIME_SCALE_OWNER: String = "res://autoload/time_fx.gd"
+const TIME_SCALE_TOKEN: String = "Engine.time_scale"
 const REQUIRED_FACTS: Array[String] = ["jumped", "landed", "dash_started", "movement_state_changed"]
 
 ## Forbidden feedback tokens (case-sensitive substring match).
@@ -54,6 +58,8 @@ func _scan_gameplay_feedback(check: Callable) -> void:
 		var lines: PackedStringArray = FileAccess.get_file_as_string(path).split("\n")
 		for i: int in lines.size():
 			for token: String in FORBIDDEN_TOKENS:
+				if path == TIME_SCALE_OWNER and token == TIME_SCALE_TOKEN:
+					continue
 				if lines[i].contains(token):
 					hits += 1
 					check.call(false, "%s:%d uses forbidden feedback token '%s'" % [path, i + 1, token])

@@ -41,7 +41,7 @@ const HIT_CLIPS: Array[StringName] = [&"Hit_A", &"Hit_B", &"UAL_Hit_Chest", &"UA
 const DEATH_CLIPS: Array[StringName] = [&"Death_A", &"Death_B", &"UAL_Death01"]
 const INTERACT_CLIPS: Array[StringName] = [&"Interact", &"UAL_Interact"]
 ## Actions that cancel an idle break (camera look does not).
-const IDLE_CANCEL_ACTIONS: Array[StringName] = [&"move_forward", &"move_back", &"move_left", &"move_right", &"jump", &"dash", &"aim", &"use_hand", &"interact"]
+const IDLE_CANCEL_ACTIONS: Array[StringName] = [&"move_forward", &"move_back", &"move_left", &"move_right", &"jump", &"dash", &"loader", &"use_hand", &"interact"]
 ## The AimPoseModifier node, relative to the Mannequin node (the AnimationTree's parent).
 const AIM_MODIFIER_PATH: NodePath = ^"Rig_Medium/Skeleton3D/AimPoseModifier"
 
@@ -69,6 +69,7 @@ const STATE_TO_ANIM: Dictionary[StringName, StringName] = {
 	&"WallRun": &"Locomotion",
 	&"WallJump": &"Jump",
 	&"Capture": &"Fall",
+	&"Loader": &"Fall",
 }
 
 ## States that count as airborne for the landing check (Landing into Idle plays the Land overlay).

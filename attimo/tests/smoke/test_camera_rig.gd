@@ -115,7 +115,7 @@ func _scenario_channels(tree: SceneTree, check: Callable) -> void:
 	var nodes: Array[Node] = await _spawn(tree)
 	var rig: CameraRig = nodes[2] as CameraRig
 	await Fixtures.wait_process(tree, 2)
-	check.call(rig.spring_arm.position == Vector3.ZERO, "(b) with no source the arm sits at the pivot (%s)" % rig.spring_arm.position)
+	check.call(rig.spring_arm.position.is_equal_approx(rig.base_shoulder_offset), "(b) with no source the arm sits at the base shoulder offset, the debug framing (%s)" % rig.spring_arm.position)
 	check.call(is_equal_approx(rig.camera.fov, rig.base_fov), "(b) with no source fov equals base_fov (%.2f)" % rig.camera.fov)
 
 	rig.set_fov_offset(&"aim", 5.0)
@@ -135,10 +135,10 @@ func _scenario_channels(tree: SceneTree, check: Callable) -> void:
 
 	rig.set_offset(&"aim", Vector3(0.7, 0.0, 0.0))
 	await Fixtures.wait_process(tree, 2)
-	check.call(rig.spring_arm.position == Vector3(0.7, 0.0, 0.0), "(b) an offset source moves the arm origin exactly (%s)" % rig.spring_arm.position)
+	check.call(rig.spring_arm.position.is_equal_approx(rig.base_shoulder_offset + Vector3(0.7, 0.0, 0.0)), "(b) an offset source moves the arm origin by exactly its offset (%s)" % rig.spring_arm.position)
 	rig.clear_offset(&"aim")
 	await Fixtures.wait_process(tree, 2)
-	check.call(rig.spring_arm.position == Vector3.ZERO, "(b) clearing the offset returns the arm to the pivot (%s)" % rig.spring_arm.position)
+	check.call(rig.spring_arm.position.is_equal_approx(rig.base_shoulder_offset), "(b) clearing the offset returns the arm to the base shoulder offset (%s)" % rig.spring_arm.position)
 	await _free_all(tree, nodes)
 
 

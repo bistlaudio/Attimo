@@ -144,3 +144,14 @@ static func spawn_scene(root: Node, path: String, position: Vector3) -> Node3D:
 	node.position = position
 	root.add_child(node)
 	return node
+
+
+## Sets the arm energy of `player` through its owner, ArmEnergy (the only writer of the value).
+static func set_energy(player: PlayerController, value: float) -> void:
+	player.arm_energy.reset_to(value)
+
+
+## Gives back every TimeFx request, so a test that held the Loader cannot leave the world in slow motion.
+static func restore_time() -> void:
+	var time_fx: Node = Engine.get_main_loop().root.get_node("TimeFx")
+	time_fx.call(&"clear_all")

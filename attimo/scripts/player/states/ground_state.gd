@@ -1,12 +1,14 @@
 class_name GroundState
 extends State
 ## Shared base of the grounded states (Idle and Run). physics_update runs the common
-## transitions first (left the floor, dash, jump or the long jump inside the dash grace), then the subclass hook _ground_update.
+## transitions first (left the floor, the Loader press, dash, jump or the long jump inside the dash grace), then the subclass hook _ground_update.
 
 
 func physics_update(delta: float) -> StringName:
 	if not actor.is_grounded():
 		return &"Fall"
+	if actor.loader_press_starts_loader():
+		return &"Loader"
 	if actor.dash_press_starts_dash():
 		return &"Dash"
 	if actor.wants_jump():

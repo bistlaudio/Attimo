@@ -42,6 +42,11 @@ var dash_jump_grace_timer: float = 0.0
 var aiming: bool = false
 ## Seconds left of the blocked-dash twitch. ProceduralPose reads it; a refused dash press starts it.
 var dash_twitch_timer: float = 0.0
+## True while the Loader may start in the air: one use per airborne stretch (D-02). An airborne Loader press and a ground discharge
+## that lifts off spend it; landing, refill_air_dash (boost ring, slingshot) give it back.
+var loader_available: bool = true
+## Seconds left before the next Loader press may start. A discharge without the bonus (empty arm) starts it at loader_redirect_cooldown.
+var loader_cooldown_timer: float = 0.0
 
 ## Reason dash_locked_reason() returns (also the `reason` of EventBus.dash_blocked). Aim is the only dash lockout.
 const DASH_LOCK_AIM: StringName = &"aim"
@@ -89,6 +94,8 @@ const MAX_CARRY_SHIFT: float = 2.0
 
 @onready var visual_root: Node3D = $VisualRoot
 @onready var state_machine: StateMachine = $StateMachine
+## The single owner of the arm energy (the Loader bonus and, from plan 05-03, every other cost and income).
+@onready var arm_energy: ArmEnergy = $ArmEnergy
 
 
 func _ready() -> void:
@@ -103,7 +110,6 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_tick_timers(delta)
-	_tick_aim()
 	_apply_push_requests(delta)
 	state_machine.physics_update(delta)
 	_integrate(delta)
@@ -292,6 +298,42 @@ func _block_dash(reason: StringName) -> void:
 	EventBus.dash_blocked.emit(global_position, reason)
 
 
+## The Loader press check of the ground and the air states, Dash and WallRun (D-01). True when a loader press this tick may start
+## the Loader: the cooldown of an empty-arm redirect has elapsed, and Rino stands on the floor or the airborne use is still available
+## (D-02). Capture never asks. Like the dash press it polls just_pressed, so the press is not buffered.
+func loader_press_starts_loader() -> bool:
+	if not Input.is_action_just_pressed(&"loader"):
+		return false
+	if loader_cooldown_timer > 0.0:
+		return false
+	return is_grounded() or loader_available
+
+
+## The unit direction a Loader discharge (and its preview) goes: the forward of the current camera, up included (A8). Without a
+## camera, or with a degenerate one, the facing of VisualRoot.
+func loader_direction() -> Vector3:
+	var camera: Camera3D = get_viewport().get_camera_3d()
+	if camera != null:
+		var forward: Vector3 = -camera.global_basis.z
+		if forward.is_finite() and forward.length_squared() > 0.0001:
+			return forward.normalized()
+	var facing: Vector3 = visual_root.global_basis.z
+	facing.y = 0.0
+	if not facing.is_finite() or facing.length_squared() < 0.0001:
+		return Vector3.FORWARD
+	return facing.normalized()
+
+
+## True while the FSM is in the Loader state.
+func loader_active() -> bool:
+	return state_machine.current != null and state_machine.current.name == &"Loader"
+
+
+## The Loader state node (its read-only helpers feed the presentation), or null without one.
+func loader_state() -> LoaderState:
+	return state_machine.get_node_or_null(^"Loader") as LoaderState
+
+
 ## Called by the Dash state on enter: starts the cooldown, spends the air dash when airborne and remembers
 ## the direction (the long jump of a later plan reads it).
 func start_dash(direction: Vector3, in_air: bool) -> void:
@@ -343,9 +385,10 @@ func boost_along(direction: Vector3, min_speed: float, add: float = 0.0) -> void
 
 
 ## Gives the air dash back (boost ring, D-06): the charge is available and the cooldown is gone, so a dash can start at once.
-## Emits EventBus.dash_refilled. Mechanisms call this with call_deferred.
+## The Loader use of this airtime comes back with it (D-02; the Loader itself never calls this, D-03). Emits EventBus.dash_refilled. Mechanisms call this with call_deferred.
 func refill_air_dash() -> void:
 	air_dash_available = true
+	loader_available = true
 	dash_cooldown_timer = 0.0
 	EventBus.dash_refilled.emit(global_position)
 
@@ -534,6 +577,7 @@ func _tick_timers(delta: float) -> void:
 	dash_cooldown_timer = maxf(dash_cooldown_timer - delta, 0.0)
 	dash_jump_grace_timer = maxf(dash_jump_grace_timer - delta, 0.0)
 	dash_twitch_timer = maxf(dash_twitch_timer - delta, 0.0)
+	loader_cooldown_timer = maxf(loader_cooldown_timer - delta, 0.0)
 	air_control_lock_timer = maxf(air_control_lock_timer - delta, 0.0)
 	wall_run_cooldown_timer = maxf(wall_run_cooldown_timer - delta, 0.0)
 	_tick_combo(delta)
@@ -557,35 +601,6 @@ func _tick_combo(delta: float) -> void:
 		combo_timer = 0.0
 		long_jump_stage = 0
 		_set_chain_stage(0)
-
-
-## Reads the aim hold (CAM-02). A change sets `aiming` on this tick and announces it once; while aiming the facing is
-## pinned to the camera before the states run, so their direction fallbacks read the crosshair facing.
-func _tick_aim() -> void:
-	var held: bool = Input.is_action_pressed(&"aim")
-	if held != aiming:
-		aiming = held
-		EventBus.aim_changed.emit(aiming)
-	if aiming:
-		_apply_aim_facing()
-
-
-## Sets VisualRoot's yaw to the camera's flat forward with no smoothing (D-09). Without a camera it changes nothing.
-## No reset_physics_interpolation: that would pop the visual position while moving (A-03-2).
-func _apply_aim_facing() -> void:
-	var camera: Camera3D = get_viewport().get_camera_3d()
-	if camera == null:
-		return
-	var forward: Vector3
-	var rig: CameraRig = _find_rig(camera)
-	if rig != null:
-		forward = Vector3(-sin(rig.yaw), 0.0, -cos(rig.yaw))
-	else:
-		forward = -camera.global_basis.z
-		forward.y = 0.0
-	if forward.length_squared() < 0.0001:
-		return
-	visual_root.rotation.y = atan2(forward.x, forward.z)
 
 
 func _integrate(delta: float) -> void:
@@ -661,6 +676,7 @@ func _track_wall_contact(delta: float) -> void:
 
 func _land(impact_speed: float) -> void:
 	air_dash_available = true
+	loader_available = true
 	coyote_timer = 0.0
 	if chain_stage > 0 or long_jump_stage > 0:
 		combo_timer = config.landing_window

@@ -1,7 +1,7 @@
 class_name AirState
 extends State
 ## Shared base of the airborne states (Jump, Fall, LongJump). physics_update applies air control and
-## facing (D-02), takes a dash press, lands into Run, Idle or a buffered Jump, and decides a jump press in the
+## facing (D-02), takes a Loader or dash press, lands into Run, Idle or a buffered Jump, and decides a jump press in the
 ## air. Subclasses add their rules in _air_update.
 ##
 ## Jump decision rules (D-09; there is no air jump, MOVE-05), in order:
@@ -15,6 +15,8 @@ func physics_update(delta: float) -> StringName:
 	var direction: Vector3 = actor.input_direction()
 	actor.face(direction, delta)
 	actor.accelerate_air(direction, delta)
+	if actor.loader_press_starts_loader():
+		return &"Loader"
 	if actor.dash_press_starts_dash():
 		return &"Dash"
 	if actor.is_grounded() and actor.vertical_speed <= 0.0:

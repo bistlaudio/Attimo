@@ -124,7 +124,7 @@ Keys are stored as physical keys (layout independent) with device -1 (all device
 | `look_down` | none | Right stick down | See `look_left`. |
 | `jump` | Space | A / Cross | |
 | `dash` | Left Shift (left side only) | B / Circle | Tap. Single binding, decided after the gym sign-off (U3). There is no sprint action. |
-| `aim` | Right mouse button | L2 / LT | Hold. |
+| `loader` | Right mouse button | L2 / LT | Hold (D-15, Phase 5). The Loader: stores momentum, slows the world, discharges along the view on release. Replaces the removed aim hold. |
 | `use_hand` | Left mouse button | R2 / RT | Fire or trigger the module. |
 | `interact` | E | X / Square | |
 | `module_next` | Mouse wheel down | Right bumper | |
@@ -140,7 +140,9 @@ Keys are stored as physical keys (layout independent) with device -1 (all device
 
 The `EventBus` autoload carries gameplay **facts** (D-10, D-11). Gameplay code only emits typed fact signals. It never calls audio, particles, tweens, time scale or camera effects. Feedback systems connect to the bus and react.
 
-Exception: placeholder hit puffs in `scripts/debug` + `scenes/debug/hit_puff.tscn`, driven only by EventBus facts; real juice stays Phase 3+. `test_feedback_guard` allowlists exactly that one scene and still fails on any other particle node or on a gameplay script that names the puff.
+Exception 1 (phase 05): the `TimeFx` autoload is the sole writer of the world time scale. The `Loader` state asks it for slow motion (`request`) and gives it back in `exit()` and `_exit_tree()` (`release`); anything that has to run in real time reads `TimeFx.unscaled(delta)` (the Loader hold clock, `CameraRig`). `test_feedback_guard` allows the time scale token in `autoload/time_fx.gd` only.
+
+Exception 2: placeholder hit puffs in `scripts/debug` + `scenes/debug/hit_puff.tscn`, driven only by EventBus facts; real juice stays Phase 3+. `test_feedback_guard` allowlists exactly that one scene and still fails on any other particle node or on a gameplay script that names the puff.
 
 | Signal | Payload | Emitted by |
 |---|---|---|
@@ -166,6 +168,10 @@ Exception: placeholder hit puffs in `scripts/debug` + `scenes/debug/hit_puff.tsc
 | `wall_jumped` | `position: Vector3, direction: Vector3` | `WallJump` state on enter; `direction` is the flat kick direction |
 | `capture_started` | `position: Vector3` | `Capture` state on enter (slingshot core, pneumatic tube, phase 04.1) |
 | `capture_released` | `position: Vector3, velocity: Vector3` | `Capture` state when it lets go; `velocity` is the exit velocity (zero after a stuck or time-out release) |
+| `loader_started` | `position: Vector3, stored_speed: float, in_air: bool` | `Loader` state on enter (HAND-04, phase 05); `stored_speed` is the stored speed in m/s, `in_air` is true when the hold hangs in the air |
+| `loader_released` | `position: Vector3, direction: Vector3, speed: float, bonus: bool` | `Loader` state on the discharge (release or the hold cap); `bonus` is true when the arm paid a core |
+| `energy_changed` | `value: float` | `ArmEnergy` after a spend or reset; `value` is the new energy, 0 to 100 |
+| `energy_spent` | `amount: float, reason: StringName` | `ArmEnergy.try_spend` after a payment; `reason` is `loader` for the Loader bonus |
 
 Listeners: the debug event log now, juice (Phases 11-12), audio (Phase 14). A new fact is a new typed signal added in the phase that needs it. The bus holds no state and no logic.
 

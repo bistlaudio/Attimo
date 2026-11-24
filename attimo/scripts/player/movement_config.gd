@@ -1,8 +1,8 @@
 class_name MovementConfig
 extends Resource
 ## The one tunable movement resource (MOVE-10, D-23). Every movement number lives here.
-## Twelve groups, 67 live sliders in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
-## Long jump (dash hop), Timing windows, Floor and platforms, Aim, Wall, Pose, Clip playback. Gravity is set directly
+## Thirteen groups, 76 live sliders in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
+## Long jump (dash hop), Timing windows, Floor and platforms, Loader, Aim, Wall, Pose, Clip playback. Gravity is set directly
 ## (rise_gravity, fall_multiplier); jump speeds are derived from the heights, so editing a
 ## height never changes the fall feel. Every divisor field has a strictly positive minimum (T-02-02).
 
@@ -89,6 +89,26 @@ extends Resource
 @export_range(30.0, 60.0, 1.0) var floor_max_angle_deg: float = 50.0
 ## Share of the platform's horizontal velocity that carries over when leaving it; raise it for a bigger launch off moving platforms.
 @export_range(0.0, 1.5, 0.05) var platform_carry: float = 1.0
+
+@export_group("Loader")
+## World speed while the Loader is held, as a share of normal (HAND-04); raise it for a gentler slow motion.
+@export_range(0.05, 1.0, 0.01) var loader_slow_factor: float = 0.25
+## Longest hold in seconds of REAL time before the Loader discharges by itself; raise it for a longer aim.
+@export_range(0.2, 3.0, 0.05) var loader_hold_cap: float = 1.2
+## Seconds of real time the run brakes to a stop when the Loader is pressed on the ground (D-01); raise it for a softer stop.
+@export_range(0.02, 0.5, 0.01) var loader_skid_time: float = 0.1
+## Smallest discharge speed in m/s, so a redirect is never slower than this; raise it for a stronger plain push.
+@export_range(0.0, 24.0, 0.5) var loader_min_push: float = 12.0
+## Speed in m/s the bonus adds on top of max(stored speed, loader_min_push); raise it for a bigger paid discharge.
+@export_range(0.0, 16.0, 0.5) var loader_bonus_speed: float = 8.0
+## Energy the bonus costs (one core, A7: below it the arm counts as empty); raise it to make the bonus rarer.
+@export_range(0.0, 100.0, 1.0) var loader_bonus_cost: float = 25.0
+## Fastest discharge in m/s; 22 is the tunnelling and camera envelope (long_jump_speed_3), do not raise it without re-running those tests.
+@export_range(8.0, 24.0, 0.5) var loader_max_speed: float = 22.0
+## Seconds before the next ground Loader may start after a discharge without the bonus (empty arm); raise it to punish an empty arm more.
+@export_range(0.0, 3.0, 0.05) var loader_redirect_cooldown: float = 1.0
+## Seconds air control is off after the discharge so steering does not eat the throw (D-03); raise it for a harder throw.
+@export_range(0.0, 0.5, 0.01) var loader_release_control_lock: float = 0.15
 
 @export_group("Aim")
 ## Share of run_speed the ground run keeps while aiming (D-10); raise it for a faster aim run, lower it for a heavier aim.

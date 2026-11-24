@@ -44,3 +44,13 @@ signal wall_jumped(position: Vector3, direction: Vector3)
 signal capture_started(position: Vector3)
 ## Emitted by the Capture state when it lets go. `velocity` is the exit velocity (zero after a stuck or time-out release). Listeners: juice, audio.
 signal capture_released(position: Vector3, velocity: Vector3)
+## Emitted by the Loader state on enter (HAND-04). `stored_speed` is the speed in m/s that was stored, `in_air` is true when the hold hangs
+## in the air. Listeners: the Loader presentation (plan 05-02), juice, audio.
+signal loader_started(position: Vector3, stored_speed: float, in_air: bool)
+## Emitted by the Loader state on the discharge (release or the hold cap). `direction` is the unit discharge direction, `speed` the
+## discharge speed in m/s, `bonus` is true when the arm paid a core for the bonus. Listeners: the Loader presentation, juice, audio.
+signal loader_released(position: Vector3, direction: Vector3, speed: float, bonus: bool)
+## Emitted by ArmEnergy whenever the energy value changed through a discrete spend or reset. `value` is the new energy, 0 .. 100. Listeners: the HUD.
+signal energy_changed(value: float)
+## Emitted by ArmEnergy when an amount was paid. `reason` names the cost (&"loader" for the Loader bonus). Listeners: the arm cores, juice, audio.
+signal energy_spent(amount: float, reason: StringName)
