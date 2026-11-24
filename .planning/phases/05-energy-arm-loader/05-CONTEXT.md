@@ -47,6 +47,15 @@ Not in this phase: enemies, health, shards, damage, module pickup and teaching r
 - **D-18 Shot under 10 energy does not fire:** grey arm flicker (D-12). Near contact with E stays free, so levers and the crank stay solvable. Every gym puzzle room that needs a shot gets an energy capsule with respawn next to it.
 - **D-19 Aim assist:** snap and hysteresis stay and become **stronger and noticeable**: a valid target near the crosshair locks (ring turquoise) and the projectile clearly bends to it, so targets can be hit while moving fast. The mouse slowdown ("sticky aim") is removed.
 
+### Movement gym rework (ROADMAP criterion 6, gym rule)
+- **D-20 Remove:** aim-mode stations and pull/push leftovers; signs and "Erwartet:" lines that mention aiming are rewritten for hip fire.
+- **D-21 Loader test room** (built first, with the Loader prototype): open space to freeze and redirect on the ground and in the air, gaps and heights that need a Loader discharge with bonus vs. a plain redirect, measured against the FEEL-10 metrics.
+- **D-22 Energy area:** a charge track (long straight plus booster/dash-hop line to see passive charge above ~10 m/s), energy capsules and one broken machine with timed respawn (Extractor station), a charge-button spot, and one station per injected move (air dash, dash hop stages 2-3, wall run past the free window) showing the base version with an empty arm and the injected version with energy.
+- **D-23 Shot stations:** tap vs. full charge (range and heavy mechanism), plus a target to hit while moving fast (stronger snap, D-19).
+- **D-24 Existing puzzle rooms stay solvable without aim:** every station or puzzle that needs a shot gets a capsule with respawn next to it (D-18); mechanisms that needed the big pulse accept the charged shot.
+- **D-25 Readout:** the energy HUD (D-13) is the readout for all stations; the F2 panel holds the energy and Loader tunables.
+- All gym content stays builder-generated (`attimo/tools/mechanism_rooms_builder.gd` and the gym builders), never hand-edited; every new station gets a smoke test and an "Erwartet:" sign.
+
 ### Carried forward (not re-asked)
 - Energy numbers and the governing rule from GAME-DESIGN.md sections 2-3: air dash 10 (does not fire when empty), dash hop stages 2/3 cost 15 each (stage 1 free), wall run free for about 0.6 s then 15/s, jumping off always free, respawn with exactly 25, Moto Perpetuo +10-15 % run speed and buffed Jump 3.
 - Phase 4 D-30 / memory: stay in the GSD band, 3-5 plans.
