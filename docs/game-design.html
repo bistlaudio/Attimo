@@ -196,7 +196,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
 
         <rect x="530" y="190" width="176" height="60" rx="10" fill="#1a2026" stroke="#3fd6c6" stroke-width="1.5"/>
         <text x="618" y="215" fill="#e7e3da" font-weight="600" font-size="16">Arm charges</text>
-        <text x="618" y="235" fill="#9aa39f" font-size="12">+3–6 /s above ~12 m/s</text>
+        <text x="618" y="235" fill="#9aa39f" font-size="12">+3–6 /s above ~10 m/s</text>
 
         <rect x="250" y="362" width="220" height="60" rx="10" fill="#1a2026" stroke="#3fd6c6" stroke-width="1.5"/>
         <text x="360" y="387" fill="#e7e3da" font-weight="600" font-size="16">Spend energy</text>
@@ -350,17 +350,17 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
   </div>
   <ul class="plain">
     <li>Scale 0–100, split into 4 cores of 25, shown diegetically on the arm.</li>
-    <li>Moto Perpetuo from 50: +10–15 % run speed, buffed Jump 3, brighter arm.</li>
+    <li>Moto Perpetuo from 50: +10–15 % run speed, buffed Jump 3; the arm glows brighter, both feet and a point on the back glow too.</li>
     <li>Respawn and checkpoints: always exactly one core (25). Fair, no soft-lock, no farming.</li>
   </ul>
   <div class="grid2">
     <div class="tbl"><table>
       <tr><th>Income</th><th>Value</th></tr>
-      <tr><td>Momentum, passive above ~12 m/s</td><td class="n">+3–6 /s</td></tr>
-      <tr><td>Energy capsule / broken machine (extracted)</td><td class="n">+40</td></tr>
+      <tr><td>Momentum, passive above ~10 m/s (plain running never charges)</td><td class="n">+3–6 /s</td></tr>
+      <tr><td>Energy capsule / broken machine (left-click extract)</td><td class="n">+40 / ~+60</td></tr>
       <tr><td>Extract from an enemy (~2 s, vulnerable)</td><td class="n">+35</td></tr>
       <tr><td>Shoot, then absorb shards</td><td class="n">−10 / +25</td></tr>
-      <tr><td>Charge button, emergency only</td><td class="n">+5 /s</td></tr>
+      <tr><td>Charge button (R, standing still), emergency only</td><td class="n">+5 /s</td></tr>
     </table></div>
     <div class="tbl"><table>
       <tr><th>Spending</th><th>Cost</th></tr>
@@ -368,7 +368,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
       <tr><td>Dash hop stage 2 / 3</td><td class="n">15 each</td></tr>
       <tr><td>Air dash</td><td class="n">10</td></tr>
       <tr><td>Wall run after 0.6 s</td><td class="n">15 /s</td></tr>
-      <tr><td>Shot</td><td class="n">10</td></tr>
+      <tr><td>Shot (tap / full charge)</td><td class="n">10 / 25</td></tr>
       <tr><td>Fast escape from an attraction field</td><td class="n">20 /s</td></tr>
       <tr><td>Energy core (mechanism)</td><td class="n">any</td></tr>
     </table></div>
@@ -382,6 +382,8 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
     <li><b>Hold:</b> momentum freezes and is stored; Rino brakes hard or hangs in the air. Slow motion ~0.25×, free camera, capped at ~1.2 s real time, then it discharges on its own.</li>
     <li><b>Release:</b> discharge in the view direction (also up and down) at <code>max(stored speed, minimum push) + bonus</code>, capped.</li>
     <li><b>Look:</b> the crosshair becomes a charge ring that fills with the stored speed, a dashed trajectory preview, slight desaturation and a turquoise vignette. Empty arm: grey ring, no bonus segment.</li>
+    <li><b>Rules:</b> on the ground Rino brakes hard and stands, the discharge may go up. One use per air phase, refilled on landing. Independent of the air dash; ~0.15 s air-control lock after the release.</li>
+    <li><b>Feel: "geladen", a loaded spring.</b> Holding builds tension (ring, rising hum, slight camera pull-back); the release is sharp with a short hitstop. The Loader ring turns the other way and looks clearly different from the shot charge ring.</li>
     <li><b>Removed:</b> goggle HUD, zoom, shoulder offset, aim pose, pull and push. The small crosshair and target aim assist stay.</li>
   </ol>
 </section>
@@ -394,10 +396,11 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
       <p>Cone in front of the hand. Drains enemies, shards, energy capsules and broken machines. Brings energy.</p>
     </div>
     <div class="layer" style="--c: var(--teal)">
-      <h4>Shot <span class="badge">tap</span></h4>
-      <p>The Fernauslöser pulse as a projectile. Costs energy, hits targets and enemies. Targets hit from the hip replace levers.</p>
+      <h4>Shot <span class="badge">tap or hold</span></h4>
+      <p>A flying projectile, never a beam (Mega Man / Samus). Tap = 10; holding drains energy continuously while the shot grows, up to 25, with a clear full-charge tell. Under 10 it does not fire. Strong snap assist bends the shot to the locked target; targets hit in motion are gear discs. Targets hit from the hip replace levers.</p>
     </div>
   </div>
+  <p class="muted"><b>HUD</b> (top left): 4 core chambers, Moto Perpetuo state, active module and a momentum gauge; health joins it in Phase 6. Both modules and the HUD arrive in Phase 5 (Extractor on capsules and machines only).</p>
 </section>
 
 <section class="ref" id="kit">
@@ -491,15 +494,15 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
   <h3>Roadmap mapping</h3>
   <div class="tbl"><table>
     <tr><th>Phase</th><th>Delivers</th></tr>
-    <tr><td class="n">5</td><td>Energy Arm &amp; Loader: resource, Moto Perpetuo, income without enemies, energy costs, Loader, aim mode removed</td></tr>
+    <tr><td class="n">5</td><td>Energy Arm &amp; Loader: resource, Moto Perpetuo, income without enemies, energy costs, Loader, aim mode removed, Extractor (capsules), charged shot, energy HUD</td></tr>
     <tr><td class="n">05.1</td><td>Kit Rework: kit cube, 8 blocks + 4 components, three layers, showroom regrouped</td></tr>
-    <tr><td class="n">6</td><td>Extractor, Shot, Enemies &amp; Recovery: modules, shards, energy HUD, pickup and teaching rooms</td></tr>
+    <tr><td class="n">6</td><td>Extractor, Shot, Enemies &amp; Recovery: enemies, shards, shot damage, health, pickup and teaching rooms</td></tr>
     <tr><td class="n">7</td><td>Level blockout with the "charge the level" gimmick</td></tr>
     <tr><td class="n">8</td><td>Boss beaten through Loader discharges and shots on weak points</td></tr>
   </table></div>
 </section>
 
-<footer>Attimo · generated from <code>docs/GAME-DESIGN.md</code> on 2026-11-23. When the design doc changes, update this page too.</footer>
+<footer>Attimo · generated from <code>docs/GAME-DESIGN.md</code> on 2026-11-24. When the design doc changes, update this page too.</footer>
 </div>
 </body>
 </html>

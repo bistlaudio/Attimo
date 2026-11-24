@@ -234,7 +234,7 @@ Plans:
 **Goal:** As a player, I want my arm to store energy from speed and to stop, aim and discharge my momentum with the right-click Loader, so that speed turns into energy and energy into more speed.
 **Mode:** mvp
 **Depends on**: Phase 4
-**Requirements**: HAND-04, FEEL-10, ENRG-01, ENRG-02, ENRG-03, ENRG-04
+**Requirements**: HAND-04, FEEL-10, ENRG-01, ENRG-02, ENRG-03, ENRG-04, ENRG-05
 **Success Criteria** (what must be TRUE):
 
   1. The arm holds 0-100 energy in 4 cores of 25, readable on the arm. From 50 the player is in Moto Perpetuo (faster run, buffed Jump 3, brighter arm). After a respawn the arm holds exactly one core (25).
@@ -274,7 +274,7 @@ Plans:
 **Goal:** As a player, I want to drain or shoot enemies for energy and recover quickly after dying, so that danger feeds the energy loop without frustration.
 **Mode:** mvp
 **Depends on**: Phase 05.1
-**Requirements**: SHOOT-01, SHOOT-02, SHOOT-03, EXTR-01, ENRG-05, HAND-05, HAND-06, ART-04, PROG-01, PROG-03, PROG-04
+**Requirements**: SHOOT-01, SHOOT-02, SHOOT-03, EXTR-01, HAND-05, HAND-06, ART-04, PROG-01, PROG-03, PROG-04
 **Success Criteria** (what must be TRUE):
 
   1. Left click runs two modules switched with the mouse wheel: the Extractor (hold, cone in front of the hand) drains enemies (up to +35 over about 2 s, player vulnerable), shards, energy capsules and broken machines; the Shot (tap, the Fernauslöser pulse as a projectile) costs energy and hits targets, objects and enemies.

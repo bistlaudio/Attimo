@@ -36,18 +36,18 @@ When the player lacks energy for an injected move, the base version fires automa
 ## 3. The resource
 
 - **Scale 0-100, split into 4 cores of 25.** The four cores on the arm glow and show the charge diegetically. This answers the open Phase 6 question (real resource: yes).
-- **Moto Perpetuo from 50 (2 cores):** +10-15 % run speed, buffed Jump 3, the arm glows brighter.
+- **Moto Perpetuo from 50 (2 cores):** +10-15 % run speed, buffed Jump 3; the arm glows brighter, both feet and a point on the back glow too (short flash on entering, fade on leaving, no screen effect).
 - **Respawn / checkpoint:** always respawn with exactly 1 core (25). Fair, no soft-lock, no farming before a checkpoint.
 
 ### Income
 
 | Source | How | Starting value |
 |---|---|---|
-| Momentum (passive) | charges while above dash exit speed (~12 m/s) | +3-6/s, scales with speed |
-| Arcane energy capsules | broken, glowing machines and gadgets placed in the world, drained with the Extractor (replaces the earlier "energy rifts" idea) | +40 per capsule, then empty |
+| Momentum (passive) | charges while above ~10 m/s (just above run speed, so plain running never charges, every technique does) | +3/s at 10 m/s up to +6/s at ~18 m/s |
+| Arcane energy capsules | broken, glowing machines and gadgets placed in the world, drained with the Extractor (left-click hold; replaces the earlier "energy rifts" idea) | capsule +40 in ~0.5 s, broken machine ~+60 in ~2 s, then empty; `respawn_time` (gym refills, level 0 = never) |
 | Extractor (Moira-style drain) | drain an enemy at close range | up to +35 per enemy, ~2 s, player is vulnerable while draining |
-| Shoot -> absorb | shooting costs energy, the enemy bursts into shards, the player extracts the shards | shot -10, shards +25, net +15 |
-| Charge button ("Super Saiyan" charge) | stand still and hold, very slow | +5/s, emergency fallback only |
+| Shoot -> absorb | shooting costs energy, the enemy bursts into shards, the player extracts the shards | shot -10 (tap), shards +25, net +15 |
+| Charge button ("Super Saiyan" charge) | key R, hold while standing still; moving, jumping or dashing cancels | +5/s, emergency fallback only |
 
 **Extract vs. shoot (intended balance):** the Extractor is more *efficient* (+35 vs. net +15 per enemy) but slow and risky; shoot-and-absorb yields less but is fast, stays in the flow and is more *fun*. A real choice, not an efficiency race.
 
@@ -59,7 +59,7 @@ When the player lacks energy for an injected move, the base version fires automa
 | Dash hop stage 2 / 3 | 15 each |
 | Air dash | 10 |
 | Wall run after 0.6 s | 15/s |
-| Shot | 10 |
+| Shot | 10 (tap); holding charges up to 25 in total |
 | Escaping an attraction field quickly | 20/s |
 | Energy core (mechanism) | any amount the player chooses to pay in |
 
@@ -70,16 +70,24 @@ Inspired by the Loader character in Risk of Rain: stop, store and redirect momen
 1. **Hold:** momentum is frozen and stored; Rino brakes hard or hangs in the air. Slow motion (~0.25x), camera freely rotatable. Hold is capped (~1.2 s real time), then the Loader discharges automatically.
 2. **Release:** discharge in the view direction (including up and down) at `max(stored speed, minimum push) + bonus`, capped.
 3. **Look while holding:** the crosshair becomes a **charge ring** that fills with the stored momentum and shows the speed; a **dashed trajectory preview** of the discharge; the world is slightly **desaturated** with a **turquoise vignette**. With an empty arm the ring stays grey and the preview shows no bonus segment.
-4. **Removed:** goggle HUD, zoom, shoulder offset and aim pose (Phase 3/4 aim mode). The small always-on crosshair stays for hip-fire shots and targets; aim-assist logic stays for targets.
+4. **Rules (Phase 5 discuss):** on the ground the Loader brakes Rino hard (~0.1 s skid), then Rino stands while the momentum is stored; the discharge may go up (super jump out of a run). One use per air phase, refilled on landing. The Loader neither refills nor spends the air dash; after the release air control is locked for ~0.15 s.
+5. **Feel property: "geladen" (a loaded spring).** Holding builds tension (ring fills, rising hum, slight camera pull-back); the release is sharp with a short hitstop. Every cue points at this one property.
+6. **Two rings, never confused:** the Loader ring at the crosshair turns and fills like the shot charge ring but looks clearly different (e.g. shot = notched ring turning clockwise, Loader = double ring filled by momentum turning the other way).
+7. **Removed:** goggle HUD, zoom, shoulder offset and aim pose (Phase 3/4 aim mode). The small always-on crosshair stays for hip-fire shots and targets; aim-assist logic stays for targets.
 
 The old Phase 5 (Pull/Push) is replaced by this mechanic. Pull and push are dropped.
 
 ## 5. Left click: two modules, switched with the mouse wheel
 
 - **Extractor** (hold): cone in front of the hand; drains enemies, shards and energy capsules. Brings energy.
-- **Shot** (tap): the existing Fernauslöser pulse as a projectile. Costs energy; hits targets and enemies. Targets activated by hip-fire shots replace levers.
+- **Shot** (tap or hold): a flying projectile, never a beam (Mega Man / Samus charge shot). Tap = small shot for 10. Holding drains energy continuously while the projectile grows, up to 25 in total in ~0.8 s, with one clear full-charge tell (flash + sound); releasing earlier fires a proportional shot. More charge = more range, heavy mechanisms, and (from Phase 6) more damage. Under 10 energy it does not fire (grey arm flicker). Hits targets and enemies. Targets activated by hip-fire shots replace levers.
+- **Aim assist:** a strong, noticeable snap with hysteresis; the projectile bends to the locked target so targets can be hit at full speed. No mouse slowdown. Targets that must be hit in motion are plate-like **gear discs**.
 
-Both run on the Phase 4 hand module framework (one folder + one registry entry per module).
+Both run on the Phase 4 hand module framework (one folder + one registry entry per module) and fire from the hip at the always-visible crosshair. Both arrive in Phase 5 (Extractor on capsules and machines only; enemies and shards in Phase 6).
+
+### HUD
+
+Top left: 4 core chambers with partial fill, the Moto Perpetuo state, the active module, and a **momentum readout** (speed gauge with marks, e.g. at the passive-charge threshold). Health joins it in Phase 6. The four glowing cores on the arm stay the diegetic main read.
 
 ## 6. Mechanism kit
 
@@ -227,9 +235,9 @@ Look rule: a look may change freely **within its layer**, but must never break t
 
 | Phase | Delivers from this document |
 |---|---|
-| 5 Energy Arm & Loader | sections 2-4: resource, Moto Perpetuo, income without enemies, energy costs, Loader, removal of aim mode |
-| 05.1 Kit Rework | section 6: kit cube, 8 logic blocks + 4 components, the three layers, showroom regroup |
-| 6 Extractor & Shot | section 5 and the enemy income from section 3 |
+| 5 Energy Arm & Loader | sections 2-4: resource, Moto Perpetuo, income without enemies, energy costs, Loader, removal of aim mode; from section 5 the Extractor (capsules and machines), the charged projectile shot and the energy HUD |
+| 05.1 Kit Rework | section 6: kit cube, 8 logic blocks + 4 components, the three layers, showroom regroup; targets as gear discs |
+| 6 Extractor & Shot | enemies, shards, shot damage, Extractor on enemies, health next to the HUD, and the enemy income from section 3 |
 | 7 Level | the "charge the level" gimmick, built from the kit |
 | 8 Boss | beaten through Loader discharges and shots on weak points |
 
@@ -240,3 +248,4 @@ Look rule: a look may change freely **within its layer**, but must never break t
 | 2026-11-23 | Created from the energy-momentum design session (note `.planning/notes/2026-11-23-energy-momentum-core-mechanic.md`): core loop, governing rule, resource, Loader, modules, mechanism kit (Block 6). |
 | 2026-11-23 | Left-click drain module renamed from Siphon to **Extractor** (verb: extract). Gym rule: every gameplay phase ends with the movement gym reworked and extended (ROADMAP rules). HTML view `docs/game-design.html` added. |
 | 2026-11-23 | Lecture review (C&D II + III) added as `docs/reference/LECTURE-PRINCIPLES.md` with the project skill `attimo-design-principles`; architecture guardrails added to 6.8; fullscreen deck `docs/attimo-presentation.html` added next to the site. |
+| 2026-11-24 | Phase 5 discuss: passive charge from ~10 m/s; charge button on R; Loader rules (ground brake, once per air phase, independent of the air dash) and feel property "geladen"; shot is a charged projectile (tap 10, hold up to 25, full-charge tell, no beam); stronger snap assist, no slowdown, gear-disc targets; Extractor (capsules only), shot and energy HUD with momentum readout pulled into Phase 5; Moto Perpetuo also lights feet and back. |

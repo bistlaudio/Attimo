@@ -140,7 +140,7 @@ code { font-family: var(--mono); font-size: .9em; color: var(--accent); }
         <text x="360" y="66" fill="#9aa39f" font-size="12">run · jump chain · dash hop</text>
         <rect x="530" y="190" width="176" height="60" rx="10" fill="#1a2026" stroke="#3fd6c6" stroke-width="1.5"/>
         <text x="618" y="215" fill="#e7e3da" font-weight="600" font-size="16">Arm charges</text>
-        <text x="618" y="235" fill="#9aa39f" font-size="12">+3–6 /s above ~12 m/s</text>
+        <text x="618" y="235" fill="#9aa39f" font-size="12">+3–6 /s above ~10 m/s</text>
         <rect x="250" y="362" width="220" height="60" rx="10" fill="#1a2026" stroke="#3fd6c6" stroke-width="1.5"/>
         <text x="360" y="387" fill="#e7e3da" font-weight="600" font-size="16">Spend energy</text>
         <text x="360" y="407" fill="#9aa39f" font-size="12">injected moves · Loader discharge</text>
@@ -276,20 +276,20 @@ code { font-family: var(--mono); font-size: .9em; color: var(--accent); }
   <section class="slide" data-title="Energy">
     <div class="eyebrow">The resource</div>
     <h2>0–100 energy in four cores</h2>
-    <div class="cores"><span class="core">25</span><span class="core">50</span><span class="core off">75</span><span class="core off">100</span><span class="lbl">50 → Moto Perpetuo: +10–15 % run speed, buffed Jump 3, brighter arm</span></div>
+    <div class="cores"><span class="core">25</span><span class="core">50</span><span class="core off">75</span><span class="core off">100</span><span class="lbl">50 → Moto Perpetuo: +10–15 % run speed, buffed Jump 3, arm, feet and back glow</span></div>
     <div class="cols2 tight">
       <table><tr><th>Income</th><th></th></tr>
-        <tr><td>Momentum above ~12 m/s</td><td class="n">+3–6 /s</td></tr>
+        <tr><td>Momentum above ~10 m/s</td><td class="n">+3–6 /s</td></tr>
         <tr><td>Capsule / broken machine</td><td class="n">+40</td></tr>
         <tr><td>Extract an enemy (~2 s)</td><td class="n">+35</td></tr>
         <tr><td>Shoot, absorb shards</td><td class="n">−10 / +25</td></tr>
-        <tr><td>Charge button</td><td class="n">+5 /s</td></tr></table>
+        <tr><td>Charge button (R)</td><td class="n">+5 /s</td></tr></table>
       <table><tr><th>Spending</th><th></th></tr>
         <tr><td>Loader bonus</td><td class="n">25</td></tr>
         <tr><td>Dash hop stage 2 / 3</td><td class="n">15 each</td></tr>
         <tr><td>Air dash</td><td class="n">10</td></tr>
         <tr><td>Wall run after 0.6 s</td><td class="n">15 /s</td></tr>
-        <tr><td>Shot</td><td class="n">10</td></tr></table>
+        <tr><td>Shot tap / full charge</td><td class="n">10 / 25</td></tr></table>
     </div>
   </section>
 
@@ -301,6 +301,8 @@ code { font-family: var(--mono); font-size: .9em; color: var(--accent); }
       <li><b>Look</b> · charge ring fills with the stored speed, dashed trajectory, turquoise vignette</li>
       <li><b>Release</b> · discharge in the view direction: <code>max(stored, min push) + bonus</code></li>
       <li><b>Empty arm</b> · redirect only, grey ring, cooldown</li>
+      <li><b>Rules</b> · ground: hard brake, then launch (also up) · once per air phase · air dash untouched</li>
+      <li><b>Feel</b> · "geladen": a loaded spring, sharp release with a short hitstop</li>
     </ol>
   </section>
 
@@ -309,7 +311,7 @@ code { font-family: var(--mono); font-size: .9em; color: var(--accent); }
     <h2>Two modules</h2>
     <div class="cols2">
       <div class="box" style="--c: var(--accent)"><h3>Extractor · hold</h3><p>Cone in front of the hand. Drains enemies, shards, capsules and broken machines. Efficient, slow, risky.</p></div>
-      <div class="box" style="--c: var(--accent)"><h3>Shot · tap</h3><p>The pulse as a projectile. Costs 10, hits targets and enemies; enemies burst into shards. Targets replace levers.</p></div>
+      <div class="box" style="--c: var(--accent)"><h3>Shot · tap or hold</h3><p>A projectile, never a beam (Mega Man / Samus). Tap 10, hold charges up to 25 with a full-charge tell. Strong snap to gear-disc targets; enemies burst into shards.</p></div>
     </div>
   </section>
 
@@ -396,9 +398,9 @@ code { font-family: var(--mono); font-size: .9em; color: var(--accent); }
     <h2>Roadmap</h2>
     <table class="small">
       <tr><th>Phase</th><th>Delivers</th></tr>
-      <tr><td class="n">5</td><td>Energy arm &amp; Loader, aim mode removed</td></tr>
+      <tr><td class="n">5</td><td>Energy arm &amp; Loader, aim mode removed, Extractor + charged shot, energy HUD</td></tr>
       <tr><td class="n">05.1</td><td>Kit rework: blocks, components, three layers</td></tr>
-      <tr><td class="n">6</td><td>Extractor, Shot, enemies, energy HUD</td></tr>
+      <tr><td class="n">6</td><td>Enemies, shards, shot damage, health</td></tr>
       <tr><td class="n">7</td><td>Level with "charge the level"</td></tr>
       <tr><td class="n">8</td><td>Boss beaten by Loader and shots</td></tr>
     </table>
