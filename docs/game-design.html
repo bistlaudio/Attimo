@@ -465,7 +465,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
       <li><b>Hold:</b> same slow motion and free camera as the Loader; a pressure gauge instead of the charge ring, brass trajectory dashes, auto-launch after the max hold.</li>
       <li><b>Release:</b> steam blast, launch in the view direction at <code>max(entry speed, fixed push)</code>, no energy bonus.</li>
     </ol>
-    <p class="muted">Same input and timing as the Loader, so it teaches the Loader without a tutorial.</p>
+    <p class="muted">Same input and timing as the Loader, so it teaches the Loader without a tutorial. Entering starts the hold at once; releasing RMB (or a tap) fires, otherwise it auto-launches at the Loader cap. It refills the Loader's air use and leaves the air dash alone.</p>
   </div>
 
   <h3>Architecture · 8 logic blocks + 4 components + looks</h3>
@@ -484,11 +484,21 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
   <div class="tbl"><table>
     <tr><th>Component</th><th>Does</th><th>Examples</th></tr>
     <tr><td>Receiver</td><td>switched by a trigger signal</td><td>switched speed pad, drawbridge, gates</td></tr>
-    <tr><td>Damage / push</td><td>hurts or pushes on contact</td><td>pendulum, steam hammer, piston wall, snap bloom</td></tr>
+    <tr><td>Damage / push</td><td>hurts or pushes on contact (only pushes until health arrives in Phase 6)</td><td>pendulum, steam hammer, piston wall, snap bloom, falling debris</td></tr>
     <tr><td>Amplification</td><td>reads the arm charge, acts stronger</td><td>bounce pad with core, gravity zone</td></tr>
-    <tr><td>Energy cost</td><td>drains energy while used</td><td>fast escape from the attraction field</td></tr>
+    <tr><td>Energy cost</td><td>drains energy while used</td><td>fast escape from the attraction field, paying into an energy core</td></tr>
   </table></div>
   <p class="muted">Parallels between layers come from components: a steampunk object plus amplification becomes its energy counterpart. A look may change freely within its layer but never breaks the coupling.</p>
+  <h3>Rules fixed in the Phase 05.1 discuss</h3>
+  <ul>
+    <li><b>Steam cannon:</b> short fixed hold, then a launch along the barrel at a fixed speed, independent of the entry speed.</li>
+    <li><b>Steam wall:</b> the nozzle push is gone; a steam-look wall pad runs and jumps exactly like the plain pad, with Rino upright along the wall.</li>
+    <li><b>Clock hand:</b> a bounded back-and-forth sweep, always on, never steeper than the floor angle (no full turn; confirm in playtest).</li>
+    <li><b>Targets:</b> gear discs fired only by a shot, with a capsule nearby.</li>
+    <li><b>Energy core:</b> hold E to pay in; the amount stays, and each threshold (25 / 50 / 75) switches one more output.</li>
+    <li><b>Barrier and attraction field:</b> only a Loader discharge with bonus breaks the barrier; walking out of the attraction field is free, a fast escape costs 20/s.</li>
+    <li><b>Showroom = gym:</b> one area per layer, grouped by role, plus a mixed course; the Phase 5 Loader room and energy area stay.</li>
+  </ul>
 </section>
 
 <section class="ref" id="roadmap">

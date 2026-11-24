@@ -197,9 +197,9 @@ Professional pattern: logic separated from look, and cross-cutting abilities as 
 | Component | Does | Examples |
 |---|---|---|
 | Receiver | gets switched by a trigger signal | switched speed pad, drawbridge, gates |
-| Damage / push | hurts or pushes on contact | pendulum, steam hammer, piston wall, snap bloom |
+| Damage / push | hurts or pushes on contact (until health exists in Phase 6 it only pushes and reports the hit amount) | pendulum, steam hammer, piston wall, snap bloom, falling debris |
 | Amplification | reads the arm charge and acts stronger | bounce pad with core, gravity zone |
-| Energy cost | drains energy while used | fast escape from the attraction field |
+| Energy cost | drains energy while used | fast escape from the attraction field, paying into an energy core |
 
 **Looks:** inherited scenes that only swap visuals. **Presets:** `.tres` value sets (e.g. "geyser strong" / "geyser weak").
 
@@ -236,6 +236,17 @@ Look rule: a look may change freely **within its layer**, but must never break t
 - **AND / OR / timer:** kept as invisible level-design logic on the trigger block (e.g. two targets open one gate; a target opens a gate for 5 s as a speed challenge).
 - **Steam wall fixes (user feedback):** the jump off the steam wall must feel natural like the normal wall jump; currently it is over the top and just flings Rino away. The wall run on it is buggy: Rino currently runs with the head against the wall (wrong orientation).
 
+### 6.10 Rules fixed in the Phase 05.1 discuss
+
+1. **Slingshot input:** entering the cage catches Rino and starts the hold at once (Loader slow motion, cap and free camera, same values). If RMB is held, its release fires. If not, a press continues the hold and the release fires (a tap fires at once). With no input the cage auto-launches at the Loader's hold cap. The launch adds no bonus and spends or gives no energy. It refills the Loader's one air use and leaves the air dash alone.
+2. **Steam cannon:** the fixed-direction catch & launch. A short fixed hold with no slow motion and no input, then a launch along the barrel at a fixed speed that does not depend on the entry speed, so the arc is always the same.
+3. **Steam wall:** the steam nozzle wall push is gone. A steam-look wall pad behaves exactly like the plain wall pad (same wall run, same wall jump, no extra push). Rino runs along the wall upright, leaning slightly toward it.
+4. **Clock-hand platform:** a hand pivoted at one end that sweeps back and forth, always on, clamped below the floor angle so it never throws the rider off. It does not do a full 360-degree turn. To be confirmed in playtest.
+5. **Targets:** gear discs fired only by a shot (tap or charged); a capsule stays nearby.
+6. **Energy core:** hold E near the core to pay in. The paid amount stays, and each threshold (start 25 / 50 / 75) switches one more output (more parkour pieces, a farther door).
+7. **Force-field barrier:** only a Loader discharge with bonus breaks it. **Attraction field:** walking out is always possible and free; a fast escape (dash or Loader) costs 20/s.
+8. **Showroom = gym:** the gym gets one area per layer (grouped by role) plus a mixed course; the Phase 5 Loader room and energy area stay as they are.
+
 ## 7. Roadmap mapping
 
 | Phase | Delivers from this document |
@@ -255,3 +266,4 @@ Look rule: a look may change freely **within its layer**, but must never break t
 | 2026-11-23 | Lecture review (C&D II + III) added as `docs/reference/LECTURE-PRINCIPLES.md` with the project skill `attimo-design-principles`; architecture guardrails added to 6.8; fullscreen deck `docs/attimo-presentation.html` added next to the site. |
 | 2026-11-24 | Phase 5 discuss: passive charge from ~10 m/s; charge button on R; Loader rules (ground brake, once per air phase, independent of the air dash) and feel property "geladen"; shot is a charged projectile (tap 10, hold up to 25, full-charge tell, no beam); stronger snap assist, no slowdown, gear-disc targets; Extractor (capsules only), shot and energy HUD with momentum readout pulled into Phase 5; Moto Perpetuo also lights feet and back. |
 | 2026-11-24 | Phase 5 executed: Loader room and energy area in the gym (doorway from the Loader room, charge track, capsules, broken machine, drain plates, injected-move and shot stations), capsules next to every shot puzzle, signs rewritten for hip fire (tap or charge, no aim hold); Extractor on capsules and machines, charged projectile shot with bend, energy-gated glow, notched shot ring; Loader pitch raised to about 75 degrees while holding; energy rows added to the metrics doc. Numbers (7 degree assist, 540 degrees per second bend, 40 m/s, 4 m extract range) are F2 starting values. |
+| 2026-11-24 | Phase 05.1 discuss (auto run): section 6.10 added (slingshot input, steam cannon fixed speed, steam wall = plain wall pad behaviour, clock hand as a bounded always-on sweep, shot-only targets, energy core pay-in with E and thresholds, barrier and attraction-field rules, showroom merged into the gym layer areas); 6.8 components: energy cost also covers the energy core pay-in, damage only pushes until Phase 6. |
