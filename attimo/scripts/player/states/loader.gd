@@ -204,7 +204,8 @@ func _discharge() -> StringName:
 func _discharge_fixed() -> StringName:
 	var config: MovementConfig = actor.config
 	var direction: Vector3 = actor.loader_profile.direction.normalized()
-	var speed: float = actor.loader_profile.speed
+	# T-05.1-05: never faster than the Loader's own ceiling, whatever the config says.
+	var speed: float = minf(actor.loader_profile.speed, config.loader_max_speed)
 	var velocity: Vector3 = direction * speed
 	actor.move_velocity = Vector3(velocity.x, 0.0, velocity.z)
 	actor.vertical_speed = clampf(velocity.y, -config.terminal_speed, config.terminal_speed)
