@@ -21,6 +21,7 @@ const COMPONENT_CLASSES: Array[String] = ["Receiver", "DamagePush", "Amplificati
 ## Every kit object scene and the smoke test that covers it (one station and one test per object, KIT-04).
 const KIT_OBJECTS: Dictionary = {
 	"res://scenes/kit/steampunk/slingshot_core.tscn": "res://tests/smoke/test_slingshot_loader.gd",
+	"res://scenes/kit/steampunk/steam_cannon.tscn": "res://tests/smoke/test_steam_cannon.gd",
 }
 
 
