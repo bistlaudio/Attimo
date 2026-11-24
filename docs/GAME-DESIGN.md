@@ -71,6 +71,7 @@ Inspired by the Loader character in Risk of Rain: stop, store and redirect momen
 2. **Release:** discharge in the view direction (including up and down) at `max(stored speed, minimum push) + bonus`, capped.
 3. **Look while holding:** the crosshair becomes a **charge ring** that fills with the stored momentum and shows the speed; a **dashed trajectory preview** of the discharge; the world is slightly **desaturated** with a **turquoise vignette**. With an empty arm the ring stays grey and the preview shows no bonus segment.
 4. **Rules (Phase 5 discuss):** on the ground the Loader brakes Rino hard (~0.1 s skid), then Rino stands while the momentum is stored; the discharge may go up (super jump out of a run). One use per air phase, refilled on landing. The Loader neither refills nor spends the air dash; after the release air control is locked for ~0.15 s.
+   **As built (Phase 5):** while holding, the camera pitch limit eases from 43 to about 75 degrees so a near-vertical discharge (super jump) is possible; the dashed preview shows the no-input arc, turquoise only with a full core; the gym room `Zone_Loader` sizes its gap (7 m) and ledge (5 m) from `LoaderMath`, so only a discharge with a full core clears them.
 5. **Feel property: "geladen" (a loaded spring).** Holding builds tension (ring fills, rising hum, slight camera pull-back); the release is sharp with a short hitstop. Every cue points at this one property.
 6. **Two rings, never confused:** the Loader ring at the crosshair turns and fills like the shot charge ring but looks clearly different (e.g. shot = notched ring turning clockwise, Loader = double ring filled by momentum turning the other way).
 7. **Removed:** goggle HUD, zoom, shoulder offset and aim pose (Phase 3/4 aim mode). The small always-on crosshair stays for hip-fire shots and targets; aim-assist logic stays for targets.
@@ -79,15 +80,19 @@ The old Phase 5 (Pull/Push) is replaced by this mechanic. Pull and push are drop
 
 ## 5. Left click: two modules, switched with the mouse wheel
 
-- **Extractor** (hold): cone in front of the hand; drains enemies, shards and energy capsules. Brings energy.
-- **Shot** (tap or hold): a flying projectile, never a beam (Mega Man / Samus charge shot). Tap = small shot for 10. Holding drains energy continuously while the projectile grows, up to 25 in total in ~0.8 s, with one clear full-charge tell (flash + sound); releasing earlier fires a proportional shot. More charge = more range, heavy mechanisms, and (from Phase 6) more damage. Under 10 energy it does not fire (grey arm flicker). Hits targets and enemies. Targets activated by hip-fire shots replace levers.
+- **Extractor** (hold, key 2): cone in front of the hand (35 degrees, 4 m, F2 starting values); drains energy capsules and broken machines (enemies and shards in Phase 6). Brings energy; the arm points at the source and the source goes dark, then refills after its `respawn_time`.
+- **Shot** (tap or hold, key 1): a flying projectile, never a beam (Mega Man / Samus charge shot). Tap = small shot for 10. Holding drains energy continuously while the projectile grows, up to 25 in total in ~0.8 s, with one clear full-charge tell (flash + sound); releasing earlier fires a proportional shot. More charge = more range (tap 15 m, full charge 25 m), heavy mechanisms (only a full-charge shot turns the valve), and (from Phase 6) more damage. The full-charge tell is a notched clockwise shot ring with a flash, a palm flash and a placeholder beep. Interactables only glow as shootable (and the target only brightens) while the arm can pay the 10. Under 10 energy it does not fire (grey arm flicker). Hits targets and enemies. Targets activated by hip-fire shots replace levers.
 - **Aim assist:** a strong, noticeable snap with hysteresis; the projectile bends to the locked target so targets can be hit at full speed. No mouse slowdown. Targets that must be hit in motion are plate-like **gear discs**.
 
-Both run on the Phase 4 hand module framework (one folder + one registry entry per module) and fire from the hip at the always-visible crosshair. Both arrive in Phase 5 (Extractor on capsules and machines only; enemies and shards in Phase 6).
+The mouse wheel and keys 1 and 2 only switch modules (no camera zoom). Both run on the Phase 4 hand module framework (one folder + one registry entry per module) and fire from the hip at the always-visible crosshair. Both arrived in Phase 5 (Extractor on capsules and machines only; enemies and shards in Phase 6). The shot bends toward its locked target at 540 degrees per second and flies at 40 m/s; the assist angle is 7 degrees (all F2 starting values).
 
 ### HUD
 
 Top left: 4 core chambers with partial fill, the Moto Perpetuo state, the active module, and a **momentum readout** (speed gauge with marks, e.g. at the passive-charge threshold). Health joins it in Phase 6. The four glowing cores on the arm stay the diegetic main read.
+
+### Gym coverage (Phase 5)
+
+The movement gym shows the energy core as stations: the Loader room, then the energy area `Zone_Energy` behind its west wall doorway (a plain run from the hall reaches it). It holds a 114 m charge track (dash-hop chain charges, plain running does not), a boost line, a capsule, a broken machine, the charge spot, and one station per injected move (air dash, dash hop stages 2-3, wall run) with a drain plate (the base version) and a capsule (the injected version) side by side, plus the shot stations (tap vs full charge, hitting while moving). Every old shot puzzle and Auslöser station has a respawning capsule next to it. Energy rates are in `docs/MOVEMENT-METRICS.md` (FEEL-10).
 
 ## 6. Mechanism kit
 
@@ -237,7 +242,7 @@ Look rule: a look may change freely **within its layer**, but must never break t
 |---|---|
 | 5 Energy Arm & Loader | sections 2-4: resource, Moto Perpetuo, income without enemies, energy costs, Loader, removal of aim mode; from section 5 the Extractor (capsules and machines), the charged projectile shot and the energy HUD |
 | 05.1 Kit Rework | section 6: kit cube, 8 logic blocks + 4 components, the three layers, showroom regroup; targets as gear discs |
-| 6 Extractor & Shot | enemies, shards, shot damage, Extractor on enemies, health next to the HUD, and the enemy income from section 3 |
+| 6 Extractor & Shot | extends the Phase 5 Extractor, shot and HUD to enemies and shards: enemies, shards, shot damage, Extractor on enemies, health next to the HUD, and the enemy income from section 3 |
 | 7 Level | the "charge the level" gimmick, built from the kit |
 | 8 Boss | beaten through Loader discharges and shots on weak points |
 
@@ -249,3 +254,4 @@ Look rule: a look may change freely **within its layer**, but must never break t
 | 2026-11-23 | Left-click drain module renamed from Siphon to **Extractor** (verb: extract). Gym rule: every gameplay phase ends with the movement gym reworked and extended (ROADMAP rules). HTML view `docs/game-design.html` added. |
 | 2026-11-23 | Lecture review (C&D II + III) added as `docs/reference/LECTURE-PRINCIPLES.md` with the project skill `attimo-design-principles`; architecture guardrails added to 6.8; fullscreen deck `docs/attimo-presentation.html` added next to the site. |
 | 2026-11-24 | Phase 5 discuss: passive charge from ~10 m/s; charge button on R; Loader rules (ground brake, once per air phase, independent of the air dash) and feel property "geladen"; shot is a charged projectile (tap 10, hold up to 25, full-charge tell, no beam); stronger snap assist, no slowdown, gear-disc targets; Extractor (capsules only), shot and energy HUD with momentum readout pulled into Phase 5; Moto Perpetuo also lights feet and back. |
+| 2026-11-24 | Phase 5 executed: Loader room and energy area in the gym (doorway from the Loader room, charge track, capsules, broken machine, drain plates, injected-move and shot stations), capsules next to every shot puzzle, signs rewritten for hip fire (tap or charge, no aim hold); Extractor on capsules and machines, charged projectile shot with bend, energy-gated glow, notched shot ring; Loader pitch raised to about 75 degrees while holding; energy rows added to the metrics doc. Numbers (7 degree assist, 540 degrees per second bend, 40 m/s, 4 m extract range) are F2 starting values. |

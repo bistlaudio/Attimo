@@ -47,7 +47,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [x] **HAND-03**: Module 1 "Fernauslöser": player aims and fires a turquoise pulse (tap = small, hold = big) that triggers mechanisms at range
 - [x] **HAND-04**: Right-click Loader: holding freezes and stores momentum in slow motion with a free camera, charge ring and trajectory preview; releasing discharges in the view direction (bonus costs one core, empty arm only redirects). Replaces aim mode and Pull/Push (docs/GAME-DESIGN.md section 4)
 - [ ] **HAND-05**: Picking up a module is a clear moment (pickup feedback, HUD icon) and unlocks the module permanently
-- [ ] **EXTR-01**: Extractor module (hold, cone in front of the hand) drains enemies, shards, energy capsules and broken machines for energy; switched with the Shot via the mouse wheel
+- [ ] **EXTR-01**: Extractor module (hold, cone in front of the hand) drains enemies, shards, energy capsules and broken machines for energy; switched with the Shot via the mouse wheel (module, capsules and broken machines built in Phase 5; enemies and shards in Phase 6)
 - [ ] **HAND-06**: Each module has a teaching room: safe first use, then a test, then a twist
 - [x] **HAND-07**: Every interactable's glow element is a steampunk primitive element (brass bezel or gear ring around a faceted turquoise core) shaped to fit its mechanic, built from shared primitives and materials; the glow stages still switch on the core
 
@@ -278,4 +278,4 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 
 ---
 *Requirements defined: 2026-11-02*
-*Last updated: 2026-11-23 after the energy-momentum rework (Phase 5 rescoped to Energy Arm & Loader, Phase 05.1 Kit Rework inserted; HAND-04, FEEL-10, ART-04, SHOOT-01, BOSS-03 reworded; ENRG-01..05, EXTR-01, KIT-01..04, LEVEL-04 added; source docs/GAME-DESIGN.md)*
+*Last updated: 2026-11-24 after Phase 5 plan 05-05 (EXTR-01 marked as partly built in Phase 5: module, capsules and machines; ENRG-05 confirmed in Phase 5). Earlier: 2026-11-23 after the energy-momentum rework (Phase 5 rescoped to Energy Arm & Loader, Phase 05.1 Kit Rework inserted; HAND-04, FEEL-10, ART-04, SHOOT-01, BOSS-03 reworded; ENRG-01..05, EXTR-01, KIT-01..04, LEVEL-04 added; source docs/GAME-DESIGN.md)*

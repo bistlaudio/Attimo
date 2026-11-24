@@ -40,7 +40,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Fernauslöser & Mechanism Kit** - Hand module framework, turquoise highlight with aim assist, Module 1 remote-trigger pulse, and the greybox D-15/D-16 mechanism kit (levers, valves, energy cores, cranks, gear gates, rotating and lift platforms, conveyors, steam nozzles, pendulums) with AND, OR and timer logic (completed 2026-11-23)
 - [ ] **Phase 5: Energy Arm & Loader** - Energy resource in 4 arm cores with Moto Perpetuo, passive and capsule income, energy costs for injected moves, the right-click Loader with charge ring and trajectory preview, aim mode removed
 - [ ] **Phase 05.1: Kit Rework** (INSERTED) - Mechanism kit rebuilt as 8 logic blocks + 4 components + looks in steampunk, energy and nature layers, showroom regrouped
-- [ ] **Phase 6: Extractor, Shot, Enemies & Recovery** - Extractor and Shot modules on the mouse wheel, shards, 1-2 greybox enemy types, energy HUD next to health, module pickup and teaching rooms, checkpoints and near-instant respawn
+- [ ] **Phase 6: Extractor, Shot, Enemies & Recovery** - Extends the Phase 5 Extractor, shot and energy HUD to enemies and shards, shards, 1-2 greybox enemy types, energy HUD next to health, module pickup and teaching rooms, checkpoints and near-instant respawn
 - [ ] **Phase 7: Level Blockout & Game Flow** - The full Prototype Bits level with ability gating, the "charge the level" gimmick and reset paths, plus title, pause and settings menus
 - [ ] **Phase 8: Boss & Ending** - A greybox object-boss with 2-3 telegraphed phases, beaten through hand modules and arena mechanisms, followed by the end screen
 
@@ -238,7 +238,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
 
   1. The arm holds 0-100 energy in 4 cores of 25, readable on the arm. From 50 the player is in Moto Perpetuo (faster run, buffed Jump 3, brighter arm). After a respawn the arm holds exactly one core (25).
-  2. Energy comes in without enemies: passively while moving above about dash exit speed, from energy capsules and broken machines (placeholder drain via hold-interact until the Extractor module lands in Phase 6), and very slowly from the charge button.
+  2. Energy comes in without enemies: passively while moving above about dash exit speed, from energy capsules and broken machines drained with the Extractor module (left-click hold), and very slowly from the charge button.
   3. Base moves stay free and the injected versions cost energy: ground dash free, air dash costs and does not fire when empty; dash hop stage 1 free, stages 2-3 cost; wall run free for about 0.6 s, then costs; jumping off is always free. Without energy the base version fires automatically (except the air dash).
   4. Holding right click freezes and stores momentum in slow motion (about 0.25x, capped about 1.2 s) with a free camera, a charge ring and a dashed trajectory preview; releasing discharges in the view direction at max(stored speed, minimum push) plus a bonus that costs one core. With an empty arm it only redirects, with a cooldown and a grey ring.
   5. Aim mode is gone (goggle HUD, zoom, shoulder offset, aim pose, pull/push); the small always-on crosshair and target aim assist stay. A Loader test room exists and the Loader metrics table (minimum push, bonus, cap, hold time, slow-motion factor, energy rates) is recorded and tuned.
@@ -294,10 +294,10 @@ Plans:
 **Requirements**: SHOOT-01, SHOOT-02, SHOOT-03, EXTR-01, HAND-05, HAND-06, ART-04, PROG-01, PROG-03, PROG-04
 **Success Criteria** (what must be TRUE):
 
-  1. Left click runs two modules switched with the mouse wheel: the Extractor (hold, cone in front of the hand) drains enemies (up to +35 over about 2 s, player vulnerable), shards, energy capsules and broken machines; the Shot (tap, the Fernauslöser pulse as a projectile) costs energy and hits targets, objects and enemies.
+  1. The two left-click modules built in Phase 5 (Extractor and Shot, switched with the mouse wheel) are extended: the Extractor (hold, cone in front of the hand) also drains enemies (up to +35 over about 2 s, player vulnerable) and shards, next to the capsules and broken machines it already drains; the Shot (a projectile, tap 10 or charged up to 25) also hits enemies.
   2. Shot enemies burst into shards the player extracts (shot -10, shards +25), so the Extractor is more efficient and shooting is faster and more fun. Prototype Bits barrels, crates and targets react visibly to shots.
   3. 1-2 simple greybox enemy types (small machines turned evil, built from Prototype Bits) patrol, notice the player and attack.
-  4. The player has 3-5 health points; an energy HUD sits next to health (diegetic cores on the arm plus a minimal readout). Taking damage is obvious from a kit Hit clip. At 0 health the player respawns at the last checkpoint with one core.
+  4. The player has 3-5 health points; health joins the Phase 5 energy HUD (diegetic cores on the arm plus a minimal readout). Taking damage is obvious from a kit Hit clip. At 0 health the player respawns at the last checkpoint with one core.
   5. Reaching a checkpoint visibly changes its state and saves progress, including unlocked modules. After a death or a fall into a kill zone, the player is back in control within about 1 second. Picking up a module plays the kit PickUp clip, shows its HUD icon and unlocks it for good; each module has a teaching room (safe use, test, twist). Loader, Extractor and Shot each show a readable pose from kit clips.
   6. The movement gym is extended with an Extractor and Shot area: training enemies, shard pickups, targets for hip shots and a short course that mixes extracting, shooting and the Loader.
 

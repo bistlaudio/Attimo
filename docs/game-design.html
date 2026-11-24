@@ -383,6 +383,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
     <li><b>Release:</b> discharge in the view direction (also up and down) at <code>max(stored speed, minimum push) + bonus</code>, capped.</li>
     <li><b>Look:</b> the crosshair becomes a charge ring that fills with the stored speed, a dashed trajectory preview, slight desaturation and a turquoise vignette. Empty arm: grey ring, no bonus segment.</li>
     <li><b>Rules:</b> on the ground Rino brakes hard and stands, the discharge may go up. One use per air phase, refilled on landing. Independent of the air dash; ~0.15 s air-control lock after the release.</li>
+    <li><b>As built:</b> while holding, the camera pitch limit eases to about 75 degrees so a near-vertical discharge (super jump) works; the dashed preview is turquoise only with a full core. In the gym only a discharge with a full core clears the 7 m gap and the 5 m ledge.</li>
     <li><b>Feel: "geladen", a loaded spring.</b> Holding builds tension (ring, rising hum, slight camera pull-back); the release is sharp with a short hitstop. The Loader ring turns the other way and looks clearly different from the shot charge ring.</li>
     <li><b>Removed:</b> goggle HUD, zoom, shoulder offset, aim pose, pull and push. The small crosshair and target aim assist stay.</li>
   </ol>
@@ -393,14 +394,14 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
   <div class="grid2">
     <div class="layer" style="--c: var(--teal)">
       <h4>Extractor <span class="badge">hold</span></h4>
-      <p>Cone in front of the hand. Drains enemies, shards, energy capsules and broken machines. Brings energy.</p>
+      <p>Key 2. Cone in front of the hand (35 degrees, 4 m). Drains energy capsules and broken machines (enemies and shards in Phase 6). Brings energy; the source goes dark and refills after its respawn time.</p>
     </div>
     <div class="layer" style="--c: var(--teal)">
       <h4>Shot <span class="badge">tap or hold</span></h4>
-      <p>A flying projectile, never a beam (Mega Man / Samus). Tap = 10; holding drains energy continuously while the shot grows, up to 25, with a clear full-charge tell. Under 10 it does not fire. Strong snap assist bends the shot to the locked target; targets hit in motion are gear discs. Targets hit from the hip replace levers.</p>
+      <p>A flying projectile, never a beam (Mega Man / Samus). Key 1. Tap = 10 (reach 15 m); holding drains energy continuously while the shot grows, up to 25 (reach 25 m, the only shot that turns heavy mechanisms), with a clear full-charge tell (notched clockwise ring, palm flash, beep). Under 10 it does not fire; targets only glow as shootable while the arm can pay. Strong snap assist bends the shot to the locked target; targets hit in motion are gear discs. Targets hit from the hip replace levers.</p>
     </div>
   </div>
-  <p class="muted"><b>HUD</b> (top left): 4 core chambers, Moto Perpetuo state, active module and a momentum gauge; health joins it in Phase 6. Both modules and the HUD arrive in Phase 5 (Extractor on capsules and machines only).</p>
+  <p class="muted"><b>HUD</b> (top left): 4 core chambers, Moto Perpetuo state, active module and a momentum gauge; health joins it in Phase 6. Both modules and the HUD arrived in Phase 5 (Extractor on capsules and machines only). The mouse wheel and keys 1 and 2 only switch modules, there is no camera zoom. The gym area <code>Zone_Energy</code> behind the Loader room shows it all: a 114 m charge track, capsule, broken machine, charge spot, a drain plate and a capsule next to every injected move, and shot stations; every shot puzzle has a capsule at hand.</p>
 </section>
 
 <section class="ref" id="kit">
@@ -494,9 +495,9 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
   <h3>Roadmap mapping</h3>
   <div class="tbl"><table>
     <tr><th>Phase</th><th>Delivers</th></tr>
-    <tr><td class="n">5</td><td>Energy Arm &amp; Loader: resource, Moto Perpetuo, income without enemies, energy costs, Loader, aim mode removed, Extractor (capsules), charged shot, energy HUD</td></tr>
+    <tr><td class="n">5</td><td>Energy Arm &amp; Loader: resource, Moto Perpetuo, income without enemies, energy costs, Loader, aim mode removed, Extractor (capsules, machines), charged shot, energy HUD</td></tr>
     <tr><td class="n">05.1</td><td>Kit Rework: kit cube, 8 blocks + 4 components, three layers, showroom regrouped</td></tr>
-    <tr><td class="n">6</td><td>Extractor, Shot, Enemies &amp; Recovery: enemies, shards, shot damage, health, pickup and teaching rooms</td></tr>
+    <tr><td class="n">6</td><td>Extractor, Shot, Enemies &amp; Recovery: extends the Phase 5 Extractor, shot and HUD to enemies, shards, health: enemies, shards, shot damage, health, pickup and teaching rooms</td></tr>
     <tr><td class="n">7</td><td>Level blockout with the "charge the level" gimmick</td></tr>
     <tr><td class="n">8</td><td>Boss beaten through Loader discharges and shots on weak points</td></tr>
   </table></div>
