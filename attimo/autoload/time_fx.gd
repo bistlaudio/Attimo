@@ -13,6 +13,9 @@ extends Node
 const MIN_SCALE: float = 0.05
 
 var _requests: Dictionary[StringName, float] = {}
+## Per source: the id of its latest pulse, so a late timer of an older pulse never gives back a newer request.
+var _pulse_ids: Dictionary[StringName, int] = {}
+var _pulse_counter: int = 0
 
 
 ## Asks for the time scale `scale` on behalf of `source`. A second call of the same source replaces its request.
@@ -21,6 +24,27 @@ func request(source: StringName, scale: float) -> void:
 		return
 	_requests[source] = clampf(scale, MIN_SCALE, 1.0)
 	_apply()
+
+
+## A short slow-down of `real_seconds` of REAL time (the hitstop of the Loader release): request(source, scale), and a timer that
+## ignores the time scale gives it back. The timer only releases its own pulse: after clear_all() or a newer pulse of the same
+## source a late callback changes nothing. A non-finite or non-positive duration or scale is ignored.
+func pulse(source: StringName, scale: float, real_seconds: float) -> void:
+	if not is_finite(scale) or not is_finite(real_seconds) or real_seconds <= 0.0 or not is_inside_tree():
+		return
+	request(source, scale)
+	_pulse_counter += 1
+	var id: int = _pulse_counter
+	_pulse_ids[source] = id
+	# process_always, not in physics, ignores the time scale (RESEARCH A4): the duration is real seconds.
+	get_tree().create_timer(real_seconds, true, false, true).timeout.connect(_end_pulse.bind(source, id))
+
+
+func _end_pulse(source: StringName, id: int) -> void:
+	if _pulse_ids.get(source, -1) != id:
+		return
+	_pulse_ids.erase(source)
+	release(source)
 
 
 ## Gives back the request of `source`. Unknown sources are ignored.
@@ -32,6 +56,7 @@ func release(source: StringName) -> void:
 ## Gives back every request: the world runs at 1.0 again.
 func clear_all() -> void:
 	_requests.clear()
+	_pulse_ids.clear()
 	_apply()
 
 

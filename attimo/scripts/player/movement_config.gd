@@ -109,6 +109,12 @@ extends Resource
 @export_range(0.0, 3.0, 0.05) var loader_redirect_cooldown: float = 1.0
 ## Seconds air control is off after the discharge so steering does not eat the throw (D-03); raise it for a harder throw.
 @export_range(0.0, 0.5, 0.01) var loader_release_control_lock: float = 0.15
+## "Geladen" cue (D-04): real seconds of the short hitstop right after the release, so the discharge lands sharp; raise it for a heavier release.
+@export_range(0.0, 0.2, 0.01) var loader_hitstop_time: float = 0.05
+## Time scale during that hitstop (1.0 = no hitstop); lower it for a harder freeze.
+@export_range(0.05, 1.0, 0.01) var loader_hitstop_scale: float = 0.05
+## "Geladen" cue (D-04): how far in m the camera pulls back at a full hold, eased with the hold (never a cut); raise it for more tension.
+@export_range(0.0, 1.5, 0.05) var loader_camera_pullback: float = 0.35
 
 @export_group("Wall")
 ## Smallest horizontal speed in m/s that starts a wall-run on contact with a wall-run pad (MOVE-12); raise it to demand a faster approach.

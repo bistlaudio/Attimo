@@ -82,7 +82,8 @@ func _end(tree: SceneTree, check: Callable, name: String) -> void:
 	for action: StringName in [&"loader", &"move_forward", &"jump", &"dash"]:
 		Fixtures.send_action_event(action, false)
 		Input.action_release(action)
-	await Fixtures.wait_physics(tree, 3)
+	# The release hitstop (loader_hitstop_time of real time, plan 05-02) ends by itself within a few ticks.
+	await Fixtures.wait_physics(tree, 8)
 	check.call(Engine.time_scale == 1.0, "(%s) Engine.time_scale is back at 1.0 (got %.3f)" % [name, Engine.time_scale])
 	Fixtures.restore_time()
 	_bus.disconnect(&"loader_started", _on_started)
@@ -153,7 +154,7 @@ func _scenario_cap_edge(tree: SceneTree, check: Callable) -> void:
 	await tree.physics_frame
 	check.call(state.update_count == CAP_TICKS and not _is_loader(player), "(c3) the %dnd update released the hold (updates %d, state %s)" % [CAP_TICKS, state.update_count, player.state_machine.current.name])
 	check.call(_released.size() == 1, "(c3) loader_released fired once (got %d)" % _released.size())
-	check.call(Engine.time_scale == 1.0, "(c3) the time scale is 1.0 after the cap release (got %.3f)" % Engine.time_scale)
+	check.call(not (TimeFx.active_sources()).has(&"loader") and Engine.time_scale >= config.loader_hitstop_scale, "(c3) the Loader slow-down is released at the cap; only the release hitstop may remain (got %.3f)" % Engine.time_scale)
 	await _end(tree, check, "cap edge")
 
 
@@ -183,7 +184,7 @@ func _scenario_release(tree: SceneTree, check: Callable) -> void:
 	check.call(released["bonus"] == true and absf((released["speed"] as float) - expected_speed) < 0.05, "(r3) the fact carries bonus true and the speed (%s)" % [released])
 	check.call(absf(player.arm_energy.value) < 0.0001, "(r4) the bonus took the whole core: energy %.2f" % player.arm_energy.value)
 	check.call(_spent.size() == 1 and is_equal_approx(_spent[0]["amount"] as float, 25.0) and _spent[0]["reason"] == &"loader", "(r4) energy_spent(25.0, loader) fired once (%s)" % [_spent])
-	check.call(not _is_loader(player) and Engine.time_scale == 1.0, "(r5) the state is left and the time scale is 1.0")
+	check.call(not _is_loader(player) and not (TimeFx.active_sources()).has(&"loader"), "(r5) the state is left and the Loader slow-down is released (hitstop scale %.3f)" % Engine.time_scale)
 	await _end(tree, check, "release")
 
 

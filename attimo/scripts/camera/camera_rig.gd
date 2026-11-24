@@ -76,6 +76,8 @@ var settings: CameraSettings
 
 ## Process priority of the rig: lower runs first, so every _process reader of the camera (arm solver) sees this frame's view.
 const PROCESS_PRIORITY: int = -100
+## Seconds the Loader pull-back needs to travel its whole way (real time).
+const LOADER_PULL_EASE: float = 0.15
 
 ## Input device families tracked for the auto-follow mode (A41).
 enum InputDevice { KEYBOARD_MOUSE, JOYPAD }
@@ -141,6 +143,8 @@ var _last_target_origin: Vector3 = Vector3.ZERO
 
 ## FOV contributions in degrees by source name.
 var _fov_sources: Dictionary[StringName, float] = {}
+## Eased Loader pull-back in m (D-04), fed into the &"loader" offset source; 0 outside the hold.
+var _loader_pull: float = 0.0
 ## Arm origin contributions in Pitch-local space by source name.
 var _offset_sources: Dictionary[StringName, Vector3] = {}
 ## The arm length in m the player chose with the mouse wheel (starts at the scene's spring_length).
@@ -228,8 +232,12 @@ func _process(delta: float) -> void:
 	var real: float = TimeFx.unscaled(delta)
 	time_since_look += real
 	_update_steering_latch()
-	_advance_recenter(real)
-	_apply_auto_follow(real)
+	# The Loader hold wins over auto-follow and recenter (D-29, intent wins): the camera is the player's aiming tool then.
+	var loader: LoaderState = _holding_loader()
+	if loader == null:
+		_advance_recenter(real)
+		_apply_auto_follow(real)
+	_update_loader_pull(real, loader)
 	var anchor: Vector3 = target.get_global_transform_interpolated().origin + Vector3.UP * pivot_height
 	var horizontal_weight: float = 1.0 - exp(-follow_rate * real)
 	var vertical_weight: float = 1.0 - exp(-vertical_follow_rate * real)
@@ -252,6 +260,32 @@ func _process(delta: float) -> void:
 	spring_arm.position = base_shoulder_offset + _offset_total()
 	camera.fov = get_fov_total()
 	_update_arm(real)
+
+
+## The Loader state while Rino holds the Loader, else null.
+func _holding_loader() -> LoaderState:
+	var player: PlayerController = target as PlayerController
+	if player == null or not player.loader_active():
+		return null
+	return player.loader_state()
+
+
+## Eases the camera pull-back with the hold ratio in real time (D-04, a pull and never a cut or a shake) through the additive
+## &"loader" source; the source is cleared once it has eased out to zero.
+func _update_loader_pull(real: float, loader: LoaderState) -> void:
+	var goal: float = 0.0
+	var pullback: float = 0.35
+	var player: PlayerController = target as PlayerController
+	if player != null and player.config != null:
+		pullback = player.config.loader_camera_pullback
+	if loader != null:
+		goal = pullback * loader.hold_ratio()
+	_loader_pull = move_toward(_loader_pull, goal, maxf(pullback, 0.01) / LOADER_PULL_EASE * real)
+	if _loader_pull > 0.0001:
+		set_offset(&"loader", Vector3(0.0, 0.0, _loader_pull))
+	else:
+		_loader_pull = 0.0
+		clear_offset(&"loader")
 
 
 ## Moves the chosen zoom distance by `amount` m (negative is closer), clamped to zoom_min .. zoom_max.
@@ -410,7 +444,7 @@ func notify_look_activity() -> void:
 ## Turns the camera behind the character's facing within recenter_time (D-17, A29). The rotation is added to the
 ## steering offset like auto-follow's, so a held direction keeps its heading. Mouse look cancels it.
 func recenter() -> void:
-	if target == null:
+	if target == null or _holding_loader() != null:
 		return
 	var facing: Vector2 = Vector2.ZERO
 	var visual: Node3D = target.get(&"visual_root") as Node3D

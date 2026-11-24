@@ -117,4 +117,7 @@ func _discharge() -> StringName:
 	if grounded_entry and velocity.y > 0.0:
 		actor.loader_available = false
 	EventBus.loader_released.emit(actor.global_position, direction, speed, bonus)
+	# D-04 "geladen": the velocity is already written, the world holds for a blink so the release lands sharp. The hitstop is its
+	# own TimeFx source; exit() still releases only &"loader".
+	TimeFx.pulse(&"loader_hitstop", config.loader_hitstop_scale, config.loader_hitstop_time)
 	return &"Fall"

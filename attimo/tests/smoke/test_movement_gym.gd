@@ -12,7 +12,7 @@ const MANNEQUIN_SCENE: String = "res://scenes/player/mannequin.tscn"
 const CONTRACT_NODES: Array[String] = [
 	"WorldEnvironment", "Sun", "Hall", "Spawn", "Player", "CameraRig",
 	"Zone_MeasurementStrip", "Zone_RampsStairs", "Zone_Gaps", "Zone_MovingPlatforms", "Zone_Conveyors",
-	"Zone_CameraTests", "Zone_Loader", "FallResetHall", "EventLog", "MetricsOverlay", "TuningPanel", "Crosshair",
+	"Zone_CameraTests", "Zone_Loader", "FallResetHall", "EventLog", "MetricsOverlay", "TuningPanel", "Crosshair", "LoaderLook",
 ]
 const RISER_COUNT: int = 6
 const RISER_STEP: float = 0.15
