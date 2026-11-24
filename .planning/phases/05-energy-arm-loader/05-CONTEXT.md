@@ -56,6 +56,13 @@ Not in this phase: enemies, health, shards, damage, module pickup and teaching r
 - **D-25 Readout:** the energy HUD (D-13) is the readout for all stations; the F2 panel holds the energy and Loader tunables.
 - All gym content stays builder-generated (`attimo/tools/mechanism_rooms_builder.gd` and the gym builders), never hand-edited; every new station gets a smoke test and an "Erwartet:" sign.
 
+### Plan-phase follow-up (2026-11-24, answers to RESEARCH open questions)
+- **D-26 Mouse wheel = module switch only:** camera wheel zoom (`camera_rig.gd`) is removed; the wheel and 1/2 switch hand modules (D-16). Camera distance stays fixed / F2-tunable.
+- **D-27 Aim layer kept dormant for the arm:** the `Aim` Blend2 layer and `AimPoseModifier` stay, driven by an `arm_out` signal (shot, near contact E, Loader) instead of the `aim` hold, until the Phase 6 hand poses replace them. Aim strafe locomotion points and aim dashes (`DashLeft/Right/Back`) may go with aim strafe facing.
+- **D-28 `Interactable.GlowStage.AIM` is reused as "shot ready":** a target brightens when it is under the crosshair lock and the arm can afford a shot (>= 10). Rename is the planner's call.
+- **D-29 Loader pitch:** while the Loader is held, the camera pitch-up limit rises to about 75 degrees (F2-tunable) so near-vertical super jumps are possible; after release it eases back to the normal `pitch_max`.
+- Researcher defaults accepted without asking: the Loader bonus needs a full core (25), otherwise the arm counts as empty; `base_shoulder_offset` (debug over-the-shoulder offset) stays untouched; the Loader room and energy area are new gym zones built by a builder tool.
+
 ### Carried forward (not re-asked)
 - Energy numbers and the governing rule from GAME-DESIGN.md sections 2-3: air dash 10 (does not fire when empty), dash hop stages 2/3 cost 15 each (stage 1 free), wall run free for about 0.6 s then 15/s, jumping off always free, respawn with exactly 25, Moto Perpetuo +10-15 % run speed and buffed Jump 3.
 - Phase 4 D-30 / memory: stay in the GSD band, 3-5 plans.
