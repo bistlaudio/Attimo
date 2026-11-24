@@ -245,11 +245,11 @@ Plans:
 
   6. The movement gym is reworked for the new core: aim-mode stations and pull/push leftovers are gone, and a Loader and energy area (charge track, capsules, injected-move stations with energy readout) is added.
 
-**Plans:** 5 plans
+**Plans:** 1/5 plans executed
 
 Plans:
 **Wave 1**
-- [ ] 05-01-PLAN.md — Tracer: Loader core end to end (RMB `loader` action, TimeFx time owner, LoaderState, LoaderMath, minimal ArmEnergy bonus spend, real-time camera), then aim mode removed completely (aiming flag and readers, aim fact, goggle HUD, aim camera, wheel zoom, glow stage SHOT_READY, static guard) (wave 1)
+- [x] 05-01-PLAN.md — Tracer: Loader core end to end (RMB `loader` action, TimeFx time owner, LoaderState, LoaderMath, minimal ArmEnergy bonus spend, real-time camera), then aim mode removed completely (aiming flag and readers, aim fact, goggle HUD, aim camera, wheel zoom, glow stage SHOT_READY, static guard) (wave 1)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 05-02-PLAN.md — Tracer: Loader room in the gym with double ring and dashed preview sized from metrics and respawn with one core (feel stop), then "geladen" cues (vignette, desaturation, pull-back, hitstop, hum), super jump pitch raise and the FEEL-10 Loader metrics rows (wave 2)
@@ -473,7 +473,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 04.1 → 5 → 05.1 →
 | 2. Movement Core & Follow Camera | 14/14 | Complete    | 2026-11-06 |
 | 3. Animated Mannequin & Aim Mode | 10/10 | Complete    | 2026-11-20 |
 | 4. Fernauslöser & Mechanism Kit | 5/5 | Complete   | 2026-11-23 |
-| 5. Energy Arm & Loader | 0/TBD | Not started | - |
+| 5. Energy Arm & Loader | 1/5 | In Progress|  |
 | 05.1. Kit Rework | 0/TBD | Not started | - |
 | 6. Extractor, Shot, Enemies & Recovery | 0/TBD | Not started | - |
 | 7. Level Blockout & Game Flow | 0/TBD | Not started | - |

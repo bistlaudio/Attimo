@@ -45,7 +45,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [x] **HAND-01**: Hand module framework: a module is a definition resource + behaviour scene; adding a module = one folder + one registry entry; arm mesh never changes
 - [x] **HAND-02**: Interactables declare which modules they accept; modules only talk to the Interactable contract
 - [x] **HAND-03**: Module 1 "Fernauslöser": player aims and fires a turquoise pulse (tap = small, hold = big) that triggers mechanisms at range
-- [ ] **HAND-04**: Right-click Loader: holding freezes and stores momentum in slow motion with a free camera, charge ring and trajectory preview; releasing discharges in the view direction (bonus costs one core, empty arm only redirects). Replaces aim mode and Pull/Push (docs/GAME-DESIGN.md section 4)
+- [x] **HAND-04**: Right-click Loader: holding freezes and stores momentum in slow motion with a free camera, charge ring and trajectory preview; releasing discharges in the view direction (bonus costs one core, empty arm only redirects). Replaces aim mode and Pull/Push (docs/GAME-DESIGN.md section 4)
 - [ ] **HAND-05**: Picking up a module is a clear moment (pickup feedback, HUD icon) and unlocks the module permanently
 - [ ] **EXTR-01**: Extractor module (hold, cone in front of the hand) drains enemies, shards, energy capsules and broken machines for energy; switched with the Shot via the mouse wheel
 - [ ] **HAND-06**: Each module has a teaching room: safe first use, then a test, then a twist
@@ -64,7 +64,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [ ] **ENRG-01**: The arm stores 0-100 energy in 4 cores of 25, readable on the arm; from 50 the player is in Moto Perpetuo (faster run, buffed Jump 3, brighter arm); respawn always with one core
 - [ ] **ENRG-02**: Energy income without enemies: passive charge while moving above about dash exit speed, energy capsules and broken machines, and a slow charge button
 - [ ] **ENRG-03**: Base moves are free and injected versions cost energy (air dash, dash hop stages 2-3, wall run after the free window); without energy the base version fires automatically, the air dash does not fire
-- [ ] **ENRG-04**: Removal of aim mode (goggle HUD, zoom, shoulder offset, aim pose, pull/push); the always-on crosshair and target aim assist stay
+- [x] **ENRG-04**: Removal of aim mode (goggle HUD, zoom, shoulder offset, aim pose, pull/push); the always-on crosshair and target aim assist stay
 - [ ] **ENRG-05**: Energy HUD top left (diegetic arm cores plus core chambers, Moto Perpetuo state, active module and a momentum readout); health joins it in Phase 6
 
 ### Mechanism Kit (docs/GAME-DESIGN.md section 6)
@@ -210,14 +210,14 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | HAND-01 | Phase 4 | Complete |
 | HAND-02 | Phase 4 | Complete |
 | HAND-03 | Phase 4 | Complete |
-| HAND-04 | Phase 5 | Pending |
+| HAND-04 | Phase 5 | Complete |
 | HAND-05 | Phase 6 | Pending |
 | HAND-06 | Phase 6 | Pending |
 | EXTR-01 | Phase 6 | Pending |
 | ENRG-01 | Phase 5 | Pending |
 | ENRG-02 | Phase 5 | Pending |
 | ENRG-03 | Phase 5 | Pending |
-| ENRG-04 | Phase 5 | Pending |
+| ENRG-04 | Phase 5 | Complete |
 | ENRG-05 | Phase 5 | Pending |
 | KIT-01 | Phase 05.1 | Pending |
 | KIT-02 | Phase 05.1 | Pending |
