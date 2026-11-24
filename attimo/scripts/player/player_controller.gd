@@ -44,7 +44,7 @@ var dash_twitch_timer: float = 0.0
 var loader_available: bool = true
 ## True after a ground discharge that stayed on the floor, while the throw still carries Rino above run_speed. Walking off a ledge
 ## in that state spends loader_available (the airborne stretch belongs to the throw, D-02); landing, a jump take-off or the speed
-## falling back to run_speed on the floor clear it (WR-02).
+## falling back to the ground target speed on the floor (run_speed, or the Moto run speed) clear it (WR-02).
 var loader_ground_throw: bool = false
 ## Seconds left before the next Loader press may start. A discharge without the bonus (empty arm) starts it at loader_redirect_cooldown.
 var loader_cooldown_timer: float = 0.0
@@ -590,7 +590,8 @@ func _tick_timers(delta: float) -> void:
 	loader_cooldown_timer = maxf(loader_cooldown_timer - delta, 0.0)
 	air_control_lock_timer = maxf(air_control_lock_timer - delta, 0.0)
 	wall_run_cooldown_timer = maxf(wall_run_cooldown_timer - delta, 0.0)
-	if loader_ground_throw and is_grounded() and horizontal_speed() <= config.run_speed:
+	# The Moto run is faster than run_speed, so the throw counts as spent once the run is back at its own target speed.
+	if loader_ground_throw and is_grounded() and horizontal_speed() <= ground_target_speed(Vector3.FORWARD) + 0.05:
 		loader_ground_throw = false
 	_tick_combo(delta)
 	if Input.is_action_just_pressed(&"jump"):
