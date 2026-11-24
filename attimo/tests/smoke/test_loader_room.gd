@@ -49,7 +49,7 @@ func _check_door_and_lane(zone: Node3D, check: Callable) -> void:
 	var hall: Node = _gym.get_node("Hall")
 	check.call(hall.get_node_or_null("WallWest_0") == null, "the hall west wall has the door cell open (no WallWest_0)")
 	check.call(hall.get_node_or_null("WallWest_1") != null, "the rest of the west wall stands")
-	check.call(zone.get_node_or_null("LoaderWallWest_1") != null and zone.get_node_or_null("LoaderWallWest_0") != null, "the room's west wall is built per cell (05-05 opens cell 0)")
+	check.call(zone.get_node_or_null("LoaderWallWest_1") != null and zone.get_node_or_null("LoaderWallWest_0") == null, "the room's west wall is built per cell and cell 0 is the open doorway into Zone_Energy (05-05)")
 	var space: PhysicsDirectSpaceState3D = _player.get_world_3d().direct_space_state
 	var bad_floor: PackedInt32Array = PackedInt32Array()
 	var blocked: PackedInt32Array = PackedInt32Array()
