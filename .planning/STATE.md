@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v0.11.0.4
 milestone_name: milestone
-status: ready_to_plan
-stopped_at: Phase 05 complete (5/5) — ready to discuss Phase 05.1
-last_updated: 2026-11-24T21:13:26.211Z
+status: planning
+stopped_at: Phase 05.1 context gathered
+last_updated: "2026-11-24T21:19:54.434Z"
 last_activity: 2026-11-24
 progress:
   total_phases: 17
@@ -201,6 +201,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-24T19:43:47.664Z
-Stopped at: Phase 5 context gathered
-Resume file: None
+Last session: 2026-11-24T21:19:54.421Z
+Stopped at: Phase 05.1 context gathered
+Resume file: .planning/phases/05.1-kit-rework-inserted/05.1-CONTEXT.md
