@@ -34,6 +34,23 @@ static func spawn_player(root: Node, position: Vector3) -> PlayerController:
 	return player
 
 
+## Signed distance in m of the Mannequin's head bone ("head") from a wall face given by a point on it and its outward normal (05.1-03,
+## D-06 head clearance). Positive in front of the face. NAN when the skeleton or the bone is missing.
+static func head_to_wall_distance(player: PlayerController, wall_point: Vector3, wall_normal: Vector3) -> float:
+	var mannequin: Node = player.get_node_or_null("VisualRoot/Mannequin")
+	if mannequin == null:
+		return NAN
+	var skeletons: Array[Node] = mannequin.find_children("*", "Skeleton3D", true, false)
+	if skeletons.is_empty():
+		return NAN
+	var skeleton: Skeleton3D = skeletons[0] as Skeleton3D
+	var bone: int = skeleton.find_bone("head")
+	if bone < 0:
+		return NAN
+	var head: Vector3 = skeleton.global_transform * skeleton.get_bone_global_pose(bone).origin
+	return (head - wall_point).dot(wall_normal.normalized())
+
+
 const CAMERA_RIG_SCENE: String = "res://scenes/camera/camera_rig.tscn"
 
 

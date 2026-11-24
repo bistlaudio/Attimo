@@ -22,6 +22,10 @@ const COMPONENT_CLASSES: Array[String] = ["Receiver", "DamagePush", "Amplificati
 const KIT_OBJECTS: Dictionary = {
 	"res://scenes/kit/steampunk/slingshot_core.tscn": "res://tests/smoke/test_slingshot_loader.gd",
 	"res://scenes/kit/steampunk/steam_cannon.tscn": "res://tests/smoke/test_steam_cannon.gd",
+	"res://scenes/kit/steampunk/wall_pad.tscn": "res://tests/smoke/test_wall_surface.gd",
+	"res://scenes/kit/steampunk/wall_pad_steam.tscn": "res://tests/smoke/test_wall_surface.gd",
+	"res://scenes/kit/steampunk/wall_jump_pad.tscn": "res://tests/smoke/test_wall_surface.gd",
+	"res://scenes/kit/steampunk/wall_jump_pad_steam.tscn": "res://tests/smoke/test_wall_surface.gd",
 }
 
 
