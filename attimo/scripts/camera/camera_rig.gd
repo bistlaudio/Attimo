@@ -76,6 +76,9 @@ var settings: CameraSettings
 
 ## Process priority of the rig: lower runs first, so every _process reader of the camera (arm solver) sees this frame's view.
 const PROCESS_PRIORITY: int = -100
+## Degrees per second the upper pitch limit rises to the Loader limit and falls back to pitch_max (real time, never a cut).
+const PITCH_LIMIT_RISE_DEG: float = 240.0
+const PITCH_LIMIT_FALL_DEG: float = 120.0
 ## Seconds the Loader pull-back needs to travel its whole way (real time).
 const LOADER_PULL_EASE: float = 0.15
 
@@ -143,6 +146,8 @@ var _last_target_origin: Vector3 = Vector3.ZERO
 
 ## FOV contributions in degrees by source name.
 var _fov_sources: Dictionary[StringName, float] = {}
+## The current upper pitch limit in rad: pitch_max normally, raised to loader_pitch_max_deg while the Loader holds (D-29), eased in real time.
+var _pitch_limit: float = 0.0
 ## Eased Loader pull-back in m (D-04), fed into the &"loader" offset source; 0 outside the hold.
 var _loader_pull: float = 0.0
 ## Arm origin contributions in Pitch-local space by source name.
@@ -211,7 +216,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if settings.invert_y:
 			vertical = -vertical
 		yaw -= motion.relative.x * scale
-		pitch = clampf(pitch - vertical, pitch_min, pitch_max)
+		pitch = clampf(pitch - vertical, pitch_min, _current_pitch_limit())
 		return
 	if event.is_action_pressed(&"camera_recenter") and (not require_mouse_capture or Input.mouse_mode == Input.MOUSE_MODE_CAPTURED):
 		recenter()
@@ -253,7 +258,7 @@ func _process(delta: float) -> void:
 		current.z = anchor.z + lag.y
 	current.y = clampf(current.y, anchor.y - max_vertical_lag, anchor.y + max_vertical_lag)
 	global_position = current
-	pitch = clampf(pitch, pitch_min, pitch_max)
+	pitch = clampf(pitch, pitch_min, _ease_pitch_limit(real, loader))
 	rotation.y = yaw
 	pitch_node.rotation.x = pitch
 	_max_arm_length = lerpf(_max_arm_length, zoom_distance, 1.0 - exp(-zoom_rate * real))
@@ -268,6 +273,23 @@ func _holding_loader() -> LoaderState:
 	if player == null or not player.loader_active():
 		return null
 	return player.loader_state()
+
+
+## The upper pitch limit right now (pitch_max until the first frame has run).
+func _current_pitch_limit() -> float:
+	return maxf(_pitch_limit, pitch_max)
+
+
+## Eases the upper pitch limit toward deg_to_rad(loader_pitch_max_deg) while the Loader holds and back to pitch_max after (D-29):
+## the player can aim a discharge almost straight up, and the view comes back without a jump (Nesky item 14).
+func _ease_pitch_limit(real: float, loader: LoaderState) -> float:
+	var goal: float = pitch_max
+	var player: PlayerController = target as PlayerController
+	if loader != null and player != null and player.config != null:
+		goal = maxf(pitch_max, deg_to_rad(player.config.loader_pitch_max_deg))
+	var rate: float = PITCH_LIMIT_RISE_DEG if goal > _pitch_limit else PITCH_LIMIT_FALL_DEG
+	_pitch_limit = move_toward(_current_pitch_limit(), goal, deg_to_rad(rate) * real)
+	return _current_pitch_limit()
 
 
 ## Eases the camera pull-back with the hold ratio in real time (D-04, a pull and never a cut or a shake) through the additive

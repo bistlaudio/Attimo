@@ -14,6 +14,7 @@ const ROW_LABELS: Array[String] = [
 	"Long jump stage 1", "Long jump stage 2", "Long jump stage 3", "Long jump stage 1 (after stage 3)", "Long jump (last grace tick)",
 	"Coyote time", "Jump buffer", "Landing window", "Dash cooldown", "Dash-jump grace",
 	"Step 0.15 m", "Step 0.20 m",
+	"Loader redirect (standing)", "Loader redirect (run)", "Loader bonus (run)", "Loader bonus (dash)", "Loader super jump (bonus, up)", "Loader hold cap", "Loader slow motion",
 	"Latency jump 60 TPS", "Latency jump 120 TPS", "Latency dash 60 TPS", "Latency dash 120 TPS",
 ]
 

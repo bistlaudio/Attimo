@@ -40,6 +40,20 @@ The long jump is the dash hop: a jump during a ground dash or within dash_jump_g
 | Long jump stage 1 (after stage 3) | 1 | 2.00 | 9.10 | 14.00 | 0.63 | the combo ends after stage 3; the next hop starts again at stage 1 |
 | Long jump (last grace tick) | 1 | 2.00 | 9.10 | 14.00 | 0.63 | jump in the last tick of dash_jump_grace, stage 1 row applies |
 
+## Loader
+
+The right-click Loader (HAND-04): hold to store the momentum in slow motion, release to throw it along the view at max(stored, loader_min_push) plus the bonus (one full core), capped at loader_max_speed. Measured with the real Player, a horizontal discharge along -z (no camera, debug_loader_direction), 10 Loader ticks of hold and the arm energy set per row. Speed out is the 3D velocity magnitude two ticks after the release. The gym room Zone_Loader sizes its gap and ledge from these numbers through LoaderMath.
+
+| Verb | Stored speed (m/s) | Result | Note |
+|---|---|---|---|
+| Loader redirect (standing) | 0.00 | 11.95 m/s | empty arm: speed out is loader_min_push 12.0; depends on loader_min_push, loader_max_speed |
+| Loader redirect (run) | 8.50 | 11.95 m/s | empty arm from a run at run_speed 8.5; depends on loader_min_push, run_speed |
+| Loader bonus (run) | 8.50 | 19.95 m/s | full core: + loader_bonus_speed 8.0; depends on loader_bonus_speed, loader_bonus_cost, loader_min_push |
+| Loader bonus (dash) | 22.00 | 21.95 m/s | pressed during a ground dash (dash_speed 22.0): capped at loader_max_speed 22.0; depends on dash_speed, loader_max_speed |
+| Loader super jump (bonus, up) | 0.00 | 5.88 m apex | straight up with a full core, apex = v^2 / (2 rise_gravity); depends on loader_min_push, loader_bonus_speed, rise_gravity |
+| Loader hold cap | - | 72 ticks (1.20 s) | the hold discharges by itself in REAL time; depends on loader_hold_cap 1.20 |
+| Loader slow motion | - | 0.25 | Engine.time_scale during the hold; depends on loader_slow_factor |
+
 ## Timing windows
 
 | Window | Seconds | Ticks at 60 TPS |
@@ -71,10 +85,10 @@ Display, compositor and USB latency are outside the software measurement (D-22).
 
 | Action | Accumulated input on: median (ms) | on: max (ms) | off: median (ms) | off: max (ms) | Verdict |
 |---|---|---|---|---|---|
-| Latency jump 60 TPS | 13.38 | 23.58 | 12.81 | 19.91 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency jump 120 TPS | 6.45 | 12.67 | 6.63 | 7.19 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 60 TPS | 20.32 | 21.22 | 9.96 | 21.38 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 120 TPS | 6.38 | 13.76 | 7.50 | 14.11 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 60 TPS | 12.68 | 19.84 | 11.12 | 19.83 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 120 TPS | 6.71 | 18.14 | 5.78 | 13.14 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 60 TPS | 12.20 | 21.36 | 13.06 | 21.19 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 120 TPS | 6.32 | 11.55 | 6.75 | 13.96 | Target met (median <= 66 ms, max <= 100 ms) |
 
 ## Grid cross-check
 
@@ -140,6 +154,7 @@ Every MovementConfig float of res://resources/player/movement_default.tres at ge
 | `loader_release_control_lock` | 0.150 |
 | `loader_hitstop_time` | 0.050 |
 | `loader_hitstop_scale` | 0.050 |
+| `loader_pitch_max_deg` | 75.000 |
 | `loader_camera_pullback` | 0.350 |
 | `wall_run_min_speed` | 7.000 |
 | `wall_run_speed` | 10.000 |

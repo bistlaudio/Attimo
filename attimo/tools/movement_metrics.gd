@@ -74,6 +74,8 @@ func _main() -> void:
 	var longs: Dictionary = await _measure_long_jumps()
 	print("MEASURE: floor limits")
 	var floors: Dictionary = await _measure_floor_limits()
+	print("MEASURE: loader")
+	var loader: Dictionary = await _measure_loader()
 	var latency: Dictionary = {}
 	for tps: int in LATENCY_TICK_RATES:
 		for accumulate: bool in [true, false]:
@@ -83,7 +85,8 @@ func _main() -> void:
 	Input.use_accumulated_input = true
 
 	_check_invariants(config, jumps, longs, latency)
-	_write_doc(config, ground, jumps, dashes, longs, floors, latency)
+	_check_loader_invariants(config, loader)
+	_write_doc(config, ground, jumps, dashes, longs, floors, latency, loader)
 
 
 # --- recorders and helpers ------------------------------------------------------------------------------
@@ -525,6 +528,137 @@ func _measure_latency(tps: int, accumulate: bool) -> Dictionary:
 	return result
 
 
+# --- loader (plan 05-02, FEEL-10) ------------------------------------------------------------------------
+
+const LOADER_HOLD_TICKS: int = 10
+## Slack for a tick-sampled Loader speed and apex.
+const LOADER_SPEED_SLACK: float = 0.3
+
+
+## The Loader numbers of the real player: redirect and bonus speeds, the dash cap, the super jump apex, the hold cap and the slow
+## motion. Driven headless with debug_loader_direction (no camera) and the arm energy set through arm_energy.reset_to.
+func _measure_loader() -> Dictionary:
+	var out: Dictionary = {}
+	var player: PlayerController = await _begin()
+	player.debug_loader_direction = Vector3(0.0, 0.0, -1.0)
+	Fixtures.set_energy(player, 0.0)
+	out["redirect_standing"] = await _loader_discharge(player)
+	await _end(player)
+
+	player = await _begin()
+	player.debug_loader_direction = Vector3(0.0, 0.0, -1.0)
+	Fixtures.set_energy(player, 0.0)
+	await _run_up(player)
+	out["redirect_run"] = await _loader_discharge(player)
+	await _end(player)
+
+	player = await _begin()
+	player.debug_loader_direction = Vector3(0.0, 0.0, -1.0)
+	Fixtures.set_energy(player, 25.0)
+	await _run_up(player)
+	out["bonus_run"] = await _loader_discharge(player)
+	await _end(player)
+
+	# Right after a ground dash: the Loader stores the dash speed, the bonus is capped at loader_max_speed.
+	player = await _begin()
+	player.debug_loader_direction = Vector3(0.0, 0.0, -1.0)
+	Fixtures.set_energy(player, 25.0)
+	await _run_up(player)
+	Fixtures.send_action_event(&"dash", true)
+	Fixtures.send_action_event(&"dash", false)
+	await Fixtures.wait_until(_tree, func() -> bool: return _state_is(player, &"Dash"), 12)
+	out["bonus_dash"] = await _loader_discharge(player)
+	await _end(player)
+
+	# Straight up with the bonus: the super jump apex above the take-off point.
+	player = await _begin()
+	player.debug_loader_direction = Vector3.UP
+	Fixtures.set_energy(player, 25.0)
+	var start_y: float = player.global_position.y
+	var up: Dictionary = await _loader_discharge(player)
+	var max_y: float = player.global_position.y
+	var frames: int = 0
+	while frames < LIMIT_TICKS and not (player.is_grounded() and frames > 4):
+		await _tree.physics_frame
+		frames += 1
+		max_y = maxf(max_y, player.global_position.y)
+	up["apex"] = max_y - start_y
+	out["super_jump"] = up
+	await _end(player)
+
+	# The hold cap: press and never release; count the Loader updates until it discharges by itself.
+	player = await _begin()
+	player.debug_loader_direction = Vector3(0.0, 0.0, -1.0)
+	Fixtures.set_energy(player, 0.0)
+	Input.action_press(&"loader")
+	var entered: int = await Fixtures.wait_until(_tree, func() -> bool: return player.loader_active(), 6)
+	var slow: float = Engine.time_scale
+	var state: LoaderState = player.loader_state()
+	await Fixtures.wait_until(_tree, func() -> bool: return not player.loader_active(), 4 * TPS)
+	out["hold_cap"] = {"ticks": state.update_count, "slow": slow, "entered": entered >= 0}
+	Input.action_release(&"loader")
+	await Fixtures.wait_physics(_tree, 12)
+	await _end(player)
+	Fixtures.restore_time()
+	return out
+
+
+## Presses the loader, holds LOADER_HOLD_TICKS Loader ticks, releases and returns the stored speed, the speed two ticks after the
+## release (the 3D velocity magnitude) and the speed the release fact reports.
+func _loader_discharge(player: PlayerController) -> Dictionary:
+	var released: Array[float] = []
+	var on_released: Callable = func(_position: Vector3, _direction: Vector3, speed: float, _bonus: bool) -> void: released.append(speed)
+	_bus.connect(&"loader_released", on_released)
+	Input.action_press(&"loader")
+	var entered: int = await Fixtures.wait_until(_tree, func() -> bool: return player.loader_active(), 6)
+	var result: Dictionary = {"stored": 0.0, "speed_out": 0.0, "fact_speed": 0.0, "slow": Engine.time_scale, "entered": entered >= 0}
+	if entered < 0:
+		_fail("a Loader press did not enter the Loader")
+	else:
+		result["stored"] = player.loader_state().stored_velocity.length()
+		await Fixtures.wait_physics(_tree, LOADER_HOLD_TICKS)
+		Input.action_release(&"loader")
+		await Fixtures.wait_until(_tree, func() -> bool: return not player.loader_active(), 6)
+		await Fixtures.wait_physics(_tree, 2)
+		result["speed_out"] = Vector3(player.move_velocity.x, player.vertical_speed, player.move_velocity.z).length()
+		result["fact_speed"] = released[0] if not released.is_empty() else 0.0
+	Input.action_release(&"loader")
+	_bus.disconnect(&"loader_released", on_released)
+	Fixtures.restore_time()
+	await Fixtures.wait_physics(_tree, 4)
+	return result
+
+
+## The Loader rows follow the config: min push, run speed, bonus, the cap, the apex under rise gravity, the hold cap in ticks.
+func _check_loader_invariants(config: MovementConfig, loader: Dictionary) -> void:
+	var standing: Dictionary = loader["redirect_standing"]
+	var run: Dictionary = loader["redirect_run"]
+	var bonus_run: Dictionary = loader["bonus_run"]
+	var bonus_dash: Dictionary = loader["bonus_dash"]
+	var up: Dictionary = loader["super_jump"]
+	var cap: Dictionary = loader["hold_cap"]
+	var rows: Array[Array] = [
+		["redirect (standing)", standing, LoaderMath.discharge_speed(float(standing["stored"]), config.loader_min_push, 0.0, config.loader_max_speed)],
+		["redirect (run)", run, LoaderMath.discharge_speed(float(run["stored"]), config.loader_min_push, 0.0, config.loader_max_speed)],
+		["bonus (run)", bonus_run, LoaderMath.discharge_speed(float(bonus_run["stored"]), config.loader_min_push, config.loader_bonus_speed, config.loader_max_speed)],
+		["bonus (dash)", bonus_dash, LoaderMath.discharge_speed(float(bonus_dash["stored"]), config.loader_min_push, config.loader_bonus_speed, config.loader_max_speed)],
+	]
+	for row: Array in rows:
+		var data: Dictionary = row[1]
+		var expected: float = row[2]
+		if absf(float(data["speed_out"]) - expected) > LOADER_SPEED_SLACK or absf(float(data["fact_speed"]) - expected) > LOADER_SPEED_SLACK:
+			_fail("Loader %s: speed out %.2f m/s (fact %.2f) is not LoaderMath's %.2f" % [row[0], float(data["speed_out"]), float(data["fact_speed"]), expected])
+	if float(bonus_dash["speed_out"]) > config.loader_max_speed + LOADER_SPEED_SLACK:
+		_fail("Loader bonus (dash) %.2f m/s exceeds loader_max_speed %.1f" % [float(bonus_dash["speed_out"]), config.loader_max_speed])
+	var apex_expected: float = LoaderMath.apex_height(float(up["fact_speed"]), config)
+	if absf(float(up["apex"]) - apex_expected) > LOADER_SPEED_SLACK:
+		_fail("Loader super jump apex %.2f m is not v^2 / 2g = %.2f m" % [float(up["apex"]), apex_expected])
+	if absi(int(cap["ticks"]) - roundi(config.loader_hold_cap * float(TPS))) > 1:
+		_fail("Loader hold cap %d ticks is not loader_hold_cap %.2f s at %d TPS" % [int(cap["ticks"]), config.loader_hold_cap, TPS])
+	if absf(float(cap["slow"]) - config.loader_slow_factor) > 0.001:
+		_fail("Loader slow motion %.3f is not loader_slow_factor %.2f" % [float(cap["slow"]), config.loader_slow_factor])
+
+
 # --- invariants -----------------------------------------------------------------------------------------
 
 func _check_invariants(config: MovementConfig, jumps: Dictionary, longs: Dictionary, latency: Dictionary) -> void:
@@ -624,7 +758,7 @@ func _grid_row(label: String, flight: Dictionary) -> String:
 	return _row([label, "%.2f" % distance, floori(distance), "%.2f" % (distance / 4.0), "%.1f" % (floorf((apex + 0.01) * 10.0) / 10.0)])
 
 
-func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, dashes: Dictionary, longs: Dictionary, floors: Dictionary, latency: Dictionary) -> void:
+func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, dashes: Dictionary, longs: Dictionary, floors: Dictionary, latency: Dictionary, loader: Dictionary) -> void:
 	var lines: PackedStringArray = PackedStringArray()
 	lines.append("# Movement Metrics")
 	lines.append("")
@@ -673,6 +807,27 @@ func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, d
 	lines.append(_long_row("Long jump stage 3", longs["hop_3"], "dash + jump on the landing tick of stage 2, long_jump_speed_3 %.1f m/s" % config.long_jump_speed_3))
 	lines.append(_long_row("Long jump stage 1 (after stage 3)", longs["hop_4"], "the combo ends after stage 3; the next hop starts again at stage 1"))
 	lines.append(_long_row("Long jump (last grace tick)", longs["grace_1"], "jump in the last tick of dash_jump_grace, stage 1 row applies"))
+	lines.append("")
+
+	lines.append("## Loader")
+	lines.append("")
+	lines.append("The right-click Loader (HAND-04): hold to store the momentum in slow motion, release to throw it along the view at max(stored, loader_min_push) plus the bonus (one full core), capped at loader_max_speed. Measured with the real Player, a horizontal discharge along -z (no camera, debug_loader_direction), %d Loader ticks of hold and the arm energy set per row. Speed out is the 3D velocity magnitude two ticks after the release. The gym room Zone_Loader sizes its gap and ledge from these numbers through LoaderMath." % LOADER_HOLD_TICKS)
+	lines.append("")
+	lines.append("| Verb | Stored speed (m/s) | Result | Note |")
+	lines.append("|---|---|---|---|")
+	var redirect_standing: Dictionary = loader["redirect_standing"]
+	var redirect_run: Dictionary = loader["redirect_run"]
+	var bonus_run: Dictionary = loader["bonus_run"]
+	var bonus_dash: Dictionary = loader["bonus_dash"]
+	var super_jump: Dictionary = loader["super_jump"]
+	var hold_cap: Dictionary = loader["hold_cap"]
+	lines.append(_row(["Loader redirect (standing)", "%.2f" % float(redirect_standing["stored"]), "%.2f m/s" % float(redirect_standing["speed_out"]), "empty arm: speed out is loader_min_push %.1f; depends on loader_min_push, loader_max_speed" % config.loader_min_push]))
+	lines.append(_row(["Loader redirect (run)", "%.2f" % float(redirect_run["stored"]), "%.2f m/s" % float(redirect_run["speed_out"]), "empty arm from a run at run_speed %.1f; depends on loader_min_push, run_speed" % config.run_speed]))
+	lines.append(_row(["Loader bonus (run)", "%.2f" % float(bonus_run["stored"]), "%.2f m/s" % float(bonus_run["speed_out"]), "full core: + loader_bonus_speed %.1f; depends on loader_bonus_speed, loader_bonus_cost, loader_min_push" % config.loader_bonus_speed]))
+	lines.append(_row(["Loader bonus (dash)", "%.2f" % float(bonus_dash["stored"]), "%.2f m/s" % float(bonus_dash["speed_out"]), "pressed during a ground dash (dash_speed %.1f): capped at loader_max_speed %.1f; depends on dash_speed, loader_max_speed" % [config.dash_speed, config.loader_max_speed]]))
+	lines.append(_row(["Loader super jump (bonus, up)", "%.2f" % float(super_jump["stored"]), "%.2f m apex" % float(super_jump["apex"]), "straight up with a full core, apex = v^2 / (2 rise_gravity); depends on loader_min_push, loader_bonus_speed, rise_gravity"]))
+	lines.append(_row(["Loader hold cap", "-", "%d ticks (%.2f s)" % [int(hold_cap["ticks"]), float(hold_cap["ticks"]) / float(TPS)], "the hold discharges by itself in REAL time; depends on loader_hold_cap %.2f" % config.loader_hold_cap]))
+	lines.append(_row(["Loader slow motion", "-", "%.2f" % float(hold_cap["slow"]), "Engine.time_scale during the hold; depends on loader_slow_factor"]))
 	lines.append("")
 
 	lines.append("## Timing windows")
