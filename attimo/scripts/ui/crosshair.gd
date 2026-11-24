@@ -3,12 +3,13 @@ extends CanvasLayer
 ## Reticle (D-01, D-15, CAM-04, CAM-06): lines drawn in code. The reticle is always on and always the same small look: a centre dot
 ## and a thin ring (the goggle HUD, lens overlay and module plate left with aim mode in phase 05). It is cream at idle alpha with
 ## no target, turquoise on a valid target (a second outer ring when the target needs the big pulse), dimmed with a diagonal stroke
-## for an invalid or out-of-range target, and it dims during the shot cooldown. A charge arc around the ring shows the shot charge
-## (plan 05-04 reshapes it). Everything is sized from the screen height (ui_reference_height), so it keeps its proportions at any
+## for an invalid or out-of-range target, and it dims during the shot cooldown. While a shot charges (D-14, D-17) a single
+## NOTCHED ring turns clockwise around the reticle: its arc fills with the charge, the notches turn faster the fuller it gets and one
+## bright flash tells the full charge. Everything is sized from the screen height (ui_reference_height), so it keeps its proportions at any
 ## resolution.
 ## While the Loader holds (D-14) a DOUBLE ring turns counter-clockwise around the reticle: the outer arc fills with the stored speed
 ## (stored / loader_max_speed), the inner arc with the hold time (hold / loader_hold_cap). It is turquoise with a full core and grey
-## without one. It differs from the single, notched, clockwise shot arc in shape (two rings) and in rotation direction, so the two
+## without one. It differs from the single, notched, clockwise shot ring in shape (two rings) and in rotation direction, so the two
 ## are never told apart by colour alone (colour-blind safe). Both advance in real time (TimeFx.unscaled).
 ## The NearPrompt child is a cream "E" keycap over HandController.prompt_target (the nearest grabbable lever or crank in
 ## reach); it hides during near contact, out of range and when the point is behind the camera.
@@ -47,7 +48,21 @@ var loader_ring_angle: float = -PI * 0.5
 var loader_ring_stored: float = 0.0
 var loader_ring_hold: float = 0.0
 var loader_ring_tint: Color = Color(0.25, 0.9, 0.85, 1.0)
+## Shot ring (D-14): shown while a shot charges. The angle (radians) starts at the top and INCREASES (clockwise on screen). shot_flash_left is
+## the remaining time of the one flash on the full charge.
+var shot_ring_visible: bool = false
+var shot_ring_angle: float = -PI * 0.5
+var shot_flash_left: float = 0.0
 
+## Ring styles, so a test can tell the two rings apart by shape and not by colour (colour-blind safe, D-14).
+const shot_ring_style: StringName = &"notched_single"
+const loader_ring_style: StringName = &"double"
+## Shot ring: notch count, notch length in pixels, turn speed in degrees per second at charge 0 and gain at full charge, flash time.
+const SHOT_NOTCHES: int = 10
+const SHOT_NOTCH_LENGTH: float = 3.5
+const SHOT_RING_SPEED_DEG: float = 80.0
+const SHOT_RING_SPEED_GAIN: float = 2.0
+const SHOT_FLASH_TIME: float = 0.15
 const RING_POINTS: int = 48
 const OUTLINE_EXTRA: float = 2.0
 const OUTER_RING_GAP: float = 4.0
@@ -79,18 +94,40 @@ func _ready() -> void:
 	_prompt.visible = false
 	_prompt.draw.connect(_draw_prompt)
 	_reticle.draw.connect(_draw_reticle)
+	EventBus.shot_fully_charged.connect(_on_shot_fully_charged)
 
 
 func _process(delta: float) -> void:
 	_update_loader_ring(delta)
 	var hand: HandController = get_tree().get_first_node_in_group(&"hand_controller") as HandController
 	_update_prompt(hand)
-	if hand == null:
-		return
-	if hand.targeting != null:
-		set_state(hand.targeting.state)
-	set_charge(hand.charge_ratio)
-	set_cooldown_dim(hand.cooldown_left > 0.0)
+	if hand != null:
+		if hand.targeting != null:
+			set_state(hand.targeting.state)
+		set_charge(hand.charge_ratio)
+		set_cooldown_dim(hand.cooldown_left > 0.0)
+	_update_shot_ring(delta)
+
+
+## Turns the notched shot ring clockwise in real time while a shot charges, faster the fuller it is, and counts the full-charge flash down.
+func _update_shot_ring(delta: float) -> void:
+	var real_delta: float = TimeFx.unscaled(delta)
+	var was_flashing: bool = shot_flash_left > 0.0
+	shot_flash_left = maxf(shot_flash_left - real_delta, 0.0)
+	var visible_now: bool = charge > 0.0 or shot_flash_left > 0.0
+	if visible_now:
+		shot_ring_angle += deg_to_rad(SHOT_RING_SPEED_DEG * (1.0 + SHOT_RING_SPEED_GAIN * charge)) * real_delta
+		_reticle.queue_redraw()
+	elif shot_ring_visible or was_flashing:
+		shot_ring_angle = -PI * 0.5
+		_reticle.queue_redraw()
+	shot_ring_visible = visible_now
+
+
+## One bright flash when the shot reaches the full charge (the single tell, D-17).
+func _on_shot_fully_charged(_position: Vector3) -> void:
+	shot_flash_left = SHOT_FLASH_TIME
+	_reticle.queue_redraw()
 
 
 ## Polls the player (read only): shows the Loader double ring while the Loader holds and turns it counter-clockwise in real time.
@@ -180,10 +217,26 @@ func _draw_reticle() -> void:
 	if state == Targeting.State.INVALID:
 		var reach: float = radius + 3.0 * _u
 		_line(centre + Vector2(-reach, reach), centre + Vector2(reach, -reach), tint, ring_width * _u)
-	if charge > 0.0:
-		_arc(centre, radius + CHARGE_RING_GAP * _u, -PI * 0.5, -PI * 0.5 + TAU * charge, lock_color, ring_width * 1.3 * _u)
+	if shot_ring_visible:
+		_draw_shot_ring(centre, radius)
 	if loader_ring_visible:
 		_draw_loader_ring(centre, radius)
+
+
+## The shot ring: ONE ring with notches (gear teeth) turning clockwise (the angle increases), its arc filled by the charge from the top.
+## A full-charge flash turns it white and thick for SHOT_FLASH_TIME.
+func _draw_shot_ring(centre: Vector2, radius: float) -> void:
+	var ring: float = radius + CHARGE_RING_GAP * _u
+	var flashing: bool = shot_flash_left > 0.0
+	var tint: Color = Color(1.0, 1.0, 1.0, 1.0) if flashing else lock_color
+	var track: Color = Color(tint.r, tint.g, tint.b, 0.25)
+	_arc(centre, ring, 0.0, TAU, track, ring_width * _u)
+	if charge > 0.0:
+		_arc(centre, ring, -PI * 0.5, -PI * 0.5 + TAU * charge, tint, ring_width * (2.2 if flashing else 1.3) * _u)
+	for i: int in SHOT_NOTCHES:
+		var angle: float = shot_ring_angle + TAU * float(i) / float(SHOT_NOTCHES)
+		var direction: Vector2 = Vector2(cos(angle), sin(angle))
+		_line(centre + direction * ring, centre + direction * (ring + SHOT_NOTCH_LENGTH * _u), tint, ring_width * 1.2 * _u)
 
 
 ## The Loader double ring: a dim track and a filling arc per ring, the arcs rotate counter-clockwise (the angle decreases).

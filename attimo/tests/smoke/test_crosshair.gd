@@ -60,6 +60,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 
 	crosshair.free()
 	await _check_loader_ring(tree, check)
+	await _check_shot_ring(tree, check)
 
 
 # Plan 05-02 (D-14): while the Loader holds, a double ring turns counter-clockwise (the angle decreases), it is turquoise with a full
@@ -104,4 +105,49 @@ func _check_loader_ring(tree: SceneTree, check: Callable) -> void:
 	player.queue_free()
 	await player.tree_exited
 	floor_body.queue_free()
+	await tree.process_frame
+
+
+# Plan 05-04 (D-14, D-17): while a shot charges a single notched ring turns clockwise (the angle increases), filled by the charge, with one
+# flash on the full charge; it is never the same shape as the Loader's counter-clockwise double ring.
+func _check_shot_ring(tree: SceneTree, check: Callable) -> void:
+	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)
+	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(0.0, 0.0, 0.0))
+	var ring: Crosshair = (load(CROSSHAIR_SCENE) as PackedScene).instantiate() as Crosshair
+	tree.root.add_child(ring)
+	var hand: HandController = player.get_node("HandController") as HandController
+	await Fixtures.wait_physics(tree, 10)
+	check.call(not ring.shot_ring_visible, "(s1) the shot ring is hidden before a charge")
+	check.call(Crosshair.shot_ring_style != Crosshair.loader_ring_style, "(s2) the shot ring and the Loader ring have different styles (%s, %s)" % [Crosshair.shot_ring_style, Crosshair.loader_ring_style])
+	Fixtures.set_energy(player, 100.0)
+	var flashes: Array = []
+	var on_full: Callable = func(_p: Vector3) -> void: flashes.append(1)
+	tree.root.get_node("EventBus").connect(&"shot_fully_charged", on_full)
+	Input.action_press(&"use_hand")
+	await Fixtures.wait_until(tree, func() -> bool: return hand.charge_ratio > 0.3, 80)
+	await Fixtures.wait_process(tree, 3)
+	check.call(ring.shot_ring_visible, "(s1) the shot ring is visible while a shot charges")
+	check.call(is_equal_approx(ring.charge, hand.charge_ratio) or absf(ring.charge - hand.charge_ratio) < 0.1, "(s1) its fill follows HandController.charge_ratio (%.2f vs %.2f)" % [ring.charge, hand.charge_ratio])
+	var first: float = ring.shot_ring_angle
+	await Fixtures.wait_process(tree, 5)
+	check.call(ring.shot_ring_angle > first, "(s1) the shot ring turns clockwise (the angle increases: %.3f then %.3f)" % [first, ring.shot_ring_angle])
+	check.call(not ring.loader_ring_visible, "(s2) the Loader ring is not drawn during a shot charge")
+	var peak: Array[float] = [0.0]
+	var flash_waited: int = await Fixtures.wait_until(tree, func() -> bool:
+		peak[0] = maxf(peak[0], ring.shot_flash_left)
+		return peak[0] > 0.0, 90)
+	var seen: float = peak[0]
+	check.call(flash_waited >= 0 and flashes.size() == 1, "(s3) the full charge flashes the ring once (waited %d, facts %d)" % [flash_waited, flashes.size()])
+	check.call(seen > 0.0 and seen <= 0.2, "(s3) the flash lasts at most 0.2 s (%.3f)" % seen)
+	Input.action_release(&"use_hand")
+	await Fixtures.wait_physics(tree, 6)
+	await Fixtures.wait_process(tree, 30)
+	check.call(not ring.shot_ring_visible, "(s1) the ring is hidden again after the shot")
+	tree.root.get_node("EventBus").disconnect(&"shot_fully_charged", on_full)
+	for node: Node in tree.get_nodes_in_group(&"shot_projectile"):
+		node.queue_free()
+	ring.queue_free()
+	player.queue_free()
+	floor_body.queue_free()
+	await tree.process_frame
 	await tree.process_frame

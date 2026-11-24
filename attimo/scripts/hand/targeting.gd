@@ -4,7 +4,7 @@ extends Node
 ## the pulse will hit: the one under the crosshair, else the best one inside hand_assist_angle with line of sight. The current
 ## target is kept with hysteresis, so it does not flicker between two close neighbours. It never rotates the camera and never
 ## slows the mouse (the sticky aim slowdown is gone).
-## It reports the reticle State, the target and the glow stage (TARGET on the target, SHOT_READY on the rest while the shot is ready). It is created by
+## It reports the reticle State, the target and the glow stage (TARGET on the target only while the arm can pay the shot, SHOT_READY on the rest while the shot is ready). It is created by
 ## the HandController, which calls update() every physics tick before it decides a shot.
 
 enum State { NONE, VALID, VALID_BIG, INVALID }
@@ -169,8 +169,19 @@ func _set_target(next: Interactable) -> void:
 		previous.set_glow_stage(_rest_stage())
 	target = next
 	if next != null:
-		next.set_glow_stage(Interactable.GlowStage.TARGET)
+		next.set_glow_stage(_target_stage())
 	target_changed.emit(next)
+
+
+## The stage the locked target shows: TARGET only while the arm can pay the shot, else IDLE while the reticle still shows the lock (D-28).
+func _target_stage() -> int:
+	return Interactable.GlowStage.TARGET if _controller != null and _controller.shot_ready else Interactable.GlowStage.IDLE
+
+
+## Re-applies the locked target's stage after shot_ready flipped (the Interactable handler never overrides TARGET itself).
+func refresh_glow() -> void:
+	if is_instance_valid(target):
+		target.set_glow_stage(_target_stage())
 
 
 ## The glow stage a target falls back to when it loses the lock: SHOT_READY while the shot is ready, else IDLE (D-28).

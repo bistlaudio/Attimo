@@ -16,13 +16,13 @@ signal module_changed(def: HandModuleDef)
 @export_range(1.0, 60.0, 0.5) var hand_big_range: float = 25.0
 
 ## Cone half angle in degrees within which a valid Interactable snaps the pulse (D-14, CAM-05).
-@export_range(0.5, 10.0, 0.1) var hand_assist_angle: float = 3.5
+@export_range(0.5, 15.0, 0.1) var hand_assist_angle: float = 7.0
 ## The current target is kept until it leaves hand_assist_angle times this factor (hysteresis).
-@export_range(1.0, 3.0, 0.05) var hand_assist_hold_factor: float = 1.6
+@export_range(1.0, 3.0, 0.05) var hand_assist_hold_factor: float = 1.8
 ## A candidate replaces the current target only when it is this many degrees closer to the crosshair.
 @export_range(0.0, 5.0, 0.1) var hand_assist_switch_margin: float = 1.0
 ## Seconds a target that failed (angle or line of sight) is still held before it is released.
-@export_range(0.0, 0.5, 0.01) var hand_assist_drop_delay: float = 0.1
+@export_range(0.0, 0.5, 0.01) var hand_assist_drop_delay: float = 0.15
 ## Reach in m of near contact, measured from the player origin to the Interactable point (D-08).
 @export_range(0.5, 5.0, 0.1) var hand_near_range: float = 2.2
 ## Seconds the arm stays out after a pulse (presentation only).
@@ -58,8 +58,8 @@ var targeting: Targeting = null
 var arm_out: bool = false
 ## The world point the stretched arm points at (the near target, else the last pulse point).
 var arm_out_point: Vector3 = Vector3.ZERO
-## True while the shot module is equipped (plan 05-04 adds the energy condition): Interactables glow SHOT_READY. Changes emit
-## EventBus.shot_ready_changed.
+## True while the shot module is equipped and the arm can pay hand_shot_cost_min (D-28): Interactables glow SHOT_READY and the locked
+## target TARGET. Changes emit EventBus.shot_ready_changed.
 var shot_ready: bool = false
 ## The Interactable held by near contact, or null.
 var near_target: Interactable = null
@@ -213,13 +213,16 @@ func _pick_module_key() -> void:
 		equip(ids[1])
 
 
-## Recomputes shot_ready (the shot module is the active one) and announces a change once.
+## Recomputes shot_ready (the shot module is the active one and the arm can pay the tap) and announces a change once. A flip while a
+## target is locked re-applies the target's stage: TARGET only while the arm can pay, else IDLE (D-28).
 func _update_shot_ready() -> void:
-	var ready: bool = active_def != null and active_def.id == &"remote_trigger"
+	var ready: bool = active_def != null and active_def.id == &"remote_trigger" and _player != null and _player.arm_energy != null and _player.arm_energy.can_afford(hand_shot_cost_min)
 	if ready == shot_ready:
 		return
 	shot_ready = ready
 	EventBus.shot_ready_changed.emit(ready)
+	if targeting != null:
+		targeting.refresh_glow()
 
 
 func _reset_charge() -> void:

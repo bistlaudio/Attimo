@@ -28,7 +28,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_limits(tree, check)
 	await _scenario_full_arm(tree, check)
 	await _scenario_respawn(tree, check)
-	# _scenario_machine joins in Task 3 (broken_machine.tscn)
+	await _scenario_machine(tree, check)
 
 
 func _on_emptied(_position: Vector3, amount: float) -> void:

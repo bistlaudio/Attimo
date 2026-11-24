@@ -27,6 +27,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	if not ResourceLoader.exists(GLOW_IDLE) or not ResourceLoader.exists(GLOW_SHOT_READY) or not ResourceLoader.exists(GLOW_TARGET):
 		return
 	await _scenario_stages(tree, check)
+	await _scenario_energy_gate(tree, check)
 	await _scenario_gym(tree, check)
 
 
@@ -125,5 +126,53 @@ func _scenario_gym(tree: SceneTree, check: Callable) -> void:
 	check.call(glowing >= 1, "(7) the gym has glowing interactables (%d)" % glowing)
 	check.call(stray.is_empty(), "(7) every glow mesh belongs to an Interactable (stray: %s)" % ", ".join(stray))
 	gym.queue_free()
+	await tree.process_frame
+	await tree.process_frame
+
+
+# D-28: SHOT_READY is on only while the shot module is equipped AND the arm can pay hand_shot_cost_min; the locked target brightens to
+# TARGET under the same condition, otherwise it stays IDLE while Targeting still reports the lock. The Extractor turns every glow off.
+func _scenario_energy_gate(tree: SceneTree, check: Callable) -> void:
+	var idle: Material = load(GLOW_IDLE) as Material
+	var ready: Material = load(GLOW_SHOT_READY) as Material
+	var target: Material = load(GLOW_TARGET) as Material
+	_nodes.clear()
+	_nodes.append(Fixtures.spawn_floor(tree.root, Vector3(200.0, 1.0, 200.0)))
+	var lever: Node3D = Fixtures.spawn_scene(tree.root, LEVER_SCENE, Vector3(40.0, 0.0, 40.0))
+	var second: Node3D = Fixtures.spawn_scene(tree.root, LEVER_SCENE, Vector3(-40.0, 0.0, 40.0))
+	_nodes.append(lever)
+	_nodes.append(second)
+	_player = Fixtures.spawn_player(tree.root, Vector3.ZERO)
+	_nodes.append(_player)
+	_rig = Fixtures.spawn_camera_rig(tree.root, _player)
+	_nodes.append(_rig)
+	_rig.pitch = 0.0
+	var hand: HandController = _player.get_node("HandController") as HandController
+	var flips: Array = []
+	var on_ready: Callable = func(is_ready: bool) -> void: flips.append(is_ready)
+	tree.root.get_node("EventBus").connect(&"shot_ready_changed", on_ready)
+	await Fixtures.wait_physics(tree, 8)
+	await Fixtures.wait_process(tree, 3)
+	_move_lever(lever, _line_point(8.0))
+	await Fixtures.wait_physics(tree, 10)
+	check.call(hand.shot_ready and _lens(lever).material_override == target and _lens(second).material_override == ready, "(8) with 25 energy the locked lever is TARGET and the other SHOT_READY")
+	flips.clear()
+	Fixtures.set_energy(_player, 9.0)
+	await Fixtures.wait_physics(tree, 6)
+	check.call(not hand.shot_ready and flips == [false], "(8) draining to 9 sends one shot_ready_changed(false) (%s)" % str(flips))
+	check.call(_lens(lever).material_override == idle and _lens(second).material_override == idle, "(8) every glow, including the locked lever, falls to IDLE")
+	check.call(hand.targeting.target != null and hand.targeting.state == Targeting.State.VALID, "(8) Targeting still reports the lock while the glow is IDLE")
+	flips.clear()
+	Fixtures.set_energy(_player, 10.0)
+	await Fixtures.wait_physics(tree, 6)
+	check.call(hand.shot_ready and flips == [true], "(8) gaining back to 10 sends one shot_ready_changed(true) (%s)" % str(flips))
+	check.call(_lens(lever).material_override == target and _lens(second).material_override == ready, "(8) SHOT_READY and TARGET are back")
+	check.call(hand.equip(&"extractor"), "(8) the Extractor equips")
+	await Fixtures.wait_physics(tree, 6)
+	check.call(_lens(lever).material_override == idle and _lens(second).material_override == idle, "(8) with the Extractor equipped every glow is IDLE")
+	tree.root.get_node("EventBus").disconnect(&"shot_ready_changed", on_ready)
+	for node: Node in _nodes:
+		if is_instance_valid(node):
+			node.queue_free()
 	await tree.process_frame
 	await tree.process_frame

@@ -25,6 +25,8 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_hysteresis(tree, check)
 	await _scenario_states(tree, check)
 	await _scenario_no_slowdown(tree, check)
+	await _scenario_strong_snap(tree, check)
+	await _scenario_bend_at_speed(tree, check)
 
 
 func _begin(tree: SceneTree) -> void:
@@ -116,7 +118,10 @@ func _scenario_snap(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.wait_physics(tree, 30)
 	lever.global_position = _point(8.0, 6.0) - (_interactable(lever).hit_body.global_position - lever.global_position)
 	await Fixtures.wait_physics(tree, 20)
-	check.call(_hand.targeting.target == null and _hand.targeting.state == Targeting.State.NONE, "(2) a lever 6 degrees off is not a target")
+	check.call(_hand.targeting.target == _interactable(lever), "(2) a lever 6 degrees off is a target with the stronger assist (7 degrees)")
+	lever.global_position = _point(8.0, 16.0) - (_interactable(lever).hit_body.global_position - lever.global_position)
+	await Fixtures.wait_physics(tree, 30)
+	check.call(_hand.targeting.target == null and _hand.targeting.state == Targeting.State.NONE, "(2) a lever 16 degrees off is not a target")
 	await _end(tree)
 
 
@@ -189,4 +194,47 @@ func _scenario_no_slowdown(tree: SceneTree, check: Callable) -> void:
 	Fixtures.send_mouse_motion(Vector2(pixels, 0.0))
 	var held_turn: float = yaw_before - _rig.yaw
 	check.call(is_equal_approx(held_turn, free_turn), "(5) the same motion turns the same with a held target, there is no sticky slowdown (%.4f vs %.4f)" % [held_turn, free_turn])
+	await _end(tree)
+
+
+# D-19: the stronger starting values lock a lever 6 degrees off and keep it until it leaves hand_assist_angle * hand_assist_hold_factor.
+func _scenario_strong_snap(tree: SceneTree, check: Callable) -> void:
+	await _begin(tree)
+	check.call(is_equal_approx(_hand.hand_assist_angle, 7.0) and is_equal_approx(_hand.hand_assist_hold_factor, 1.8) and is_equal_approx(_hand.hand_assist_drop_delay, 0.15), "(6) the assist defaults are 7 degrees, hold factor 1.8, drop delay 0.15 s")
+	var lever: Lever = _lever_at(tree, _point(10.0, 6.0))
+	await Fixtures.wait_physics(tree, 8)
+	check.call(_hand.targeting.target == _interactable(lever) and _hand.targeting.state == Targeting.State.VALID, "(6) a lever 6 degrees off the crosshair is locked (VALID)")
+	var keep_limit: float = _hand.hand_assist_angle * _hand.hand_assist_hold_factor
+	lever.global_position = _point(10.0, keep_limit - 1.0) - (_interactable(lever).hit_body.global_position - lever.global_position)
+	await Fixtures.wait_physics(tree, 30)
+	check.call(_hand.targeting.target == _interactable(lever), "(6) the lock holds inside %.1f degrees" % keep_limit)
+	lever.global_position = _point(10.0, keep_limit + 2.0) - (_interactable(lever).hit_body.global_position - lever.global_position)
+	await Fixtures.wait_physics(tree, 30)
+	check.call(_hand.targeting.target == null, "(6) the lock is gone beyond %.1f degrees" % keep_limit)
+	var yaw: float = _rig.yaw
+	var pitch: float = _rig.pitch
+	await Fixtures.wait_physics(tree, 10)
+	check.call(is_equal_approx(_rig.yaw, yaw) and is_equal_approx(_rig.pitch, pitch), "(6) the assist never writes the camera yaw or pitch")
+	await _end(tree)
+
+
+# D-19: a tap shot with the player moving sideways at 18 m/s still hits a lever 4 degrees off the crosshair 12 m away: the ball bends in.
+func _scenario_bend_at_speed(tree: SceneTree, check: Callable) -> void:
+	await _begin(tree)
+	var lever: Lever = _lever_at(tree, _point(12.0, 4.0))
+	await Fixtures.wait_physics(tree, 8)
+	check.call(_hand.targeting.target == _interactable(lever), "(7) the lever 4 degrees off is the locked target")
+	Fixtures.set_energy(_player, 50.0)
+	var right: Vector3 = _rig.camera.global_basis.x
+	right.y = 0.0
+	right = right.normalized()
+	Input.action_press(&"use_hand")
+	for i: int in 40:
+		_player.global_position += right * (18.0 / float(SHIPPED_TPS))
+		await Fixtures.wait_physics(tree, 1)
+		if i == 1:
+			Input.action_release(&"use_hand")
+		if lever.is_active:
+			break
+	check.call(lever.is_active, "(7) a tap shot hits the lever while the player moves at 18 m/s (the projectile bends)")
 	await _end(tree)
