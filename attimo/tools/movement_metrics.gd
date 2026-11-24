@@ -161,6 +161,8 @@ func _begin(position: Vector3 = START) -> PlayerController:
 	_floor = Fixtures.spawn_floor(_tree.root, FLOOR_SIZE)
 	var player: PlayerController = Fixtures.spawn_player(_tree.root, position)
 	await Fixtures.wait_physics(_tree, 8)
+	# The measurements are of the injected moves, not their cost: enough energy for several, below the Moto Perpetuo threshold (50).
+	player.arm_energy.reset_to(40.0)
 	return player
 
 

@@ -1,8 +1,8 @@
 class_name MovementConfig
 extends Resource
 ## The one tunable movement resource (MOVE-10, D-23). Every movement number lives here.
-## Twelve groups, 73 live sliders in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
-## Long jump (dash hop), Timing windows, Floor and platforms, Loader, Wall, Pose, Clip playback. Gravity is set directly
+## Thirteen groups in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
+## Long jump (dash hop), Timing windows, Floor and platforms, Loader, Energy, Wall, Pose, Clip playback. Gravity is set directly
 ## (rise_gravity, fall_multiplier); jump speeds are derived from the heights, so editing a
 ## height never changes the fall feel. Every divisor field has a strictly positive minimum (T-02-02).
 
@@ -117,6 +117,18 @@ extends Resource
 @export_range(43.0, 85.0, 1.0) var loader_pitch_max_deg: float = 75.0
 ## "Geladen" cue (D-04): how far in m the camera pulls back at a full hold, eased with the hold (never a cut); raise it for more tension.
 @export_range(0.0, 1.5, 0.05) var loader_camera_pullback: float = 0.35
+
+@export_group("Energy")
+## Horizontal speed in m/s from which the arm charges by itself (D-05); plain running at run_speed stays below it, so only the dash, the hop and the Loader earn energy. Raise it to make passive charge rarer.
+@export_range(5.0, 20.0, 0.1) var energy_passive_start_speed: float = 10.0
+## Horizontal speed in m/s at which the passive charge reaches its top rate; keep it above the start speed (the curve guards a zero span). Raise it to make the top rate harder to reach.
+@export_range(10.5, 30.0, 0.1) var energy_passive_full_speed: float = 18.0
+## Passive charge in energy per second at energy_passive_start_speed; raise it for a faster charge at modest speed.
+@export_range(0.0, 20.0, 0.1) var energy_passive_rate_min: float = 3.0
+## Passive charge in energy per second at energy_passive_full_speed and above; raise it for a faster charge at top speed.
+@export_range(0.0, 20.0, 0.1) var energy_passive_rate_max: float = 6.0
+## Energy an air dash costs (the ground dash is free, D-12); raise it to make the air dash rarer.
+@export_range(0.0, 100.0, 1.0) var air_dash_cost: float = 10.0
 
 @export_group("Wall")
 ## Smallest horizontal speed in m/s that starts a wall-run on contact with a wall-run pad (MOVE-12); raise it to demand a faster approach.

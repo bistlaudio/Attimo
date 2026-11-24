@@ -27,6 +27,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_landing(tree, check)
 	await _scenario_pirouette(tree, check)
 	await _scenario_no_lockout(tree, check)
+	await _scenario_energy_reason(tree, check)
 	await _scenario_twitch(tree, check)
 	await _scenario_open_dash(tree, check)
 	await _scenario_blends(tree, check)
@@ -156,6 +157,28 @@ func _scenario_no_lockout(tree: SceneTree, check: Callable) -> void:
 	Input.action_release(&"loader")
 	await Fixtures.wait_until(tree, func() -> bool: return not player.loader_active(), 6)
 	Fixtures.restore_time()
+	await _end(player)
+
+
+# The one lockout (plan 05-03): an air dash the arm cannot pay. Only in the air, with the charge unspent and the cooldown elapsed.
+func _scenario_energy_reason(tree: SceneTree, check: Callable) -> void:
+	var player: PlayerController = await _begin(tree)
+	var cost: float = player.config.air_dash_cost
+	Fixtures.set_energy(player, 0.0)
+	check.call(player.dash_locked_reason() == &"" and player.can_dash(), "(e1) on the ground an empty arm locks nothing (ground dash is free)")
+	Fixtures.send_action_event(&"jump", true)
+	await Fixtures.wait_until(tree, func() -> bool: return not player.is_grounded() and player.vertical_speed > 0.0, 10)
+	Fixtures.send_action_event(&"jump", false)
+	Fixtures.set_energy(player, cost - 0.01)
+	check.call(player.dash_locked_reason() == &"energy" and not player.can_dash(), "(e2) in the air below the cost the reason is energy (got %s)" % player.dash_locked_reason())
+	Fixtures.set_energy(player, cost)
+	check.call(player.dash_locked_reason() == &"" and player.can_dash(), "(e3) with exactly the cost the air dash is open")
+	Fixtures.set_energy(player, 0.0)
+	player.air_dash_available = false
+	check.call(player.dash_locked_reason() == &"", "(e4) a spent air dash is no energy lockout (silent refusal as before)")
+	player.air_dash_available = true
+	player.dash_cooldown_timer = 0.5
+	check.call(player.dash_locked_reason() == &"", "(e5) a running cooldown is no energy lockout")
 	await _end(player)
 
 

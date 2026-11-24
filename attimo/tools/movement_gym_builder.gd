@@ -26,6 +26,7 @@ const METRICS_OVERLAY: String = "res://scenes/debug/metrics_overlay.tscn"
 const TUNING_PANEL: String = "res://scenes/debug/tuning_panel.tscn"
 const HIT_PUFFS: String = "res://scenes/debug/hit_puffs.tscn"
 const CROSSHAIR: String = "res://scenes/ui/crosshair.tscn"
+const ENERGY_HUD: String = "res://scenes/ui/energy_hud.tscn"
 const LOADER_LOOK: String = "res://scenes/ui/loader_look.tscn"
 
 ## Hall lattice: cell (i, j) is a 4 m tile centred at (4 i, 4 j), top at y 0.
@@ -80,6 +81,7 @@ func build() -> Node3D:
 	_instance_node(_root, TUNING_PANEL, "TuningPanel")
 	_instance_node(_root, HIT_PUFFS, "HitPuffs")
 	_instance_node(_root, CROSSHAIR, "Crosshair")
+	_instance_node(_root, ENERGY_HUD, "EnergyHud")
 	var loader_look: Node = _instance_node(_root, LOADER_LOOK, "LoaderLook")
 	loader_look.set("world_environment", _root.get_node("WorldEnvironment"))
 

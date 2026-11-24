@@ -91,7 +91,7 @@ const MAX_CARRY_SHIFT: float = 2.0
 
 @onready var visual_root: Node3D = $VisualRoot
 @onready var state_machine: StateMachine = $StateMachine
-## The single owner of the arm energy (the Loader bonus and, from plan 05-03, every other cost and income).
+## The single owner of the arm energy (the Loader bonus, the move costs and every income).
 @onready var arm_energy: ArmEnergy = $ArmEnergy
 
 
@@ -250,10 +250,12 @@ func can_coyote_jump() -> bool:
 
 
 ## Why a dash is locked right now, or &"" when no lockout applies (quick 261120-dik, reduced by quick 261120-ef9, aim removed in
-## phase 05). The one place both the ground and the air states ask. There is no lockout today; plan 05-03 adds the energy reason
-## for an unaffordable air dash. The pirouette, the landing and the take-off never lock the dash (a dash hop on the landing tick
+## phase 05). The one place both the ground and the air states ask. The one lockout is &"energy": an air dash while the arm cannot
+## pay air_dash_cost (the ground dash is free). The pirouette, the landing and the take-off never lock the dash (a dash hop on the landing tick
 ## works). The cooldown and the air dash charge are not lockouts.
 func dash_locked_reason() -> StringName:
+	if not is_grounded() and air_dash_available and dash_cooldown_timer <= 0.0 and not arm_energy.can_afford(config.air_dash_cost):
+		return &"energy"
 	return &""
 
 
@@ -287,6 +289,8 @@ func _block_dash(reason: StringName) -> void:
 	_dash_block_frame = frame
 	dash_twitch_timer = config.dash_blocked_twitch_time
 	EventBus.dash_blocked.emit(global_position, reason)
+	if reason == &"energy":
+		arm_energy.refuse(&"air_dash", config.air_dash_cost)
 
 
 ## The Loader press check of the ground and the air states, Dash and WallRun (D-01). True when a loader press this tick may start
@@ -333,6 +337,7 @@ func start_dash(direction: Vector3, in_air: bool) -> void:
 	dash_cooldown_timer = config.dash_cooldown
 	if in_air:
 		air_dash_available = false
+		arm_energy.try_spend(config.air_dash_cost, &"air_dash")
 	last_dash_direction = direction
 
 
@@ -565,6 +570,8 @@ func _set_chain_stage(stage: int) -> void:
 ## Per-tick timers (coyote, buffer, dash cooldown, long jump grace, blocked-dash twitch, landing window). Runs before the states, so every state
 ## sees the same timers. Polling just_pressed in the physics tick catches presses between two ticks.
 func _tick_timers(delta: float) -> void:
+	var state_name: StringName = &"" if state_machine.current == null else state_machine.current.name
+	arm_energy.tick(delta, horizontal_speed(), state_name, input_direction() == Vector3.ZERO)
 	coyote_timer = maxf(coyote_timer - delta, 0.0)
 	jump_buffer_timer = maxf(jump_buffer_timer - delta, 0.0)
 	dash_cooldown_timer = maxf(dash_cooldown_timer - delta, 0.0)

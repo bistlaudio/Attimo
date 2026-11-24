@@ -85,10 +85,10 @@ Display, compositor and USB latency are outside the software measurement (D-22).
 
 | Action | Accumulated input on: median (ms) | on: max (ms) | off: median (ms) | off: max (ms) | Verdict |
 |---|---|---|---|---|---|
-| Latency jump 60 TPS | 12.68 | 19.84 | 11.12 | 19.83 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency jump 120 TPS | 6.71 | 18.14 | 5.78 | 13.14 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 60 TPS | 12.20 | 21.36 | 13.06 | 21.19 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 120 TPS | 6.32 | 11.55 | 6.75 | 13.96 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 60 TPS | 13.22 | 19.05 | 13.63 | 19.68 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 120 TPS | 6.32 | 13.77 | 6.74 | 14.29 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 60 TPS | 18.78 | 19.84 | 18.21 | 22.85 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 120 TPS | 6.16 | 13.38 | 5.89 | 12.88 | Target met (median <= 66 ms, max <= 100 ms) |
 
 ## Grid cross-check
 
@@ -156,6 +156,11 @@ Every MovementConfig float of res://resources/player/movement_default.tres at ge
 | `loader_hitstop_scale` | 0.050 |
 | `loader_pitch_max_deg` | 75.000 |
 | `loader_camera_pullback` | 0.350 |
+| `energy_passive_start_speed` | 10.000 |
+| `energy_passive_full_speed` | 18.000 |
+| `energy_passive_rate_min` | 3.000 |
+| `energy_passive_rate_max` | 6.000 |
+| `air_dash_cost` | 10.000 |
 | `wall_run_min_speed` | 7.000 |
 | `wall_run_speed` | 10.000 |
 | `wall_run_time` | 1.100 |

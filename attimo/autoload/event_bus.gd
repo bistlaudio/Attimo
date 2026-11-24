@@ -10,8 +10,8 @@ signal movement_state_changed(from_state: StringName, to_state: StringName)
 signal long_jumped(position: Vector3, stage: int)
 ## Emitted by PlayerController when the ground-jump chain stage changes: 1..3 for Jump 1, 2, 3 (the pirouette jump), 0 on reset.
 signal chain_stage_changed(stage: int)
-## Emitted by PlayerController when a dash press is refused: `reason` is the StringName lockout reason (plan 05-03 uses &"energy" for an
-## unaffordable air dash; there is no lockout before it). Once per press, no dash starts and the cooldown and the air dash stay
+## Emitted by PlayerController when a dash press is refused: `reason` is the StringName lockout reason (&"energy" for an air dash the
+## arm cannot pay, D-12; there is no other lockout). Once per press, no dash starts and the cooldown and the air dash stay
 ## unspent. Listeners: later juice and audio.
 signal dash_blocked(position: Vector3, reason: StringName)
 ## Emitted by the Fernausloeser module on every shot, valid or not (D-06). `size` is a PulseHit.Size, `hit_valid` is true when an
@@ -53,6 +53,12 @@ signal loader_released(position: Vector3, direction: Vector3, speed: float, bonu
 signal energy_changed(value: float)
 ## Emitted by ArmEnergy when an amount was paid. `reason` names the cost (&"loader" for the Loader bonus). Listeners: the arm cores, juice, audio.
 signal energy_spent(amount: float, reason: StringName)
+## Emitted by an energy source at the end of a continuous gain (the charge button when it stops; capsules and machines in plan 05-04).
+## `amount` is the total gained, `source` names the income. The passive charge never emits it (it would flood the log).
+signal energy_gained(amount: float, source: StringName)
+## Emitted by ArmEnergy.refuse when a move that does not fire (the air dash, the shot) is refused for lack of energy. `reason` names the
+## move, `needed` the energy it would have cost. A base move that falls back never emits it (D-12). Listeners: the arm flicker, audio.
+signal energy_refused(reason: StringName, needed: float)
 ## Emitted by HandController when the shot module becomes usable (true) or unusable (false), once per change and once after an equip.
 ## Listeners: Interactable glow (stage SHOT_READY), the HUD.
 signal shot_ready_changed(ready: bool)
