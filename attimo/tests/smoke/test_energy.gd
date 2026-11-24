@@ -209,3 +209,33 @@ func _scenario_moto_buffs(tree: SceneTree, check: Callable, player: PlayerContro
 	check.call(absf((apex - start_y) - config.moto_jump_height) < 0.15, "(b2) Jump 3 in Moto reaches moto_jump_height %.2f (got %.3f)" % [config.moto_jump_height, apex - start_y])
 	await Fixtures.wait_until(tree, func() -> bool: return player.is_grounded(), 240)
 	check.call(player.gravity_scale == 1.0, "(b3) gravity_scale is 1.0 after the Moto jump (got %.3f)" % player.gravity_scale)
+	# WR-05: a tapped Jump 3 in Moto is never lower than a tapped normal Jump 3 (the cut follows the heavier rise).
+	var normal_tap: float = await _tapped_jump_3(tree, player, 0.0)
+	var moto_tap: float = await _tapped_jump_3(tree, player, 60.0)
+	check.call(normal_tap > 0.0 and absf(normal_tap - config.jump_min_height) < 0.15, "(b4) a tapped normal Jump 3 reaches about jump_min_height %.2f (got %.3f)" % [config.jump_min_height, normal_tap])
+	check.call(moto_tap >= normal_tap - 0.03, "(b4) a tapped Moto Jump 3 is not lower than a tapped normal Jump 3 (moto %.3f, normal %.3f)" % [moto_tap, normal_tap])
+
+
+
+## Apex height of a Jump 3 whose button is released after one tick, at `energy` (60 = Moto on, 0 = off), taken from a run.
+func _tapped_jump_3(tree: SceneTree, player: PlayerController, energy: float) -> float:
+	player.teleport(Vector3(0.0, 0.0, 0.0))
+	await Fixtures.wait_physics(tree, 6)
+	Input.action_press(&"move_forward")
+	await Fixtures.wait_physics(tree, 40)
+	player.arm_energy.reset_to(energy)
+	player.chain_stage = 2
+	player.combo_timer = 1.0
+	var start_y: float = player.global_position.y
+	Fixtures.send_action_event(&"jump", true)
+	await tree.physics_frame
+	Fixtures.send_action_event(&"jump", false)
+	var apex: float = start_y
+	for i: int in 120:
+		await tree.physics_frame
+		apex = maxf(apex, player.global_position.y)
+		if player.vertical_speed < -1.0:
+			break
+	Input.action_release(&"move_forward")
+	await Fixtures.wait_until(tree, func() -> bool: return player.is_grounded(), 240)
+	return apex - start_y

@@ -42,10 +42,14 @@ func _air_update(_delta: float) -> StringName:
 
 ## Variable jump height (D-04): a released button cuts the rise down to the tap speed.
 ## Every rising state calls this, so chain stages and long jumps only change the maximum.
+## A heavier rise (gravity_scale above 1, only the Moto Jump 3) scales the cut by sqrt(gravity_scale), so a tap still reaches
+## jump_min_height: h = cut^2 * s / (2 * g * s). Every other state runs at a scale of 1 or less and keeps the plain cut (WR-05).
 func apply_jump_cut() -> void:
 	if Input.is_action_pressed(&"jump"):
 		return
 	var cut: float = actor.config.cut_speed()
+	if actor.gravity_scale > 1.0:
+		cut *= sqrt(actor.gravity_scale)
 	if actor.vertical_speed > cut:
 		actor.vertical_speed = cut
 
