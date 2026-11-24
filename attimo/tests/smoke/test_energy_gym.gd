@@ -267,8 +267,8 @@ func _live_capsule(tree: SceneTree, check: Callable) -> void:
 	_release_inputs()
 
 
-## Every shot station has a respawning capsule within reach: the Auslöser stations that need a shot, the entry of each puzzle room,
-## the Loader room's gap and super jump, and (above) the Zone_Energy shot stations.
+## Every shot station has a respawning capsule within reach: the Auslöser stations that need a shot, the Loader room's gap and
+## super jump, and (above) the Zone_Energy shot stations. (The Phase 4 puzzle rooms were removed in plan 05.1-02, D-29.)
 func _check_capsules_near_shots(check: Callable) -> void:
 	var mech: Node3D = _gym.get_node("Zone_MechanismRooms") as Node3D
 	for entry: Variant in mech.get_meta(&"stations", []) as Array:
@@ -278,11 +278,6 @@ func _check_capsules_near_shots(check: Callable) -> void:
 		var at: Vector3 = data["at"] as Vector3
 		var capsule: EnergySource = _nearest_capsule(at)
 		check.call(capsule != null and capsule.respawn_time > 0.0 and capsule.global_position.distance_to(at) <= CAPSULE_REACH, "Auslöser station %s has a respawning capsule within %.0f m" % [data["tag"], CAPSULE_REACH])
-	for room: Node in _gym.find_children("PuzzleRoom_*", "Node3D", true, false):
-		var capsule_name: StringName = StringName(room.get_meta(&"capsule", &""))
-		var capsule: EnergySource = room.get_node_or_null(NodePath(str(capsule_name))) as EnergySource
-		var respawn: Marker3D = room.get_node("Respawn") as Marker3D
-		check.call(capsule != null and capsule.respawn_time > 0.0 and capsule.global_position.distance_to(respawn.global_position) <= CAPSULE_REACH, "%s has its capsule (meta capsule) within %.0f m of its entry" % [room.name, CAPSULE_REACH])
 	var loader: Node3D = _gym.get_node("Zone_Loader") as Node3D
 	for tag: String in ["Loader_Gap", "Loader_SuperJump"]:
 		var launch: Marker3D = loader.get_node("%s/Launch" % tag) as Marker3D
@@ -309,7 +304,8 @@ func _check_signs(check: Callable) -> void:
 	for node: Node in _gym.find_children("Label_*_Expect", "Label3D", true, false):
 		if (node as Label3D).text.begins_with("Erwartet:"):
 			expects += 1
-	check.call(expects >= 48, "the gym has at least 48 'Erwartet:' lines (got %d)" % expects)
+	# 47 since plan 05.1-02 removed the pneumatic tube station (48 before).
+	check.call(expects >= 47, "the gym has at least 47 'Erwartet:' lines (got %d)" % expects)
 	check.call(labels >= 40, "at least 40 labels (%d)" % labels)
 
 

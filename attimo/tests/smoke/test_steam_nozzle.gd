@@ -1,5 +1,5 @@
 extends RefCounted
-## D-16 / D-20: the Dampfduese modes. JUMP and CANNON launch once per entry, UPDRAFT and WALL push every tick. The volume is
+## D-16 / D-20: the Dampfduese modes. JUMP launches once per entry, UPDRAFT and WALL push every tick. The volume is
 ## an Area3D on no layer that masks the player.
 
 const Fixtures := preload("res://tests/fixtures.gd")
@@ -17,7 +17,6 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_jump(tree, check)
 	await _scenario_updraft(tree, check)
 	await _scenario_wall(tree, check)
-	await _scenario_cannon(tree, check)
 	EventBus.launched.disconnect(_on_launched)
 
 
@@ -100,23 +99,3 @@ func _scenario_wall(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.wait_physics(tree, 20)
 	check.call(player.global_position.x - start_x > 0.3, "WALL pushes the player along the nozzle direction (%.2f m)" % (player.global_position.x - start_x))
 	await _free(tree, [nozzle, player, source])
-
-
-# CANNON: a launch along the tilted direction.
-func _scenario_cannon(tree: SceneTree, check: Callable) -> void:
-	var source: SignalSource = SignalSource.new()
-	tree.root.add_child(source)
-	source.set_active(true)
-	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)
-	var nozzle: SteamNozzle = _nozzle(tree, check, SteamNozzle.Mode.CANNON, source)
-	if nozzle == null:
-		await _free(tree, [source, floor_body])
-		return
-	nozzle.rotation.x = PI * 0.25
-	tree.root.add_child(nozzle)
-	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3.ZERO)
-	_facts.clear()
-	await Fixtures.wait_physics(tree, 20)
-	var tilted: bool = _facts.size() >= 1 and _facts[0].y > 0.5 and _facts[0].z < -0.5
-	check.call(tilted, "CANNON launches along the tilted direction (%s)" % str(_facts[0] if _facts.size() > 0 else Vector3.ZERO))
-	await _free(tree, [nozzle, player, floor_body, source])

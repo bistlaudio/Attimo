@@ -7,8 +7,9 @@ extends RefCounted
 ## Plan view (x east, z south): the hall east wall sits at x 42.5. The door (Zahnrad-Tor) is its z 0 cell, the tracer lever
 ## stands on the hall side at (38, -3). Room 2 is the showcase east of the door, x 43..219, z -32..32. A main corridor at z -4..4 runs
 ## from the west door to the east exit (z 0..4). Seven closed rooms (ZONES, 4 m walls, no ceiling) line it, four north and three
-## south, each with one doorway and a door sign; 4 m alleys separate them. They hold the 33 stations, grouped by what the mechanism
-## does to the player. The puzzle rooms of tools/puzzle_rooms_builder.gd follow behind the east wall, shifted by PUZZLE_SHIFT_X.
+## south, each with one doorway and a door sign; 4 m alleys separate them. They hold the 32 stations, grouped by what the mechanism
+## does to the player. The Phase 4 puzzle rooms behind the east wall were removed in plan 05.1-02 (D-29: they depended on cut
+## triggers); their AND / OR / timer ideas return as target-based stations in plan 05.1-14. The east wall is closed.
 
 const GATE_SCENE: String = "res://scenes/mechanisms/gear_gate.tscn"
 const LEVER_SCENE: String = "res://scenes/mechanisms/lever.tscn"
@@ -32,7 +33,7 @@ const PISTON_SCENE: String = "res://scenes/mechanisms/piston_wall.tscn"
 const WALL_PAD_SCENE: String = "res://scenes/mechanisms/wall_pad.tscn"
 const FIELD_SCENE: String = "res://scenes/mechanisms/force_field.tscn"
 const SLINGSHOT_SCENE: String = "res://scenes/kit/steampunk/slingshot_core.tscn"
-const TUBE_SCENE: String = "res://scenes/mechanisms/pneumatic_tube.tscn"
+const STEAM_CANNON_SCENE: String = "res://scenes/kit/steampunk/steam_cannon.tscn"
 const WIND_SCENE: String = "res://scenes/mechanisms/wind_tunnel.tscn"
 const CRUMBLING_SCENE: String = "res://scenes/mechanisms/crumbling_platform.tscn"
 const PATERNOSTER_SCENE: String = "res://scenes/mechanisms/paternoster.tscn"
@@ -44,13 +45,11 @@ const BOUNCE_SCENE: String = "res://scenes/mechanisms/bounce_pad.tscn"
 const RAISED: float = 1.0
 const WALL_X: float = 42.5
 const ROOM_X_MIN: float = 43.0
-## East wall of room 2: the north row of rooms ends at x 215, plus a 4 m alley. The puzzle rooms start behind it.
+## East wall of room 2: the north row of rooms ends at x 215, plus a 4 m alley.
 const ROOM_X_MAX: float = 219.0
 ## Room 2 spans z -32..32: rooms z 4..28 on each side of the corridor plus a 4 m alley along the outer walls.
 const ROOM_Z_HALF: float = 32.0
 const TILE: float = 4.0
-## Index of the east wall cell (z 0..4) that stays open for the puzzle room doorway: the row whose centre is z 2.
-const EAST_DOOR_ROW: int = int(ROOM_Z_HALF / TILE)
 ## Slot pitch inside a room: every room is a block of 12 m slots, 2 rows deep.
 const SLOT_PITCH: float = 12.0
 ## The main corridor runs from the west door to the east exit at z -4..4. North rooms span z -28..-4, south rooms z 4..28.
@@ -115,20 +114,9 @@ func build_into(zone: Node3D, builder: RefCounted) -> void:
 	_build_room_reset(zone, builder)
 	_build_door(zone, builder)
 	build_showcase_stations(zone, builder)
-	_build_puzzle_rooms(zone, builder)
 
 
-## The three puzzle rooms (04-05) start behind room 2's east wall, in their own worker.
-func _build_puzzle_rooms(zone: Node3D, builder: RefCounted) -> void:
-	var script: GDScript = load("res://tools/puzzle_rooms_builder.gd") as GDScript
-	if script == null or not script.can_instantiate():
-		builder.set(&"failure", "cannot load res://tools/puzzle_rooms_builder.gd")
-		return
-	var worker: RefCounted = script.new() as RefCounted
-	worker.call(&"build_into", zone, builder)
-
-
-## Showcase stations (D-03, D-04): 33 stations on the slot grid, one row of STATIONS each, grouped by zone. Every station node is a
+## Showcase stations (D-03, D-04): 32 stations on the slot grid, one row of STATIONS each, grouped by zone. Every station node is a
 ## DIRECT child of the zone under its tag name (the gym tests iterate the direct children); its geometry props (pillars, steps,
 ## walkways) go into ZoneDecor. Every sign has two lines: Label_<tag> and Label_<tag>_Expect ("Erwartet: ...").
 ## kinds: valve, core, crank, plate (self-triggered, with a gate), and / or / timer (logic, with a gate), mover (own lever at `lever`
@@ -175,9 +163,9 @@ const STATIONS: Array[Dictionary] = [
 	{"tag": "ConveyorReverse", "zone": "Tragen", "slots": [Vector2i(4, 1), Vector2i(5, 1)], "kind": "mover", "scene": CONVEYOR_SCENE, "text": "Förderband: Hebel kehrt um", "expect": "Erwartet: Läuft immer, der Hebel kehrt die Richtung um", "yaw": -90.0, "lever": Vector3(0.0, 0.0, 3.5), "props": {"behaviour": Mechanism.Behaviour.REVERSE_ON_SIGNAL}},
 	# Werfen & Tempo (einmal Tempo in eine Richtung)
 	{"tag": "BoostRing", "zone": "Werfen", "slots": [Vector2i(0, 0), Vector2i(1, 0)], "kind": "driven", "scene": BOOST_SCENE, "text": "Boost-Ring", "expect": "Erwartet: Durchfliegen gibt Tempo und lädt den Dash", "y": 2.5},
-	{"tag": "Slingshot", "zone": "Werfen", "slots": [Vector2i(3, 0)], "kind": "kit", "scene": SLINGSHOT_SCENE, "text": "Schleuderkern (wie der Loader)", "expect": "Erwartet: Fängt dich, Zeitlupe; Rechtsklick loslassen oder antippen wirft in Blickrichtung, sonst automatisch nach 1,2 s", "y": 3.0},
-	{"tag": "NozzleCannon", "zone": "Werfen", "slots": [Vector2i(0, 1)], "kind": "mover", "scene": NOZZLE_SCENE, "text": "Dampfdüse: Kanone", "expect": "Erwartet: Wirft dich schräg in Düsenrichtung", "yaw": -90.0, "pitch": 45.0, "lever": Vector3(0.0, 0.0, 2.5), "props": {"mode": SteamNozzle.Mode.CANNON}},
-	{"tag": "Tube", "zone": "Werfen", "slots": [Vector2i(3, 1)], "kind": "driven", "scene": TUBE_SCENE, "text": "Rohrpost", "expect": "Erwartet: Rein ins Rohr, am Ende schießt es dich raus", "yaw": -90.0, "offset": Vector3(-8.0, 0.0, 0.0), "props": {"exit_speed": 6.0}},
+	{"tag": "Slingshot", "zone": "Werfen", "slots": [Vector2i(1, 1)], "kind": "kit", "scene": SLINGSHOT_SCENE, "text": "Schleuderkern (wie der Loader)", "expect": "Erwartet: Fängt dich, Zeitlupe; Rechtsklick loslassen oder antippen wirft in Blickrichtung, sonst automatisch nach 1,2 s", "y": 3.0},
+	# The steam cannon (Catch & launch FIXED, plan 05.1-02) is yaw only: the barrel pitch lives in its config, never on the node.
+	{"tag": "SteamCannon", "zone": "Werfen", "slots": [Vector2i(0, 1)], "kind": "kit", "scene": STEAM_CANNON_SCENE, "text": "Dampfkanone", "expect": "Erwartet: Fängt dich am Rohr, kurz Halt, dann immer der gleiche Bogen", "yaw": -90.0},
 ]
 ## Default offset of a gate from its station point and of a lever (and sign) of a mover or driven station.
 const GATE_OFFSET: Vector3 = Vector3(4.0, 0.0, 0.0)
@@ -357,9 +345,6 @@ func _build_room_shell(zone: Node3D, builder: RefCounted) -> void:
 		builder.call(&"_wall", zone, "Room2WallNorth_%d" % column, x, -ROOM_Z_HALF - 0.5, 0.0, 0.0)
 		builder.call(&"_wall", zone, "Room2WallSouth_%d" % column, x, ROOM_Z_HALF + 0.5, 0.0, 0.0)
 	for row: int in rows:
-		# The z 0..4 cell (row 4) is the doorway into the puzzle rooms (EntryGate of puzzle_rooms_builder).
-		if row == EAST_DOOR_ROW:
-			continue
 		var z: float = -ROOM_Z_HALF + TILE * 0.5 + TILE * row
 		builder.call(&"_wall", zone, "Room2WallEast_%d" % row, ROOM_X_MAX + 0.5, z, 90.0, 0.0)
 	# The hall floor ends at x 42 and room 2 starts at x 43: a 1 m threshold closes the wall cell between them.
@@ -425,7 +410,7 @@ func _build_zones(zone: Node3D, builder: RefCounted) -> void:
 
 
 ## Room-2 safety net (T-04.1-13): a FallReset under x 81..ROOM_X_MAX + 30 (east of the hall reset's x 80 edge) that returns the player to
-## Respawn_Room2 near the west door. The puzzle rooms carry their own resets above it.
+## Respawn_Room2 near the west door.
 func _build_room_reset(zone: Node3D, builder: RefCounted) -> void:
 	var marker: Marker3D = Marker3D.new()
 	builder.call(&"_adopt", zone, marker, "Respawn_Room2", RESPAWN_ROOM2)

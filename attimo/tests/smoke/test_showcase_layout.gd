@@ -17,8 +17,8 @@ const ZONE_TAGS: Array[String] = ["Ausloeser", "Kraft", "Hoch", "Stossen", "Wand
 const ZONE_COUNT: int = 7
 const STATION_TAGS: Array[String] = [
 	"Valve", "EnergyCore", "Crank", "PressurePlate", "LogicAnd", "LogicOr", "LogicTimer",
-	"NozzleCannon", "NozzleJump", "NozzleUpdraft", "Geyser", "NozzleWall",
-	"Pendulum", "PistonWall", "WallRun", "WallJump", "Repulsor", "Attractor", "Slingshot", "Tube",
+	"SteamCannon", "NozzleJump", "NozzleUpdraft", "Geyser", "NozzleWall",
+	"Pendulum", "PistonWall", "WallRun", "WallJump", "Repulsor", "Attractor", "Slingshot",
 	"WindTunnel", "LowGravity", "RotatingLying", "RotatingStanding", "RotatingTilting", "Crumbling",
 	"LiftPiston", "LiftChain", "Paternoster", "BoostRing", "Bounce", "ConveyorRun", "ConveyorReverse",
 ]
@@ -160,7 +160,7 @@ func _check_room_shell(gym: Node, zone: Node3D, check: Callable) -> void:
 
 func _check_stations(zone: Node3D, rects: Dictionary, check: Callable) -> void:
 	var entries: Array = zone.get_meta(&"stations", []) as Array
-	check.call(entries.size() == 33, "Zone_MechanismRooms has 33 stations in its metadata (got %d)" % entries.size())
+	check.call(entries.size() == STATION_TAGS.size(), "Zone_MechanismRooms has %d stations in its metadata (got %d)" % [STATION_TAGS.size(), entries.size()])
 	var points: Array[Vector3] = []
 	var tags: Array[String] = []
 	for entry: Variant in entries:
@@ -227,7 +227,8 @@ func _check_ray_guard(tree: SceneTree, gym: Node, check: Callable) -> void:
 		elif node is Paternoster:
 			for deck: AnimatableBody3D in (node as Paternoster).decks():
 				bodies.append(deck)
-	check.call(bodies.size() >= 15, "the ray guard covers the moving and vanishing bodies (%d bodies)" % bodies.size())
+	# 12 since plan 05.1-02 removed the puzzle rooms with their lift, rotating platform and conveyor (15 before).
+	check.call(bodies.size() >= 12, "the ray guard covers the moving and vanishing bodies (%d bodies)" % bodies.size())
 	var space: PhysicsDirectSpaceState3D = (gym as Node3D).get_world_3d().direct_space_state
 	var wrong: PackedStringArray = PackedStringArray()
 	for body: CollisionObject3D in bodies:

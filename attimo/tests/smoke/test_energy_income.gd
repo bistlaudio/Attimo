@@ -1,6 +1,6 @@
 extends RefCounted
 ## Plan 05-03 (ENRG-02, D-05, D-06): the passive charge uses horizontal speed only (0 below 10 m/s, 3/s at 10, 4.5/s at 14, 6/s from
-## 18), pauses in the Loader and Capture states and never charges at plain run speed. A live dash-hop run fills the arm.
+## 18), pauses in the Loader state and never charges at plain run speed. A live dash-hop run fills the arm.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 const SHIPPED_TPS: int = 60
@@ -44,7 +44,7 @@ func _scenario_curve(check: Callable, player: PlayerController) -> void:
 
 func _scenario_paused_states(check: Callable, player: PlayerController) -> void:
 	var arm: ArmEnergy = player.arm_energy
-	for state_name: StringName in [&"Loader", &"Capture"]:
+	for state_name: StringName in [&"Loader"]:
 		arm.reset_to(0.0)
 		for i: int in SHIPPED_TPS:
 			arm.tick(1.0 / SHIPPED_TPS, 20.0, state_name, false)

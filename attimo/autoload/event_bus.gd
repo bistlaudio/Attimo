@@ -45,10 +45,6 @@ signal wall_run_started(position: Vector3, normal: Vector3)
 signal wall_run_ended(position: Vector3)
 ## Emitted by the WallJump state on enter; `direction` is the flat kick direction away from the wall. Listeners: juice, audio.
 signal wall_jumped(position: Vector3, direction: Vector3)
-## Emitted by the Capture state on enter (pneumatic tube, phase 04.1). Listeners: juice, audio.
-signal capture_started(position: Vector3)
-## Emitted by the Capture state when it lets go. `velocity` is the exit velocity (zero after a stuck or time-out release). Listeners: juice, audio.
-signal capture_released(position: Vector3, velocity: Vector3)
 ## Emitted by the Loader state on enter (HAND-04). `stored_speed` is the speed in m/s that was stored, `in_air` is true when the hold hangs
 ## in the air. Listeners: the Loader presentation (plan 05-02), juice, audio.
 signal loader_started(position: Vector3, stored_speed: float, in_air: bool)

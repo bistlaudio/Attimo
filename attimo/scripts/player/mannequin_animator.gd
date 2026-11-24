@@ -69,7 +69,6 @@ const STATE_TO_ANIM: Dictionary[StringName, StringName] = {
 	&"Dash": &"Dash",
 	&"WallRun": &"Locomotion",
 	&"WallJump": &"Jump",
-	&"Capture": &"Fall",
 	&"Loader": &"Fall",
 }
 

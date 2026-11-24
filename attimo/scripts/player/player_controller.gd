@@ -87,11 +87,6 @@ var wall_contact_age: float = INF
 var wall_pre_velocity: Vector3 = Vector3.ZERO
 ## Seconds left before the next wall-run may start. Every WallRun exit and every WallJump sets it to config.wall_run_cooldown.
 var wall_run_cooldown_timer: float = 0.0
-## The Capture request of capture_along: target points of the player origin, speed, hold time at the end and the exit velocity.
-var capture_points: PackedVector3Array = PackedVector3Array()
-var capture_speed: float = 0.0
-var capture_hold: float = 0.0
-var capture_exit_velocity: Vector3 = Vector3.ZERO
 
 ## A rotating platform never carries further than this per tick (a guard against a bad transform).
 const MAX_CARRY_SHIFT: float = 2.0
@@ -208,7 +203,7 @@ func respawn(new_position: Vector3) -> void:
 
 
 ## Places the body, zeroes all motion, hands the FSM to Fall and clears the interpolation streak (call order matters).
-## The Fall hand-over ends a running Capture, WallRun or Dash through its exit() (gravity_scale restored), so a respawn
+## The Fall hand-over ends a running Loader, WallRun or Dash through its exit() (gravity_scale restored), so a respawn
 ## does not keep steering, sliding or dashing (WR-02).
 func teleport(new_position: Vector3) -> void:
 	global_position = new_position
@@ -304,7 +299,7 @@ func _block_dash(reason: StringName) -> void:
 
 ## The Loader press check of the ground and the air states, Dash and WallRun (D-01). True when a loader press this tick may start
 ## the Loader: the cooldown of an empty-arm redirect has elapsed, and Rino stands on the floor or the airborne use is still available
-## (D-02). Capture never asks. Like the dash press it polls just_pressed, so the press is not buffered.
+## (D-02). Like the dash press it polls just_pressed, so the press is not buffered.
 func loader_press_starts_loader() -> bool:
 	if not Input.is_action_just_pressed(&"loader"):
 		return false
@@ -350,7 +345,7 @@ func start_dash(direction: Vector3, in_air: bool) -> void:
 	last_dash_direction = direction
 
 
-## One-shot launch (steam nozzle jump and cannon, D-20): sets the velocity along `direction` to exactly `speed` and keeps the
+## One-shot launch (steam nozzle jump, D-20): sets the velocity along `direction` to exactly `speed` and keeps the
 ## sideways momentum (`keep_sideways` true), so height and distance repeat. With `keep_sideways` false the velocity becomes
 ## exactly direction * speed (a pad that decides the whole path). Leaves Dash, LongJump and Jump for Fall. The air dash and the
 ## landing chain are not touched. Mechanisms call this with call_deferred (never inside the physics flush). A bad vector is ignored.
@@ -499,26 +494,6 @@ func can_wall_jump() -> bool:
 	return wall_surface(&"wall_jump_surface")
 
 
-## Capture request (pneumatic tube, D-06): the Capture state carries the player origin through `points` at `speed`,
-## holds `hold_time` at the last point and lets go with `exit_velocity`. Mechanisms call this with call_deferred. Empty or non-finite
-## input, a non-positive speed and a request while already captured are ignored.
-func capture_along(points: PackedVector3Array, speed: float, hold_time: float, exit_velocity: Vector3) -> void:
-	if points.is_empty() or not is_finite(speed) or speed <= 0.0:
-		return
-	if not is_finite(hold_time) or hold_time < 0.0 or not exit_velocity.is_finite():
-		return
-	for point: Vector3 in points:
-		if not point.is_finite():
-			return
-	if state_machine.current.name == &"Capture":
-		return
-	capture_points = points
-	capture_speed = speed
-	capture_hold = hold_time
-	capture_exit_velocity = exit_velocity
-	state_machine.transition_to(&"Capture")
-
-
 func _enter_fall() -> void:
 	if state_machine.current.name != &"Fall":
 		state_machine.transition_to(&"Fall")
@@ -651,8 +626,8 @@ func _integrate(delta: float) -> void:
 	# Speed-scaled floor snap, held inside the D-13 band (A35).
 	var snap: float = horizontal_speed() * delta * tan(floor_max_angle) + 0.1
 	floor_snap_length = clampf(snap, config.snap_min, maxf(config.snap_min, config.snap_max))
-	if state_machine.current.name == &"Capture" or (loader_active() and loader_profile != null and loader_profile.source == LoaderProfile.Source.FIXED):
-		# A captured body (or one pulled to the cannon mouth) is carried along a path: the floor snap must not pull it back down.
+	if loader_active() and loader_profile != null and loader_profile.source == LoaderProfile.Source.FIXED:
+		# A body pulled to the steam cannon mouth is carried along a path: the floor snap must not pull it back down.
 		floor_snap_length = 0.0
 	move_and_slide()
 	vertical_speed = maxf(vertical_speed - g * delta * 0.5, -config.terminal_speed)

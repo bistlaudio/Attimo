@@ -348,7 +348,7 @@ func _check_moving_stations(zone: Node, check: Callable) -> void:
 	check.call(axes.size() == 3, "room 2 has a Dreh-Plattform in all three axis modes (%d)" % axes.size())
 	check.call(looks.size() == 2, "room 2 has a Hub-Plattform with both looks (%d)" % looks.size())
 	check.call(behaviours.size() == 2, "room 2 has a Foerderband per behaviour (%d)" % behaviours.size())
-	check.call(modes.size() == 4, "room 2 has a Dampfduese in all four modes (%d)" % modes.size())
+	check.call(modes.size() == 3, "room 2 has a Dampfduese in all three modes, JUMP, UPDRAFT and WALL (%d)" % modes.size())
 	check.call(pendulums >= 1, "room 2 has a Pendel (%d)" % pendulums)
 	check.call(unwired == 0, "every moving mechanism in Zone_MechanismRooms has a source (%d unwired)" % unwired)
 
@@ -357,7 +357,7 @@ func _check_moving_stations(zone: Node, check: Callable) -> void:
 func _check_field_stations(zone: Node, check: Callable) -> void:
 	var field_modes: Dictionary = {}
 	var pad_modes: Dictionary = {}
-	var kinds: Dictionary = {"WindTunnel": 0, "LowGravityZone": 0, "CatchLaunch": 0, "PneumaticTube": 0, "BouncePad": 0, "BoostRing": 0, "CrumblingPlatform": 0, "PistonWall": 0, "Geyser": 0, "Paternoster": 0}
+	var kinds: Dictionary = {"WindTunnel": 0, "LowGravityZone": 0, "CatchLaunch": 0, "BouncePad": 0, "BoostRing": 0, "CrumblingPlatform": 0, "PistonWall": 0, "Geyser": 0, "Paternoster": 0}
 	var unwired: int = 0
 	var plate_gates: int = 0
 	var plates: Array[Node] = []
@@ -384,5 +384,7 @@ func _check_field_stations(zone: Node, check: Callable) -> void:
 	check.call(pad_modes.size() == 2, "room 2 has a WallPad in both modes (%d)" % pad_modes.size())
 	for kind: String in kinds:
 		check.call(int(kinds[kind]) >= 1, "room 2 has a %s station (%d)" % [kind, int(kinds[kind])])
+	# Plan 05.1-02: the slingshot cage (FREE_AIM) and the steam cannon (FIXED) are both Catch & launch blocks.
+	check.call(int(kinds["CatchLaunch"]) == 2, "room 2 has two CatchLaunch stations, the cage and the cannon (%d)" % int(kinds["CatchLaunch"]))
 	check.call(plate_gates >= 1, "room 2 has a PressurePlate that drives a gate (%d)" % plate_gates)
 	check.call(unwired == 0, "every new mechanism in Zone_MechanismRooms has a source (%d unwired)" % unwired)

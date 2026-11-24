@@ -82,7 +82,7 @@ func active_sources() -> Array[StringName]:
 	return sources
 
 
-## Captures the engine scale once per iteration, before anything in that iteration writes it (this node is the sole writer).
+## Records the engine scale once per iteration, before anything in that iteration writes it (this node is the sole writer).
 func _sync_frame_scale() -> void:
 	var frame: int = Engine.get_process_frames()
 	if frame != _frame_scale_frame:

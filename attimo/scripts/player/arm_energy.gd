@@ -123,12 +123,12 @@ func passive_rate(horizontal_speed: float, config: MovementConfig) -> float:
 
 
 ## Per physics tick, called by PlayerController before the states run: the passive charge from the horizontal speed (paused in the
-## Loader and Capture states: the speed there is stored or carried, not earned) and the charge button. The button adds
+## Loader state: the speed there is stored or carried, not earned) and the charge button. The button adds
 ## energy_charge_rate while it is held in Idle with no move input (`still`); anything else stops it at once, and the total of one
 ## charge run is reported once as energy_gained(total, &"charge") when it stops.
 func tick(delta: float, horizontal_speed: float, state_name: StringName, still: bool) -> void:
 	var config: MovementConfig = _config()
-	if config != null and state_name != &"Loader" and state_name != &"Capture":
+	if config != null and state_name != &"Loader":
 		gain(passive_rate(horizontal_speed, config) * delta, &"passive")
 	var wants_charge: bool = config != null and state_name == &"Idle" and still and Input.is_action_pressed(&"charge")
 	if wants_charge and value < MAX_ENERGY:

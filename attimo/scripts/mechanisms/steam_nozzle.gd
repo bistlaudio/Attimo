@@ -1,16 +1,17 @@
 class_name SteamNozzle
 extends Mechanism
 ## Dampfduese (MECH-03, D-16, D-20): throws or pushes the player along a fixed direction while active. Modes: JUMP (up, one launch
-## per entry), UPDRAFT (a lift column that holds the player up), CANNON (one launch along the nozzle's -Z) and WALL (a push
-## back along -Z). Active means the signal is on (RUN_WHILE_ON) or always (REVERSE_ON_SIGNAL, where the signal flips the
-## CANNON and WALL direction, D-18). One call rule: one-shot launches go through call_deferred (the overlap callback runs
+## per entry), UPDRAFT (a lift column that holds the player up) and WALL (a push back along -Z). The cannon mode moved to the Catch &
+## launch kit block (FIXED profile, scenes/kit/steampunk/steam_cannon.tscn, plan 05.1-02); WALL keeps its value 3 so a stored mode
+## keeps its meaning. Active means the signal is on (RUN_WHILE_ON) or always (REVERSE_ON_SIGNAL, where the signal flips the
+## WALL direction, D-18). One call rule: one-shot launches go through call_deferred (the overlap callback runs
 ## inside the physics flush), continuous pushes call push_toward straight from this _physics_process, which only records a
 ## request the player consumes in its own tick. This script never writes the player's velocity.
 
-enum Mode { JUMP, UPDRAFT, CANNON, WALL }
+enum Mode { JUMP = 0, UPDRAFT = 1, WALL = 3 }
 
 @export var mode: Mode = Mode.JUMP
-## JUMP and CANNON: speed along the direction in m/s.
+## JUMP: speed along the direction in m/s.
 @export_range(1.0, 30.0, 0.5) var launch_speed: float = 14.0
 ## UPDRAFT: target speed along the direction.
 @export_range(1.0, 20.0, 0.5) var updraft_speed: float = 6.0
@@ -19,7 +20,7 @@ enum Mode { JUMP, UPDRAFT, CANNON, WALL }
 ## WALL: target speed along the direction.
 @export_range(1.0, 20.0, 0.5) var wall_speed: float = 8.0
 @export_range(1.0, 120.0, 1.0) var wall_accel: float = 60.0
-## JUMP and CANNON: seconds after a launch before the next entry may launch again.
+## JUMP: seconds after a launch before the next entry may launch again.
 @export_range(0.0, 2.0, 0.05) var launch_cooldown: float = 0.25
 
 var _armed: bool = true
@@ -78,7 +79,7 @@ func reset() -> void:
 
 func _on_signal(on: bool) -> void:
 	_column.visible = is_active()
-	if on and (mode == Mode.JUMP or mode == Mode.CANNON):
+	if on and mode == Mode.JUMP:
 		# A lever pulled while the player already stands in the volume launches that player once.
 		for body: Node3D in _volume.get_overlapping_bodies():
 			_try_launch(body)
@@ -89,7 +90,7 @@ func _on_body_entered(body: Node3D) -> void:
 
 
 func _try_launch(body: Node3D) -> void:
-	if mode != Mode.JUMP and mode != Mode.CANNON:
+	if mode != Mode.JUMP:
 		return
 	var player: PlayerController = body as PlayerController
 	if player == null or not is_active() or not _armed:
