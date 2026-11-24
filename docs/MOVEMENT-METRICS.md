@@ -54,6 +54,27 @@ The right-click Loader (HAND-04): hold to store the momentum in slow motion, rel
 | Loader hold cap | - | 72 ticks (1.20 s) | the hold discharges by itself in REAL time; depends on loader_hold_cap 1.20 |
 | Loader slow motion | - | 0.25 | Engine.time_scale during the hold; depends on loader_slow_factor |
 
+## Energy
+
+The arm energy (ENRG-01 to ENRG-05, FEEL-10): what charges it and what each move costs. Passive rows run ArmEnergy.tick at an exact horizontal speed for one second; the charge button is held 2 s in Idle; capsule and machine are drained tick by tick through EnergySource.extract; the cost rows are the config values; the Moto rows run the real Player with a full arm. The gym area Zone_Energy sizes its stations from these numbers.
+
+| Verb | Value | Note |
+|---|---|---|
+| Passive charge 10 m/s | 3.000 energy/s | horizontal speed only; depends on energy_passive_start_speed 10.0, energy_passive_full_speed 18.0, energy_passive_rate_min 3.0, energy_passive_rate_max 6.0 |
+| Passive charge 14 m/s | 4.500 energy/s | horizontal speed only; depends on energy_passive_start_speed 10.0, energy_passive_full_speed 18.0, energy_passive_rate_min 3.0, energy_passive_rate_max 6.0 |
+| Passive charge 18 m/s | 6.000 energy/s | horizontal speed only; depends on energy_passive_start_speed 10.0, energy_passive_full_speed 18.0, energy_passive_rate_min 3.0, energy_passive_rate_max 6.0 |
+| Charge button | 5.000 energy/s | held in Idle without move input; depends on energy_charge_rate 5.0 |
+| Energy capsule | +40.0 in 0.50 s | Extractor drain of energy_capsule.tscn; depends on EnergySource amount and duration |
+| Broken machine | +60.0 in 2.00 s | Extractor drain of broken_machine.tscn; depends on EnergySource amount and duration |
+| Air dash cost | 10.0 | the ground dash is free; depends on air_dash_cost |
+| Dash hop stage 2-3 cost | 15.0 each | stage 1 is free, without energy the hop stays stage 1; depends on long_jump_cost |
+| Wall run cost | 15.0 energy/s | after the free 0.60 s, until wall_run_time 1.10 s; depends on wall_run_cost_per_second, wall_run_free_time |
+| Loader bonus cost | 25.0 | one full core; depends on loader_bonus_cost |
+| Shot tap | 10.0 | a tap shot; depends on HandController hand_shot_cost_min |
+| Shot full charge | 25.0 | a full-charge shot opens heavy mechanisms; depends on HandController hand_shot_cost_max |
+| Moto Perpetuo run | 9.52 m/s | with a full arm (moto_threshold 50); depends on run_speed, moto_run_bonus 0.12 |
+| Moto Perpetuo Jump 3 | 5.00 m apex | buffed Jump 3 with a full arm (plain Jump 3: 4.0 m); depends on moto_jump_height 5.0, moto_jump_gravity_scale 1.45 |
+
 ## Timing windows
 
 | Window | Seconds | Ticks at 60 TPS |
@@ -85,10 +106,10 @@ Display, compositor and USB latency are outside the software measurement (D-22).
 
 | Action | Accumulated input on: median (ms) | on: max (ms) | off: median (ms) | off: max (ms) | Verdict |
 |---|---|---|---|---|---|
-| Latency jump 60 TPS | 13.36 | 19.65 | 13.17 | 20.26 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency jump 120 TPS | 5.81 | 7.37 | 6.49 | 15.36 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 60 TPS | 12.13 | 20.85 | 13.06 | 19.33 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 120 TPS | 5.88 | 13.89 | 6.36 | 13.72 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 60 TPS | 13.10 | 21.19 | 15.56 | 20.08 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 120 TPS | 7.67 | 13.91 | 6.40 | 13.23 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 60 TPS | 16.66 | 22.47 | 19.48 | 21.61 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 120 TPS | 5.80 | 13.75 | 5.86 | 14.15 | Target met (median <= 66 ms, max <= 100 ms) |
 
 ## Grid cross-check
 
