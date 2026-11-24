@@ -40,7 +40,7 @@ var dash_jump_grace_timer: float = 0.0
 ## Seconds left of the blocked-dash twitch. ProceduralPose reads it; a refused dash press starts it.
 var dash_twitch_timer: float = 0.0
 ## True while the Loader may start in the air: one use per airborne stretch (D-02). An airborne Loader press and a ground discharge
-## that lifts off spend it; landing, refill_air_dash (boost ring, slingshot) give it back.
+## that lifts off spend it; landing, refill_air_dash (boost ring) and refill_loader (slingshot cage) give it back.
 var loader_available: bool = true
 ## True after a ground discharge that stayed on the floor, while the throw still carries Rino above run_speed. Walking off a ledge
 ## in that state spends loader_available (the airborne stretch belongs to the throw, D-02); landing, a jump take-off or the speed
@@ -48,6 +48,9 @@ var loader_available: bool = true
 var loader_ground_throw: bool = false
 ## Seconds left before the next Loader press may start. A discharge without the bonus (empty arm) starts it at loader_redirect_cooldown.
 var loader_cooldown_timer: float = 0.0
+## The source of the current Loader hold (Phase 05.1, D-04): null means the arm (ARM). catch_into_loader sets it for a kit block
+## (slingshot cage); LoaderState.exit clears it, so the next right-click press is an arm hold again.
+var loader_profile: LoaderProfile = null
 
 var _was_on_floor: bool = true
 var _dash_block_frame: int = -1
@@ -386,6 +389,25 @@ func boost_along(direction: Vector3, min_speed: float, add: float = 0.0) -> void
 	air_speed_cap = maxf(config.run_speed, horizontal_speed())
 	_enter_fall()
 	EventBus.boosted.emit(global_position, dir, new_along)
+
+
+## Catch request of a Catch & launch kit block (slingshot cage, Phase 05.1 D-01, D-17): puts Rino into the Loader state with the
+## block's profile, so the hold, the slow world, the cap and the throw are the Loader's own. Kit blocks call this with call_deferred
+## (the overlap callback runs inside the physics flush). A null or invalid profile (non-finite numbers, T-05.1-01) and a request
+## while a Loader hold already runs (arm or cage, T-05.1-04) are ignored.
+func catch_into_loader(profile: LoaderProfile) -> void:
+	if profile == null or not profile.is_valid() or profile.source == LoaderProfile.Source.ARM:
+		return
+	if loader_active():
+		return
+	loader_profile = profile
+	state_machine.transition_to(&"Loader")
+
+
+## Gives the Loader's airborne use back and nothing else (slingshot cage, D-03): the air dash and its cooldown stay as they are,
+## unlike refill_air_dash.
+func refill_loader() -> void:
+	loader_available = true
 
 
 ## Gives the air dash back (boost ring, D-06): the charge is available and the cooldown is gone, so a dash can start at once.

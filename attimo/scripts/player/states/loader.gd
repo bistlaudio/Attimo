@@ -10,7 +10,12 @@ extends State
 ## control for loader_release_control_lock and hands over to Fall. It never touches air_dash_available and never calls
 ## refill_air_dash (D-03: the Loader is independent of the air dash). One use per airborne stretch (D-02): an air press spends
 ## loader_available, and so does a ground discharge that lifts off, ends off the floor or carries Rino over a ledge
-## (loader_ground_throw); landing, a boost ring or the slingshot give it back.
+## (loader_ground_throw); landing, a boost ring or the slingshot cage give it back.
+## Phase 05.1 (D-01..D-04): one state serves every source through PlayerController.loader_profile (LoaderProfile, null = ARM). A CAGE
+## hold (slingshot core, PlayerController.catch_into_loader) always hangs Rino (even near the floor) and spends no use; it ends on the
+## release after the loader button was held at the catch or pressed later (a same-tick tap counts), or at the cap, never on "not
+## pressed" alone; its throw has no bonus, spends no energy, starts no redirect cooldown, skips the ground-throw rules and gives the
+## Loader use back through refill_loader (never refill_air_dash). Slow factor, cap, control lock, hitstop and the camera stay shared.
 ## exit() restores gravity_scale, spends the jump buffer and coyote window (the buffer would outlive the slow motion) and releases
 ## the time scale, so every exit path ends the slow world: release, cap, teleport() and a freed player (_exit_tree).
 
@@ -25,6 +30,13 @@ var hold_real: float = 0.0
 var grounded_entry: bool = false
 ## Physics updates since enter (a diagnostic the tests read for the cap edge).
 var update_count: int = 0
+## CAGE: true once the loader button was seen held or pressed during the hold (D-02 latch); its release then fires the throw.
+var _press_seen: bool = false
+
+
+## The source of the current hold: ARM without a profile, else the profile's source.
+func source() -> LoaderProfile.Source:
+	return LoaderProfile.Source.ARM if actor.loader_profile == null else actor.loader_profile.source
 
 
 func enter(_previous: StringName) -> void:
@@ -32,12 +44,16 @@ func enter(_previous: StringName) -> void:
 	stored_velocity = Vector3(actor.move_velocity.x, actor.vertical_speed, actor.move_velocity.z)
 	if not stored_velocity.is_finite():
 		stored_velocity = Vector3.ZERO
-	grounded_entry = actor.is_grounded()
+	var cage: bool = source() == LoaderProfile.Source.CAGE
+	# A cage hangs Rino wherever it catches, so a ring near the floor freezes instead of skidding (D-01).
+	grounded_entry = actor.is_grounded() and not cage
 	hold_real = 0.0
 	update_count = 0
+	_press_seen = cage and _loader_pressed()
 	actor.consume_jump()
 	if not grounded_entry:
-		actor.loader_available = false
+		if not cage:
+			actor.loader_available = false
 		actor.gravity_scale = 0.0
 		actor.move_velocity = Vector3.ZERO
 		actor.vertical_speed = 0.0
@@ -46,6 +62,7 @@ func enter(_previous: StringName) -> void:
 
 
 func exit() -> void:
+	actor.loader_profile = null
 	actor.gravity_scale = 1.0
 	actor.consume_jump()
 	TimeFx.release(&"loader")
@@ -69,9 +86,25 @@ func physics_update(delta: float) -> StringName:
 		actor.move_velocity.y = 0.0
 		if actor.is_grounded():
 			actor.vertical_speed = 0.0
-	if not Input.is_action_pressed(&"loader") or hold_real >= config.loader_hold_cap - HOLD_EPSILON:
+	if hold_real >= config.loader_hold_cap - HOLD_EPSILON:
+		return _discharge()
+	if source() == LoaderProfile.Source.CAGE:
+		# D-02 latch: a press seen this tick (or held since the catch) arms the release; "not pressed" alone never fires.
+		var pressed: bool = Input.is_action_pressed(&"loader")
+		if _loader_pressed():
+			_press_seen = true
+		if _press_seen and not pressed:
+			return _discharge()
+		return &""
+	if not Input.is_action_pressed(&"loader"):
 		return _discharge()
 	return &""
+
+
+## True when the loader button is held, or was pressed or released since the last tick (a press and a release between two ticks
+## is a tap and still counts as a press).
+func _loader_pressed() -> bool:
+	return Input.is_action_pressed(&"loader") or Input.is_action_just_pressed(&"loader") or Input.is_action_just_released(&"loader")
 
 
 ## 0 at the start of the hold, 1 at loader_hold_cap (presentation, plan 05-02).
@@ -86,6 +119,8 @@ func stored_ratio() -> float:
 
 ## True when the arm can pay the bonus right now (a full core). The release decides again with the energy of that moment.
 func bonus_ready() -> bool:
+	if source() == LoaderProfile.Source.CAGE:
+		return false
 	return actor.arm_energy.can_afford(actor.config.loader_bonus_cost)
 
 
@@ -97,23 +132,33 @@ func preview_velocity() -> Vector3:
 ## The velocity a release right now would give with or without the bonus (the trajectory preview draws both arcs).
 func preview_velocity_for(with_bonus: bool) -> Vector3:
 	var config: MovementConfig = actor.config
-	var bonus: float = config.loader_bonus_speed if with_bonus else 0.0
-	var speed: float = LoaderMath.discharge_speed(stored_velocity.length(), config.loader_min_push, bonus, config.loader_max_speed)
+	var bonus: float = config.loader_bonus_speed if with_bonus and source() != LoaderProfile.Source.CAGE else 0.0
+	var speed: float = LoaderMath.discharge_speed(stored_velocity.length(), _min_push(), bonus, config.loader_max_speed)
 	return LoaderMath.discharge_velocity(actor.loader_direction(), speed)
+
+
+## The smallest throw speed: the profile's for a kit source, else MovementConfig.loader_min_push.
+func _min_push() -> float:
+	return actor.config.loader_min_push if actor.loader_profile == null else actor.loader_profile.min_push
 
 
 ## Throws Rino along the view: the bonus is paid here, the velocity is written, air control is locked, then Fall takes over.
 func _discharge() -> StringName:
 	var config: MovementConfig = actor.config
 	var direction: Vector3 = actor.loader_direction()
-	var bonus: bool = actor.arm_energy.try_spend(config.loader_bonus_cost, &"loader")
-	var speed: float = LoaderMath.discharge_speed(stored_velocity.length(), config.loader_min_push, config.loader_bonus_speed if bonus else 0.0, config.loader_max_speed)
+	var cage: bool = source() == LoaderProfile.Source.CAGE
+	# D-03: the cage throw has no bonus and never touches the energy.
+	var bonus: bool = false if cage else actor.arm_energy.try_spend(config.loader_bonus_cost, &"loader")
+	var speed: float = LoaderMath.discharge_speed(stored_velocity.length(), _min_push(), config.loader_bonus_speed if bonus else 0.0, config.loader_max_speed)
 	var velocity: Vector3 = LoaderMath.discharge_velocity(direction, speed)
 	actor.move_velocity = Vector3(velocity.x, 0.0, velocity.z)
 	actor.vertical_speed = clampf(velocity.y, -config.terminal_speed, config.terminal_speed)
 	actor.air_speed_cap = maxf(config.run_speed, actor.horizontal_speed())
 	actor.lock_air_control(config.loader_release_control_lock)
-	if not bonus:
+	if cage:
+		# D-03: no redirect cooldown, no ground-throw rules; the cage gives the use back and leaves the air dash alone.
+		actor.refill_loader()
+	elif not bonus:
 		actor.loader_cooldown_timer = config.loader_redirect_cooldown
 	if grounded_entry:
 		# D-02: a ground discharge that lifts off, or one released after the skid left the floor, spends the airborne use. A throw
