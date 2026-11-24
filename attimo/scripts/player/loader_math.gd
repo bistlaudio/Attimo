@@ -2,7 +2,7 @@ class_name LoaderMath
 extends RefCounted
 ## The pure Loader discharge math (HAND-04, GAME-DESIGN 6.8). Static functions only, no node access: the release (LoaderState) and
 ## the trajectory preview of plan 05-02 call the same functions, so what the preview promises is what the release does. The
-## slingshot core may adopt them later (the catch-and-launch shares code with the Loader).
+## slingshot cage (Catch & launch, Phase 05.1) throws through the same LoaderState discharge, so it uses them too.
 
 
 ## The speed of a discharge in m/s: max(stored, min_push) + bonus, capped at `cap`. A non-finite stored speed counts as 0, a

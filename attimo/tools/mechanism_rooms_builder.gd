@@ -31,7 +31,7 @@ const GEYSER_SCENE: String = "res://scenes/mechanisms/geyser.tscn"
 const PISTON_SCENE: String = "res://scenes/mechanisms/piston_wall.tscn"
 const WALL_PAD_SCENE: String = "res://scenes/mechanisms/wall_pad.tscn"
 const FIELD_SCENE: String = "res://scenes/mechanisms/force_field.tscn"
-const SLINGSHOT_SCENE: String = "res://scenes/mechanisms/slingshot_core.tscn"
+const SLINGSHOT_SCENE: String = "res://scenes/kit/steampunk/slingshot_core.tscn"
 const TUBE_SCENE: String = "res://scenes/mechanisms/pneumatic_tube.tscn"
 const WIND_SCENE: String = "res://scenes/mechanisms/wind_tunnel.tscn"
 const CRUMBLING_SCENE: String = "res://scenes/mechanisms/crumbling_platform.tscn"
@@ -132,7 +132,8 @@ func _build_puzzle_rooms(zone: Node3D, builder: RefCounted) -> void:
 ## DIRECT child of the zone under its tag name (the gym tests iterate the direct children); its geometry props (pillars, steps,
 ## walkways) go into ZoneDecor. Every sign has two lines: Label_<tag> and Label_<tag>_Expect ("Erwartet: ...").
 ## kinds: valve, core, crank, plate (self-triggered, with a gate), and / or / timer (logic, with a gate), mover (own lever at `lever`
-## from the station point), driven (always-on Driver<tag> SignalSource, sign at the lever position).
+## from the station point), driven (always-on Driver<tag> SignalSource, sign at the lever position), kit (a Phase 05.1 kit block
+## that needs no signal source, sign at the lever position).
 ## Row keys: tag, zone, slots (one slot, or two for a half block: the midpoint), kind, scene, text, expect, and optional y (node
 ## height), yaw / pitch (degrees), offset (node offset from the station point), lever (lever offset), sign_h, gate (gate offset),
 ## props (properties set on the mechanism).
@@ -174,7 +175,7 @@ const STATIONS: Array[Dictionary] = [
 	{"tag": "ConveyorReverse", "zone": "Tragen", "slots": [Vector2i(4, 1), Vector2i(5, 1)], "kind": "mover", "scene": CONVEYOR_SCENE, "text": "Förderband: Hebel kehrt um", "expect": "Erwartet: Läuft immer, der Hebel kehrt die Richtung um", "yaw": -90.0, "lever": Vector3(0.0, 0.0, 3.5), "props": {"behaviour": Mechanism.Behaviour.REVERSE_ON_SIGNAL}},
 	# Werfen & Tempo (einmal Tempo in eine Richtung)
 	{"tag": "BoostRing", "zone": "Werfen", "slots": [Vector2i(0, 0), Vector2i(1, 0)], "kind": "driven", "scene": BOOST_SCENE, "text": "Boost-Ring", "expect": "Erwartet: Durchfliegen gibt Tempo und lädt den Dash", "y": 2.5},
-	{"tag": "Slingshot", "zone": "Werfen", "slots": [Vector2i(3, 0)], "kind": "driven", "scene": SLINGSHOT_SCENE, "text": "Schleuderkern", "expect": "Erwartet: Rein von links oben, raus nach rechts unten", "y": 3.0},
+	{"tag": "Slingshot", "zone": "Werfen", "slots": [Vector2i(3, 0)], "kind": "kit", "scene": SLINGSHOT_SCENE, "text": "Schleuderkern (wie der Loader)", "expect": "Erwartet: Fängt dich, Zeitlupe; Rechtsklick loslassen oder antippen wirft in Blickrichtung, sonst automatisch nach 1,2 s", "y": 3.0},
 	{"tag": "NozzleCannon", "zone": "Werfen", "slots": [Vector2i(0, 1)], "kind": "mover", "scene": NOZZLE_SCENE, "text": "Dampfdüse: Kanone", "expect": "Erwartet: Wirft dich schräg in Düsenrichtung", "yaw": -90.0, "pitch": 45.0, "lever": Vector3(0.0, 0.0, 2.5), "props": {"mode": SteamNozzle.Mode.CANNON}},
 	{"tag": "Tube", "zone": "Werfen", "slots": [Vector2i(3, 1)], "kind": "driven", "scene": TUBE_SCENE, "text": "Rohrpost", "expect": "Erwartet: Rein ins Rohr, am Ende schießt es dich raus", "yaw": -90.0, "offset": Vector3(-8.0, 0.0, 0.0), "props": {"exit_speed": 6.0}},
 ]
@@ -247,6 +248,8 @@ func _place_station(zone: Node3D, builder: RefCounted, row: Dictionary, at: Vect
 			_station_mover(zone, builder, tag, scene, node_at, basis, lever_at, props, text, float(row.get("sign_h", 3.2)), expect)
 		"driven":
 			_station_driven(zone, builder, tag, scene, node_at, basis, props, text, expect, float(row.get("sign_h", 3.2)), at + LEVER_OFFSET)
+		"kit":
+			_station_kit(zone, builder, tag, scene, node_at, basis, props, text, expect, float(row.get("sign_h", 3.2)), at + LEVER_OFFSET)
 		_:
 			builder.set(&"failure", "unknown station kind %s" % String(row["kind"]))
 
@@ -303,6 +306,14 @@ func _station_driven(zone: Node3D, builder: RefCounted, tag: String, scene: Stri
 	mechanism.set("source", driver)
 	for key: Variant in props:
 		mechanism.set(String(key), props[key])
+	_sign(zone, builder, tag, text, Vector3(sign_at.x, 0.0, sign_at.z), sign_height, expect)
+
+
+## A kit block (Phase 05.1) that runs on its own: no Driver source (a kit block has no `source`, D-13), only the block and its sign.
+func _station_kit(zone: Node3D, builder: RefCounted, tag: String, scene: String, at: Vector3, basis: Basis, props: Dictionary, text: String, expect: String, sign_height: float, sign_at: Vector3) -> void:
+	var block: Node3D = builder.call(&"_instance", zone, scene, tag, at, basis) as Node3D
+	for key: Variant in props:
+		block.set(String(key), props[key])
 	_sign(zone, builder, tag, text, Vector3(sign_at.x, 0.0, sign_at.z), sign_height, expect)
 
 

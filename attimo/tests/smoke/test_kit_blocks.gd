@@ -42,7 +42,10 @@ func _check_kit_block(check: Callable) -> void:
 	var exported: Array[String] = _exported(script)
 	check.call(exported.has("layer") and exported.has("energy_relation"), "KitBlock exports layer and energy_relation (%s)" % [exported])
 	check.call(not exported.has("source"), "KitBlock keeps no source field (switching is the Receiver component's job, D-13)")
-	check.call(script.has_method(&"reset") and script.has_method(&"own_config"), "KitBlock has reset() and own_config()")
+	var methods: Array[String] = []
+	for method: Dictionary in script.get_script_method_list():
+		methods.append(String(method["name"]))
+	check.call(methods.has("reset") and methods.has("own_config"), "KitBlock has reset() and own_config()")
 
 
 ## The names of a script's exported properties (script variables with the editor usage flag).

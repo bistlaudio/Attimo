@@ -175,7 +175,7 @@ Exception 2: placeholder hit puffs in `scripts/debug` + `scenes/debug/hit_puff.t
 | `wall_run_started` | `position: Vector3, normal: Vector3` | `WallRun` state on enter (MOVE-12, phase 04.1); `normal` is the flat wall normal |
 | `wall_run_ended` | `position: Vector3` | `WallRun` state on exit, whatever the reason |
 | `wall_jumped` | `position: Vector3, direction: Vector3` | `WallJump` state on enter; `direction` is the flat kick direction |
-| `capture_started` | `position: Vector3` | `Capture` state on enter (slingshot core, pneumatic tube, phase 04.1) |
+| `capture_started` | `position: Vector3` | `Capture` state on enter (pneumatic tube, phase 04.1) |
 | `capture_released` | `position: Vector3, velocity: Vector3` | `Capture` state when it lets go; `velocity` is the exit velocity (zero after a stuck or time-out release) |
 | `loader_started` | `position: Vector3, stored_speed: float, in_air: bool` | `Loader` state on enter (HAND-04, phase 05); `stored_speed` is the stored speed in m/s, `in_air` is true when the hold hangs in the air |
 | `loader_released` | `position: Vector3, direction: Vector3, speed: float, bonus: bool` | `Loader` state on the discharge (release or the hold cap); `bonus` is true when the arm paid a core |

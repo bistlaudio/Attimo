@@ -8,6 +8,8 @@ const Fixtures := preload("res://tests/fixtures.gd")
 const GYM_SCENE: String = "res://scenes/test/movement_gym.tscn"
 const PROTO_PREFIX: String = "res://scenes/proto/"
 const MECHANISMS_PREFIX: String = "res://scenes/mechanisms/"
+## Phase 05.1 kit object scenes (scenes/kit/<layer>/...) are sanctioned like mechanisms scenes.
+const KIT_PREFIX: String = "res://scenes/kit/"
 const MANNEQUIN_SCENE: String = "res://scenes/player/mannequin.tscn"
 const CONTRACT_NODES: Array[String] = [
 	"WorldEnvironment", "Sun", "Hall", "Spawn", "Player", "CameraRig",
@@ -255,7 +257,7 @@ func _has_sanctioned_ancestor(node: Node) -> bool:
 	var current: Node = node
 	while current != null:
 		var path: String = current.scene_file_path
-		if path.begins_with(PROTO_PREFIX) or path.begins_with(MECHANISMS_PREFIX) or path == MANNEQUIN_SCENE:
+		if path.begins_with(PROTO_PREFIX) or path.begins_with(MECHANISMS_PREFIX) or path.begins_with(KIT_PREFIX) or path == MANNEQUIN_SCENE:
 			return true
 		current = current.get_parent()
 	return false
@@ -271,7 +273,7 @@ func _layer_allowed(body: StaticBody3D) -> bool:
 		return true
 	var current: Node = body
 	while current != null:
-		if current.scene_file_path.begins_with(MECHANISMS_PREFIX):
+		if current.scene_file_path.begins_with(MECHANISMS_PREFIX) or current.scene_file_path.begins_with(KIT_PREFIX):
 			return true
 		current = current.get_parent()
 	return false
@@ -355,7 +357,7 @@ func _check_moving_stations(zone: Node, check: Callable) -> void:
 func _check_field_stations(zone: Node, check: Callable) -> void:
 	var field_modes: Dictionary = {}
 	var pad_modes: Dictionary = {}
-	var kinds: Dictionary = {"WindTunnel": 0, "LowGravityZone": 0, "SlingshotCore": 0, "PneumaticTube": 0, "BouncePad": 0, "BoostRing": 0, "CrumblingPlatform": 0, "PistonWall": 0, "Geyser": 0, "Paternoster": 0}
+	var kinds: Dictionary = {"WindTunnel": 0, "LowGravityZone": 0, "CatchLaunch": 0, "PneumaticTube": 0, "BouncePad": 0, "BoostRing": 0, "CrumblingPlatform": 0, "PistonWall": 0, "Geyser": 0, "Paternoster": 0}
 	var unwired: int = 0
 	var plate_gates: int = 0
 	var plates: Array[Node] = []
@@ -364,6 +366,11 @@ func _check_field_stations(zone: Node, check: Callable) -> void:
 			plates.append(child)
 		if child is GearGate and plates.has((child as GearGate).source):
 			plate_gates += 1
+		# Kit blocks (Phase 05.1, e.g. CatchLaunch) count as kinds but carry no source (D-13), so they skip the wiring check.
+		if child is Mechanism or child is KitBlock:
+			for kind: String in kinds:
+				if str(child.get_script().get_global_name()) == kind:
+					kinds[kind] += 1
 		if not child is Mechanism:
 			continue
 		var mechanism: Mechanism = child as Mechanism
@@ -373,9 +380,6 @@ func _check_field_stations(zone: Node, check: Callable) -> void:
 			field_modes[(child as ForceField).mode] = true
 		elif child is WallPad:
 			pad_modes[(child as WallPad).mode] = true
-		for kind: String in kinds:
-			if str(child.get_script().get_global_name()) == kind:
-				kinds[kind] += 1
 	check.call(field_modes.size() == 2, "room 2 has a ForceField in both modes (%d)" % field_modes.size())
 	check.call(pad_modes.size() == 2, "room 2 has a WallPad in both modes (%d)" % pad_modes.size())
 	for kind: String in kinds:

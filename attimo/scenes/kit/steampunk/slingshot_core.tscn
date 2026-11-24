@@ -1,0 +1,26 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/kit/catch_launch_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://resources/kit/catch_launch/slingshot_default.tres" id="2_config"]
+
+[sub_resource type="TorusMesh" id="TorusMesh_ring"]
+inner_radius = 0.85
+outer_radius = 1.0
+rings = 16
+ring_segments = 8
+
+[node name="SlingshotCage" instance=ExtResource("1_base")]
+layer = 0
+energy_relation = 0
+config = ExtResource("2_config")
+
+[node name="RingA" type="MeshInstance3D" parent="."]
+mesh = SubResource("TorusMesh_ring")
+
+[node name="RingB" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
+mesh = SubResource("TorusMesh_ring")
+
+[node name="RingC" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("TorusMesh_ring")

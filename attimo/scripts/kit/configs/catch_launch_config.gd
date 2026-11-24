@@ -1,0 +1,24 @@
+class_name CatchLaunchConfig
+extends Resource
+## Config of the Catch & launch block (Phase 05.1, KIT-03, D-11): one profile enum instead of flags. FREE_AIM is the slingshot cage
+## (the hold is the Loader's own: slow factor, cap, min push and control lock come from MovementConfig, never copied here). FIXED is
+## the steam cannon (fixed direction and speed, short hold), whose fields are declared now and used from plan 05.1-02. Presets live in
+## resources/kit/catch_launch/. Every divisor or timer field has a strictly positive minimum (T-02-02). A loaded preset is never
+## written at runtime: the block duplicates it in _ready (D-12).
+
+enum Profile { FREE_AIM, FIXED }
+
+@export_group("Catch")
+## FREE_AIM throws along the view like the Loader; FIXED throws along the barrel at fixed_speed.
+@export var profile: Profile = Profile.FREE_AIM
+## Trigger sphere radius in m; raise it for a cage that catches from further away.
+@export_range(0.5, 6.0, 0.1) var radius: float = 2.5
+## Seconds after a throw before the block catches again (it also waits until the player has left the radius); raise it to stop
+## quick re-catches.
+@export_range(0.1, 5.0, 0.1) var rearm_time: float = 1.0
+
+@export_group("Fixed")
+## FIXED: seconds Rino is held in the barrel before the throw; raise it for a longer wind-up.
+@export_range(0.05, 1.0, 0.01) var fixed_hold: float = 0.2
+## FIXED: the throw speed in m/s; raise it for a longer, higher arc.
+@export_range(1.0, 40.0, 0.5) var fixed_speed: float = 14.0

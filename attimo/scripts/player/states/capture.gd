@@ -1,5 +1,5 @@
 extends State
-## Capture (MECH-04 C, MECH-05 tube, D-06, D-10): a mechanism (slingshot core, pneumatic tube) asks for it through
+## Capture (MECH-04 C, MECH-05 tube, D-06, D-10): a mechanism (pneumatic tube; the slingshot core moved to LoaderState in Phase 05.1) asks for it through
 ## PlayerController.capture_along. The state owns the whole body for its duration, like Dash: gravity is off, move_velocity and
 ## vertical_speed carry the player origin through capture_points at capture_speed, hold capture_hold seconds at the last point, then
 ## release with capture_exit_velocity (air control locked for EXIT_CONTROL_LOCK, the air dash refilled) into Fall. The move itself is

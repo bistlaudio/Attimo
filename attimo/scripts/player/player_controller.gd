@@ -499,7 +499,7 @@ func can_wall_jump() -> bool:
 	return wall_surface(&"wall_jump_surface")
 
 
-## Capture request (slingshot core, pneumatic tube, D-06): the Capture state carries the player origin through `points` at `speed`,
+## Capture request (pneumatic tube, D-06): the Capture state carries the player origin through `points` at `speed`,
 ## holds `hold_time` at the last point and lets go with `exit_velocity`. Mechanisms call this with call_deferred. Empty or non-finite
 ## input, a non-positive speed and a request while already captured are ignored.
 func capture_along(points: PackedVector3Array, speed: float, hold_time: float, exit_velocity: Vector3) -> void:
