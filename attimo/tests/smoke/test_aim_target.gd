@@ -14,7 +14,8 @@ const FACE_TOLERANCE: float = 0.05
 const ERROR_LIMIT_DEG: float = 1.0
 const PARALLAX_MIN_DEG: float = 1.0
 const SETTLE_FRAMES: int = 6
-const AIM_FRAMES: int = 90
+## Shorter than the Loader hold cap (72 ticks), so the arm is still out when the solver is read.
+const AIM_FRAMES: int = 40
 
 ## Records the camera position and aim point in _process at the default priority (like the animator that feeds the arm).
 class EarlyReader extends Node:
@@ -58,8 +59,9 @@ func _begin(tree: SceneTree) -> void:
 
 
 func _end(tree: SceneTree, extra: Array[Node] = []) -> void:
-	Input.action_release(&"aim")
-	Fixtures.send_action_event(&"aim", false)
+	Input.action_release(&"loader")
+	Fixtures.send_action_event(&"loader", false)
+	Fixtures.restore_time()
 	for node: Node in [_player, _rig, _floor] + extra:
 		if is_instance_valid(node):
 			node.queue_free()
@@ -122,8 +124,8 @@ func _scenario_direction(tree: SceneTree, check: Callable) -> void:
 	await _end(tree)
 
 
-# (t5) with aim held the solver receives the crosshair target point, so the arm direction (shoulder to point) differs from
-# the camera forward by the parallax and the solver still reaches it.
+# (t5) with the arm out for the Loader hold the solver receives the crosshair target point (HandController.arm_out_point), so
+# the arm direction (shoulder to point) differs from the camera forward by the parallax and the solver still reaches it.
 func _scenario_wiring(tree: SceneTree, check: Callable) -> void:
 	await _begin(tree)
 	var wall: StaticBody3D = Fixtures.spawn_box(_floor.get_parent(), Vector3(20.0, 10.0, 1.0), Vector3(0.0, 5.0, -4.0))
@@ -133,7 +135,7 @@ func _scenario_wiring(tree: SceneTree, check: Callable) -> void:
 	if modifier == null:
 		await _end(tree, [wall])
 		return
-	Input.action_press(&"aim")
+	Input.action_press(&"loader")
 	await Fixtures.wait_physics(tree, AIM_FRAMES)
 	await Fixtures.wait_process(tree, SETTLE_FRAMES)
 	var target: Vector3 = _rig.aim_target_point()

@@ -53,14 +53,12 @@ func run(tree: SceneTree, check: Callable) -> void:
 	var pulses: Array = []
 	var on_pulse: Callable = func(_o: Vector3, _p: Vector3, _s: int, _v: bool) -> void: pulses.append(1)
 	bus.connect(&"pulse_fired", on_pulse)
-	Input.action_press(&"aim")
 	await Fixtures.wait_physics(tree, 4)
 	await Fixtures.tap_action(tree, &"use_hand", 2)
 	await Fixtures.wait_physics(tree, 3)
 	var dummy: DummyModule = hand.active_module as DummyModule
-	check.call(dummy != null and dummy.use_count == 1, "a tap while aiming reaches the dummy (use_count %d)" % (dummy.use_count if dummy != null else -1))
+	check.call(dummy != null and dummy.use_count == 1, "a tap reaches the dummy without any hold (use_count %d)" % (dummy.use_count if dummy != null else -1))
 	check.call(pulses.is_empty(), "the dummy emits no pulse_fired")
-	Input.action_release(&"aim")
 	Input.action_release(&"use_hand")
 	bus.disconnect(&"pulse_fired", on_pulse)
 	floor_body.queue_free()

@@ -1,5 +1,5 @@
 extends RefCounted
-## HAND-03 / D-01..D-07, D-15: aim (hold) + use_hand (tap or hold) fires the Fernausloeser pulse at the crosshair.
+## HAND-03 / D-01..D-07, D-15, D-16: use_hand (tap or hold) fires the Fernausloeser pulse at the crosshair from the hip, no aim hold.
 ## End to end: pulse -> Lever -> Zahnrad-Tor. Every scenario builds its own world, releases every action and frees it.
 
 const Fixtures := preload("res://tests/fixtures.gd")
@@ -7,7 +7,6 @@ const Fixtures := preload("res://tests/fixtures.gd")
 const LEVER_SCENE: String = "res://scenes/mechanisms/lever.tscn"
 const GATE_SCENE: String = "res://scenes/mechanisms/gear_gate.tscn"
 const SHIPPED_TPS: int = 60
-const AIM_SETTLE_FRAMES: int = 180
 ## Hold time above the 0.4 s charge threshold.
 const BIG_HOLD_SECONDS: float = 0.5
 
@@ -25,9 +24,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 		return
 	_bus = tree.root.get_node("EventBus")
 	await _scenario_end_to_end(tree, check)
-	await _scenario_no_aim(tree, check)
 	await _scenario_big_pulse(tree, check)
-	await _scenario_cancel(tree, check)
 	await _scenario_cooldown(tree, check)
 	await _scenario_range(tree, check)
 	await _scenario_occlusion(tree, check)
@@ -38,8 +35,8 @@ func _on_pulse(origin: Vector3, point: Vector3, size: int, valid: bool) -> void:
 	_events.append({"origin": origin, "point": point, "size": size, "valid": valid})
 
 
-## Floor, player, camera rig. Aims (holds the action) unless `aim` is false, and waits until the aim blend settled.
-func _begin(tree: SceneTree, aim: bool) -> void:
+## Floor, player, camera rig, and a short settle.
+func _begin(tree: SceneTree) -> void:
 	_events.clear()
 	_nodes.clear()
 	_nodes.append(Fixtures.spawn_floor(tree.root, Vector3(200.0, 1.0, 200.0)))
@@ -51,18 +48,11 @@ func _begin(tree: SceneTree, aim: bool) -> void:
 	_bus.connect(&"pulse_fired", _on_pulse)
 	await Fixtures.wait_physics(tree, 6)
 	await Fixtures.wait_process(tree, 3)
-	if aim:
-		Input.action_press(&"aim")
-		var frames: int = 0
-		while _rig.aim_weight < 0.999 and frames < AIM_SETTLE_FRAMES:
-			await tree.process_frame
-			frames += 1
-		await Fixtures.wait_physics(tree, 3)
-		await Fixtures.wait_process(tree, 3)
+	await Fixtures.wait_physics(tree, 3)
+	await Fixtures.wait_process(tree, 3)
 
 
 func _end(tree: SceneTree, extra: Array[Node] = []) -> void:
-	Input.action_release(&"aim")
 	Input.action_release(&"use_hand")
 	if _bus.is_connected(&"pulse_fired", _on_pulse):
 		_bus.disconnect(&"pulse_fired", _on_pulse)
@@ -115,7 +105,7 @@ func _place_gate(tree: SceneTree, lever: Lever) -> GearGate:
 
 
 func _scenario_end_to_end(tree: SceneTree, check: Callable) -> void:
-	await _begin(tree, true)
+	await _begin(tree)
 	var lever: Lever = _place_lever(tree, 8.0)
 	var gate: GearGate = _place_gate(tree, lever)
 	await Fixtures.wait_physics(tree, 3)
@@ -131,18 +121,8 @@ func _scenario_end_to_end(tree: SceneTree, check: Callable) -> void:
 	await _end(tree)
 
 
-func _scenario_no_aim(tree: SceneTree, check: Callable) -> void:
-	await _begin(tree, false)
-	var lever: Lever = _place_lever(tree, 8.0)
-	await Fixtures.tap_action(tree, &"use_hand", 2)
-	await Fixtures.wait_physics(tree, 4)
-	check.call(_events.is_empty(), "use_hand without aim fires nothing")
-	check.call(not lever.is_active, "the lever stays off without aim")
-	await _end(tree)
-
-
 func _scenario_big_pulse(tree: SceneTree, check: Callable) -> void:
-	await _begin(tree, true)
+	await _begin(tree)
 	var lever: Lever = _place_lever(tree, 8.0)
 	await Fixtures.wait_physics(tree, 2)
 	await Fixtures.hold_action(tree, &"use_hand", BIG_HOLD_SECONDS)
@@ -154,22 +134,8 @@ func _scenario_big_pulse(tree: SceneTree, check: Callable) -> void:
 	await _end(tree)
 
 
-func _scenario_cancel(tree: SceneTree, check: Callable) -> void:
-	await _begin(tree, true)
-	var lever: Lever = _place_lever(tree, 8.0)
-	Input.action_press(&"use_hand")
-	await Fixtures.wait_physics(tree, 6)
-	Input.action_release(&"aim")
-	await Fixtures.wait_physics(tree, 4)
-	Input.action_release(&"use_hand")
-	await Fixtures.wait_physics(tree, 4)
-	check.call(_events.is_empty(), "releasing aim mid-charge cancels the shot")
-	check.call(not lever.is_active, "the cancelled charge left the lever off")
-	await _end(tree)
-
-
 func _scenario_cooldown(tree: SceneTree, check: Callable) -> void:
-	await _begin(tree, true)
+	await _begin(tree)
 	var lever: Lever = _place_lever(tree, 8.0)
 	await Fixtures.tap_action(tree, &"use_hand", 2)
 	await Fixtures.wait_physics(tree, 4)
@@ -181,7 +147,7 @@ func _scenario_cooldown(tree: SceneTree, check: Callable) -> void:
 
 
 func _scenario_range(tree: SceneTree, check: Callable) -> void:
-	await _begin(tree, true)
+	await _begin(tree)
 	var lever: Lever = _place_lever(tree, 18.0)
 	await Fixtures.wait_physics(tree, 2)
 	await Fixtures.tap_action(tree, &"use_hand", 2)
@@ -196,7 +162,7 @@ func _scenario_range(tree: SceneTree, check: Callable) -> void:
 
 
 func _scenario_occlusion(tree: SceneTree, check: Callable) -> void:
-	await _begin(tree, true)
+	await _begin(tree)
 	var lever: Lever = _place_lever(tree, 8.0)
 	var wall: StaticBody3D = Fixtures.spawn_box(tree.root, Vector3(3.0, 3.0, 3.0), _line_point(4.0))
 	_nodes.append(wall)
@@ -209,7 +175,7 @@ func _scenario_occlusion(tree: SceneTree, check: Callable) -> void:
 
 
 func _scenario_empty_sky(tree: SceneTree, check: Callable) -> void:
-	await _begin(tree, true)
+	await _begin(tree)
 	await Fixtures.tap_action(tree, &"use_hand", 2)
 	await Fixtures.wait_physics(tree, 4)
 	check.call(_events.size() == 1 and not bool(_events[0]["valid"]), "a shot into empty space fires with hit_valid false")

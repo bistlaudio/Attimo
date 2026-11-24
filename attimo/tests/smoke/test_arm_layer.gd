@@ -1,14 +1,13 @@
 extends RefCounted
-## MOVE-09 / CAM-02 (D-09, D-11, D-12): the clip side of aim mode. The Aim layer is the UAL spell hand (quick 261118-qi3:
-## Enter, Hold, Exit and a Shoot OneShot; the KayKit Ranged_1H_Aiming is the fallback of a dropped clip) on the upper
-## body while the legs keep their locomotion clip, aim strafes and walks backwards through one BlendSpace2D, the clip
-## playback speed follows the movement, and the directional Dodge nodes are dormant (no dash while aiming, quick 261120-dik). Tree parameters are read
-## through the MannequinAnimator constants, never a path literal. Scenarios that count animation time run the tree in
-## manual mode and advance it once per physics frame (Pitfall 12).
+## MOVE-09 / D-27 (phase 05): the clip side of the arm. The upper-body Aim layer (the UAL spell hand: Enter, Hold, Exit and a Shoot
+## OneShot; the KayKit Ranged_1H_Aiming is the fallback of a dropped clip) and the AimPoseModifier are driven by
+## HandController.arm_out (near contact, a shot, the Loader hold), never by a held button. The legs keep their locomotion clip,
+## the clip playback speed follows the movement, and the directional Dodge nodes are dormant tree nodes. Tree parameters are read
+## through the MannequinAnimator constants, never a path literal.
 
 const Fixtures := preload("res://tests/fixtures.gd")
-## The animation node of the unaimed ground dash: Slide only while Dash.SLIDE_PRESENTATION is on (off since 2026-11-18).
-const UNAIMED_DASH: StringName = &"Slide" if preload("res://scripts/player/states/dash.gd").SLIDE_PRESENTATION else &"Dash"
+## The animation node of the ground dash: Slide only while Dash.SLIDE_PRESENTATION is on (off since 2026-11-18).
+const GROUND_DASH: StringName = &"Slide" if preload("res://scripts/player/states/dash.gd").SLIDE_PRESENTATION else &"Dash"
 const SHIPPED_TPS: int = 60
 const LIBRARY_PATH: String = "res://assets/animations/rig_medium/rig_medium_library.res"
 const SKEL: String = "Rig_Medium/Skeleton3D:"
@@ -21,9 +20,14 @@ const SPELL_CLIPS: Dictionary[StringName, StringName] = {
 const P_SHOOT_ACTIVE: StringName = &"parameters/Shoot/active"
 const HAND_BONE: StringName = &"upperarm.l"
 const SETTLE_FRAMES: int = 30
-const STRAFE_FRAMES: int = 90
-const STRAFE_BLEND_MIN: float = 0.8
-const STRAFE_ROOT_YAW_MIN_DEG: float = 40.0
+const LEVER_SCENE: String = "res://scenes/mechanisms/lever.tscn"
+## A lever 1.2 m ahead: inside hand_near_range (2.2 m), so E starts near contact and the arm goes out.
+const NEAR_POSITION: Vector3 = Vector3(0.0, 0.0, 1.2)
+const MODIFIER_PATH: String = "VisualRoot/Mannequin/Rig_Medium/Skeleton3D/AimPoseModifier"
+const POINT_ERROR_LIMIT_DEG: float = 5.0
+const OPPOSITE_TOLERANCE_DEG: float = 0.1
+## Frames the layer may need beyond aim_layer_blend_time (the state change, the process step).
+const BLEND_SLACK_FRAMES: int = 3
 const SCALE_TOLERANCE: float = 0.01
 const RUN_SCALE_TOLERANCE: float = 0.05
 const RUN_FRAMES: int = 120
@@ -33,6 +37,9 @@ var _floor: StaticBody3D
 var _player: PlayerController
 var _rig: CameraRig
 var _animator: MannequinAnimator
+var _hand: HandController
+var _lever: Lever
+var _modifier: AimPoseModifier
 var _anim_tree: AnimationTree
 var _library: AnimationLibrary
 var _calls: Array[Dictionary] = []
@@ -45,18 +52,38 @@ func run(tree: SceneTree, check: Callable) -> void:
 	# The camera rig needs a tree that has finished starting up (it reads global transforms when it snaps).
 	await Fixtures.wait_physics(tree, 2)
 	_library = load(LIBRARY_PATH) as AnimationLibrary
-	await _scenario_aim_layer(tree, check)
+	_scenario_rotation_between(check)
+	await _scenario_idle_and_structure(tree, check)
+	await _scenario_near_contact(tree, check)
 	await _scenario_spell_hand(tree, check)
-	await _scenario_strafe(tree, check)
-	await _scenario_not_aiming(tree, check)
+	await _scenario_loader_hold(tree, check)
 	await _scenario_clip_scale(tree, check)
 	await _scenario_dash_scale(tree, check)
-	await _scenario_aim_dash_choice(tree, check)
-	await _scenario_air_dash_blocked_in_aim(tree, check)
+	await _scenario_dash_choice(tree, check)
 
 
-# Tracer: hold aim -> animator aim weight -> filtered Aim layer shows the held pose on the upper body.
-func _scenario_aim_layer(tree: SceneTree, check: Callable) -> void:
+# T-03-12: opposite directions give a finite rotation that still maps the first onto the second.
+func _scenario_rotation_between(check: Callable) -> void:
+	var pairs: Array[Array] = [
+		[Vector3(0.0, 0.0, 1.0), Vector3(0.0, 0.0, -1.0), "+Z to -Z"],
+		[Vector3.UP, Vector3.DOWN, "UP to DOWN"],
+		[Vector3.RIGHT, Vector3.LEFT, "RIGHT to LEFT"],
+		[Vector3(0.3, -0.5, 0.8), Vector3(-0.3, 0.5, -0.8), "a skew pair"],
+	]
+	for pair: Array in pairs:
+		var from: Vector3 = pair[0] as Vector3
+		var to: Vector3 = pair[1] as Vector3
+		var turn: Quaternion = AimPoseModifier.rotation_between(from, to)
+		var error_deg: float = rad_to_deg((turn * from.normalized()).angle_to(to.normalized()))
+		check.call(turn.is_finite() and error_deg < OPPOSITE_TOLERANCE_DEG, "(r1) rotation_between %s is finite and lands %.4f deg from the target" % [pair[2], error_deg])
+	var same: Quaternion = AimPoseModifier.rotation_between(Vector3.FORWARD, Vector3.FORWARD)
+	check.call(same.is_finite() and absf(same.get_angle()) < 0.001, "(r2) equal directions give the identity")
+	var zero: Quaternion = AimPoseModifier.rotation_between(Vector3.ZERO, Vector3.UP)
+	check.call(zero.is_finite() and absf(zero.get_angle()) < 0.001, "(r3) a zero-length input gives the identity, not NaN")
+
+
+# With no input the layer is down. The tree keeps the Aim Blend2 with its bone filter, the Shoot OneShot and the AimMachine.
+func _scenario_idle_and_structure(tree: SceneTree, check: Callable) -> void:
 	await _begin(tree)
 	var machine_root: AnimationNodeBlendTree = _anim_tree.tree_root as AnimationNodeBlendTree
 	var aim_node: AnimationNodeBlend2 = machine_root.get_node(&"Aim") as AnimationNodeBlend2
@@ -65,7 +92,7 @@ func _scenario_aim_layer(tree: SceneTree, check: Callable) -> void:
 		for bone: String in ["upperarm.r", "upperarm.l", "spine", "chest", "head", "hand.r", "lowerarm.l"]:
 			check.call(aim_node.is_path_filtered(NodePath(SKEL + bone)), "(a2) the Aim filter takes over %s" % bone)
 		for bone: String in ["hips", "root", "upperleg.l", "upperleg.r"]:
-			check.call(not aim_node.is_path_filtered(NodePath(SKEL + bone)), "(a3) the Aim filter leaves %s to locomotion (legs and strafe yaw)" % bone)
+			check.call(not aim_node.is_path_filtered(NodePath(SKEL + bone)), "(a3) the Aim filter leaves %s to locomotion" % bone)
 	check.call(not machine_root.has_node(&"AimClip"), "(a4) the old AimClip node is gone")
 	var shoot: AnimationNodeOneShot = machine_root.get_node(&"Shoot") as AnimationNodeOneShot
 	check.call(shoot != null and is_equal_approx(shoot.fadein_time, 0.05) and is_equal_approx(shoot.fadeout_time, 0.1), "(a4) the tree has a Shoot OneShot with fade 0.05 in and 0.1 out")
@@ -86,139 +113,112 @@ func _scenario_aim_layer(tree: SceneTree, check: Callable) -> void:
 		if holder != null and not dropped.has(ual):
 			var wants_loop: bool = node_name == &"Hold"
 			check.call(_library.get_animation(ual).loop_mode == (Animation.LOOP_LINEAR if wants_loop else Animation.LOOP_NONE), "(a4) %s %s" % [ual, "loops" if wants_loop else "does not loop"])
-
-	check.call(is_zero_approx(float(_anim_tree.get(MannequinAnimator.P_AIM))), "(a5) the aim weight is 0 before aiming")
-	Input.action_press(&"aim")
-	var blended: int = await Fixtures.wait_until(tree, func() -> bool: return is_equal_approx(float(_anim_tree.get(MannequinAnimator.P_AIM)), 1.0), AIM_BLEND_FRAMES)
-	check.call(blended >= 0, "(a5) holding aim brings %s to 1.0 within %d frames (took %d)" % [MannequinAnimator.P_AIM, AIM_BLEND_FRAMES, blended])
-	var expected_frames: int = ceili(_player.config.aim_layer_blend_time * float(SHIPPED_TPS))
-	check.call(blended >= 0 and blended <= expected_frames + 3, "(a5) the blend takes about aim_layer_blend_time (%d frames, took %d)" % [expected_frames, blended])
-
-	# The left upper arm (the right arm belongs to AimPoseModifier) shows the Hold clip once the Enter clip has handed over.
-	var machine_playback: AnimationNodeStateMachinePlayback = _anim_tree.get(MannequinAnimator.P_AIM_PLAYBACK) as AnimationNodeStateMachinePlayback
-	var in_hold: int = await Fixtures.wait_until(tree, func() -> bool: return machine_playback.get_current_node() == &"Hold", AIM_BLEND_FRAMES)
-	check.call(in_hold >= 0, "(a6) the spell hand reaches Hold after Enter (took %d frames)" % in_hold)
-	await Fixtures.wait_physics(tree, 12)
-	var previous_mode: AnimationMixer.AnimationCallbackModeProcess = _anim_tree.callback_mode_process
-	_anim_tree.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
-	for i: int in 10:
-		_anim_tree.advance(1.0 / float(SHIPPED_TPS))
-	var skeleton: Skeleton3D = _player.get_node(SKELETON_PATH) as Skeleton3D
-	check.call(skeleton != null, "(a6) the Mannequin skeleton is reachable")
-	if skeleton != null and aim_machine != null:
-		var arm_bone: int = skeleton.find_bone(HAND_BONE)
-		var hold_node: AnimationNodeAnimation = aim_machine.get_node(&"Hold") as AnimationNodeAnimation
-		var hold_clip: Animation = _library.get_animation(hold_node.animation)
-		var arm_track: int = hold_clip.find_track(NodePath(SKEL + String(HAND_BONE)), Animation.TYPE_ROTATION_3D)
-		check.call(arm_bone >= 0 and arm_track >= 0, "(a6) %s exists on the skeleton and in the Hold clip" % HAND_BONE)
-		if arm_bone >= 0 and arm_track >= 0:
-			var position: float = machine_playback.get_current_play_position()
-			var window_start: float = hold_node.start_offset if hold_node.use_custom_timeline else 0.0
-			var expected: Quaternion = hold_clip.rotation_track_interpolate(arm_track, window_start + position)
-			var shown: Quaternion = skeleton.get_bone_pose_rotation(arm_bone)
-			var error_deg: float = rad_to_deg(shown.angle_to(expected))
-			check.call(error_deg < HOLD_POSE_TOLERANCE_DEG, "(a6) %s shows the Hold pose at %.2f s (%.2f deg from the clip)" % [HAND_BONE, position, error_deg])
-	_anim_tree.callback_mode_process = previous_mode
-
-	Input.action_release(&"aim")
-	var released: int = await Fixtures.wait_until(tree, func() -> bool: return is_zero_approx(float(_anim_tree.get(MannequinAnimator.P_AIM))), AIM_BLEND_FRAMES)
-	check.call(released >= 0, "(a7) releasing aim brings the aim weight back to 0 (took %d frames)" % released)
+	await Fixtures.wait_physics(tree, 20)
+	check.call(not _hand.arm_out, "(a5) with no input the arm is not out")
+	check.call(is_zero_approx(float(_anim_tree.get(MannequinAnimator.P_AIM))), "(a5) the arm layer weight is 0 with no input (got %s)" % _anim_tree.get(MannequinAnimator.P_AIM))
+	check.call(_modifier != null and is_zero_approx(_modifier.influence), "(a5) the AimPoseModifier influence is 0 with no input")
 	await _end(tree)
 
 
-# The spell hand: Enter on the press frame, Hold, a Shoot OneShot while aiming only, Exit on the release.
+# Near contact: E held on a lever raises the layer within aim_layer_blend_time, the solver points the right arm at
+# HandController.arm_out_point, releasing E lowers the layer back to 0.
+func _scenario_near_contact(tree: SceneTree, check: Callable) -> void:
+	await _begin(tree, true)
+	check.call(_modifier != null, "(n1) the Mannequin skeleton has an AimPoseModifier")
+	Input.action_press(&"interact")
+	var blended: int = await Fixtures.wait_until(tree, func() -> bool: return is_equal_approx(float(_anim_tree.get(MannequinAnimator.P_AIM)), 1.0), AIM_BLEND_FRAMES)
+	var expected_frames: int = ceili(_player.config.aim_layer_blend_time * float(SHIPPED_TPS))
+	check.call(_hand.arm_out, "(n2) near contact puts the arm out")
+	check.call(blended >= 0 and blended <= expected_frames + BLEND_SLACK_FRAMES, "(n2) E near a lever raises the layer within aim_layer_blend_time (%d frames, took %d)" % [expected_frames, blended])
+	await Fixtures.wait_physics(tree, 10)
+	if _modifier != null:
+		check.call(is_equal_approx(_modifier.influence, 1.0), "(n3) the solver influence is 1.0 with the arm out (got %.3f)" % _modifier.influence)
+		check.call(_modifier.last_target_dir.is_finite() and is_equal_approx(_modifier.last_target_dir.length(), 1.0), "(n3) the solver target direction is finite and normalized")
+		check.call(_modifier.last_error_deg < POINT_ERROR_LIMIT_DEG, "(n3) the right arm points at arm_out_point within %.0f deg (error %.3f deg)" % [POINT_ERROR_LIMIT_DEG, _modifier.last_error_deg])
+	check.call(_hand.near_target != null and _hand.arm_out_point.is_finite() and _hand.arm_out_point.is_equal_approx(_hand.near_target.target_point()), "(n3) arm_out_point is the lever's target point (%s)" % _hand.arm_out_point)
+	Input.action_release(&"interact")
+	var lowered: int = await Fixtures.wait_until(tree, func() -> bool: return is_zero_approx(float(_anim_tree.get(MannequinAnimator.P_AIM))), AIM_BLEND_FRAMES * 2)
+	check.call(lowered >= 0 and not _hand.arm_out, "(n4) releasing E lowers the layer back to 0 (took %d frames)" % lowered)
+	await _end(tree)
+
+
+# The spell hand: Enter on the frame the arm goes out, Hold, a Shoot OneShot on a shot, Exit when the arm comes back.
 func _scenario_spell_hand(tree: SceneTree, check: Callable) -> void:
-	await _begin(tree)
+	await _begin(tree, true)
 	var machine: AnimationNodeStateMachinePlayback = _anim_tree.get(MannequinAnimator.P_AIM_PLAYBACK) as AnimationNodeStateMachinePlayback
 	check.call(machine != null, "(h1) the tree exposes the AimMachine playback")
 	if machine == null:
 		await _end(tree)
 		return
-	# use_hand outside aim fires nothing.
-	await Fixtures.tap_action(tree, &"use_hand")
-	await Fixtures.wait_process(tree, 2)
-	check.call(not bool(_anim_tree.get(P_SHOOT_ACTIVE)), "(h2) use_hand without aim does not fire the Shoot OneShot")
-
-	Input.action_press(&"aim")
+	Input.action_press(&"interact")
 	await Fixtures.wait_physics(tree, 2)
 	await Fixtures.wait_process(tree, 2)
-	check.call(machine.get_current_node() == &"Enter", "(h3) an aim press starts the spell hand at Enter within 2 physics frames (node %s)" % machine.get_current_node())
+	check.call(machine.get_current_node() == &"Enter", "(h3) the arm going out starts the spell hand at Enter within 2 physics frames (node %s)" % machine.get_current_node())
 	check.call(machine.get_current_play_position() < 4.0 / float(SHIPPED_TPS) + 0.02, "(h3) Enter has just started (position %.3f s)" % machine.get_current_play_position())
 	var enter_length: float = _clip_length(&"Enter")
 	var reached: int = await Fixtures.wait_until(tree, func() -> bool: return machine.get_current_node() == &"Hold", int(ceil(enter_length * float(SHIPPED_TPS))) + 20)
 	check.call(reached >= 0, "(h4) Enter hands over to Hold after the Enter clip (%d frames, clip %.2f s)" % [reached, enter_length])
 	await Fixtures.wait_physics(tree, 30)
-	check.call(machine.get_current_node() == &"Hold", "(h4) holding aim stays in Hold (node %s)" % machine.get_current_node())
+	check.call(machine.get_current_node() == &"Hold", "(h4) the arm staying out stays in Hold (node %s)" % machine.get_current_node())
 
-	# The shot is the pulse on release (EventBus.pulse_fired), not the press: the tap releases after 2 physics frames, the
-	# release tick fires the pulse and the animator fires Shoot on that same tick.
-	await Fixtures.tap_action(tree, &"use_hand")
-	await Fixtures.wait_physics(tree, 2)
-	await Fixtures.wait_process(tree, 2)
-	check.call(bool(_anim_tree.get(P_SHOOT_ACTIVE)), "(h5) a tap of use_hand while aiming fires the Shoot OneShot on release")
-	var shot_done: int = await Fixtures.wait_until(tree, func() -> bool: return not bool(_anim_tree.get(P_SHOOT_ACTIVE)), 90)
-	check.call(shot_done >= 0, "(h5) the Shoot OneShot ends on its own (%d frames)" % shot_done)
-	check.call(machine.get_current_node() == &"Hold", "(h5) the hand is still in Hold after the shot")
-
-	Input.action_release(&"aim")
-	await Fixtures.wait_physics(tree, 2)
-	await Fixtures.wait_process(tree, 2)
-	check.call(machine.get_current_node() == &"Exit", "(h6) an aim release travels to Exit within 2 physics frames (node %s)" % machine.get_current_node())
-	var exit_length: float = _clip_length(&"Exit")
-	var half_frames: int = int(floor(exit_length * 0.5 * float(SHIPPED_TPS)))
-	await Fixtures.wait_physics(tree, half_frames)
-	var layer_during_exit: float = float(_anim_tree.get(MannequinAnimator.P_AIM))
-	check.call(layer_during_exit > 0.99, "(h6) the layer stays up while Exit plays (%.2f at %.2f s)" % [layer_during_exit, exit_length * 0.5])
-	var faded: int = await Fixtures.wait_until(tree, func() -> bool: return is_zero_approx(float(_anim_tree.get(MannequinAnimator.P_AIM))), 60)
-	var limit_frames: int = int(ceil((exit_length + _player.config.aim_layer_blend_time) * float(SHIPPED_TPS))) + 4
-	check.call(faded >= 0 and faded + half_frames + 4 <= limit_frames, "(h6) the layer reaches 0 within Exit length plus aim_layer_blend_time (%d + %d frames, limit %d)" % [half_frames + 4, faded, limit_frames])
-	await _end(tree)
-
-
-# D-09: in aim, moving sideways or backwards relative to the facing blends the strafe and backward clips.
-func _scenario_strafe(tree: SceneTree, check: Callable) -> void:
-	await _begin(tree)
-	Input.action_press(&"aim")
-	Input.action_press(&"move_right")
-	var right: int = await Fixtures.wait_until(tree, func() -> bool: return Fixtures.locomotion_blend(_player).x > STRAFE_BLEND_MIN, STRAFE_FRAMES)
-	check.call(right >= 0, "(b1) aiming with move_right drives the blend x above %.1f within %d frames (got %s)" % [STRAFE_BLEND_MIN, STRAFE_FRAMES, Fixtures.locomotion_blend(_player)])
-	# The strafe clip carries its direction in the root bone yaw (Pitfall 3); the pose is read in manual mode.
+	# The left upper arm (the right arm belongs to AimPoseModifier) shows the Hold clip once the Enter clip has handed over.
+	var root: AnimationNodeBlendTree = _anim_tree.tree_root as AnimationNodeBlendTree
+	var aim_machine: AnimationNodeStateMachine = root.get_node(&"AimMachine") as AnimationNodeStateMachine
 	var previous_mode: AnimationMixer.AnimationCallbackModeProcess = _anim_tree.callback_mode_process
 	_anim_tree.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
 	for i: int in 10:
-		await tree.physics_frame
 		_anim_tree.advance(1.0 / float(SHIPPED_TPS))
 	var skeleton: Skeleton3D = _player.get_node(SKELETON_PATH) as Skeleton3D
-	var root_bone: int = skeleton.find_bone(&"root")
-	check.call(root_bone >= 0, "(b2) the skeleton has the root bone")
-	if root_bone >= 0:
-		var yaw: float = rad_to_deg(skeleton.get_bone_pose_rotation(root_bone).get_euler(EULER_ORDER_YXZ).y)
-		check.call(absf(yaw) > STRAFE_ROOT_YAW_MIN_DEG, "(b2) the strafe right clip turns the root bone by more than %.0f deg (got %.1f)" % [STRAFE_ROOT_YAW_MIN_DEG, yaw])
+	check.call(skeleton != null, "(h4) the Mannequin skeleton is reachable")
+	if skeleton != null and aim_machine != null:
+		var arm_bone: int = skeleton.find_bone(HAND_BONE)
+		var hold_node: AnimationNodeAnimation = aim_machine.get_node(&"Hold") as AnimationNodeAnimation
+		var hold_clip: Animation = _library.get_animation(hold_node.animation)
+		var arm_track: int = hold_clip.find_track(NodePath(SKEL + String(HAND_BONE)), Animation.TYPE_ROTATION_3D)
+		check.call(arm_bone >= 0 and arm_track >= 0, "(h4) %s exists on the skeleton and in the Hold clip" % HAND_BONE)
+		if arm_bone >= 0 and arm_track >= 0:
+			var position: float = machine.get_current_play_position()
+			var window_start: float = hold_node.start_offset if hold_node.use_custom_timeline else 0.0
+			var expected: Quaternion = hold_clip.rotation_track_interpolate(arm_track, window_start + position)
+			var shown: Quaternion = skeleton.get_bone_pose_rotation(arm_bone)
+			var error_deg: float = rad_to_deg(shown.angle_to(expected))
+			check.call(error_deg < HOLD_POSE_TOLERANCE_DEG, "(h4) %s shows the Hold pose at %.2f s (%.2f deg from the clip)" % [HAND_BONE, position, error_deg])
 	_anim_tree.callback_mode_process = previous_mode
-	Input.action_release(&"move_right")
-	Input.action_press(&"move_left")
-	var left: int = await Fixtures.wait_until(tree, func() -> bool: return Fixtures.locomotion_blend(_player).x < -STRAFE_BLEND_MIN, STRAFE_FRAMES * 2)
-	check.call(left >= 0, "(b3) aiming with move_left drives the blend x below -%.1f (got %s)" % [STRAFE_BLEND_MIN, Fixtures.locomotion_blend(_player)])
-	Input.action_release(&"move_left")
-	Input.action_press(&"move_back")
-	var back: int = await Fixtures.wait_until(tree, func() -> bool: return Fixtures.locomotion_blend(_player).y < -STRAFE_BLEND_MIN, STRAFE_FRAMES * 2)
-	check.call(back >= 0, "(b4) aiming with move_back drives the blend y below -%.1f (got %s)" % [STRAFE_BLEND_MIN, Fixtures.locomotion_blend(_player)])
-	Input.action_release(&"move_back")
-	Input.action_press(&"move_forward")
-	var forward: int = await Fixtures.wait_until(tree, func() -> bool: return Fixtures.locomotion_blend(_player).y > STRAFE_BLEND_MIN, STRAFE_FRAMES * 2)
-	check.call(forward >= 0, "(b5) aiming with move_forward reaches the full run blend although the aim run is slower than run_speed (got %s)" % Fixtures.locomotion_blend(_player))
+
+	# The shot is the pulse on release (EventBus.pulse_fired), not the press: the tap releases after 2 physics frames, the
+	# release tick fires the pulse and the animator fires Shoot on that same tick. The hip fire needs no aim.
+	await Fixtures.tap_action(tree, &"use_hand")
+	await Fixtures.wait_physics(tree, 2)
+	await Fixtures.wait_process(tree, 2)
+	check.call(bool(_anim_tree.get(P_SHOOT_ACTIVE)), "(h5) a tap of use_hand fires the Shoot OneShot on release")
+	var shot_done: int = await Fixtures.wait_until(tree, func() -> bool: return not bool(_anim_tree.get(P_SHOOT_ACTIVE)), 90)
+	check.call(shot_done >= 0, "(h5) the Shoot OneShot ends on its own (%d frames)" % shot_done)
+
+	Input.action_release(&"interact")
+	var exit_started: int = await Fixtures.wait_until(tree, func() -> bool: return machine.get_current_node() == &"Exit", 8 + ceili(_hand.hand_shot_arm_time * float(SHIPPED_TPS)))
+	check.call(exit_started >= 0, "(h6) the arm coming back travels to Exit (node %s)" % machine.get_current_node())
+	var exit_length: float = _clip_length(&"Exit")
+	var faded: int = await Fixtures.wait_until(tree, func() -> bool: return is_zero_approx(float(_anim_tree.get(MannequinAnimator.P_AIM))), 120)
+	var limit_frames: int = int(ceil((exit_length + _player.config.aim_layer_blend_time) * float(SHIPPED_TPS))) + 8
+	check.call(faded >= 0 and faded <= limit_frames, "(h6) the layer reaches 0 within Exit length plus aim_layer_blend_time (took %d frames, limit %d)" % [faded, limit_frames])
 	await _end(tree)
 
 
-# D-09: outside aim the strafe axis is forced to 0, whatever direction the camera-relative input has.
-func _scenario_not_aiming(tree: SceneTree, check: Callable) -> void:
+# D-27: the Loader hold puts the arm out (arm_out, layer up, solver on the crosshair point); releasing everything lowers it.
+func _scenario_loader_hold(tree: SceneTree, check: Callable) -> void:
 	await _begin(tree)
-	Input.action_press(&"move_right")
-	await Fixtures.wait_physics(tree, 40)
-	var blend: Vector2 = Fixtures.locomotion_blend(_player)
-	check.call(not _player.aiming and _player.horizontal_speed() > 1.0, "(c1) the player runs sideways to the camera without aiming (speed %.2f)" % _player.horizontal_speed())
-	check.call(blend.x == 0.0, "(c1) outside aim the strafe axis is exactly 0 (got %s)" % blend)
-	check.call(blend.y > 0.5, "(c1) outside aim the forward weight follows the speed (got %.2f)" % blend.y)
+	check.call(not _hand.arm_out, "(l1) the arm is not out before the Loader")
+	Input.action_press(&"loader")
+	var entered: int = await Fixtures.wait_until(tree, func() -> bool: return _player.loader_active(), 4)
+	check.call(entered >= 0, "(l2) the press enters the Loader")
+	var raised: int = await Fixtures.wait_until(tree, func() -> bool: return is_equal_approx(float(_anim_tree.get(MannequinAnimator.P_AIM)), 1.0), AIM_BLEND_FRAMES)
+	check.call(_hand.arm_out and raised >= 0, "(l2) holding the Loader puts the arm out and raises the layer (took %d frames)" % raised)
+	await Fixtures.wait_physics(tree, 10)
+	if _modifier != null:
+		check.call(_modifier.last_error_deg < POINT_ERROR_LIMIT_DEG and _modifier.last_target_dir.is_finite(), "(l3) the right arm points at the crosshair during the hold (error %.3f deg)" % _modifier.last_error_deg)
+	Input.action_release(&"loader")
+	var lowered: int = await Fixtures.wait_until(tree, func() -> bool: return not _hand.arm_out and is_zero_approx(float(_anim_tree.get(MannequinAnimator.P_AIM))), 180)
+	check.call(lowered >= 0, "(l4) releasing the Loader lowers the layer back to 0 (took %d frames)" % lowered)
 	await _end(tree)
 
 
@@ -254,8 +254,8 @@ func _scenario_dash_scale(tree: SceneTree, check: Callable) -> void:
 	var entry: int = _find(&"Run", &"Dash")
 	check.call(entry >= 0, "(e1) Run -> Dash was recorded (calls %s)" % [_names()])
 	if entry >= 0:
-		var expected: float = MannequinAnimator.SLIDE_PLAYBACK_SCALE if UNAIMED_DASH == &"Slide" else _library.get_animation(&"Dodge_Forward").length / config.dash_time
-		check.call(_calls[entry]["travel"] == UNAIMED_DASH, "(e1) the unaimed ground dash travels to its node inside the call (got %s)" % _calls[entry]["travel"])
+		var expected: float = MannequinAnimator.SLIDE_PLAYBACK_SCALE if GROUND_DASH == &"Slide" else _library.get_animation(&"Dodge_Forward").length / config.dash_time
+		check.call(_calls[entry]["travel"] == GROUND_DASH, "(e1) the unaimed ground dash travels to its node inside the call (got %s)" % _calls[entry]["travel"])
 		check.call(absf(float(_calls[entry]["scale"]) - expected) < SCALE_TOLERANCE, "(e1) the unaimed ground dash plays the Slide window at the fixed slide scale: scale %.3f on the entry frame, expected %.3f" % [_calls[entry]["scale"], expected])
 	Input.action_release(&"move_forward")
 	await Fixtures.wait_until(tree, func() -> bool: return _player.is_grounded() and _player.state_machine.current.name == &"Idle", 120)
@@ -284,78 +284,45 @@ func _scenario_dash_scale(tree: SceneTree, check: Callable) -> void:
 	await _end(tree)
 
 
-# D-12 as amended by quick 261120-dik: there is no dash while aiming, so the directional dash nodes (DashLeft, DashRight,
-# DashBack) are dormant. dash_node_for() still maps a direction to the node (kept for a later aimed dodge), an aimed press is
-# blocked, and an unaimed ground dash is Slide / Dash (DEV-04).
-func _scenario_aim_dash_choice(tree: SceneTree, check: Callable) -> void:
+# The directional dash nodes (DashLeft, DashRight, DashBack) are dormant tree nodes: dash_node_for() maps every direction to
+# Dash (Slide for a dash shown as the slide, DEV-04), there is no aimed dash and no strafe facing any more (D-27).
+func _scenario_dash_choice(tree: SceneTree, check: Callable) -> void:
 	await _begin(tree)
-	Input.action_press(&"aim")
-	await Fixtures.wait_physics(tree, 12)
 	var facing: Basis = _player.visual_root.global_basis
-	check.call(_animator.dash_node_for(-facing.x) == &"DashRight", "(f1) dormant: an aimed direction to the figure's right maps to DashRight")
-	check.call(_animator.dash_node_for(facing.x) == &"DashLeft", "(f2) dormant: an aimed direction to the figure's left maps to DashLeft")
-	check.call(_animator.dash_node_for(-facing.z) == &"DashBack", "(f3) dormant: an aimed direction behind the figure maps to DashBack")
-	check.call(_animator.dash_node_for(facing.z) == &"Dash", "(f4) dormant: an aimed direction ahead maps to Dash")
-	check.call(_animator.dash_node_for(Vector3.ZERO) == &"Dash", "(f5) dormant: no direction maps to Dash")
+	check.call(_animator.dash_node_for(-facing.x) == &"Dash", "(f1) a direction to the figure's right maps to Dash")
+	check.call(_animator.dash_node_for(facing.x) == &"Dash", "(f2) a direction to the figure's left maps to Dash")
+	check.call(_animator.dash_node_for(-facing.z) == &"Dash", "(f3) a direction behind the figure maps to Dash")
+	check.call(_animator.dash_node_for(Vector3.ZERO) == &"Dash", "(f5) no direction maps to Dash")
+	check.call(_animator.dash_node_for(facing.z, true) == &"Slide", "(f5) a dash shown as the slide maps to Slide")
+	var root: AnimationNodeBlendTree = _anim_tree.tree_root as AnimationNodeBlendTree
+	var machine: AnimationNodeStateMachine = root.get_node(&"StateMachine") as AnimationNodeStateMachine
+	for node_name: StringName in [&"DashLeft", &"DashRight", &"DashBack"]:
+		check.call(machine.has_node(node_name), "(f5) the dormant tree node %s stays in the tree" % node_name)
 	await _end(tree)
-	await _aim_dash_blocked_case(tree, check, &"move_right", "(f1b)")
-	await _aim_dash_blocked_case(tree, check, &"move_back", "(f3b)")
-	await _aim_dash_blocked_case(tree, check, &"", "(f5b)")
-	await _unaimed_dash_case(tree, check, &"move_right", "(f6)")
+	await _ground_dash_case(tree, check, &"move_right", "(f6)")
+	await _ground_dash_case(tree, check, &"move_back", "(f7)")
 
 
-# An aimed dash press starts no Dash and no dash node travel, and the tree stays on its locomotion node.
-func _aim_dash_blocked_case(tree: SceneTree, check: Callable, move: StringName, label: String) -> void:
-	await _begin(tree)
-	_record()
-	Input.action_press(&"aim")
-	await Fixtures.wait_physics(tree, 12)
-	if move != &"":
-		Input.action_press(move)
-		await Fixtures.wait_physics(tree, 6)
-	await Fixtures.tap_action(tree, &"dash")
-	await Fixtures.wait_physics(tree, 6)
-	check.call(_find_to(&"Dash") < 0, "%s an aimed dash press starts no Dash (calls %s)" % [label, _names()])
-	check.call(not MannequinAnimator.DASH_NODES.has(_animator.last_travel), "%s the tree never travels to a dash node while aiming (got %s)" % [label, _animator.last_travel])
-	check.call(_player.dash_cooldown_timer == 0.0, "%s the blocked press spends no cooldown" % label)
-	await _end(tree)
-
-
-func _unaimed_dash_case(tree: SceneTree, check: Callable, move: StringName, label: String) -> void:
+# A ground dash (no aim): the tree travels to its dash node on the state-change frame at the Dodge clip scale.
+func _ground_dash_case(tree: SceneTree, check: Callable, move: StringName, label: String) -> void:
 	await _begin(tree)
 	_record()
 	Input.action_press(move)
 	await Fixtures.wait_physics(tree, 6)
 	await Fixtures.tap_action(tree, &"dash")
 	var dash_call: int = _find_to(&"Dash")
-	check.call(dash_call >= 0, "%s an unaimed dash was recorded (calls %s)" % [label, _names()])
+	check.call(dash_call >= 0, "%s a dash was recorded (calls %s)" % [label, _names()])
 	if dash_call >= 0:
 		var entry: Dictionary = _calls[dash_call]
-		var clip: StringName = &"Running_Slide" if UNAIMED_DASH == &"Slide" else &"Dodge_Forward"
-		check.call(entry["travel"] == UNAIMED_DASH, "%s last_travel is %s inside the Dash call (got %s)" % [label, UNAIMED_DASH, entry["travel"]])
+		var clip: StringName = &"Running_Slide" if GROUND_DASH == &"Slide" else &"Dodge_Forward"
+		check.call(entry["travel"] == GROUND_DASH, "%s last_travel is %s inside the Dash call (got %s)" % [label, GROUND_DASH, entry["travel"]])
 		check.call(entry["travel_frame"] == entry["frame"], "%s last_travel_frame %d equals the physics frame %d of the call" % [label, entry["travel_frame"], entry["frame"]])
-		var clip_length: float = _slide_window() if UNAIMED_DASH == &"Slide" else _library.get_animation(clip).length
-		var expected_scale: float = MannequinAnimator.SLIDE_PLAYBACK_SCALE if UNAIMED_DASH == &"Slide" else clip_length / _player.config.dash_time
+		var clip_length: float = _slide_window() if GROUND_DASH == &"Slide" else _library.get_animation(clip).length
+		var expected_scale: float = MannequinAnimator.SLIDE_PLAYBACK_SCALE if GROUND_DASH == &"Slide" else clip_length / _player.config.dash_time
 		check.call(absf(float(entry["scale"]) - expected_scale) < SCALE_TOLERANCE, "%s the ground dash scale is %s length / dash_time = %.3f (got %.3f)" % [label, clip, expected_scale, entry["scale"]])
 		await Fixtures.wait_process(tree, 2)
 		var visible: StringName = Fixtures.playback(_player).get_current_node()
-		check.call(visible == UNAIMED_DASH, "%s the playback is on %s within 2 process frames (got %s)" % [label, UNAIMED_DASH, visible])
-	await _end(tree)
-
-
-# An aim press in the air blocks the air dash: no Dash, the dash charge stays unspent, the hold never starts.
-func _scenario_air_dash_blocked_in_aim(tree: SceneTree, check: Callable) -> void:
-	await _begin(tree)
-	_record()
-	Input.action_press(&"aim")
-	await Fixtures.wait_physics(tree, 12)
-	await Fixtures.tap_action(tree, &"jump")
-	await Fixtures.wait_physics(tree, 4)
-	await Fixtures.tap_action(tree, &"dash")
-	await Fixtures.wait_physics(tree, 4)
-	check.call(_find_to(&"Dash") < 0, "(g1) an aimed air dash press starts no Dash (calls %s)" % [_names()])
-	check.call(_player.air_dash_available, "(g1) the blocked press spends no air dash charge")
-	check.call(not _animator.air_dash_holding, "(g1) no air dash pose hold starts")
+		check.call(visible == GROUND_DASH, "%s the playback is on %s within 2 process frames (got %s)" % [label, GROUND_DASH, visible])
 	await _end(tree)
 
 
@@ -393,25 +360,35 @@ func _fallback_of(ual_clip: StringName) -> StringName:
 	return StringName(table.get(ual_clip, &""))
 
 
-## Spawns floor, player and a camera rig (aim needs a camera frame) and waits until the scene has settled.
-func _begin(tree: SceneTree) -> void:
-	_floor = Fixtures.spawn_floor(tree.root)
+## Spawns floor, player and a camera rig, optionally a lever in near reach, and waits until the scene has settled.
+func _begin(tree: SceneTree, with_lever: bool = false) -> void:
+	_floor = Fixtures.spawn_floor(tree.root, Vector3(200.0, 1.0, 200.0))
 	_player = Fixtures.spawn_player(tree.root, Vector3.ZERO)
 	# A private copy: scenarios that change numbers (d3) must not touch the shared movement_default.tres (WR-06).
 	_player.config = _player.config.duplicate() as MovementConfig
 	_rig = Fixtures.spawn_camera_rig(tree.root, _player)
+	_rig.pitch = 0.0
+	_lever = null
+	if with_lever:
+		_lever = Fixtures.spawn_scene(tree.root, LEVER_SCENE, NEAR_POSITION) as Lever
 	await Fixtures.wait_physics(tree, SETTLE_FRAMES)
 	_animator = _player.get_node("MannequinAnimator") as MannequinAnimator
+	_hand = _player.get_node("HandController") as HandController
+	_modifier = _player.get_node_or_null(MODIFIER_PATH) as AimPoseModifier
 	_anim_tree = Fixtures.animation_tree(_player)
 
 
 ## Releases every action and frees the scenario's nodes.
 func _end(tree: SceneTree) -> void:
-	for action: StringName in [&"aim", &"jump", &"dash", &"move_forward", &"move_left", &"move_right", &"move_back"]:
+	for action: StringName in [&"loader", &"interact", &"use_hand", &"jump", &"dash", &"move_forward", &"move_left", &"move_right", &"move_back"]:
 		Input.action_release(action)
 		Fixtures.send_action_event(action, false)
 	_stop_recording()
+	await Fixtures.wait_physics(tree, 3)
+	Fixtures.restore_time()
 	_rig.queue_free()
+	if _lever != null:
+		_lever.queue_free()
 	_player.queue_free()
 	_floor.queue_free()
 	await _player.tree_exited

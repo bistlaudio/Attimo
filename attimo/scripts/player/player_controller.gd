@@ -37,9 +37,6 @@ var long_jump_stage: int = 0
 var combo_timer: float = 0.0
 ## Seconds left after a ground dash ended in which a jump still is a long jump (D-06).
 var dash_jump_grace_timer: float = 0.0
-## True while the aim button is held (CAM-02, D-09). While true this controller owns the facing: VisualRoot's yaw follows
-## the camera every physics tick and face() and face_now() do nothing. Changes emit aim_changed.
-var aiming: bool = false
 ## Seconds left of the blocked-dash twitch. ProceduralPose reads it; a refused dash press starts it.
 var dash_twitch_timer: float = 0.0
 ## True while the Loader may start in the air: one use per airborne stretch (D-02). An airborne Loader press and a ground discharge
@@ -47,9 +44,6 @@ var dash_twitch_timer: float = 0.0
 var loader_available: bool = true
 ## Seconds left before the next Loader press may start. A discharge without the bonus (empty arm) starts it at loader_redirect_cooldown.
 var loader_cooldown_timer: float = 0.0
-
-## Reason dash_locked_reason() returns (also the `reason` of EventBus.dash_blocked). Aim is the only dash lockout.
-const DASH_LOCK_AIM: StringName = &"aim"
 
 var _was_on_floor: bool = true
 var _dash_block_frame: int = -1
@@ -126,8 +120,8 @@ func horizontal_speed() -> float:
 
 
 ## Movement input in world space, flattened, keeping the analog magnitude (<= 1).
-## Camera-relative: a camera under a CameraRig steers through the rig's steering_yaw() (A40), or its true yaw
-## while aiming, any other current camera through its own yaw. Without a camera it falls back to world axes (W = -Z).
+## Camera-relative: a camera under a CameraRig steers through the rig's steering_yaw() (A40), any other current camera
+## through its own yaw. Without a camera it falls back to world axes (W = -Z).
 func input_direction() -> Vector3:
 	var input: Vector2 = Input.get_vector(&"move_left", &"move_right", &"move_forward", &"move_back")
 	if input == Vector2.ZERO:
@@ -145,20 +139,10 @@ func input_direction() -> Vector3:
 	return right * input.x - forward * input.y
 
 
-## The ground run target speed for `direction` (a world-space input direction): run_speed, or while aiming
-## run_speed * aim_speed_factor, reduced further toward aim_back_speed_factor the more `direction` points behind the
-## facing (D-10). Strafing is not slowed; a zero direction returns the aim forward speed.
-func ground_target_speed(direction: Vector3) -> float:
-	if not aiming:
-		return config.run_speed
-	var aim_speed: float = config.run_speed * config.aim_speed_factor
-	var flat_direction: Vector3 = Vector3(direction.x, 0.0, direction.z)
-	var flat_facing: Vector3 = visual_root.global_basis.z
-	flat_facing.y = 0.0
-	if flat_direction.length_squared() < 0.0001 or flat_facing.length_squared() < 0.0001:
-		return aim_speed
-	var backness: float = clampf(-flat_direction.normalized().dot(flat_facing.normalized()), 0.0, 1.0)
-	return aim_speed * lerpf(1.0, config.aim_back_speed_factor, backness)
+## The ground run target speed for `direction` (a world-space input direction): run_speed. There is one run speed; plan 05-03 adds the
+## Moto Perpetuo factor here.
+func ground_target_speed(_direction: Vector3) -> float:
+	return config.run_speed
 
 
 ## Moves move_velocity toward direction * target_speed. The rate is turn_decel when the current
@@ -190,18 +174,16 @@ func accelerate_air(direction: Vector3, delta: float) -> void:
 
 ## Turns VisualRoot toward `direction` (the Mannequin faces +Z).
 ## Called from state physics_update so the rotation happens inside the physics tick.
-## Does nothing while aiming: the camera owns the facing then (D-09).
 func face(direction: Vector3, delta: float) -> void:
-	if aiming or direction.length_squared() < 0.0001:
+	if direction.length_squared() < 0.0001:
 		return
 	var target_yaw: float = atan2(direction.x, direction.z)
 	visual_root.rotation.y = lerp_angle(visual_root.rotation.y, target_yaw, minf(config.turn_rate * delta, 1.0))
 
 
-## Snaps the VisualRoot yaw toward `direction` without turning. Does nothing while aiming (Dash and LongJump keep the
-## crosshair facing).
+## Snaps the VisualRoot yaw toward `direction` without turning (Dash, LongJump and WallRun face their direction at once).
 func face_now(direction: Vector3) -> void:
-	if aiming or direction.length_squared() < 0.0001:
+	if direction.length_squared() < 0.0001:
 		return
 	visual_root.rotation.y = atan2(direction.x, direction.z)
 
@@ -257,16 +239,15 @@ func can_coyote_jump() -> bool:
 	return coyote_timer > 0.0
 
 
-## Why a dash is locked right now, or &"" when no lockout applies (quick 261120-dik, reduced by quick 261120-ef9). The one place
-## both the ground and the air states ask. The only lockout is aim: no dash while aiming. The pirouette, the landing and the
-## take-off never lock the dash (a dash hop on the landing tick works). The cooldown and the air dash charge are not lockouts.
+## Why a dash is locked right now, or &"" when no lockout applies (quick 261120-dik, reduced by quick 261120-ef9, aim removed in
+## phase 05). The one place both the ground and the air states ask. There is no lockout today; plan 05-03 adds the energy reason
+## for an unaffordable air dash. The pirouette, the landing and the take-off never lock the dash (a dash hop on the landing tick
+## works). The cooldown and the air dash charge are not lockouts.
 func dash_locked_reason() -> StringName:
-	if aiming:
-		return DASH_LOCK_AIM
 	return &""
 
 
-## True when a dash may start: not aiming, the cooldown has elapsed, and on the ground always, in the air only while
+## True when a dash may start: no lockout, the cooldown has elapsed, and on the ground always, in the air only while
 ## the air dash of this airtime is unspent (D-12).
 func can_dash() -> bool:
 	if dash_locked_reason() != &"":

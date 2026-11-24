@@ -1,6 +1,6 @@
 class_name HandController
 extends Node
-## The hand: aim-gated charge, cooldown and module routing by registry id (HAND-01, D-02, D-05, D-07, D-24).
+## The hand: charge, cooldown and module routing by registry id (HAND-01, D-05, D-07, D-24). It fires from the hip: there is no aim hold (D-15).
 ## Child of the Player. It names no module class: modules come from the registry and are driven through HandModule.
 ## It never writes movement state.
 
@@ -25,16 +25,10 @@ signal module_changed(def: HandModuleDef)
 @export_range(0.0, 5.0, 0.1) var hand_assist_switch_margin: float = 1.0
 ## Seconds a target that failed (angle or line of sight) is still held before it is released.
 @export_range(0.0, 0.5, 0.01) var hand_assist_drop_delay: float = 0.1
-## Look sensitivity factor while a valid target is held (sticky aim, D-14).
-@export_range(0.2, 1.0, 0.05) var hand_sticky_factor: float = 0.6
-## Rate in 1/s at which the sticky factor eases in and out.
-@export_range(1.0, 20.0, 0.5) var hand_sticky_rate: float = 6.0
 ## Reach in m of near contact, measured from the player origin to the Interactable point (D-08).
 @export_range(0.5, 5.0, 0.1) var hand_near_range: float = 2.2
 ## Seconds the arm stays out after a pulse (presentation only).
 @export_range(0.0, 1.0, 0.05) var hand_shot_arm_time: float = 0.25
-## DEBUG: use_hand fires without aim (bypasses D-02). Turn off before verification, the D-02 smoke tests expect it off.
-@export var debug_fire_without_aim: bool = true
 
 var active_def: HandModuleDef = null
 var active_module: HandModule = null
@@ -44,7 +38,7 @@ var cooldown_left: float = 0.0
 var shots_fired: int = 0
 ## The aim assist, a child created in _ready.
 var targeting: Targeting = null
-## True while the arm is stretched out: aiming, shortly after a pulse, near contact. Presentation state of the hand.
+## True while the arm is stretched out: near contact, shortly after a pulse, the Loader hold (D-27). Presentation state of the hand.
 var arm_out: bool = false
 ## The world point the stretched arm points at (the near target, else the last pulse point).
 var arm_out_point: Vector3 = Vector3.ZERO
@@ -128,14 +122,13 @@ func _physics_process(delta: float) -> void:
 	# The assist runs first, so a shot decided on this tick reads this tick's target (Pitfall 7).
 	if targeting != null:
 		targeting.update(delta)
-	# Near contact does not depend on aim (D-08), it works while aiming too.
 	_tick_near(delta)
 	_shot_arm_left = maxf(_shot_arm_left - delta, 0.0)
-	arm_out = near_target != null or _shot_arm_left > 0.0 or _player.aiming
-	if not _player.aiming and not debug_fire_without_aim:
-		# D-02: nothing fires without aim, and releasing aim mid-charge cancels the shot.
-		_reset_charge()
-		return
+	var loader_hold: bool = _player.loader_active()
+	arm_out = near_target != null or _shot_arm_left > 0.0 or loader_hold
+	if loader_hold and near_target == null and _context.rig != null:
+		# The Loader hold points the arm along the crosshair, where the discharge goes.
+		arm_out_point = _context.rig.aim_target_point()
 	if Input.is_action_just_pressed(&"module_next"):
 		cycle(1)
 	elif Input.is_action_just_pressed(&"module_prev"):

@@ -1,8 +1,8 @@
 class_name MovementConfig
 extends Resource
 ## The one tunable movement resource (MOVE-10, D-23). Every movement number lives here.
-## Thirteen groups, 76 live sliders in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
-## Long jump (dash hop), Timing windows, Floor and platforms, Loader, Aim, Wall, Pose, Clip playback. Gravity is set directly
+## Twelve groups, 73 live sliders in the F2 tuning panel: Run, Air, Gravity, Jump chain, Dash,
+## Long jump (dash hop), Timing windows, Floor and platforms, Loader, Wall, Pose, Clip playback. Gravity is set directly
 ## (rise_gravity, fall_multiplier); jump speeds are derived from the heights, so editing a
 ## height never changes the fall feel. Every divisor field has a strictly positive minimum (T-02-02).
 
@@ -110,12 +110,6 @@ extends Resource
 ## Seconds air control is off after the discharge so steering does not eat the throw (D-03); raise it for a harder throw.
 @export_range(0.0, 0.5, 0.01) var loader_release_control_lock: float = 0.15
 
-@export_group("Aim")
-## Share of run_speed the ground run keeps while aiming (D-10); raise it for a faster aim run, lower it for a heavier aim.
-@export_range(0.1, 1.0, 0.05) var aim_speed_factor: float = 0.75
-## Extra factor on the aim run speed for input pointing behind the facing, blended by how far behind it points; raise it for a faster back-pedal.
-@export_range(0.1, 1.0, 0.05) var aim_back_speed_factor: float = 0.6
-
 @export_group("Wall")
 ## Smallest horizontal speed in m/s that starts a wall-run on contact with a wall-run pad (MOVE-12); raise it to demand a faster approach.
 @export_range(2.0, 20.0, 0.1) var wall_run_min_speed: float = 7.0
@@ -147,15 +141,13 @@ extends Resource
 @export_group("Pose")
 ## Forward lean of the body during a ground dash in degrees (D-01); raise it for a harder lean into the dash.
 @export_range(0.0, 45.0, 0.5) var dash_lean_deg: float = 10.0
-## Share of the lean kept while aiming (03-01 checkpoint item 3); raise it for a stronger lean in aim mode.
-@export_range(0.0, 1.0, 0.05) var aim_lean_scale: float = 0.5
 ## Seconds the lean takes to build up from upright to the dash lean; lower it for a snappier lean.
 @export_range(0.01, 0.5, 0.01) var lean_in_time: float = 0.05
 ## Seconds the lean takes to ease out from the dash lean to upright, also when a dash hands over to a long jump; raise it for a slower recovery.
 @export_range(0.01, 0.5, 0.01) var lean_out_time: float = 0.12
 ## Seconds before the predicted touchdown at which the Jump 3 pirouette is finished; raise it for an earlier finish.
 @export_range(0.0, 0.3, 0.01) var pirouette_lead_time: float = 0.08
-## Seconds the remaining spin takes when an aim press, an air dash or the landing cuts a pirouette short (DEV-03); raise it for a softer finish.
+## Seconds the remaining spin takes when a Loader press, an air dash or the landing cuts a pirouette short (DEV-03); raise it for a softer finish.
 @export_range(0.01, 0.5, 0.01) var pirouette_finish_time: float = 0.1
 ## Forward lean kick in degrees that a refused dash press gives (a non-moving twitch); raise it for a stronger blocked signal.
 @export_range(0.0, 20.0, 0.5) var dash_blocked_twitch_deg: float = 6.0
@@ -169,7 +161,7 @@ extends Resource
 @export_range(0.5, 20.0, 0.1) var run_anim_ref_speed: float = 4.5
 ## Cap on the Running_A playback speed (1 = never faster than the clip); raise it for a faster-playing run at full speed.
 @export_range(1.0, 4.0, 0.05) var run_anim_max_scale: float = 2.5
-## Seconds the upper body takes to blend into the aim pose and back out; raise it for a slower aim blend.
+## Seconds the upper body takes to blend into the arm pose and back out (near contact, shot, Loader hold); raise it for a slower arm blend.
 @export_range(0.01, 1.0, 0.01) var aim_layer_blend_time: float = 0.15
 ## Speed in 1/s at which the locomotion blend follows the movement (idle 0 .. run 1); raise it for a snappier blend.
 @export_range(1.0, 40.0, 0.5) var locomotion_blend_rate: float = 10.0

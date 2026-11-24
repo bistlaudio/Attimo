@@ -1,12 +1,11 @@
 extends RefCounted
-## CAM-05 / D-03, D-06, D-14: the aim assist snaps a valid Interactable inside hand_assist_angle onto the crosshair,
-## keeps it with hysteresis, drops the look sensitivity while a valid target is held and never moves the camera.
+## CAM-05 / D-03, D-06, D-14, D-19: the aim assist is always on (hip fire, no button held). It snaps a valid Interactable inside
+## hand_assist_angle onto the crosshair, keeps it with hysteresis, never slows the mouse and never moves the camera.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
 const LEVER_SCENE: String = "res://scenes/mechanisms/lever.tscn"
 const SHIPPED_TPS: int = 60
-const AIM_SETTLE_FRAMES: int = 180
 const SETTLE_TICKS: int = 6
 ## Where a lever spawns before it is moved onto the line: away from the player, whose capsule its base would push.
 const PARK: Vector3 = Vector3(300.0, 0.0, 300.0)
@@ -25,7 +24,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_snap(tree, check)
 	await _scenario_hysteresis(tree, check)
 	await _scenario_states(tree, check)
-	await _scenario_sticky(tree, check)
+	await _scenario_no_slowdown(tree, check)
 
 
 func _begin(tree: SceneTree) -> void:
@@ -39,17 +38,11 @@ func _begin(tree: SceneTree) -> void:
 	_hand = _player.get_node("HandController") as HandController
 	await Fixtures.wait_physics(tree, 6)
 	await Fixtures.wait_process(tree, 3)
-	Input.action_press(&"aim")
-	var frames: int = 0
-	while _rig.aim_weight < 0.999 and frames < AIM_SETTLE_FRAMES:
-		await tree.process_frame
-		frames += 1
 	await Fixtures.wait_physics(tree, SETTLE_TICKS)
 	await Fixtures.wait_process(tree, 3)
 
 
 func _end(tree: SceneTree) -> void:
-	Input.action_release(&"aim")
 	Input.action_release(&"use_hand")
 	for node: Node in _nodes:
 		if is_instance_valid(node):
@@ -176,18 +169,24 @@ func _scenario_states(tree: SceneTree, check: Callable) -> void:
 	out.queue_free()
 	await _end(tree)
 
-
-func _scenario_sticky(tree: SceneTree, check: Callable) -> void:
+# D-19: the mouse is never slowed (the sticky aim slowdown is gone): the same mouse motion turns the camera by the same
+# angle with and without a held target, and the assist itself never rotates the camera.
+func _scenario_no_slowdown(tree: SceneTree, check: Callable) -> void:
 	await _begin(tree)
-	check.call(is_equal_approx(_rig.look_sensitivity_multiplier, 1.0), "(5) the sensitivity multiplier is 1.0 without a target")
+	var pixels: float = 40.0
 	var yaw_before: float = _rig.yaw
-	var pitch_before: float = _rig.pitch
+	Fixtures.send_mouse_motion(Vector2(pixels, 0.0))
+	var free_turn: float = yaw_before - _rig.yaw
+	check.call(is_equal_approx(free_turn, pixels * _rig.base_sensitivity * _rig.settings.sensitivity), "(5) free look turns by pixels * base_sensitivity (%.4f)" % free_turn)
 	var lever: Lever = _lever_at(tree, _point(8.0))
 	await Fixtures.wait_physics(tree, 18)
-	check.call(_rig.look_sensitivity_multiplier < 1.0, "(5) a valid target lowers the look sensitivity within 0.3 s (%.2f)" % _rig.look_sensitivity_multiplier)
+	check.call(_hand.targeting.target == _interactable(lever), "(5) a valid target is held with no button pressed")
 	await Fixtures.wait_physics(tree, 12)
-	check.call(is_equal_approx(_rig.yaw, yaw_before) and is_equal_approx(_rig.pitch, pitch_before), "(5) 30 ticks of assist leave yaw and pitch untouched")
-	lever.queue_free()
-	await Fixtures.wait_physics(tree, 40)
-	check.call(is_equal_approx(_rig.look_sensitivity_multiplier, 1.0), "(5) the multiplier returns to 1.0 after the target is lost (%.2f)" % _rig.look_sensitivity_multiplier)
+	yaw_before = _rig.yaw
+	var pitch_before: float = _rig.pitch
+	await Fixtures.wait_physics(tree, 12)
+	check.call(is_equal_approx(_rig.yaw, yaw_before) and is_equal_approx(_rig.pitch, pitch_before), "(5) the assist leaves yaw and pitch untouched")
+	Fixtures.send_mouse_motion(Vector2(pixels, 0.0))
+	var held_turn: float = yaw_before - _rig.yaw
+	check.call(is_equal_approx(held_turn, free_turn), "(5) the same motion turns the same with a held target, there is no sticky slowdown (%.4f vs %.4f)" % [held_turn, free_turn])
 	await _end(tree)

@@ -1,12 +1,11 @@
 extends RefCounted
 ## HAND-02 / D-08, D-09, D-10: interact next to an Interactable that accepts near contact stretches the arm, holds
-## while E is held and releases with it. It works while aiming, and it never starts strafe or backward locomotion.
+## while E is held and releases with it. The arm going out starts the spell hand (D-27), and it never starts strafe or backward locomotion.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
 const LEVER_SCENE: String = "res://scenes/mechanisms/lever.tscn"
 const SHIPPED_TPS: int = 60
-const AIM_SETTLE_FRAMES: int = 180
 ## A lever 1.2 m ahead: its handle swings, so the aim point stays well inside hand_near_range (2.2 m).
 const NEAR_POSITION: Vector3 = Vector3(0.0, 0.0, 1.2)
 
@@ -28,7 +27,6 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_out_of_reach(tree, check)
 	await _scenario_not_accepting(tree, check)
 	await _scenario_hold(tree, check)
-	await _scenario_aiming(tree, check)
 	await _scenario_no_strafe(tree, check)
 
 
@@ -41,7 +39,7 @@ func _on_triggered(_node: Node, kind: int) -> void:
 		_triggered_near += 1
 
 
-func _begin(tree: SceneTree, aim: bool) -> void:
+func _begin(tree: SceneTree) -> void:
 	_contacts.clear()
 	_triggered_near = 0
 	_nodes.clear()
@@ -56,17 +54,10 @@ func _begin(tree: SceneTree, aim: bool) -> void:
 	_bus.connect(&"interactable_triggered", _on_triggered)
 	await Fixtures.wait_physics(tree, 6)
 	await Fixtures.wait_process(tree, 3)
-	if aim:
-		Input.action_press(&"aim")
-		var frames: int = 0
-		while _rig.aim_weight < 0.999 and frames < AIM_SETTLE_FRAMES:
-			await tree.process_frame
-			frames += 1
-		await Fixtures.wait_physics(tree, 3)
 
 
 func _end(tree: SceneTree) -> void:
-	for action: StringName in [&"aim", &"interact", &"use_hand", &"move_back", &"move_left"]:
+	for action: StringName in [&"interact", &"use_hand", &"move_back", &"move_left"]:
 		Input.action_release(action)
 	if _bus.is_connected(&"near_contact_changed", _on_contact):
 		_bus.disconnect(&"near_contact_changed", _on_contact)
@@ -86,7 +77,7 @@ func _lever(tree: SceneTree, position: Vector3) -> Lever:
 
 
 func _scenario_toggle(tree: SceneTree, check: Callable) -> void:
-	await _begin(tree, false)
+	await _begin(tree)
 	var lever: Lever = _lever(tree, NEAR_POSITION)
 	await Fixtures.wait_physics(tree, 3)
 	Input.action_press(&"interact")
@@ -103,7 +94,7 @@ func _scenario_toggle(tree: SceneTree, check: Callable) -> void:
 
 
 func _scenario_out_of_reach(tree: SceneTree, check: Callable) -> void:
-	await _begin(tree, false)
+	await _begin(tree)
 	var lever: Lever = _lever(tree, Vector3(0.0, 0.0, 4.0))
 	await Fixtures.wait_physics(tree, 3)
 	await Fixtures.tap_action(tree, &"interact", 4)
@@ -114,7 +105,7 @@ func _scenario_out_of_reach(tree: SceneTree, check: Callable) -> void:
 
 
 func _scenario_not_accepting(tree: SceneTree, check: Callable) -> void:
-	await _begin(tree, false)
+	await _begin(tree)
 	var lever: Lever = _lever(tree, NEAR_POSITION)
 	(lever.get_node("Interactable") as Interactable).accepts_near = false
 	await Fixtures.wait_physics(tree, 3)
@@ -125,7 +116,7 @@ func _scenario_not_accepting(tree: SceneTree, check: Callable) -> void:
 
 
 func _scenario_hold(tree: SceneTree, check: Callable) -> void:
-	await _begin(tree, false)
+	await _begin(tree)
 	var lever: Lever = _lever(tree, NEAR_POSITION)
 	var held: Array[int] = [0]
 	(lever.get_node("Interactable") as Interactable).near_held.connect(func(_delta: float) -> void: held[0] += 1)
@@ -136,20 +127,9 @@ func _scenario_hold(tree: SceneTree, check: Callable) -> void:
 	await _end(tree)
 
 
-func _scenario_aiming(tree: SceneTree, check: Callable) -> void:
-	await _begin(tree, true)
-	var lever: Lever = _lever(tree, NEAR_POSITION)
-	await Fixtures.wait_physics(tree, 3)
-	Input.action_press(&"interact")
-	await Fixtures.wait_physics(tree, 6)
-	check.call(lever.is_active, "(5) near contact works while aiming")
-	Input.action_release(&"interact")
-	await _end(tree)
-
-
-## Near contact without aim raises the arm layer but never enters strafe or backward locomotion.
+## Near contact raises the arm layer and starts the spell hand at Enter (D-27), but never enters strafe or backward locomotion.
 func _scenario_no_strafe(tree: SceneTree, check: Callable) -> void:
-	await _begin(tree, false)
+	await _begin(tree)
 	var lever: Lever = _lever(tree, NEAR_POSITION)
 	var animator: MannequinAnimator = _player.get_node("MannequinAnimator") as MannequinAnimator
 	var machine: AnimationNodeStateMachinePlayback = Fixtures.animation_tree(_player).get(MannequinAnimator.P_AIM_PLAYBACK) as AnimationNodeStateMachinePlayback
@@ -174,7 +154,6 @@ func _scenario_no_strafe(tree: SceneTree, check: Callable) -> void:
 			backward = true
 	check.call(lever.is_active, "(6) the near press toggled the lever")
 	check.call(max_layer > 0.0, "(6) the arm layer rises during near contact (%.2f)" % max_layer)
-	check.call(not entered, "(6) the AimMachine is never started at Enter")
+	check.call(entered, "(6) the arm going out starts the AimMachine at Enter (D-27)")
 	check.call(not strafe and not backward, "(6) no strafe or backward blend (strafe %s, backward %s)" % [str(strafe), str(backward)])
-	check.call(not _player.aiming, "(6) the player is not aiming")
 	await _end(tree)

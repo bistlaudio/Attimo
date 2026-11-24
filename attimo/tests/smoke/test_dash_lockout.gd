@@ -1,13 +1,13 @@
 extends RefCounted
-## Quick 261120-dik, reduced by quick 261120-ef9: the only dash lockout is aim. A dash press while aiming is refused (consumed,
-## never buffered), emits EventBus.dash_blocked once with the reason aim, kicks the ProceduralPose twitch (no velocity, no dash
-## clip), and spends neither the cooldown nor the air dash charge. A press during the Jump 3 / long jump stage 3 pirouette, on
-## the landing tick or right after a take-off starts a dash as before the lockouts. The dash crossfades
-## (dash_in_blend, dash_in_blend_air, dash_out_blend) are written to the animation edges by MannequinAnimator.
-## Every expectation derives from player.config; scenarios that change numbers use a duplicate of the config.
+## Quick 261120-dik, reduced by quick 261120-ef9, aim removed in phase 05: there is no dash lockout today (plan 05-03 adds the
+## energy reason), so dash_locked_reason() is &"" in every scenario. A press during the Jump 3 / long jump stage 3 pirouette, on
+## the landing tick or right after a take-off starts a dash. The blocked-dash infrastructure stays alive for the energy reason:
+## _block_dash emits EventBus.dash_blocked once per physics frame and kicks the ProceduralPose twitch (no velocity, no dash clip,
+## no cooldown). The dash crossfades (dash_in_blend, dash_in_blend_air, dash_out_blend) are written to the animation edges by
+## MannequinAnimator. Every expectation derives from player.config; scenarios that change numbers use a duplicate of the config.
 
 const Fixtures := preload("res://tests/fixtures.gd")
-## The animation node of the unaimed ground dash: Slide only while Dash.SLIDE_PRESENTATION is on.
+## The animation node of the ground dash: Slide only while Dash.SLIDE_PRESENTATION is on.
 const UNAIMED_DASH: StringName = &"Slide" if preload("res://scripts/player/states/dash.gd").SLIDE_PRESENTATION else &"Dash"
 const SHIPPED_TPS: int = 60
 const TWITCH_TOLERANCE_DEG: float = 0.1
@@ -26,7 +26,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_takeoff(tree, check)
 	await _scenario_landing(tree, check)
 	await _scenario_pirouette(tree, check)
-	await _scenario_aim(tree, check)
+	await _scenario_no_lockout(tree, check)
 	await _scenario_twitch(tree, check)
 	await _scenario_open_dash(tree, check)
 	await _scenario_blends(tree, check)
@@ -48,7 +48,7 @@ func _begin(tree: SceneTree, position: Vector3 = Vector3.ZERO) -> PlayerControll
 
 
 func _end(player: PlayerController) -> void:
-	for action: StringName in [&"move_forward", &"jump", &"dash", &"aim"]:
+	for action: StringName in [&"move_forward", &"jump", &"dash", &"loader"]:
 		Fixtures.send_action_event(action, false)
 		Input.action_release(action)
 	_bus.disconnect(&"dash_blocked", _on_blocked)
@@ -138,32 +138,29 @@ func _held_jump(tree: SceneTree, player: PlayerController) -> void:
 	await Fixtures.wait_until(tree, func() -> bool: return player.is_grounded(), 240)
 
 
-# Aim blocks the dash on the ground and in the air, and a refused press does not touch a running cooldown.
-func _scenario_aim(tree: SceneTree, check: Callable) -> void:
+# No lockout remains: at rest, running, in the air and during the Loader hold the reason is empty, a ground and an air press start
+# a dash (no dash_blocked fact), and a press does not touch a running cooldown.
+func _scenario_no_lockout(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
-	check.call(player.dash_locked_reason() == &"", "(a1) no lockout at rest")
-	Input.action_press(&"aim")
-	await Fixtures.wait_physics(tree, 4)
-	check.call(player.dash_locked_reason() == &"aim" and not player.can_dash(), "(a1) aim is a lock reason and can_dash is false")
-	await Fixtures.tap_action(tree, &"dash")
-	check.call(_only_reason(&"aim") and _dashes.is_empty(), "(a2) an aimed press on the ground is refused with the aim reason (got %s)" % [_reasons()])
-	check.call(_unspent(player), "(a2) the aimed press spends no cooldown")
-	Input.action_release(&"aim")
-	await Fixtures.wait_physics(tree, 4)
+	check.call(player.dash_locked_reason() == &"" and player.can_dash(), "(a1) no lockout at rest")
 	await Fixtures.tap_action(tree, &"dash")
 	var dashing: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"Dash", 4)
-	check.call(dashing >= 0 and _only_dash(false), "(a3) after releasing aim the dash works (dashes %s)" % [_dashes])
+	check.call(dashing >= 0 and _only_dash(false) and _blocked.is_empty(), "(a2) a ground press starts the dash and emits no dash_blocked (dashes %s, blocked %s)" % [_dashes, _reasons()])
 	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name != &"Dash", 40)
 	var cooldown_before: float = player.dash_cooldown_timer
-	Input.action_press(&"aim")
-	await Fixtures.wait_physics(tree, 3)
 	await Fixtures.tap_action(tree, &"dash")
-	check.call(_blocked.size() == 2 and player.dash_cooldown_timer < cooldown_before, "(a4) a refused press during a cooldown does not reset it (%.3f s before, %.3f after, blocked %d)" % [cooldown_before, player.dash_cooldown_timer, _blocked.size()])
-	Input.action_release(&"aim")
+	check.call(_blocked.is_empty() and player.dash_cooldown_timer <= cooldown_before, "(a3) a press during the cooldown is refused silently and does not reset it (%.3f before, %.3f after)" % [cooldown_before, player.dash_cooldown_timer])
+	Input.action_press(&"loader")
+	await Fixtures.wait_until(tree, func() -> bool: return player.loader_active(), 6)
+	check.call(player.dash_locked_reason() == &"", "(a4) the Loader hold is no dash lockout (reason %s)" % player.dash_locked_reason())
+	Input.action_release(&"loader")
+	await Fixtures.wait_until(tree, func() -> bool: return not player.loader_active(), 6)
+	Fixtures.restore_time()
 	await _end(player)
 
 
-# The twitch: a half sine kick of dash_blocked_twitch_deg, forward, no motion and no dash clip, back to exactly 0.
+# The twitch (started by _block_dash, which plan 05-03 calls for the energy reason): a half sine kick of dash_blocked_twitch_deg,
+# forward, no motion and no dash clip, back to exactly 0.
 func _scenario_twitch(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
 	var config: MovementConfig = player.config
@@ -173,9 +170,8 @@ func _scenario_twitch(tree: SceneTree, check: Callable) -> void:
 	check.call(pose.twitch_angle == 0.0 and mannequin.transform == Transform3D.IDENTITY, "(w1) at rest there is no twitch and the Mannequin transform is identity")
 	var start_position: Vector3 = player.global_position
 	var yaw: float = player.visual_root.rotation.y
-	Input.action_press(&"aim")
 	await Fixtures.wait_physics(tree, 4)
-	Input.action_press(&"dash")
+	player.call(&"_block_dash", &"energy")
 	var peak: float = 0.0
 	var peak_tilt: float = 0.0
 	var max_lean: float = 0.0
@@ -184,8 +180,6 @@ func _scenario_twitch(tree: SceneTree, check: Callable) -> void:
 	var ticks: int = int(ceil(config.dash_blocked_twitch_time * float(SHIPPED_TPS))) + 6
 	for i: int in ticks:
 		await tree.physics_frame
-		if i == 1:
-			Input.action_release(&"dash")
 		peak = maxf(peak, pose.twitch_angle)
 		max_lean = maxf(max_lean, pose.lean_angle)
 		max_speed = maxf(max_speed, player.horizontal_speed())
@@ -201,11 +195,11 @@ func _scenario_twitch(tree: SceneTree, check: Callable) -> void:
 	check.call(finite, "(w3) every written Mannequin basis is finite")
 	check.call(pose.twitch_angle == 0.0 and player.dash_twitch_timer == 0.0, "(w4) the twitch decays to exactly 0 within dash_blocked_twitch_time plus 6 ticks (got %.4f)" % pose.twitch_angle)
 	check.call(mannequin.transform == Transform3D.IDENTITY, "(w4) the Mannequin transform is identity again")
-	# Two presses are two facts.
-	await Fixtures.tap_action(tree, &"dash")
-	check.call(_blocked.size() == 2, "(w5) each refused press is one dash_blocked fact (got %d)" % _blocked.size())
+	# Two blocks on different frames are two facts.
+	check.call(_only_reason(&"energy"), "(w5) the first block is one dash_blocked fact with the reason (got %s)" % [_reasons()])
+	player.call(&"_block_dash", &"energy")
+	check.call(_blocked.size() == 2, "(w5) each block is one dash_blocked fact (got %d)" % _blocked.size())
 	check.call(_blocked[0]["position"] is Vector3, "(w5) dash_blocked carries the position")
-	Input.action_release(&"aim")
 	await _end(player)
 
 

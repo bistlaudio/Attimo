@@ -118,13 +118,13 @@ func _scenario_channels(tree: SceneTree, check: Callable) -> void:
 	check.call(rig.spring_arm.position.is_equal_approx(rig.base_shoulder_offset), "(b) with no source the arm sits at the base shoulder offset, the debug framing (%s)" % rig.spring_arm.position)
 	check.call(is_equal_approx(rig.camera.fov, rig.base_fov), "(b) with no source fov equals base_fov (%.2f)" % rig.camera.fov)
 
-	rig.set_fov_offset(&"aim", 5.0)
+	rig.set_fov_offset(&"probe", 5.0)
 	rig.set_fov_offset(&"kick", -2.0)
 	await Fixtures.wait_process(tree, 2)
 	check.call(is_equal_approx(rig.camera.fov, rig.base_fov + 3.0), "(b) +5 and -2 give base_fov + 3 (%.2f)" % rig.camera.fov)
 	check.call(is_equal_approx(rig.get_fov_total(), rig.base_fov + 3.0), "(b) get_fov_total reports base_fov + 3")
 
-	rig.clear_fov_offset(&"aim")
+	rig.clear_fov_offset(&"probe")
 	await Fixtures.wait_process(tree, 2)
 	check.call(is_equal_approx(rig.camera.fov, rig.base_fov - 2.0), "(b) clearing +5 leaves only the -2 share (%.2f)" % rig.camera.fov)
 
@@ -133,10 +133,10 @@ func _scenario_channels(tree: SceneTree, check: Callable) -> void:
 	check.call(rig.camera.fov <= 179.0 and rig.camera.fov >= 1.0, "(b) the summed fov is clamped to 1..179 (%.2f)" % rig.camera.fov)
 	rig.clear_fov_offset(&"kick")
 
-	rig.set_offset(&"aim", Vector3(0.7, 0.0, 0.0))
+	rig.set_offset(&"probe", Vector3(0.7, 0.0, 0.0))
 	await Fixtures.wait_process(tree, 2)
 	check.call(rig.spring_arm.position.is_equal_approx(rig.base_shoulder_offset + Vector3(0.7, 0.0, 0.0)), "(b) an offset source moves the arm origin by exactly its offset (%s)" % rig.spring_arm.position)
-	rig.clear_offset(&"aim")
+	rig.clear_offset(&"probe")
 	await Fixtures.wait_process(tree, 2)
 	check.call(rig.spring_arm.position.is_equal_approx(rig.base_shoulder_offset), "(b) clearing the offset returns the arm to the base shoulder offset (%s)" % rig.spring_arm.position)
 	await _free_all(tree, nodes)
@@ -275,11 +275,25 @@ func _scenario_framing(tree: SceneTree, check: Callable) -> void:
 	check.call(feet_ndc >= -0.9 and feet_ndc < shoulder_ndc, "(k) the feet project to vertical ndc %.2f (at least -0.9)" % feet_ndc)
 	check.call((head_ndc + feet_ndc) * 0.5 < 0.0, "(k) the standing character sits in the lower part of the screen (centre ndc %.2f)" % ((head_ndc + feet_ndc) * 0.5))
 	check.call(rig.spring_arm.spring_length <= 5.0, "(k) the start arm is at most 5 m (%.2f)" % rig.spring_arm.spring_length)
-	# Mouse-wheel zoom (2026-11-18): the chosen distance clamps to zoom_min .. zoom_max.
+	# zoom_by() (F2 panel, tests): the chosen distance clamps to zoom_min .. zoom_max.
+	var start_zoom: float = rig.zoom_distance
 	rig.zoom_by(-100.0)
 	check.call(is_equal_approx(rig.zoom_distance, rig.zoom_min), "(k) zooming far in clamps to zoom_min (%.2f)" % rig.zoom_distance)
 	rig.zoom_by(100.0)
 	check.call(is_equal_approx(rig.zoom_distance, rig.zoom_max), "(k) zooming far out clamps to zoom_max (%.2f)" % rig.zoom_distance)
+	rig.zoom_distance = start_zoom
+	# D-26: the mouse wheel switches hand modules and no longer zooms the camera.
+	await Fixtures.wait_process(tree, 90)
+	var arm_before: float = rig.spring_arm.spring_length
+	for wheel: MouseButton in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN, MOUSE_BUTTON_WHEEL_DOWN, MOUSE_BUTTON_WHEEL_DOWN]:
+		var event: InputEventMouseButton = InputEventMouseButton.new()
+		event.button_index = wheel
+		event.pressed = true
+		Input.parse_input_event(event)
+		Input.flush_buffered_events()
+	await Fixtures.wait_process(tree, 20)
+	check.call(is_equal_approx(rig.zoom_distance, start_zoom), "(k) a wheel event no longer changes zoom_distance (%.2f, was %.2f)" % [rig.zoom_distance, start_zoom])
+	check.call(is_equal_approx(rig.spring_arm.spring_length, arm_before), "(k) a wheel event no longer changes the arm length (%.3f, was %.3f)" % [rig.spring_arm.spring_length, arm_before])
 	check.call(rig.pivot_height >= shoulder + 0.05 and rig.pivot_height <= shoulder + 0.4, "(k) pivot_height %.2f lies 0.05 .. 0.4 above the shoulder %.2f" % [rig.pivot_height, shoulder])
 	check.call(rig.base_fov >= 76.0 and rig.base_fov <= 82.0, "(k) the field of view is a little wider than 75 (%.1f)" % rig.base_fov)
 	check.call(rig.pitch_max >= 0.7, "(k) the upward pitch range is larger than before (%.2f)" % rig.pitch_max)

@@ -54,7 +54,6 @@ func run(_tree: SceneTree, check: Callable) -> void:
 		check.call(doc.contains(term), "map documents %s (verbs left out)" % term)
 	for term: String in RULE_TERMS:
 		check.call(doc.contains(term), "map states the rule term %s" % term)
-	check.call(doc.count("DEV-03") >= 2, "DEV-03 aim rule appears on at least two rows (Jump 3 and long jump stage 3)")
 	check.call(doc.contains("Adding a verb"), "map carries the 'Adding a verb' rule")
 
 	_check_guard_can_fail(check, doc, states)

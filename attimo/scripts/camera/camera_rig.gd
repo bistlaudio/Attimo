@@ -32,9 +32,6 @@ extends Node3D
 ## Auto-follow mode (A41, CameraSettings.auto_follow_mode): "on" always follows, "off" never, "auto" only while
 ## the last input event came from a joypad. `_input` records the device and never consumes the event.
 
-## Sticky aim factor written by Targeting (1.0 = off). It scales the look sensitivity and never rotates the camera.
-var look_sensitivity_multiplier: float = 1.0
-
 ## The node to follow (the Player).
 @export var target: Node3D
 ## Tests set this to false: a headless run cannot capture the mouse.
@@ -54,11 +51,11 @@ var look_sensitivity_multiplier: float = 1.0
 @export var max_vertical_lag: float = 0.6
 
 @export_group("Zoom")
-## Closest and farthest arm length in m the mouse wheel can choose (outside aim; in aim the wheel stays free for the
-## Phase 4 module switch). The scene's SpringArm3D spring_length is the start distance.
+## Closest and farthest arm length in m that zoom_by() can choose (the F2 panel and tests; the mouse wheel no longer zooms,
+## it switches hand modules, D-26). The scene's SpringArm3D spring_length is the start distance.
 @export var zoom_min: float = 2.5
 @export var zoom_max: float = 7.0
-## Metres per wheel notch.
+## Metres per zoom_by() step in the old wheel notch size.
 @export var zoom_step: float = 0.5
 ## Rate in 1/s at which the arm eases to the chosen zoom distance.
 @export var zoom_rate: float = 12.0
@@ -232,7 +229,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		if motion.relative != Vector2.ZERO:
 			notify_look_activity()
-		var scale: float = base_sensitivity * settings.sensitivity * lerpf(1.0, aim_sensitivity_factor, aim_weight) * look_sensitivity_multiplier
+		var scale: float = base_sensitivity * settings.sensitivity * lerpf(1.0, aim_sensitivity_factor, aim_weight)
 		var vertical: float = motion.relative.y * scale
 		if settings.invert_y:
 			vertical = -vertical
@@ -246,9 +243,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		return
 	var button := event as InputEventMouseButton
-	if button != null and button.pressed and _aim_target <= 0.0 and (button.button_index == MOUSE_BUTTON_WHEEL_UP or button.button_index == MOUSE_BUTTON_WHEEL_DOWN):
-		zoom_by(-zoom_step if button.button_index == MOUSE_BUTTON_WHEEL_UP else zoom_step)
-		return
 	if button != null and button.pressed and require_mouse_capture and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		if DisplayServer.get_name() != "headless":
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED

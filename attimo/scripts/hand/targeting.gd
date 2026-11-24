@@ -1,9 +1,9 @@
 class_name Targeting
 extends Node
-## Aim assist of the hand (CAM-05, D-14). While aiming it picks the Interactable the pulse will hit: the one under the
-## crosshair, else the best one inside hand_assist_angle with line of sight. The current target is kept with hysteresis,
-## so it does not flicker between two close neighbours. A valid target also lowers the look sensitivity (sticky aim,
-## CameraRig.look_sensitivity_multiplier). It never rotates the camera.
+## Aim assist of the hand (CAM-05, D-14, D-19). It is always on (there is no aim hold since phase 05) and picks the Interactable
+## the pulse will hit: the one under the crosshair, else the best one inside hand_assist_angle with line of sight. The current
+## target is kept with hysteresis, so it does not flicker between two close neighbours. It never rotates the camera and never
+## slows the mouse (the sticky aim slowdown is gone).
 ## It reports the reticle State, the target and the glow stage (TARGET on the target, AIM on the rest). It is created by
 ## the HandController, which calls update() every physics tick before it decides a shot.
 
@@ -45,14 +45,7 @@ func update(delta: float) -> void:
 		_release_target()
 		state = State.NONE
 		return
-	if not _player.aiming:
-		_release_target()
-		state = State.NONE
-		_ease_sensitivity(rig, 1.0, delta)
-		return
 	_select(rig, delta)
-	var sticky: bool = target != null and (state == State.VALID or state == State.VALID_BIG)
-	_ease_sensitivity(rig, _controller.hand_sticky_factor if sticky else 1.0, delta)
 
 
 func _process(delta: float) -> void:
@@ -174,7 +167,7 @@ func _set_target(next: Interactable) -> void:
 	target_changed.emit(next)
 
 
-## Drops the target when aim ends or the rig is gone: the old one falls back to the idle glow.
+## Drops the target when the rig is gone: the old one falls back to the idle glow.
 func _release_target() -> void:
 	_lost_time = 0.0
 	target_angle_deg = 0.0
@@ -185,10 +178,6 @@ func _release_target() -> void:
 	if previous != null:
 		previous.set_glow_stage(Interactable.GlowStage.IDLE)
 	target_changed.emit(null)
-
-
-func _ease_sensitivity(rig: CameraRig, goal: float, delta: float) -> void:
-	rig.look_sensitivity_multiplier = move_toward(rig.look_sensitivity_multiplier, goal, _controller.hand_sticky_rate * delta)
 
 
 ## Angle in degrees between the unit vector `forward` and `to`; INF for a zero-length or non-finite direction (T-04-05).

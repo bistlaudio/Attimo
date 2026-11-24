@@ -3,13 +3,14 @@ extends Node
 ## Presents FSM state on the Mannequin: maps the LOCAL StateMachine.state_changed signal to AnimationTree travel,
 ## the Locomotion blend and the Land overlay. Animation shows state; it is not feedback in the D-10 sense.
 ## The tree root is a BlendTree (tools/build_mannequin_tree.gd): StateMachine -> TimeScale -> Land OneShot -> Aim
-## (upper-body layer) -> output. The state machine has one dash node per Dodge clip; dash_node_for() picks it (D-12, the aimed nodes are dormant).
-## The aim layer is the spell hand (quick 261118-qi3): an aim press starts the AimMachine at Enter on the same physics
-## frame, Hold loops while aim is held, a pulse_fired while aiming fires the Shoot OneShot, a release travels to Exit and the
-## layer fades out after the Exit clip.
+## (upper-body layer) -> output. The state machine has one dash node per Dodge clip; dash_node_for() picks it (the aimed nodes are dormant).
+## The upper-body layer is the arm (quick 261118-qi3, driven by HandController.arm_out since phase 05, D-27): when the hand reports
+## the arm stretched out (near contact, a shot, the Loader hold) the AimMachine starts at Enter on the same physics frame, Hold
+## loops while the arm is out, a pulse_fired fires the Shoot OneShot, the arm coming back travels to Exit and the layer fades
+## out after the Exit clip. There is no aim hold any more; the layer stays until the Phase 6 hand poses replace it.
 ## Idle breaks (quick 261118-qi3): standing still in Idle for a rolled delay (MovementConfig idle_break_delay_min/max)
 ## fires the IdleBreak OneShot with a clip picked by a VariantPicker (never the same one twice in a row). Any gameplay
-## action, aim or state change fades it out on that same physics frame; the FSM never waits for it.
+## action or state change fades it out on that same physics frame; the FSM never waits for it.
 ##
 ## Air-dash pose hold (DEV-02, D-02 "Dodge held as a pose in the air"): when the FSM leaves a Dash that started in
 ## the air into Fall, the animator keeps the dash node. The Dodge clip plays on at 1x and holds its last frame,
@@ -49,7 +50,7 @@ const AIM_MODIFIER_PATH: NodePath = ^"Rig_Medium/Skeleton3D/AimPoseModifier"
 const DASH_NODES: Array[StringName] = [&"Dash", &"DashLeft", &"DashRight", &"DashBack"]
 
 ## The dash nodes of the state machine and the Dodge clip each plays; the clip length is stretched to dash_time.
-## Dash is the ground and the air dash; DashLeft, DashRight and DashBack are dormant since there is no dash while aiming (D-12 amended, quick 261120-dik). Slide is the unaimed ground
+## Dash is the ground and the air dash; DashLeft, DashRight and DashBack are dormant tree nodes (there is no aimed dash any more, D-27). Slide is the unaimed ground
 ## dash (DEV-04): the retargeted Running_Slide, picked through Dash.slide.
 const DASH_CLIPS: Dictionary[StringName, StringName] = {
 	&"Dash": &"Dodge_Forward",
@@ -94,9 +95,9 @@ const SLIDE_HOLD_TIME: float = 0.3
 ## The Slide window plays at this fixed speed: the 0.233 s drop reaches the floor in about 0.15 s, inside the 0.18 s
 ## dash (developer 2026-11-18: 1.85x was rushed, 1.0x took too long to reach the floor), then the low pose holds.
 const SLIDE_PLAYBACK_SCALE: float = 1.6
-## Weight of the upper-body aim layer, 0 (locomotion only) to 1 (aim pose), eased over aim_layer_blend_time.
+## Weight of the upper-body arm layer, 0 (locomotion only) to 1 (arm pose), eased over aim_layer_blend_time.
 var aim_weight: float = 0.0
-## Weight of the Aim layer in the tree (P_AIM, read-only for others): 1 while aiming and while the Exit clip lowers the
+## Weight of the Aim layer in the tree (P_AIM, read-only for others): 1 while the arm is out and while the Exit clip lowers the
 ## hand, eased at the aim_weight rate. aim_weight is the solver influence, this is the pose layer.
 var layer_weight: float = 0.0
 ## The clip of the last idle break and the physics frame it fired on; the frame of the last break cancel (read-only).
@@ -113,8 +114,8 @@ var _playback: AnimationNodeStateMachinePlayback
 var _hand: HandController
 ## The spell hand state machine (Enter, Hold, Exit) inside the Aim layer; null when the tree has none.
 var _aim_machine: AnimationNodeStateMachinePlayback
-var _was_aiming: bool = false
-## Seconds of the Exit clip still to play after an aim release; the layer stays at weight 1 until it has run out.
+var _was_arm_out: bool = false
+## Seconds of the Exit clip still to play after the arm came back; the layer stays at weight 1 until it has run out.
 var _exit_left: float = 0.0
 var _exit_length: float = 0.0
 var _picker: VariantPicker
@@ -242,21 +243,22 @@ func _physics_process(delta: float) -> void:
 		_travel_to(&"Fall")
 
 
-## The aim press starts the spell hand at Enter on the physics frame the FSM's aiming flag turns true, the release travels
-## to Exit and starts the exit countdown that keeps the layer up until the lowering has played.
+## The arm going out (HandController.arm_out: near contact, a shot, the Loader hold) starts the spell hand at Enter on the
+## physics frame it turns true, the arm coming back travels to Exit and starts the exit countdown that keeps the layer up until
+## the lowering has played.
 func _update_aim_edge(delta: float) -> void:
-	var aiming: bool = player.aiming
-	if aiming and not _was_aiming:
+	var arm_out: bool = _arm_up()
+	if arm_out and not _was_arm_out:
 		_exit_left = 0.0
 		if _aim_machine != null:
 			_aim_machine.start(&"Enter", true)
-	elif not aiming and _was_aiming:
+	elif not arm_out and _was_arm_out:
 		_exit_left = _exit_length
 		if _aim_machine != null:
 			_aim_machine.travel(&"Exit")
 	elif _exit_left > 0.0:
 		_exit_left = maxf(_exit_left - delta, 0.0)
-	_was_aiming = aiming
+	_was_arm_out = arm_out
 
 
 ## The shot of the hand happened (EventBus.pulse_fired, on release after charge and cooldown): fire the Shoot OneShot.
@@ -264,18 +266,15 @@ func _on_pulse_fired(_origin: Vector3, _point: Vector3, _size: int, _hit_valid: 
 	play_hand_shot()
 
 
-## True while the arm layer is up: aiming, or the hand reports the arm stretched out (shot, near contact). Only the Aim
-## layer weight and the solver target use it. The aim edge, strafe, backward locomotion and the dash node stay on
-## player.aiming, so near contact without aim never enters strafe or backward clips.
+## True while the arm layer is up: the hand reports the arm stretched out (near contact, a shot, the Loader hold; D-27). Only the
+## Aim layer weight and the solver target use it.
 func _arm_up() -> bool:
-	return player.aiming or (_hand != null and _hand.arm_out)
+	return _hand != null and _hand.arm_out
 
 
-## Fires the Shoot OneShot of the spell hand. Only while aiming: outside aim the layer weight stays on the near-contact
-## pose and the spell hand clips belong to aim.
+## Fires the Shoot OneShot of the spell hand.
 func play_hand_shot() -> void:
-	if player.aiming:
-		animation_tree.set(P_SHOOT_REQUEST, AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+	animation_tree.set(P_SHOOT_REQUEST, AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
 
 
 ## The hold length in seconds (MovementConfig.air_dash_hold_time, live-tunable).
@@ -289,27 +288,28 @@ func _process(delta: float) -> void:
 	_loco_blend = _loco_blend.move_toward(_loco_target, player.config.locomotion_blend_rate * delta)
 	animation_tree.set(P_LOCOMOTION, _loco_blend)
 	animation_tree.set(P_TIME_SCALE, clip_scale())
+	# The arm layer blends in real time, so the Loader hold (a slow world) raises the arm as fast as any other moment.
+	var real: float = TimeFx.unscaled(delta)
 	var blend_time: float = maxf(player.config.aim_layer_blend_time, 0.001)
 	var arm_up: bool = _arm_up()
-	aim_weight = move_toward(aim_weight, 1.0 if arm_up else 0.0, delta / blend_time)
+	aim_weight = move_toward(aim_weight, 1.0 if arm_up else 0.0, real / blend_time)
 	var layer_target: float = 1.0 if (arm_up or _exit_left > 0.0) else 0.0
-	layer_weight = move_toward(layer_weight, layer_target, delta / blend_time)
+	layer_weight = move_toward(layer_weight, layer_target, real / blend_time)
 	animation_tree.set(P_AIM, layer_weight)
 	_feed_aim_modifier()
 
 
-## Fades the arm solver with the aim weight and points it at the crosshair target point (D-11): the world point under
-## the screen centre (CameraRig.aim_target_point()). The solver aims from the shoulder, so the hand lies on the
-## shoulder-to-point line and the camera-to-character parallax is corrected. Without a rig the fallback is the camera
-## origin plus forward times converge_distance.
+## Fades the arm solver with the arm weight and points it at HandController.arm_out_point (the near target, the last shot point or
+## the crosshair point during the Loader hold). The solver aims from the shoulder, so the hand lies on the shoulder-to-point line
+## and the camera-to-character parallax is corrected. Without a hand the fallback is the crosshair target point of the rig, and
+## without a rig the camera origin plus forward times converge_distance.
 func _feed_aim_modifier() -> void:
 	if _aim_modifier == null:
 		return
 	_aim_modifier.influence = aim_weight
 	if aim_weight <= 0.0:
 		return
-	if not player.aiming and _hand != null and _hand.arm_out:
-		# Near contact or a shot without aim: the arm points at the hand's own point, not the crosshair.
+	if _hand != null:
 		_aim_modifier.set_aim_point(_hand.arm_out_point)
 		return
 	var rig: CameraRig = player.camera_rig()
@@ -435,20 +435,10 @@ func _update_land(from_state: StringName, to_state: StringName) -> void:
 		animation_tree.set(P_LAND_REQUEST, AnimationNodeOneShot.ONE_SHOT_REQUEST_FADE_OUT)
 
 
-## The Locomotion BlendSpace2D target. Outside aim x is forced to 0 and y is the speed share of run_speed, so the facing
-## lagging the input during a turn never shows strafe clips (D-09). While aiming the facing is the camera, so the
-## velocity in the facing frame picks the clip: x strafe (left -1, right +1), y forward (back -1, forward +1). The
-## divisor is the ground target speed of the current direction, so the aim run, which is slower than run_speed, still
-## reaches the full run clip, and the slower back-pedal reaches the full backward clip.
+## The Locomotion BlendSpace2D target. x is forced to 0 and y is the speed share of run_speed, so the facing lagging the input
+## during a turn never shows strafe clips (D-09). The strafe and backwards points of the tree stay dormant (aim strafe is gone).
 func _locomotion_target() -> Vector2:
-	if not player.aiming:
-		return Vector2(0.0, locomotion_y_for(player.horizontal_speed()))
-	var flat: Vector3 = Vector3(player.move_velocity.x, 0.0, player.move_velocity.z)
-	var local: Vector3 = player.visual_root.global_basis.orthonormalized().inverse() * flat
-	# The Mannequin faces +Z and its left is +X, so a left strafe has positive local x and negative blend x.
-	var divisor: float = maxf(player.ground_target_speed(flat.normalized()), 0.01)
-	var target: Vector2 = Vector2(-local.x, local.z) / divisor
-	return Vector2(clampf(target.x, -1.0, 1.0), clampf(target.y, -1.0, 1.0))
+	return Vector2(0.0, locomotion_y_for(player.horizontal_speed()))
 
 
 ## The unaimed Locomotion blend y for a horizontal speed: speed / run_speed up to 1 (Running_A), then rising toward 2
@@ -463,19 +453,12 @@ func locomotion_y_for(speed: float) -> float:
 	return 1.0 + clampf((speed - run_speed) / span, 0.0, 1.0)
 
 
-## The dash node for a dash in world-space `direction` (D-12). `slide` is Dash.slide: the unaimed ground dash is Slide
-## (Running_Slide, DEV-04). Otherwise, outside aim, and for a near-zero direction, every dash is Dash (Dodge_Forward). While aiming the facing is the camera, so the dominant axis of the direction in the facing
-## frame picks the clip: +Z Dash, -Z DashBack, +X DashLeft (the Mannequin's left is +X), -X DashRight.
-func dash_node_for(direction: Vector3, slide: bool = false) -> StringName:
-	if slide and not player.aiming:
+## The dash node: Slide for a dash shown as the slide (Dash.slide, Running_Slide, DEV-04), otherwise Dash (Dodge_Forward). The
+## DashLeft, DashRight and DashBack nodes are dormant tree nodes since the aim strafe is gone (D-27).
+func dash_node_for(_direction: Vector3, slide: bool = false) -> StringName:
+	if slide:
 		return &"Slide"
-	var flat: Vector3 = Vector3(direction.x, 0.0, direction.z)
-	if not player.aiming or flat.length_squared() < 0.0001:
-		return &"Dash"
-	var local: Vector3 = player.visual_root.global_basis.inverse() * flat
-	if absf(local.x) > absf(local.z):
-		return &"DashLeft" if local.x > 0.0 else &"DashRight"
-	return &"Dash" if local.z >= 0.0 else &"DashBack"
+	return &"Dash"
 
 
 ## Playback speed of the whole state machine. A ground dash plays its Dodge clip in exactly dash_time; an air dash
@@ -515,8 +498,8 @@ func pick_reaction(kind: StringName) -> StringName:
 	return _picker.pick(kind, options)
 
 
-## Counts still time in Idle and fires an idle break at the rolled delay. Not counting while a break plays; any action,
-## aim or a non-Idle state cancels on this same call.
+## Counts still time in Idle and fires an idle break at the rolled delay. Not counting while a break plays; any action
+## or a non-Idle state cancels on this same call.
 func _update_idle_break(delta: float) -> void:
 	if not _has_idle_break:
 		return
@@ -525,7 +508,7 @@ func _update_idle_break(delta: float) -> void:
 	var pool: Array[StringName] = idle_break_pool()
 	if pool.is_empty():
 		return
-	if _fsm_state != &"Idle" or player.aiming or _cancel_action_pressed():
+	if _fsm_state != &"Idle" or _cancel_action_pressed():
 		_cancel_idle_break()
 		return
 	if _idle_break_running():

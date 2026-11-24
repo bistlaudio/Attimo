@@ -8,20 +8,21 @@ extends State
 ## A jump press during a ground dash leaves it into the LongJump (D-06; the hop sets its own speed per stage).
 ## During an air dash a jump press only stays in the buffer: there is no air jump (MOVE-05). A ground dash that
 ## ended on the ground opens the config.dash_jump_grace window in which a jump is still a long jump (GroundState).
-## A dash never starts while aiming (PlayerController.dash_locked_reason, quick 261120-dik); a refused press never reaches enter.
-## Emits the dash_started fact once on enter. A ground dash started without aim is shown as the retargeted Running_Slide
+## A Loader press cuts a dash short (PlayerController.loader_press_starts_loader); the stored speed is then the dash speed.
+## A refused press (PlayerController.dash_locked_reason) never reaches enter.
+## Emits the dash_started fact once on enter. A ground dash can be shown as the retargeted Running_Slide
 ## (DEV-04, quick 261118-qbt); that is presentation only, see `slide`.
 
 ## Direction of this dash (flattened, normalized). Read by the long jump of a later plan.
 var direction: Vector3 = Vector3.ZERO
 ## True when the dash started off the floor.
 var in_air: bool = false
-## Presentation hint read by MannequinAnimator and ProceduralPose: true for a ground dash started without aim. Movement
+## Presentation hint read by MannequinAnimator and ProceduralPose: true for a ground dash shown as the slide. Movement
 ## never reads it.
 var slide: bool = false
 
 ## Off since 2026-11-18 (developer): the Mixamo Running_Slide is a long baseball slide with a hand on the floor and a slow
-## get-up, which does not fit the 0.18 s dash. The unaimed ground dash shows Dodge_Forward with the lean again. The clip,
+## get-up, which does not fit the 0.18 s dash. The ground dash shows Dodge_Forward with the lean again. The clip,
 ## the Slide node and the hold logic stay for a later real slide move; set true to bring the slide back.
 const SLIDE_PRESENTATION: bool = false
 
@@ -38,7 +39,7 @@ func enter(_previous: StringName) -> void:
 	# A dodge snaps its facing instead of turning toward it.
 	actor.face_now(direction)
 	in_air = not actor.is_grounded()
-	slide = SLIDE_PRESENTATION and not in_air and not actor.aiming
+	slide = SLIDE_PRESENTATION and not in_air
 	actor.start_dash(direction, in_air)
 	if not in_air:
 		actor.on_ground_dash_started()

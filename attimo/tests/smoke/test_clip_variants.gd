@@ -3,9 +3,9 @@ extends RefCounted
 ## never delayed. Tree parameters are read through the MannequinAnimator constants.
 ##   I1 standing in Idle fires the IdleBreak OneShot after the rolled delay, the playback node stays Locomotion
 ##   I2 a move press cancels a running break on the same physics frame, the FSM enters Run on its normal tick
-##   I3 two consecutive breaks use different clips; holding aim prevents any break
+##   I3 two consecutive breaks use different clips; holding a gameplay action (interact) prevents any break
 ##   R1 the reaction pools are in the library (or dropped on purpose) and pick_reaction never repeats immediately
-##   S1 the unaimed Locomotion y is speed / run_speed up to 1, then rises toward 2 up to sprint_anim_full_speed
+##   S1 the Locomotion y is speed / run_speed up to 1, then rises toward 2 up to sprint_anim_full_speed
 ##   S2 after a ground dash the blend goes above 1, comes back to 1 at run speed; the clip scale caps at run_speed
 ##   J1 Jump stage 2 travels to Jump2, stages 1 and 3 to Jump, LongJump to LongJump, Fall to Fall, on the call
 ##   J2 the Jump2 and LongJump windows start at most 2 frames before their crouch bottom
@@ -35,11 +35,10 @@ func run(tree: SceneTree, check: Callable) -> void:
 	_library = load(LIBRARY_PATH) as AnimationLibrary
 	await _scenario_idle_break(tree, check)
 	await _scenario_idle_cancel(tree, check)
-	await _scenario_idle_variety_and_aim(tree, check)
+	await _scenario_idle_variety_and_action(tree, check)
 	await _scenario_reactions(tree, check)
 	await _scenario_sprint_table(tree, check)
 	await _scenario_sprint_after_dash(tree, check)
-	await _scenario_aim_clamp(tree, check)
 	await _scenario_jump_nodes(tree, check)
 	_scenario_anticipation(check)
 	await _scenario_landing_table(tree, check)
@@ -86,8 +85,8 @@ func _scenario_idle_cancel(tree: SceneTree, check: Callable) -> void:
 	await _end(tree)
 
 
-# I3: consecutive breaks differ; holding aim keeps any break away.
-func _scenario_idle_variety_and_aim(tree: SceneTree, check: Callable) -> void:
+# I3: consecutive breaks differ; holding a gameplay action keeps any break away.
+func _scenario_idle_variety_and_action(tree: SceneTree, check: Callable) -> void:
 	await _begin(tree)
 	var tps: int = Engine.physics_ticks_per_second
 	var limit: int = ceili(BREAK_DELAY_MAX * float(tps)) + 10 + SETTLE_FRAMES
@@ -104,12 +103,12 @@ func _scenario_idle_variety_and_aim(tree: SceneTree, check: Callable) -> void:
 	else:
 		check.call(first_clip == second_clip, "I3 a one-clip pool repeats its only clip (%s)" % first_clip)
 
-	Input.action_press(&"aim")
+	Input.action_press(&"interact")
 	await Fixtures.wait_physics(tree, 2)
 	var frame_before: int = _animator.last_idle_break_frame
 	await Fixtures.wait_physics(tree, tps)
-	check.call(_animator.last_idle_break_frame == frame_before, "I3 holding aim for 1 s fires no break")
-	Input.action_release(&"aim")
+	check.call(_animator.last_idle_break_frame == frame_before, "I3 holding interact for 1 s fires no break")
+	Input.action_release(&"interact")
 	await _end(tree)
 
 
@@ -187,24 +186,6 @@ func _scenario_sprint_after_dash(tree: SceneTree, check: Callable) -> void:
 	var settled: float = Fixtures.locomotion_blend(_player).y
 	check.call(settled <= 1.0001 and settled > 0.9, "S2 at run speed the blend y is back at 1 (got %.3f)" % settled)
 	Input.action_release(&"move_forward")
-	await _end(tree)
-
-
-# S1: while aiming the blend stays inside [-1, 1], also right after an aimed dash.
-func _scenario_aim_clamp(tree: SceneTree, check: Callable) -> void:
-	await _begin(tree, false)
-	Input.action_press(&"aim")
-	Input.action_press(&"move_forward")
-	await Fixtures.wait_physics(tree, 30)
-	await Fixtures.tap_action(tree, &"dash")
-	var worst: float = 0.0
-	for i: int in 40:
-		await Fixtures.wait_physics(tree, 1)
-		await Fixtures.wait_process(tree, 1)
-		worst = maxf(worst, absf(Fixtures.locomotion_blend(_player).y))
-	check.call(worst <= 1.0001, "S1 while aiming the blend y stays within [-1, 1] (max %.3f)" % worst)
-	Input.action_release(&"move_forward")
-	Input.action_release(&"aim")
 	await _end(tree)
 
 
@@ -380,7 +361,7 @@ func _begin(tree: SceneTree, short_breaks: bool = true, spawn: Vector3 = Vector3
 
 ## Releases every action and frees the scenario's nodes.
 func _end(tree: SceneTree) -> void:
-	for action: StringName in [&"aim", &"jump", &"dash", &"use_hand", &"move_forward", &"move_left", &"move_right", &"move_back"]:
+	for action: StringName in [&"loader", &"interact", &"jump", &"dash", &"use_hand", &"move_forward", &"move_left", &"move_right", &"move_back"]:
 		Input.action_release(action)
 	_player.queue_free()
 	_floor.queue_free()
