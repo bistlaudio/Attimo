@@ -242,10 +242,10 @@ Look rule: a look may change freely **within its layer**, but must never break t
 2. **Steam cannon:** the fixed-direction catch & launch. A short fixed hold with no slow motion and no input, then a launch along the barrel at a fixed speed that does not depend on the entry speed, so the arc is always the same.
 3. **Steam wall:** the steam nozzle wall push is gone. A steam-look wall pad behaves exactly like the plain wall pad (same wall run, same wall jump, no extra push). Rino runs along the wall upright, leaning slightly toward it.
 4. **Clock-hand platform:** a hand pivoted at one end that sweeps back and forth, always on, clamped below the floor angle so it never throws the rider off. It does not do a full 360-degree turn. To be confirmed in playtest.
-5. **Targets:** gear discs fired only by a shot (tap or charged); a capsule stays nearby.
+5. **Targets:** gear discs fired only by a shot (tap or charged); a capsule stays nearby. A heavy gear disc needs a full-charge shot and replaces the valve.
 6. **Energy core:** hold E near the core to pay in. The paid amount stays, and each threshold (start 25 / 50 / 75) switches one more output (more parkour pieces, a farther door).
 7. **Force-field barrier:** only a Loader discharge with bonus breaks it. **Attraction field:** walking out is always possible and free; a fast escape (dash or Loader) costs 20/s.
-8. **Showroom = gym:** the gym gets one area per layer (grouped by role) plus a mixed course; the Phase 5 Loader room and energy area stay as they are.
+8. **Showroom = gym:** the gym gets one area per layer (grouped by role) plus a mixed course (the new energy layer area is not the Phase 5 energy area). The Phase 5 Loader room and energy area keep their layout; cut pieces in them (levers, the valve) are swapped in place for gear-disc targets.
 
 ## 7. Roadmap mapping
 
