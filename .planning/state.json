@@ -25,12 +25,17 @@
     },
     {
       "number": "5",
-      "name": "Pull/Push & Module Unlocks",
+      "name": "Energy Arm & Loader",
+      "status": "pending"
+    },
+    {
+      "number": "05.1",
+      "name": "Kit Rework",
       "status": "pending"
     },
     {
       "number": "6",
-      "name": "Shooting, Enemies & Recovery",
+      "name": "Extractor, Shot, Enemies & Recovery",
       "status": "pending"
     },
     {
@@ -80,9 +85,9 @@
     }
   ],
   "next": {
-    "command": "/gsd:progress --next",
+    "command": "/gsd-progress --next",
     "label": "Advance to the next step",
-    "reason": "Phase 04.1 of 16 · 31% · executing"
+    "reason": "Phase 6 of 17 · executing"
   },
-  "updated_at": "2026-11-23T21:28:46.333Z"
+  "updated_at": "2026-11-24T12:08:56.482Z"
 }
