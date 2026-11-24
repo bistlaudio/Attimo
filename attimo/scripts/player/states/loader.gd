@@ -90,8 +90,13 @@ func bonus_ready() -> bool:
 
 ## The velocity a release right now would give (the same math as the discharge, with the bonus when it is affordable).
 func preview_velocity() -> Vector3:
+	return preview_velocity_for(bonus_ready())
+
+
+## The velocity a release right now would give with or without the bonus (the trajectory preview draws both arcs).
+func preview_velocity_for(with_bonus: bool) -> Vector3:
 	var config: MovementConfig = actor.config
-	var bonus: float = config.loader_bonus_speed if bonus_ready() else 0.0
+	var bonus: float = config.loader_bonus_speed if with_bonus else 0.0
 	var speed: float = LoaderMath.discharge_speed(stored_velocity.length(), config.loader_min_push, bonus, config.loader_max_speed)
 	return LoaderMath.discharge_velocity(actor.loader_direction(), speed)
 

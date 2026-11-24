@@ -1,6 +1,6 @@
 class_name FallReset
 extends Area3D
-## A gym kill-zone: a player entering the volume is put back at the respawn marker with zero motion.
+## A gym kill-zone: a player entering the volume is put back at the respawn marker with zero motion and one core of arm energy (PlayerController.respawn).
 ## Sits on the Hazard layer and masks the Player layer. The teleport and the camera snap run deferred,
 ## never inside the physics flush that reports the overlap (T-02-08).
 
@@ -24,7 +24,7 @@ func _on_body_entered(body: Node3D) -> void:
 	var player: PlayerController = body as PlayerController
 	if player == null or respawn == null:
 		return
-	player.call_deferred(&"teleport", respawn.global_position)
+	player.call_deferred(&"respawn", respawn.global_position)
 	if reset_root != null:
 		call_deferred(&"_sweep_room")
 	if camera_rig != null:

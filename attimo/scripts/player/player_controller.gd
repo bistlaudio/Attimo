@@ -50,6 +50,9 @@ var _dash_block_frame: int = -1
 var _last_platform_velocity: Vector3 = Vector3.ZERO
 ## Test-only switch: true leaves rotating platforms to the engine's own platform velocity (A2 measurement).
 var debug_disable_custom_carry: bool = false
+## Test and tool hook: a non-zero direction replaces the camera forward as the Loader discharge direction (the gym room tests aim
+## without a mouse). ZERO keeps the camera.
+var debug_loader_direction: Vector3 = Vector3.ZERO
 ## The mechanism root (has carry_velocity_at) of the carrying_platform body the last post-move stood on, or null.
 var _floor_carrier: Node = null
 var _floor_body: CollisionObject3D = null
@@ -188,6 +191,13 @@ func face_now(direction: Vector3) -> void:
 	visual_root.rotation.y = atan2(direction.x, direction.z)
 
 
+## Respawn after a fall (ENRG-01: always with one core): teleport() plus the arm back at its checkpoint energy. teleport() itself stays
+## a pure test utility that leaves the energy alone.
+func respawn(new_position: Vector3) -> void:
+	teleport(new_position)
+	arm_energy.reset_to_checkpoint()
+
+
 ## Places the body, zeroes all motion, hands the FSM to Fall and clears the interpolation streak (call order matters).
 ## The Fall hand-over ends a running Capture, WallRun or Dash through its exit() (gravity_scale restored), so a respawn
 ## does not keep steering, sliding or dashing (WR-02).
@@ -293,6 +303,8 @@ func loader_press_starts_loader() -> bool:
 ## The unit direction a Loader discharge (and its preview) goes: the forward of the current camera, up included (A8). Without a
 ## camera, or with a degenerate one, the facing of VisualRoot.
 func loader_direction() -> Vector3:
+	if debug_loader_direction.is_finite() and debug_loader_direction.length_squared() > 0.0001:
+		return debug_loader_direction.normalized()
 	var camera: Camera3D = get_viewport().get_camera_3d()
 	if camera != null:
 		var forward: Vector3 = -camera.global_basis.z

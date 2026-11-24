@@ -9,6 +9,7 @@ extends RefCounted
 ##   lane (x 0, z 0..-40), height references (z -6, x 8..20), ramps/stairs/ledges (x 6..40, z -48..-10),
 ##   gap course (x -38 column z 34..-22, then z -20 row x -38..-4), passage (z -2, x -26..-10),
 ##   conveyors (z 12 and 20, x -26..-10), pillar forest (x -6..10, z 10..31), moving platforms (x 14..38, z 10..34).
+##   west door (z -2..2, no WallWest_0) into Zone_Loader (x -43..-115, z -26..26, tools/loader_room_builder.gd).
 
 const PROTO: String = "res://scenes/proto/"
 const FLOOR: String = PROTO + "primitive_floor.tscn"
@@ -65,6 +66,7 @@ func build() -> Node3D:
 	_build_conveyors(_group(_root, "Zone_Conveyors"))
 	_build_camera_tests(_group(_root, "Zone_CameraTests"))
 	_build_mechanism_rooms(_group(_root, "Zone_MechanismRooms"))
+	_build_loader_room(_group(_root, "Zone_Loader"))
 	_build_hall(hall)
 
 	var hall_reset: Area3D = _fall_reset("FallResetHall", Vector3(0.0, -30.0, -8.0), Vector3(160.0, 4.0, 160.0), spawn, rig)
@@ -224,7 +226,9 @@ func _build_hall(hall: Node3D) -> void:
 		# Cell 0 is the door into room 2 (the Zahnrad-Tor of Zone_MechanismRooms).
 		if j != 0:
 			_wall(hall, "WallEast_%s" % _cell_name(j), x_edge, j * TILE, 90.0)
-		_wall(hall, "WallWest_%s" % _cell_name(j), -x_edge, j * TILE, 90.0)
+		# Cell 0 is the west door into Zone_Loader.
+		if j != 0:
+			_wall(hall, "WallWest_%s" % _cell_name(j), -x_edge, j * TILE, 90.0)
 
 
 func _cell_name(index: int) -> String:
@@ -420,6 +424,18 @@ func _build_mechanism_rooms(zone: Node3D) -> void:
 	var script: GDScript = load("res://tools/mechanism_rooms_builder.gd") as GDScript
 	if script == null or not script.can_instantiate():
 		failure = "cannot load res://tools/mechanism_rooms_builder.gd"
+		return
+	var worker: RefCounted = script.new() as RefCounted
+	worker.call(&"build_into", zone, self)
+
+
+# --- Zone_Loader --------------------------------------------------------------------------------------------
+
+
+func _build_loader_room(zone: Node3D) -> void:
+	var script: GDScript = load("res://tools/loader_room_builder.gd") as GDScript
+	if script == null or not script.can_instantiate():
+		failure = "cannot load res://tools/loader_room_builder.gd"
 		return
 	var worker: RefCounted = script.new() as RefCounted
 	worker.call(&"build_into", zone, self)

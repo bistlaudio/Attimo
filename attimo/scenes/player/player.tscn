@@ -17,6 +17,7 @@
 [ext_resource type="Script" path="res://scripts/player/states/capture.gd" id="20_capture"]
 [ext_resource type="Script" path="res://scripts/player/states/loader.gd" id="21_loader"]
 [ext_resource type="Script" path="res://scripts/player/arm_energy.gd" id="22_arm_energy"]
+[ext_resource type="Script" path="res://scripts/player/loader_preview.gd" id="23_loader_preview"]
 [ext_resource type="Script" path="res://scripts/hand/hand_controller.gd" id="15_hand"]
 [ext_resource type="Resource" path="res://resources/hand/module_registry.tres" id="16_registry"]
 [ext_resource type="Script" path="res://scripts/hand/hand_presentation.gd" id="17_presentation"]
@@ -75,6 +76,9 @@ script = ExtResource("21_loader")
 
 [node name="ArmEnergy" type="Node" parent="."]
 script = ExtResource("22_arm_energy")
+
+[node name="LoaderPreview" type="MultiMeshInstance3D" parent="."]
+script = ExtResource("23_loader_preview")
 
 [node name="MannequinAnimator" type="Node" parent="." node_paths=PackedStringArray("state_machine", "animation_tree", "player")]
 script = ExtResource("6_anim")

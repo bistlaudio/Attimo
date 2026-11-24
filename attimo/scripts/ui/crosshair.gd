@@ -6,6 +6,10 @@ extends CanvasLayer
 ## for an invalid or out-of-range target, and it dims during the shot cooldown. A charge arc around the ring shows the shot charge
 ## (plan 05-04 reshapes it). Everything is sized from the screen height (ui_reference_height), so it keeps its proportions at any
 ## resolution.
+## While the Loader holds (D-14) a DOUBLE ring turns counter-clockwise around the reticle: the outer arc fills with the stored speed
+## (stored / loader_max_speed), the inner arc with the hold time (hold / loader_hold_cap). It is turquoise with a full core and grey
+## without one. It differs from the single, notched, clockwise shot arc in shape (two rings) and in rotation direction, so the two
+## are never told apart by colour alone (colour-blind safe). Both advance in real time (TimeFx.unscaled).
 ## The NearPrompt child is a cream "E" keycap over HandController.prompt_target (the nearest grabbable lever or crank in
 ## reach); it hides during near contact, out of range and when the point is behind the camera.
 ## It polls the hand_controller group (read only, it never drives the hand). The Reticle and NearPrompt children ignore
@@ -25,6 +29,10 @@ extends CanvasLayer
 @export var color: Color = Color(0.96, 0.93, 0.85, 0.9)
 ## Lock colour (turquoise: valid target and charge arc).
 @export var lock_color: Color = Color(0.25, 0.9, 0.85, 1.0)
+## Loader ring colour while the arm cannot pay the bonus (grey: the arm is empty). With a full core it uses lock_color.
+@export var loader_empty_color: Color = Color(0.55, 0.57, 0.6, 1.0)
+## Degrees per second the Loader double ring turns counter-clockwise (real time).
+@export var loader_ring_speed_deg: float = 90.0
 ## Dark outline colour under every line, so the HUD reads on bright sky.
 @export var outline_color: Color = Color(0.0, 0.0, 0.0, 0.55)
 
@@ -33,11 +41,21 @@ var locked: bool = false
 ## The Targeting.State shown by the reticle and the charge ratio of the shot.
 var state: int = Targeting.State.NONE
 var charge: float = 0.0
+## Loader double ring (D-14): shown while the Loader holds. The angle (radians) starts at the top and DECREASES (counter-clockwise on screen).
+var loader_ring_visible: bool = false
+var loader_ring_angle: float = -PI * 0.5
+var loader_ring_stored: float = 0.0
+var loader_ring_hold: float = 0.0
+var loader_ring_tint: Color = Color(0.25, 0.9, 0.85, 1.0)
 
 const RING_POINTS: int = 48
 const OUTLINE_EXTRA: float = 2.0
 const OUTER_RING_GAP: float = 4.0
 const CHARGE_RING_GAP: float = 7.0
+const LOADER_OUTER_GAP: float = 14.0
+const LOADER_INNER_GAP: float = 9.0
+## The smallest drawn arc of a Loader ring (radians), so the turning is visible at an empty ring.
+const LOADER_MIN_SWEEP: float = 0.35
 const COOLDOWN_ALPHA: float = 0.5
 const INVALID_ALPHA: float = 0.35
 const PROMPT_LIFT: float = 0.35
@@ -63,7 +81,8 @@ func _ready() -> void:
 	_reticle.draw.connect(_draw_reticle)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_update_loader_ring(delta)
 	var hand: HandController = get_tree().get_first_node_in_group(&"hand_controller") as HandController
 	_update_prompt(hand)
 	if hand == null:
@@ -72,6 +91,25 @@ func _process(_delta: float) -> void:
 		set_state(hand.targeting.state)
 	set_charge(hand.charge_ratio)
 	set_cooldown_dim(hand.cooldown_left > 0.0)
+
+
+## Polls the player (read only): shows the Loader double ring while the Loader holds and turns it counter-clockwise in real time.
+func _update_loader_ring(delta: float) -> void:
+	var player: PlayerController = get_tree().get_first_node_in_group(&"player") as PlayerController
+	var state: LoaderState = null if player == null else player.loader_state()
+	var active: bool = player != null and state != null and player.loader_active()
+	if not active:
+		if loader_ring_visible:
+			loader_ring_visible = false
+			loader_ring_angle = -PI * 0.5
+			_reticle.queue_redraw()
+		return
+	loader_ring_visible = true
+	loader_ring_angle -= deg_to_rad(loader_ring_speed_deg) * TimeFx.unscaled(delta)
+	loader_ring_stored = state.stored_ratio()
+	loader_ring_hold = state.hold_ratio()
+	loader_ring_tint = lock_color if state.bonus_ready() else loader_empty_color
+	_reticle.queue_redraw()
 
 
 ## Sets the reticle state (a Targeting.State value). VALID and VALID_BIG are the turquoise lock.
@@ -144,6 +182,21 @@ func _draw_reticle() -> void:
 		_line(centre + Vector2(-reach, reach), centre + Vector2(reach, -reach), tint, ring_width * _u)
 	if charge > 0.0:
 		_arc(centre, radius + CHARGE_RING_GAP * _u, -PI * 0.5, -PI * 0.5 + TAU * charge, lock_color, ring_width * 1.3 * _u)
+	if loader_ring_visible:
+		_draw_loader_ring(centre, radius)
+
+
+## The Loader double ring: a dim track and a filling arc per ring, the arcs rotate counter-clockwise (the angle decreases).
+func _draw_loader_ring(centre: Vector2, radius: float) -> void:
+	var outer: float = radius + LOADER_OUTER_GAP * _u
+	var inner: float = radius + LOADER_INNER_GAP * _u
+	var track: Color = Color(loader_ring_tint.r, loader_ring_tint.g, loader_ring_tint.b, 0.25)
+	_arc(centre, outer, 0.0, TAU, track, ring_width * _u)
+	_arc(centre, inner, 0.0, TAU, track, ring_width * _u)
+	var outer_sweep: float = maxf(TAU * loader_ring_stored, LOADER_MIN_SWEEP)
+	var inner_sweep: float = maxf(TAU * loader_ring_hold, LOADER_MIN_SWEEP)
+	_arc(centre, outer, loader_ring_angle, loader_ring_angle + outer_sweep, loader_ring_tint, ring_width * 1.6 * _u)
+	_arc(centre, inner, loader_ring_angle, loader_ring_angle + inner_sweep, loader_ring_tint, ring_width * 1.2 * _u)
 
 
 ## A line with a dark outline under it.
