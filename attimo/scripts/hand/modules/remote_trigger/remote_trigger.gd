@@ -5,6 +5,8 @@ extends HandModule
 ## Holding past hand_shot_tap_time drains energy up to hand_shot_cost_max in hand_shot_charge_time (a Samus-style charge) and tells
 ## shot_fully_charged once; running dry keeps what was spent so far. The release fires: range grows with the charge, the payload is the
 ## energy spent, and a locked target bends the shot in (D-19). The size derives from the energy (PulseHit.size_for_energy).
+## Paid energy is never lost silently: a module switch mid-charge (deactivate) or a shot that cannot spawn gives the energy spent so
+## far back to the arm and reports it once as energy_gained(amount, &"shot_refund") (ArmEnergy stays all or nothing, CR-01).
 
 const CHEST_HEIGHT: float = 1.3
 const PROJECTILE_SCENE: PackedScene = preload("res://scenes/hand/shot_projectile.tscn")
@@ -60,8 +62,13 @@ func on_use_released() -> void:
 	_fire()
 
 
+## A switch mid-charge never fires a surprise shot: the energy paid so far goes back to the arm.
 func deactivate() -> void:
+	if _active:
+		_refund()
 	_active = false
+	_spent = 0.0
+	_held = 0.0
 
 
 func charge_ratio() -> float:
@@ -102,17 +109,31 @@ func _fire() -> void:
 	var targeting: Targeting = controller.targeting
 	if targeting != null and is_instance_valid(targeting.target) and (targeting.state == Targeting.State.VALID or targeting.state == Targeting.State.VALID_BIG):
 		target = targeting.target
+	var projectile: ShotProjectile = PROJECTILE_SCENE.instantiate() as ShotProjectile
+	var parent: Node = player.get_parent()
+	if projectile == null or parent == null or not direction.is_finite():
+		# No shot can leave the hand: give the paid energy back instead of losing it (CR-01).
+		if projectile != null:
+			projectile.free()
+		_refund()
+		_held = 0.0
+		return
 	var spent: float = _spent
 	_spent = 0.0
 	_held = 0.0
 	controller.start_cooldown(controller.hand_cooldown)
-	var projectile: ShotProjectile = PROJECTILE_SCENE.instantiate() as ShotProjectile
-	var parent: Node = player.get_parent()
-	if projectile == null or parent == null or not direction.is_finite():
-		if projectile != null:
-			projectile.free()
-		return
 	parent.add_child(projectile)
 	var module_id: StringName = controller.active_def.id if controller.active_def != null else &"remote_trigger"
 	projectile.setup(chest, direction, spent, controller.hand_shot_speed, reach, target, controller.hand_shot_turn_rate, module_id, controller.hand_shot_big_energy, player, ratio)
 	EventBus.shot_fired.emit(chest, direction, spent)
+
+
+## Gives the energy paid for the current charge back to the arm and reports the amount once (energy_gained, &"shot_refund").
+func _refund() -> void:
+	var paid: float = _spent
+	_spent = 0.0
+	if paid <= 0.0 or ctx == null or ctx.player == null or ctx.player.arm_energy == null:
+		return
+	var back: float = ctx.player.arm_energy.gain(paid, &"shot_refund")
+	if back > 0.0:
+		EventBus.energy_gained.emit(back, &"shot_refund")

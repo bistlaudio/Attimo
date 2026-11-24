@@ -43,6 +43,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_occlusion(tree, check)
 	await _scenario_empty_sky(tree, check)
 	await _scenario_bend(tree, check)
+	await _scenario_switch_refund(tree, check)
 
 
 func _on_pulse(origin: Vector3, point: Vector3, size: int, valid: bool) -> void:
@@ -344,4 +345,27 @@ func _scenario_bend(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.tap_action(tree, &"use_hand", 2)
 	var waited: int = await Fixtures.wait_until(tree, func() -> bool: return lever.is_active, 60)
 	check.call(waited >= 0, "(10) the shot bends into the locked target (waited %d)" % waited)
+	await _end(tree)
+
+
+## CR-01: a module switch mid-charge fires no shot and gives every paid unit back (one energy_gained(shot_refund) fact).
+func _scenario_switch_refund(tree: SceneTree, check: Callable) -> void:
+	await _begin(tree)
+	var refunds: Array = []
+	var on_gained: Callable = func(amount: float, source: StringName) -> void:
+		if source == &"shot_refund":
+			refunds.append(amount)
+	_bus.connect(&"energy_gained", on_gained)
+	Fixtures.set_energy(_player, 60.0)
+	Input.action_press(&"use_hand")
+	await Fixtures.wait_physics(tree, ceili(0.4 * SHIPPED_TPS))
+	var paid: float = 60.0 - _player.arm_energy.value
+	check.call(paid > 10.5, "(11) the charge has paid more than the tap cost before the switch (%.2f)" % paid)
+	check.call(_hand.equip(&"extractor"), "(11) the switch to the extractor succeeds mid-charge")
+	Input.action_release(&"use_hand")
+	await Fixtures.wait_physics(tree, 6)
+	check.call(_fired.is_empty() and _projectiles(tree) == 0, "(11) the switch fires no shot (%d fired)" % _fired.size())
+	check.call(absf(_player.arm_energy.value - 60.0) < 0.01, "(11) the paid energy is refunded: back at 60.0 (got %.3f)" % _player.arm_energy.value)
+	check.call(refunds.size() == 1 and absf(float(refunds[0]) - paid) < 0.01, "(11) one energy_gained(%.2f, shot_refund) fact (got %s)" % [paid, str(refunds)])
+	_bus.disconnect(&"energy_gained", on_gained)
 	await _end(tree)
