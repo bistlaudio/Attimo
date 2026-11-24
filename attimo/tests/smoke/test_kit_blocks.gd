@@ -20,6 +20,20 @@ const BLOCKS: Dictionary = {
 		"positive": ["fixed_hold", "fixed_speed", "radius", "rearm_time"],
 		"profile_presets": {"res://resources/kit/catch_launch/steam_cannon_default.tres": "FIXED"},
 	},
+	# Plan 05.1-03: the Wall surface block. Its single profile enum is Surface (field `surface`), D-11.
+	"WallSurface": {
+		"script": "res://scripts/kit/blocks/wall_surface.gd",
+		"config_class": "WallSurfaceConfig",
+		"config_script": "res://scripts/kit/configs/wall_surface_config.gd",
+		"profile_enum": "Surface",
+		"profile_field": "surface",
+		"profiles": ["WALL_RUN", "WALL_JUMP"],
+		"preset": "res://resources/kit/wall_surface/wall_run.tres",
+		"scene": "res://scenes/kit/steampunk/wall_pad.tscn",
+		"probe": "height",
+		"positive": ["height", "width"],
+		"profile_presets": {"res://resources/kit/wall_surface/wall_run.tres": "WALL_RUN", "res://resources/kit/wall_surface/wall_jump.tres": "WALL_JUMP"},
+	},
 }
 ## Source fragments a block script must not contain: direct writes of the player's motion (D-17).
 const FORBIDDEN_WRITES: Array[String] = [".move_velocity =", ".vertical_speed =", ".move_velocity +=", ".vertical_speed +=", ".velocity ="]
@@ -83,15 +97,17 @@ func _check_block(tree: SceneTree, check: Callable, block: String, spec: Diction
 	var config_script: GDScript = load(String(spec["config_script"])) as GDScript
 	check.call(config_script != null and String(config_script.get_global_name()) == String(spec["config_class"]), "%s: the config class %s exists" % [block, spec["config_class"]])
 	if config_script != null:
-		var profiles: Dictionary = config_script.get_script_constant_map().get("Profile", {}) as Dictionary
+		var enum_name: String = String(spec.get("profile_enum", "Profile"))
+		var profile_field: String = String(spec.get("profile_field", "profile"))
+		var profiles: Dictionary = config_script.get_script_constant_map().get(enum_name, {}) as Dictionary
 		for value: String in spec["profiles"] as Array:
-			check.call(profiles.has(value), "%s: the Profile enum has %s (%s)" % [block, value, profiles])
+			check.call(profiles.has(value), "%s: the %s enum has %s (%s)" % [block, enum_name, value, profiles])
 		_check_positive(check, block, config_script, spec.get("positive", []) as Array)
 		var presets: Dictionary = spec.get("profile_presets", {}) as Dictionary
 		for preset_path: String in presets:
 			var preset: Resource = load(preset_path) as Resource if ResourceLoader.exists(preset_path) else null
 			var wanted: int = int(profiles.get(String(presets[preset_path]), -1))
-			check.call(preset != null and int(preset.get("profile")) == wanted, "%s: preset %s uses profile %s" % [block, preset_path, presets[preset_path]])
+			check.call(preset != null and int(preset.get(profile_field)) == wanted, "%s: preset %s uses %s %s" % [block, preset_path, profile_field, presets[preset_path]])
 	var source: String = script.source_code
 	for fragment: String in FORBIDDEN_WRITES:
 		check.call(not source.contains(fragment), "%s writes no player motion itself (no '%s', D-17)" % [block, fragment])

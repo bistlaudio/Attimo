@@ -293,7 +293,9 @@ func _scenario_lean(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"WallRun", 20)
 	await Fixtures.wait_physics(tree, 10)
 	var toward_wall: float = mannequin.global_basis.y.normalized().dot(-player.wall_normal)
-	check.call(toward_wall > 0.1, "during WallRun the body tilts toward the wall (up dot -normal = %.3f)" % toward_wall)
+	# 05.1-03: the roll lean is clamped by head clearance (about 4.4 degrees instead of wall_run_lean_deg 18), so the check asks only
+	# for a tilt toward the wall, not for a minimum angle.
+	check.call(toward_wall > 0.0, "during WallRun the body tilts toward the wall (up dot -normal = %.3f)" % toward_wall)
 	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name != &"WallRun", 80)
 	await Fixtures.wait_physics(tree, 18)
 	var upright: float = mannequin.global_basis.y.normalized().dot(-player.wall_normal)

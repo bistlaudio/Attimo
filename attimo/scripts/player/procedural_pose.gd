@@ -33,6 +33,11 @@ const MIN_SPIN_TIME: float = 0.05
 const MIN_TWITCH_TIME: float = 0.01
 ## Smallest lean in degrees the ease rate is scaled by, so a dash_lean_deg of 0 never gives a zero rate.
 const MIN_LEAN_REFERENCE_DEG: float = 1.0
+## Smallest distance in m the head bone keeps from the wall face during a wall-run (05.1-03, D-06). The wall-run roll lean is clamped
+## to the largest angle that keeps it, from the head bone's rest height above the pose pivot and the capsule-to-wall distance
+## (collision radius plus the contact skin), so the clamp is geometric and adds no tuning number. MovementConfig.wall_run_lean_deg
+## stays the upper bound (unattended decision 2: the value is not changed, the clamp is pose only).
+const WALL_RUN_HEAD_CLEARANCE: float = 0.45
 
 @export var player: PlayerController
 @export var mannequin: Node3D
@@ -65,12 +70,36 @@ var _finishing: bool = false
 var _finish_rate: float = 0.0
 ## World axis of the wall-run roll lean while it is set or still easing out, else ZERO.
 var _wall_axis: Vector3 = Vector3.ZERO
+## Head bone rest height in m above the VisualRoot origin, NAN when the bone is missing (then the shipped lean is used, T-05.1-09).
+var _head_height: float = NAN
+## Distance in m from the capsule axis to the wall face while the capsule touches it (radius plus safe_margin).
+var _wall_gap: float = NAN
 
 
 func _ready() -> void:
 	# The Player's own state_machine reference is set after its children are ready, so find the node.
 	_machine = player.get_node(^"StateMachine") as StateMachine
 	_machine.state_changed.connect(_on_state_changed)
+	_measure_head_clearance()
+
+
+## Reads the head bone's rest height and the capsule-to-wall distance once (no per-tick search). The Mannequin is still identity here,
+## so its scale is part of the height. A missing skeleton or bone logs once and leaves the wall-run lean unclamped (T-05.1-09).
+func _measure_head_clearance() -> void:
+	var shape_node: CollisionShape3D = player.get_node_or_null(^"CollisionShape3D") as CollisionShape3D
+	var capsule: CapsuleShape3D = shape_node.shape as CapsuleShape3D if shape_node != null else null
+	if capsule != null:
+		_wall_gap = capsule.radius + player.safe_margin
+	var skeletons: Array[Node] = mannequin.find_children("*", "Skeleton3D", true, false) if mannequin != null else []
+	var skeleton: Skeleton3D = skeletons[0] as Skeleton3D if not skeletons.is_empty() else null
+	var bone: int = skeleton.find_bone("head") if skeleton != null else -1
+	if bone < 0:
+		push_warning("ProceduralPose: no head bone found, the wall-run lean is not clamped by head clearance")
+		return
+	var head: Vector3 = skeleton.global_transform * skeleton.get_bone_global_rest(bone).origin
+	# The Player's @onready visual_root is set after its children are ready, so read the node.
+	var visual: Node3D = player.get_node(^"VisualRoot") as Node3D
+	_head_height = (visual.global_transform.affine_inverse() * head).y
 
 
 ## Starts the pirouette of Jump 3 and of long jump stage 3. The stage was set by the state's enter, which runs before the signal.
@@ -126,14 +155,33 @@ func _twitch_for(config: MovementConfig) -> float:
 	return deg_to_rad(config.dash_blocked_twitch_deg) * sin(PI * progress)
 
 
-## Lean target in degrees for the current state: only an aimed ground dash leans. An air dash, the unaimed ground dash
-## (the slide), the long jump that follows a dash and everything else are upright (D-02, DEV-04).
+## Lean target in degrees for the current state: an aimed ground dash leans forward and a wall-run rolls toward the wall (head
+## clearance clamp, 05.1-03). An air dash, the unaimed ground dash (the slide), the long jump that follows a dash and everything else
+## are upright (D-02, DEV-04).
 func _lean_target_deg(config: MovementConfig) -> float:
 	if _machine.current.name == &"WallRun":
-		return config.wall_run_lean_deg
+		return wall_run_lean_limit_deg(config)
 	if _machine.current.name != &"Dash" or bool(_machine.current.get(&"in_air")) or bool(_machine.current.get(&"slide")):
 		return 0.0
 	return config.dash_lean_deg
+
+
+## The wall-run roll lean in degrees: wall_run_lean_deg, clamped to the largest lean that keeps the head bone
+## WALL_RUN_HEAD_CLEARANCE from the wall face. A lean about the pivot moves the head toward the wall by (head height above the pivot)
+## x sin(lean), so the limit is asin((wall gap - clearance) / arm), its argument clamped to [-1, 1] (T-05.1-08). Without the bone
+## data, or with the head at or below the pivot, the shipped lean is used.
+func wall_run_lean_limit_deg(config: MovementConfig) -> float:
+	var shipped: float = config.wall_run_lean_deg
+	if not is_finite(_head_height) or not is_finite(_wall_gap):
+		return shipped
+	var arm: float = _head_height - config.pose_pivot_height
+	if arm <= 0.0:
+		return shipped
+	var ratio: float = clampf((_wall_gap - WALL_RUN_HEAD_CLEARANCE) / arm, -1.0, 1.0)
+	var limit: float = rad_to_deg(asin(ratio))
+	if not is_finite(limit):
+		return 0.0
+	return clampf(shipped, 0.0, maxf(limit, 0.0))
 
 
 ## True while the running state is a Dash that started in the air.

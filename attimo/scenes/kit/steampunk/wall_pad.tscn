@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/kit/wall_surface_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://resources/kit/wall_surface/wall_run.tres" id="2_config"]
+[ext_resource type="Material" path="res://resources/mechanisms/look_brass.tres" id="3_brass"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_inlay"]
+size = Vector3(11, 0.3, 0.04)
+
+[node name="WallRunPad" instance=ExtResource("1_base")]
+layer = 0
+energy_relation = 0
+config = ExtResource("2_config")
+
+[node name="InlayFront" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0.27)
+mesh = SubResource("BoxMesh_inlay")
+material_override = ExtResource("3_brass")
+
+[node name="InlayBack" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -0.27)
+mesh = SubResource("BoxMesh_inlay")
+material_override = ExtResource("3_brass")

@@ -200,7 +200,9 @@ func _scenario_head_clearance(tree: SceneTree, check: Callable) -> void:
 	check.call(finite, "head clearance: the head bone is found on every tick")
 	check.call(min_distance >= HEAD_CLEARANCE, "the head bone stays at least 0.45 m from the wall face (closest %.3f m)" % min_distance)
 	check.call(min_tangent > TANGENT_DOT, "the facing runs along the wall (facing . wall_tangent() at least %.4f > 0.99)" % min_tangent)
-	check.call(max_up_dot < 0.0, "the body still leans toward the wall (Mannequin up . wall normal at most %.4f < 0)" % max_up_dot)
+	var pose: Node = player.get_node("ProceduralPose")
+	var limit: float = float(pose.call(&"wall_run_lean_limit_deg", player.config)) if pose.has_method(&"wall_run_lean_limit_deg") else NAN
+	check.call(max_up_dot < 0.0, "the body still leans toward the wall (Mannequin up . wall normal at most %.4f < 0, lean %.2f deg, wall_run_lean_deg %.1f)" % [max_up_dot, limit, player.config.wall_run_lean_deg])
 	await _free(tree, [floor_body, pad, player])
 
 
