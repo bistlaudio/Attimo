@@ -45,7 +45,7 @@ func _scenario_cores(tree: SceneTree, check: Callable, player: PlayerController,
 	check.call(is_equal_approx(e0, e1) and e1 > e2 and e2 > e3, "(c2) at 62.5 the cores read full, full, half, dark (%.2f %.2f %.2f %.2f)" % [e0, e1, e2, e3])
 	var mid: float = (e0 + e3) * 0.5
 	check.call(absf(e2 - mid) <= 0.1 * absf(e0 - e3) + 0.001, "(c2) the half core sits halfway between full and dark (%.3f vs %.3f)" % [e2, mid])
-	check.call(is_equal_approx(presentation.core_color(), ENERGY_COLOR) and presentation.ENERGY_COLOR.is_equal_approx(ENERGY_COLOR), "(c3) the cores glow in the energy turquoise like HandPresentation")
+	check.call(presentation.core_color().is_equal_approx(ENERGY_COLOR) and presentation.ENERGY_COLOR.is_equal_approx(ENERGY_COLOR), "(c3) the cores glow in the energy turquoise like HandPresentation")
 
 
 func _scenario_flash(tree: SceneTree, check: Callable, player: PlayerController, presentation: ArmEnergyPresentation) -> void:

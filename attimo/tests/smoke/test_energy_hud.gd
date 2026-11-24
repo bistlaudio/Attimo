@@ -54,6 +54,7 @@ func _scenario_readouts(tree: SceneTree, check: Callable, hud: EnergyHud, player
 	var hand: HandController = player.get_node("HandController") as HandController
 	await tree.process_frame
 	check.call(hand.active_def != null and hud.module_name == hand.active_def.display_name, "(r2) the module plate shows the active module (%s)" % hud.module_name)
+	player.set_physics_process(false)
 	player.move_velocity = Vector3(7.5, 0.0, 0.0)
 	await tree.process_frame
 	await tree.process_frame
@@ -73,4 +74,5 @@ func _scenario_readouts(tree: SceneTree, check: Callable, hud: EnergyHud, player
 	await tree.process_frame
 	check.call(hud.charging_shown, "(r5) the charge indicator follows arm_energy.charging")
 	player.arm_energy.charging = false
+	player.set_physics_process(true)
 	check.call(hud.health_slot_rect().position.x > hud.chambers_rect().end.x, "(r6) a slot for health is left to the right of the chambers")

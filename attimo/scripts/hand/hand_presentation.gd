@@ -9,7 +9,6 @@ extends Node
 const ENERGY_COLOR: Color = Color(0.25, 0.9, 0.85, 1.0)
 const HAND_BONE: StringName = &"hand.r"
 const FOREARM_BONE: StringName = &"lowerarm.r"
-const SKELETON_PATH: NodePath = ^"Rig_Medium/Skeleton3D"
 const PALM_RADIUS: float = 0.06
 const BASE_ENERGY: float = 0.4
 const CHARGE_ENERGY: float = 2.0
@@ -40,13 +39,11 @@ var _time: float = 0.0
 func _ready() -> void:
 	if player != null:
 		_hand = player.get_node_or_null(^"HandController") as HandController
-	var skeleton: Skeleton3D = null
-	if mannequin != null:
-		skeleton = mannequin.get_node_or_null(SKELETON_PATH) as Skeleton3D
+	var skeleton: Skeleton3D = BoneAttach.skeleton_of(mannequin)
 	if skeleton == null or skeleton.find_bone(HAND_BONE) < 0:
 		set_process(false)
 		return
-	var hand_attachment: BoneAttachment3D = _attach(skeleton, HAND_BONE)
+	var hand_attachment: BoneAttachment3D = BoneAttach.attach(skeleton, HAND_BONE)
 	_palm_material = StandardMaterial3D.new()
 	_palm_material.albedo_color = ENERGY_COLOR.darkened(0.7)
 	_palm_material.emission_enabled = true
@@ -64,7 +61,7 @@ func _ready() -> void:
 	var forearm_name: StringName = FOREARM_BONE
 	if skeleton.find_bone(FOREARM_BONE) < 0:
 		forearm_name = skeleton.get_bone_name(skeleton.get_bone_parent(skeleton.find_bone(HAND_BONE)))
-	var arm_attachment: BoneAttachment3D = _attach(skeleton, forearm_name)
+	var arm_attachment: BoneAttachment3D = BoneAttach.attach(skeleton, forearm_name)
 	_arm_light = _make_light(&"ArmLight")
 	arm_attachment.add_child(_arm_light)
 	var streak_material: StandardMaterial3D = StandardMaterial3D.new()
@@ -121,14 +118,6 @@ func _on_pulse_fired(_origin: Vector3, point: Vector3, _size: int, _hit_valid: b
 	_streak.scale = Vector3(1.0, 1.0, distance)
 	_streak.visible = true
 	_streak_left = STREAK_TIME
-
-
-func _attach(skeleton: Skeleton3D, bone: StringName) -> BoneAttachment3D:
-	var attachment: BoneAttachment3D = BoneAttachment3D.new()
-	attachment.name = StringName("%sAttachment" % String(bone).replace(".", "_"))
-	attachment.bone_name = bone
-	skeleton.add_child(attachment)
-	return attachment
 
 
 func _make_light(light_name: StringName) -> OmniLight3D:
