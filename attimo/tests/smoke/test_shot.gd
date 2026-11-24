@@ -19,6 +19,7 @@ var _pulses: Array = []
 var _fired: Array = []
 var _refused: Array = []
 var _spent: float = 0.0
+var _spent_facts: int = 0
 var _full: int = 0
 var _hits: Array = []
 var _bus: Node
@@ -61,6 +62,7 @@ func _on_refused(reason: StringName, needed: float) -> void:
 func _on_spent(amount: float, reason: StringName) -> void:
 	if reason == &"shot":
 		_spent += amount
+		_spent_facts += 1
 
 
 func _on_full(_position: Vector3) -> void:
@@ -78,6 +80,7 @@ func _begin(tree: SceneTree) -> void:
 	_refused.clear()
 	_hits.clear()
 	_spent = 0.0
+	_spent_facts = 0
 	_full = 0
 	_nodes.clear()
 	_nodes.append(Fixtures.spawn_floor(tree.root, Vector3(200.0, 1.0, 200.0)))
@@ -217,6 +220,7 @@ func _scenario_hold(tree: SceneTree, check: Callable) -> void:
 	var waited: int = await Fixtures.wait_until(tree, func() -> bool: return not _pulses.is_empty(), 60)
 	check.call(waited >= 0 and _fired.size() == 1, "(3) holding fires once, on release")
 	check.call(absf(_spent - 25.0) <= 0.2, "(3) a full hold spends 25 in total (got %.2f)" % _spent)
+	check.call(_spent_facts == 2, "(3) the hold reports two energy_spent(shot) facts, the tap cost and the charge total, never one per tick (got %d)" % _spent_facts)
 	check.call(_full == 1, "(3) shot_fully_charged fired exactly once (%d)" % _full)
 	check.call(_hits.size() == 1 and absf(float(_hits[0]["energy"]) - 25.0) <= 0.2 and int(_hits[0]["size"]) == int(PulseHit.Size.BIG), "(3) the payload is 25 energy and BIG (%s)" % str(_hits))
 	check.call(bool(valve.get("is_active")), "(3) the valve (min pulse BIG) turns with a full charge")
@@ -367,5 +371,6 @@ func _scenario_switch_refund(tree: SceneTree, check: Callable) -> void:
 	check.call(_fired.is_empty() and _projectiles(tree) == 0, "(11) the switch fires no shot (%d fired)" % _fired.size())
 	check.call(absf(_player.arm_energy.value - 60.0) < 0.01, "(11) the paid energy is refunded: back at 60.0 (got %.3f)" % _player.arm_energy.value)
 	check.call(refunds.size() == 1 and absf(float(refunds[0]) - paid) < 0.01, "(11) one energy_gained(%.2f, shot_refund) fact (got %s)" % [paid, str(refunds)])
+	check.call(absf(_spent - paid) < 0.01 and _spent_facts == 2, "(11) the bus balances: energy_spent(shot) totals %.2f in two facts (got %.2f in %d)" % [paid, _spent, _spent_facts])
 	_bus.disconnect(&"energy_gained", on_gained)
 	await _end(tree)

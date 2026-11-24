@@ -13,6 +13,8 @@ const PROJECTILE_SCENE: PackedScene = preload("res://scenes/hand/shot_projectile
 
 var _active: bool = false
 var _spent: float = 0.0
+## The part of _spent drained by the charge, reported once as energy_spent at the release or the refund (WR-03).
+var _drained: float = 0.0
 var _held: float = 0.0
 var _dry: bool = false
 var _full: bool = false
@@ -30,6 +32,7 @@ func on_use_pressed() -> void:
 		return
 	_active = true
 	_spent = controller.hand_shot_cost_min
+	_drained = 0.0
 	_held = 0.0
 	_dry = false
 	_full = false
@@ -46,6 +49,7 @@ func on_use_held(delta: float) -> void:
 	var want: float = minf(rate * delta, controller.hand_shot_cost_max - _spent)
 	var taken: float = ctx.player.arm_energy.drain(want, &"shot")
 	_spent += taken
+	_drained += taken
 	if taken < want - 0.0001:
 		_dry = true
 	if _spent >= controller.hand_shot_cost_max - 0.0001:
@@ -121,6 +125,7 @@ func _fire() -> void:
 	var spent: float = _spent
 	_spent = 0.0
 	_held = 0.0
+	_report_drained()
 	controller.start_cooldown(controller.hand_cooldown)
 	parent.add_child(projectile)
 	var module_id: StringName = controller.active_def.id if controller.active_def != null else &"remote_trigger"
@@ -130,6 +135,7 @@ func _fire() -> void:
 
 ## Gives the energy paid for the current charge back to the arm and reports the amount once (energy_gained, &"shot_refund").
 func _refund() -> void:
+	_report_drained()
 	var paid: float = _spent
 	_spent = 0.0
 	if paid <= 0.0 or ctx == null or ctx.player == null or ctx.player.arm_energy == null:
@@ -137,3 +143,11 @@ func _refund() -> void:
 	var back: float = ctx.player.arm_energy.gain(paid, &"shot_refund")
 	if back > 0.0:
 		EventBus.energy_gained.emit(back, &"shot_refund")
+
+
+## Sends the charge drain as one energy_spent(total, &"shot"); the press already reported the tap cost through try_spend.
+func _report_drained() -> void:
+	var drained: float = _drained
+	_drained = 0.0
+	if ctx != null and ctx.player != null and ctx.player.arm_energy != null:
+		ctx.player.arm_energy.report_spent(drained, &"shot")

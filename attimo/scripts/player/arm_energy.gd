@@ -9,7 +9,8 @@ extends Node
 ## runs dry) never calls refuse, so there is never a failure cue for it.
 ## Every API ignores non-finite amounts and keeps the value inside 0 .. MAX_ENERGY (T-05-08).
 ## energy_changed is quantised (T-05-09): once when the whole number changes or after a discrete spend or reset, at most once per
-## physics tick, so the passive charge at 60 Hz never floods the EventLog.
+## physics tick, so the passive charge at 60 Hz never floods the EventLog. energy_spent is never sent per tick either: drain() is
+## silent and a continuous spender (the wall run, the shot charge) reports its total once through report_spent() (WR-03).
 
 ## Energy of one core, the respawn value and the Loader bonus cost.
 const CORE_SIZE: float = 25.0
@@ -49,18 +50,26 @@ func try_spend(amount: float, reason: StringName) -> bool:
 	return true
 
 
-## Pays as much of `amount` as the arm holds (a partial spend: the wall run per tick). Returns what was taken. Silent: a dry arm
-## returns 0.0 and the caller decides what happens (no refusal fact). A non-finite or negative amount takes nothing.
-func drain(amount: float, reason: StringName) -> float:
+## Pays as much of `amount` as the arm holds (a partial spend: the wall run per tick). Returns what was taken. Silent: no
+## energy_spent per call (the caller sums what it took and reports it once with report_spent), and a dry arm returns 0.0 so the
+## caller decides what happens (no refusal fact). A non-finite or negative amount takes nothing. `_reason` documents the cost.
+func drain(amount: float, _reason: StringName) -> float:
 	if not is_finite(amount) or amount <= 0.0:
 		return 0.0
 	var taken: float = minf(amount, value)
 	if taken <= 0.0:
 		return 0.0
 	_write(value - taken)
-	EventBus.energy_spent.emit(taken, reason)
 	_announce(false)
 	return taken
+
+
+## Reports the total a continuous spender drained (one energy_spent at the end of a wall run or a shot charge, WR-03). A
+## non-finite or non-positive total sends nothing. Changes no energy: drain() already took it.
+func report_spent(total: float, reason: StringName) -> void:
+	if not is_finite(total) or total <= 0.0:
+		return
+	EventBus.energy_spent.emit(total, reason)
 
 
 ## Adds `amount` (income), clamped to MAX_ENERGY. Returns what was added. Silent apart from the quantised energy_changed; sources

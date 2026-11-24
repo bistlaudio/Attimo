@@ -12,11 +12,14 @@ var _timer: float = 0.0
 var _normal: Vector3 = Vector3.ZERO
 var _tangent: Vector3 = Vector3.ZERO
 var _speed: float = 0.0
+## Energy drained during this run, reported once in exit() (WR-03: no energy_spent per tick).
+var _drained: float = 0.0
 
 
 func enter(_previous: StringName) -> void:
 	var config: MovementConfig = actor.config
 	_timer = 0.0
+	_drained = 0.0
 	_normal = actor.wall_normal
 	_tangent = actor.wall_tangent()
 	var entry_speed: float = Vector2(actor.wall_pre_velocity.x, actor.wall_pre_velocity.z).length()
@@ -32,6 +35,8 @@ func enter(_previous: StringName) -> void:
 func exit() -> void:
 	actor.gravity_scale = 1.0
 	actor.wall_run_cooldown_timer = actor.config.wall_run_cooldown
+	actor.arm_energy.report_spent(_drained, &"wall_run")
+	_drained = 0.0
 	# Drop the press into the wall; the next state starts with the run along it.
 	var into_wall: float = actor.move_velocity.dot(_normal)
 	if into_wall < 0.0:
@@ -56,7 +61,9 @@ func physics_update(delta: float) -> StringName:
 		return &"Idle"
 	if _timer > config.wall_run_free_time:
 		var wanted: float = config.wall_run_cost_per_second * delta
-		if actor.arm_energy.drain(wanted, &"wall_run") < wanted - 1e-6:
+		var taken: float = actor.arm_energy.drain(wanted, &"wall_run")
+		_drained += taken
+		if taken < wanted - 1e-6:
 			return &"Fall"
 	# wall_surface folds in wall_contact_grace and re-checks the group every tick: a plain wall or a pad switched off ends the run.
 	if _timer >= config.wall_run_time or not actor.wall_surface(&"wall_run_surface"):

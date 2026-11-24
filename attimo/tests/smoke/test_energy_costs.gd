@@ -193,6 +193,11 @@ func _scenario_wall_run_costs(tree: SceneTree, check: Callable) -> void:
 	player = parts[0] as PlayerController
 	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"WallRun", 20)
 	var start_value: float = player.arm_energy.value
+	var run_facts: Array[float] = []
+	var on_run_spent: Callable = func(amount: float, reason: StringName) -> void:
+		if reason == &"wall_run":
+			run_facts.append(amount)
+	_bus.connect(&"energy_spent", on_run_spent)
 	var start_ticks: int = 0
 	while player.state_machine.current.name == &"WallRun" and start_ticks < 120:
 		await tree.physics_frame
@@ -203,6 +208,8 @@ func _scenario_wall_run_costs(tree: SceneTree, check: Callable) -> void:
 	var passive_back: float = config.energy_passive_rate_min * config.wall_run_time
 	check.call(float(start_ticks) / SHIPPED_TPS >= config.wall_run_time - 0.1, "(w2) with energy the run lasts about wall_run_time (%.3f s)" % [float(start_ticks) / SHIPPED_TPS])
 	check.call(spent > expected - passive_back - 0.5 and spent < expected + 0.5, "(w2) the run costs about %.2f (spent %.2f, passive back up to %.2f)" % [expected, spent, passive_back])
+	_bus.disconnect(&"energy_spent", on_run_spent)
+	check.call(run_facts.size() == 1 and absf(run_facts[0] - expected) < 0.5, "(w2) the run reports one energy_spent(~%.2f, wall_run) at its end, never one per tick (got %s)" % [expected, str(run_facts)])
 	await _wall_free(tree, parts)
 
 	# Jumping off is always free: empty arm, past the free window, still a WallJump.
