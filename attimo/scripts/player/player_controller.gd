@@ -42,6 +42,10 @@ var dash_twitch_timer: float = 0.0
 ## True while the Loader may start in the air: one use per airborne stretch (D-02). An airborne Loader press and a ground discharge
 ## that lifts off spend it; landing, refill_air_dash (boost ring, slingshot) give it back.
 var loader_available: bool = true
+## True after a ground discharge that stayed on the floor, while the throw still carries Rino above run_speed. Walking off a ledge
+## in that state spends loader_available (the airborne stretch belongs to the throw, D-02); landing, a jump take-off or the speed
+## falling back to run_speed on the floor clear it (WR-02).
+var loader_ground_throw: bool = false
 ## Seconds left before the next Loader press may start. A discharge without the bonus (empty arm) starts it at loader_redirect_cooldown.
 var loader_cooldown_timer: float = 0.0
 
@@ -586,6 +590,8 @@ func _tick_timers(delta: float) -> void:
 	loader_cooldown_timer = maxf(loader_cooldown_timer - delta, 0.0)
 	air_control_lock_timer = maxf(air_control_lock_timer - delta, 0.0)
 	wall_run_cooldown_timer = maxf(wall_run_cooldown_timer - delta, 0.0)
+	if loader_ground_throw and is_grounded() and horizontal_speed() <= config.run_speed:
+		loader_ground_throw = false
 	_tick_combo(delta)
 	if Input.is_action_just_pressed(&"jump"):
 		jump_buffer_timer = config.jump_buffer_time
@@ -683,6 +689,7 @@ func _track_wall_contact(delta: float) -> void:
 func _land(impact_speed: float) -> void:
 	air_dash_available = true
 	loader_available = true
+	loader_ground_throw = false
 	coyote_timer = 0.0
 	if chain_stage > 0 or long_jump_stage > 0:
 		combo_timer = config.landing_window
@@ -693,6 +700,10 @@ func _leave_floor() -> void:
 	# Coyote time starts only when the body walked off (a jump take-off leaves with upward speed).
 	if vertical_speed <= 0.0:
 		coyote_timer = config.coyote_time
+		# A ground Loader throw that carries Rino over a ledge spends the airborne use (D-02, WR-02).
+		if loader_ground_throw:
+			loader_available = false
+	loader_ground_throw = false
 	move_velocity.x += _last_platform_velocity.x * config.platform_carry
 	move_velocity.z += _last_platform_velocity.z * config.platform_carry
 	air_speed_cap = maxf(config.run_speed, horizontal_speed())

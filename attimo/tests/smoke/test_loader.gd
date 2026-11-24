@@ -41,6 +41,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_release(tree, check)
 	await _scenario_no_bonus_edge(tree, check)
 	await _scenario_air_hang(tree, check)
+	await _scenario_ground_throw_over_ledge(tree, check)
 	await _scenario_air_dash_untouched(tree, check, true)
 	await _scenario_air_dash_untouched(tree, check, false)
 	await _scenario_jump_buffer(tree, check)
@@ -327,3 +328,27 @@ func _scenario_free(tree: SceneTree, check: Callable) -> void:
 	await player.tree_exited
 	check.call(Engine.time_scale == 1.0, "(f2) freeing the player mid-hold restores the time scale (got %.3f)" % Engine.time_scale)
 	await _end(tree, check, "free")
+
+
+# D-02 / WR-02: a ground discharge aimed slightly down stays on the floor; when the throw carries Rino over a ledge, that airborne
+# stretch already used the Loader, so a second press in the air does not enter it. Landing gives it back.
+func _scenario_ground_throw_over_ledge(tree: SceneTree, check: Callable) -> void:
+	var player: PlayerController = await _begin(tree, Vector3(0.0, 0.0, -1.5), -0.22, Vector3(6.0, 1.0, 6.0))
+	player.debug_loader_direction = Vector3(0.0, -0.1, -1.0)
+	var entered: int = await _press_loader(tree, player)
+	check.call(entered >= 0 and _started.size() == 1 and _started[0]["in_air"] == false, "(l1) a standing ground press enters the Loader (%s)" % [_started])
+	await Fixtures.wait_physics(tree, 3)
+	Input.action_release(&"loader")
+	await Fixtures.wait_until(tree, func() -> bool: return not _released.is_empty(), 6)
+	var released_velocity: Vector3 = Vector3.ZERO if _released.is_empty() else _released[0]["velocity"] as Vector3
+	check.call(released_velocity.y <= 0.0, "(l1) the throw points slightly down (vertical %.2f)" % released_velocity.y)
+	var left: int = await Fixtures.wait_until(tree, func() -> bool: return not player.is_grounded(), 60)
+	check.call(left >= 0, "(l2) the throw carries Rino over the ledge")
+	check.call(not player.loader_available, "(l2) leaving the floor with the throw spends the airborne Loader use")
+	await Fixtures.wait_physics(tree, ceili(player.config.loader_redirect_cooldown * SHIPPED_TPS) + 2)
+	var before: int = _started.size()
+	Input.action_press(&"loader")
+	await Fixtures.wait_physics(tree, 4)
+	check.call(not _is_loader(player) and _started.size() == before, "(l3) a second press in the same airtime does not enter the Loader (state %s)" % player.state_machine.current.name)
+	Input.action_release(&"loader")
+	await _end(tree, check, "ground throw over ledge")

@@ -9,7 +9,8 @@ extends State
 ## full core and is decided HERE at the release (A7: below a core the arm counts as empty, the redirect cooldown starts). It locks air
 ## control for loader_release_control_lock and hands over to Fall. It never touches air_dash_available and never calls
 ## refill_air_dash (D-03: the Loader is independent of the air dash). One use per airborne stretch (D-02): an air press spends
-## loader_available, and so does a ground discharge that lifts off; landing, a boost ring or the slingshot give it back.
+## loader_available, and so does a ground discharge that lifts off, ends off the floor or carries Rino over a ledge
+## (loader_ground_throw); landing, a boost ring or the slingshot give it back.
 ## exit() restores gravity_scale, spends the jump buffer and coyote window (the buffer would outlive the slow motion) and releases
 ## the time scale, so every exit path ends the slow world: release, cap, teleport() and a freed player (_exit_tree).
 
@@ -114,8 +115,13 @@ func _discharge() -> StringName:
 	actor.lock_air_control(config.loader_release_control_lock)
 	if not bonus:
 		actor.loader_cooldown_timer = config.loader_redirect_cooldown
-	if grounded_entry and velocity.y > 0.0:
-		actor.loader_available = false
+	if grounded_entry:
+		# D-02: a ground discharge that lifts off, or one released after the skid left the floor, spends the airborne use. A throw
+		# that stays on the floor marks loader_ground_throw, so walking off a ledge with it spends the use too (WR-02).
+		if velocity.y > 0.0 or not actor.is_grounded():
+			actor.loader_available = false
+		else:
+			actor.loader_ground_throw = true
 	EventBus.loader_released.emit(actor.global_position, direction, speed, bonus)
 	# D-04 "geladen": the velocity is already written, the world holds for a blink so the release lands sharp. The hitstop is its
 	# own TimeFx source; exit() still releases only &"loader".
