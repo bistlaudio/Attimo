@@ -66,7 +66,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 		var prop_name: String = prop.name
 		if prop_name.begins_with("autoload/"):
 			autoloads.append(prop_name)
-	check.call(autoloads == ["autoload/EventBus"], "only EventBus is an autoload (got %s)" % [autoloads])
+	check.call(autoloads == ["autoload/EventBus", "autoload/TimeFx"], "only EventBus and TimeFx are autoloads (got %s)" % [autoloads])
 
 	log_node.queue_free()
 	await tree.process_frame
