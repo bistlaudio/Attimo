@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.11.0.4
 milestone_name: milestone
 status: executing
-stopped_at: Phase 05.1 context gathered
-last_updated: "2026-11-24T22:41:22.231Z"
-last_activity: 2026-11-24 -- Phase 05.1 planning complete
+stopped_at: Completed 05.1-01-PLAN.md
+last_updated: "2026-11-24T23:03:03.455Z"
+last_activity: 2026-11-25 -- Plan 05.1-01 complete (slingshot as Loader, kit skeleton)
 progress:
   total_phases: 17
   completed_phases: 6
   total_plans: 66
-  completed_plans: 46
+  completed_plans: 47
   percent: 35
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 05.1
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-11-24 -- Phase 05.1 planning complete
+Plan: 2 of 20 (05.1-01 complete)
+Status: Executing
+Last activity: 2026-11-25 -- Plan 05.1-01 complete (slingshot as Loader, kit skeleton)
 
-Progress: [██████████] 100%
+Progress: [███████░░░] 71%
 
 ## Performance Metrics
 
@@ -93,6 +93,7 @@ Progress: [██████████] 100%
 | Phase 04.1 P04 | 75min | 2 tasks | 45 files |
 | Phase 04.1 P05 | 95min | 3 tasks | 9 files |
 | Phase 05 P05-04 | single session | 3 tasks | 30 files |
+| Phase 05.1 P01 | 40min | 3 tasks | 24 files |
 
 ## Accumulated Context
 
@@ -101,6 +102,9 @@ Progress: [██████████] 100%
 Decisions are logged in the PROJECT.md Key Decisions table.
 Recent decisions that affect current work:
 
+- [Phase 05.1-01]: The cage press latch counts is_action_just_released too, so a same-tick tap fires at once
+- [Phase 05.1-01]: KitBlock joins groups mechanism and kit_block in NOTIFICATION_READY (survives a subclass _ready without super)
+- [Phase 05.1-01]: New gym station kind 'kit' (block + sign, no Driver source) because KitBlock has no source (D-13)
 - [Roadmap]: Two groups, 15 phases (fine granularity), vertical MVP; every phase ends playable. Group A Prototyp (Phases 1-8) runs until all mechanics are right. Group B Produktion (Phases 9-15): style contract + final hero, world building, juice + polish, controller, audio, Windows release.
 - [Roadmap]: Group A uses only KayKit Prototype Bits (greybox) and the KayKit Mannequin_Medium on Rig_Medium with kit clips. No particles, no juice, no Meshy work. Missing shapes (gears, valves, conveyors, enemies, boss) are stand-ins built from Prototype Bits pieces.
 - [Roadmap]: The gameplay fact bus (FEEL-01) is built in Phase 1, so juice (Phases 11-12) and audio (Phase 14) plug in without gameplay code changes. The cue catalogue (FEEL-08) waits for Phase 11.
@@ -201,6 +205,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-24T21:19:54.421Z
-Stopped at: Phase 05.1 context gathered
-Resume file: .planning/phases/05.1-kit-rework-inserted/05.1-CONTEXT.md
+Last session: 2026-11-24T23:02:59.614Z
+Stopped at: Completed 05.1-01-PLAN.md
+Resume file: None

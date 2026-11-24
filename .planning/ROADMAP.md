@@ -284,7 +284,7 @@ Plans:
 **Plans**: 20 plans (sequential waves 1-20; D-33 deviation, see 05.1-01-PLAN.md)
 
 Plans:
-- [ ] 05.1-01-PLAN.md — Kit skeleton (KitBlock, config pattern, coupling + contract tests) and slingshot as Loader (CAGE source)
+- [x] 05.1-01-PLAN.md — Kit skeleton (KitBlock, config pattern, coupling + contract tests) and slingshot as Loader (CAGE source)
 - [ ] 05.1-02-PLAN.md — Steam cannon FIXED profile (deterministic arc); Capture, pneumatic tube and puzzle rooms removed
 - [ ] 05.1-03-PLAN.md — Wall surface block, plain/steam looks, head clearance clamp, twin-pad layout fix
 - [ ] 05.1-04-PLAN.md — Timed motion SWEEP/TILT always on, clock-hand floor-snap / clearance fix, take-off vertical carry
@@ -496,7 +496,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 04.1 → 5 → 05.1 →
 | 3. Animated Mannequin & Aim Mode | 10/10 | Complete    | 2026-11-20 |
 | 4. Fernauslöser & Mechanism Kit | 5/5 | Complete   | 2026-11-23 |
 | 5. Energy Arm & Loader | 5/5 | Complete   | 2026-11-24 |
-| 05.1. Kit Rework | 0/20 | Not started | - |
+| 05.1. Kit Rework | 1/20 | In Progress|  |
 | 6. Extractor, Shot, Enemies & Recovery | 0/TBD | Not started | - |
 | 7. Level Blockout & Game Flow | 0/TBD | Not started | - |
 | 8. Boss & Ending | 0/TBD | Not started | - |
