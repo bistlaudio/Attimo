@@ -29,6 +29,8 @@ var _environment: Environment
 var _original_enabled: bool = false
 var _original_saturation: float = 1.0
 var _touched: bool = false
+## The hold ratio of the last held frame: the fade-out scales it down with `level`, so a release never makes the cues jump up.
+var _last_ratio: float = 0.0
 
 @onready var _vignette: ColorRect = $Vignette
 @onready var _hum: PlaceholderTone = $Hum
@@ -50,7 +52,10 @@ func _process(delta: float) -> void:
 		_hum.set_hum(lerpf(hum_pitch_from, hum_pitch_to, ratio), hum_volume_db)
 	else:
 		_hum.stop_hum()
-	_apply(level * (0.5 + 0.5 * ratio if holding else level))
+	if holding:
+		_last_ratio = ratio
+	# WR-04: the same product fades out with `level`; it never switches to level * level, which jumped up on a short hold.
+	_apply(level * (0.5 + 0.5 * _last_ratio))
 
 
 ## Writes the vignette and the world saturation for `amount` (0 = off); at 0 the environment is restored exactly.

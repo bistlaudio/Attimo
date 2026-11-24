@@ -26,6 +26,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	Engine.physics_ticks_per_second = SHIPPED_TPS
 	await tree.process_frame
 	await _scenario_look(tree, check)
+	await _scenario_release_fade(tree, check)
 	await _scenario_free_mid_hold(tree, check)
 	await _scenario_camera(tree, check)
 	await _scenario_hitstop(tree, check)
@@ -180,4 +181,28 @@ func _scenario_pitch(tree: SceneTree, check: Callable) -> void:
 	elapsed = float(Time.get_ticks_msec() - start) / 1000.0
 	check.call(_rig.pitch <= _rig.pitch_max + 0.0001, "(p2) the pitch eases back to pitch_max within 0.4 s (%.1f deg after %.2f s)" % [rad_to_deg(_rig.pitch), elapsed])
 	check.call(rad_to_deg(worst_step) <= 10.0, "(p3) no frame moves the pitch by more than 10 deg (worst %.1f deg)" % rad_to_deg(worst_step))
+	await _end(tree)
+
+
+# WR-04 / D-04: a short hold's cues only fade after the release, they never jump up first ("eases, never a cut").
+func _scenario_release_fade(tree: SceneTree, check: Callable) -> void:
+	await _begin(tree)
+	var material: ShaderMaterial = (_look.get_node("Vignette") as ColorRect).material as ShaderMaterial
+	await _hold(tree, 4)
+	await _wait_real(tree, 0.15)
+	var last_held: float = -1.0
+	var after_max: float = -1.0
+	var released: bool = false
+	for i: int in 90:
+		await tree.process_frame
+		var strength: float = float(material.get_shader_parameter(&"strength"))
+		if _player.loader_active():
+			last_held = strength
+		else:
+			after_max = maxf(after_max, strength)
+		if i == 2 and not released:
+			released = true
+			Input.action_release(&"loader")
+	check.call(last_held > 0.0, "(e1) the vignette is on at the end of a short hold (%.3f)" % last_held)
+	check.call(after_max >= 0.0 and after_max <= last_held + 0.0001, "(e1) after the release the vignette only fades: max %.3f <= last held %.3f" % [after_max, last_held])
 	await _end(tree)
