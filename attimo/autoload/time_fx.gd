@@ -8,6 +8,10 @@ extends Node
 ## Slow motion scales every delta (_process and _physics_process), not the physics tick rate. Anything that has to run in real time
 ## (the Loader hold clock, the free camera, HUD rings) reads unscaled(delta). A scale is clamped to MIN_SCALE .. 1.0 and a
 ## non-finite request is ignored, so a bad slider can neither freeze the game nor speed it up.
+## Engine fact (probed headless in 4.7.2, WR-01): the main loop reads Engine.time_scale ONCE at the start of an iteration and scales
+## every physics step and the process step of that iteration with it. A write mid-iteration only lands in the next one, so unscaled()
+## divides by the scale captured at the start of the current iteration (the process frame number tells iterations apart), never by
+## the value just written.
 
 ## Smallest scale a request can reach. The engine wants a time scale above 0.
 const MIN_SCALE: float = 0.05
@@ -16,6 +20,9 @@ var _requests: Dictionary[StringName, float] = {}
 ## Per source: the id of its latest pulse, so a late timer of an older pulse never gives back a newer request.
 var _pulse_ids: Dictionary[StringName, int] = {}
 var _pulse_counter: int = 0
+## The time scale that produced the deltas of the current main-loop iteration, and the process frame it was captured in.
+var _frame_scale: float = 1.0
+var _frame_scale_frame: int = -1
 
 
 ## Asks for the time scale `scale` on behalf of `source`. A second call of the same source replaces its request.
@@ -61,8 +68,10 @@ func clear_all() -> void:
 
 
 ## The seconds of REAL time that the scaled `delta` of a process or physics tick stands for.
+## Divides by the scale of the current iteration, so the frame a request or release lands in is not over-counted.
 func unscaled(delta: float) -> float:
-	return delta / maxf(Engine.time_scale, 0.01)
+	_sync_frame_scale()
+	return delta / maxf(_frame_scale, 0.01)
 
 
 ## The sources that hold a request right now (for tests and the debug overlay).
@@ -73,7 +82,16 @@ func active_sources() -> Array[StringName]:
 	return sources
 
 
+## Captures the engine scale once per iteration, before anything in that iteration writes it (this node is the sole writer).
+func _sync_frame_scale() -> void:
+	var frame: int = Engine.get_process_frames()
+	if frame != _frame_scale_frame:
+		_frame_scale_frame = frame
+		_frame_scale = Engine.time_scale
+
+
 func _apply() -> void:
+	_sync_frame_scale()
 	var lowest: float = 1.0
 	for scale: float in _requests.values():
 		lowest = minf(lowest, scale)

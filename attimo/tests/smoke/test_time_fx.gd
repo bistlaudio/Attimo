@@ -36,9 +36,22 @@ func run(tree: SceneTree, check: Callable) -> void:
 	fx.call(&"release", &"c")
 	check.call(Engine.time_scale == 1.0, "releasing the only source returns to 1.0 (got %.3f)" % Engine.time_scale)
 
+	# WR-01: the engine reads the scale once per main-loop iteration, so the deltas of the iteration a request lands in are still
+	# scaled by the old value; unscaled() divides by that one, and by the new scale from the next iteration on.
+	await tree.process_frame
 	fx.call(&"request", &"d", 0.25)
+	var same_frame: float = fx.call(&"unscaled", 1.0 / 60.0) as float
+	check.call(absf(same_frame - 1.0 / 60.0) < TOLERANCE, "on the frame of the request unscaled divides by the old scale 1.0 (got %.7f)" % same_frame)
+	await tree.process_frame
 	var real: float = fx.call(&"unscaled", 1.0 / 240.0) as float
 	check.call(absf(real - 1.0 / 60.0) < TOLERANCE, "unscaled(1/240) at scale 0.25 is 1/60 s (got %.7f)" % real)
+	fx.call(&"request", &"e", 0.05)
+	var hitstop_frame: float = fx.call(&"unscaled", 1.0 / 240.0) as float
+	check.call(absf(hitstop_frame - 1.0 / 60.0) < TOLERANCE, "a lower request mid-frame keeps dividing by 0.25 until the next frame (got %.7f)" % hitstop_frame)
+	await tree.process_frame
+	var hitstop_real: float = fx.call(&"unscaled", 1.0 / 1200.0) as float
+	check.call(absf(hitstop_real - 1.0 / 60.0) < TOLERANCE, "unscaled(1/1200) at scale 0.05 is 1/60 s (got %.7f)" % hitstop_real)
+	fx.call(&"release", &"e")
 	sources = fx.call(&"active_sources") as Array
 	check.call(sources.size() == 1 and sources[0] == &"d", "active_sources lists the live request (got %s)" % [sources])
 
