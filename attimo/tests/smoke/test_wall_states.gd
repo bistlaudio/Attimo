@@ -5,7 +5,9 @@ extends RefCounted
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
-const PAD_SCENE: String = "res://scenes/mechanisms/wall_pad.tscn"
+## Wall surface block looks (05.1-03): mode 0 is the wall-run pad, mode 1 the wall-jump pad. Both are always on (no source).
+const RUN_PAD_SCENE: String = "res://scenes/kit/steampunk/wall_pad.tscn"
+const JUMP_PAD_SCENE: String = "res://scenes/kit/steampunk/wall_jump_pad.tscn"
 const SHIPPED_TPS: int = 60
 ## Player start 1.5 m in front of the pad face (face at z = 0.25, capsule radius 0.5).
 const START_Z: float = 2.25
@@ -34,21 +36,17 @@ func _free(tree: SceneTree, nodes: Array) -> void:
 	await tree.process_frame
 
 
-## A floor, an active pad (mode 0 = WALL_RUN, 1 = WALL_JUMP) and a player in the air at (x, 2, START_Z). Returns [floor, source, pad, player].
+## A floor, a wall surface (mode 0 = WALL_RUN, 1 = WALL_JUMP) and a player in the air at (x, 2, START_Z). Returns
+## [floor, null (the old signal source slot), pad, player].
 func _setup(tree: SceneTree, mode: int, x: float) -> Array:
-	var source: SignalSource = SignalSource.new()
-	tree.root.add_child(source)
 	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)
-	var pad: WallPad = (load(PAD_SCENE) as PackedScene).instantiate() as WallPad
-	pad.mode = mode as WallPad.Mode
-	pad.source = source
+	var pad: WallSurface = (load(RUN_PAD_SCENE if mode == 0 else JUMP_PAD_SCENE) as PackedScene).instantiate() as WallSurface
 	tree.root.add_child(pad)
-	source.set_active(true)
 	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(x, 2.0, START_Z))
 	await Fixtures.wait_physics(tree, 3)
 	# These scenarios measure the injected wall run, not its cost: enough for a full run, below Moto Perpetuo (50).
 	Fixtures.set_energy(player, 40.0)
-	return [floor_body, source, pad, player]
+	return [floor_body, null, pad, player]
 
 
 func _launch_at_pad(player: PlayerController, speed: float) -> void:
@@ -69,12 +67,12 @@ func _scenario_run_basics(tree: SceneTree, check: Callable) -> void:
 	var on_started: Callable = func(_p: Vector3, _n: Vector3) -> void: started[0] += 1
 	EventBus.wall_run_started.connect(on_started)
 	var parts: Array = await _setup(tree, 0, -7.0)
-	var pad: WallPad = parts[2] as WallPad
+	var pad: WallSurface = parts[2] as WallSurface
 	var player: PlayerController = parts[3] as PlayerController
 	var panel: Node = pad.get_node("Panel")
-	check.call(panel.is_in_group(&"wall_run_surface") and not panel.is_in_group(&"wall_jump_surface"), "an active WALL_RUN pad puts its panel in group wall_run_surface only")
+	check.call(panel.is_in_group(&"wall_run_surface") and not panel.is_in_group(&"wall_jump_surface"), "a WALL_RUN surface puts its panel in group wall_run_surface only")
 	pad.reset()
-	check.call(pad.signal_on and panel.is_in_group(&"wall_run_surface"), "reset() keeps a pad on while its source is on (WR-05)")
+	check.call(panel.is_in_group(&"wall_run_surface") and not panel.is_in_group(&"wall_jump_surface"), "reset() keeps the panel in its surface group (WR-05)")
 	_launch_at_pad(player, 10.0)
 	var waited: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"WallRun", 20)
 	check.call(waited >= 0, "a 10 m/s approach at an active wall-run pad enters WallRun within 20 ticks (%d)" % waited)
@@ -243,8 +241,8 @@ func _scenario_wall_jump_pads(tree: SceneTree, check: Callable) -> void:
 	# A WALL_JUMP pad: a slow approach touches it, a jump press kicks off.
 	var parts: Array = await _setup(tree, 1, -2.0)
 	var player: PlayerController = parts[3] as PlayerController
-	var panel: Node = (parts[2] as WallPad).get_node("Panel")
-	check.call(panel.is_in_group(&"wall_jump_surface") and not panel.is_in_group(&"wall_run_surface"), "an active WALL_JUMP pad puts its panel in group wall_jump_surface only")
+	var panel: Node = (parts[2] as WallSurface).get_node("Panel")
+	check.call(panel.is_in_group(&"wall_jump_surface") and not panel.is_in_group(&"wall_run_surface"), "a WALL_JUMP surface puts its panel in group wall_jump_surface only")
 	player.launch_along(Vector3(0.2, 0.2, -0.8), 6.0, false)
 	var touched: bool = await _wait_contact(tree, player, 40)
 	check.call(touched, "the player touches the wall-jump pad")

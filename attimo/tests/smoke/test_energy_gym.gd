@@ -304,8 +304,9 @@ func _check_signs(check: Callable) -> void:
 	for node: Node in _gym.find_children("Label_*_Expect", "Label3D", true, false):
 		if (node as Label3D).text.begins_with("Erwartet:"):
 			expects += 1
-	# 47 since plan 05.1-02 removed the pneumatic tube station (48 before).
-	check.call(expects >= 47, "the gym has at least 47 'Erwartet:' lines (got %d)" % expects)
+	# 47 since plan 05.1-02 removed the pneumatic tube station (48 before); 46 since plan 05.1-03 cut the nozzle wall and jump
+	# stations and added the steam-look wall-run pad.
+	check.call(expects >= 46, "the gym has at least 46 'Erwartet:' lines (got %d)" % expects)
 	check.call(labels >= 40, "at least 40 labels (%d)" % labels)
 
 

@@ -23,7 +23,7 @@ const CAPSULE_SCENE: String = "res://scenes/mechanisms/energy_capsule.tscn"
 const MACHINE_SCENE: String = "res://scenes/mechanisms/broken_machine.tscn"
 const PLATE_SCENE: String = "res://scenes/mechanisms/energy_drain_plate.tscn"
 const BOOST_SCENE: String = "res://scenes/mechanisms/boost_ring.tscn"
-const PAD_SCENE: String = "res://scenes/mechanisms/wall_pad.tscn"
+const PAD_SCENE: String = "res://scenes/kit/steampunk/wall_pad.tscn"
 const LEVER_SCENE: String = "res://scenes/mechanisms/lever.tscn"
 const VALVE_SCENE: String = "res://scenes/mechanisms/valve.tscn"
 const GATE_SCENE: String = "res://scenes/mechanisms/gear_gate.tscn"
@@ -296,8 +296,7 @@ func _build_wall_run(zone: Node3D, builder: RefCounted) -> void:
 	var station: Node3D = _station(zone, builder, "Energy_WallRun", start, text, "Erwartet: Leer endet der Lauf nach %s s, mit Energie hält er länger" % _fmt(_config.wall_run_free_time))
 	_marker(station, builder, "Start", start)
 	var pad_at: Vector3 = Vector3(WALL_PIT.position.x + WALL_PIT.size.x * 0.5, 0.0, WALL_PIT.position.y)
-	var pad: Node3D = _driven(station, builder, PAD_SCENE, "Pad", pad_at)
-	pad.set("mode", WallPad.Mode.WALL_RUN)
+	builder.call(&"_instance", station, PAD_SCENE, "Pad", pad_at - station.position)
 	_marker(station, builder, "Far", Vector3(WALL_PIT.position.x - 4.0, 0.0, -19.0))
 	_plate(station, builder, "Plate", Vector3(-195.0, 0.0, -13.0))
 	_capsule(station, builder, "Capsule", Vector3(-193.0, 0.0, -15.0), CAPSULE_RESPAWN)

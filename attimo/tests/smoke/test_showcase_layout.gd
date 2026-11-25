@@ -17,8 +17,8 @@ const ZONE_TAGS: Array[String] = ["Ausloeser", "Kraft", "Hoch", "Stossen", "Wand
 const ZONE_COUNT: int = 7
 const STATION_TAGS: Array[String] = [
 	"Valve", "EnergyCore", "Crank", "PressurePlate", "LogicAnd", "LogicOr", "LogicTimer",
-	"SteamCannon", "NozzleJump", "NozzleUpdraft", "Geyser", "NozzleWall",
-	"Pendulum", "PistonWall", "WallRun", "WallJump", "Repulsor", "Attractor", "Slingshot",
+	"SteamCannon", "NozzleUpdraft", "Geyser",
+	"Pendulum", "PistonWall", "WallRun", "WallRunSteam", "WallJump", "Repulsor", "Attractor", "Slingshot",
 	"WindTunnel", "LowGravity", "RotatingLying", "RotatingStanding", "RotatingTilting", "Crumbling",
 	"LiftPiston", "LiftChain", "Paternoster", "BoostRing", "Bounce", "ConveyorRun", "ConveyorReverse",
 ]

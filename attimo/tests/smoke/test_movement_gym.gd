@@ -348,7 +348,8 @@ func _check_moving_stations(zone: Node, check: Callable) -> void:
 	check.call(axes.size() == 3, "room 2 has a Dreh-Plattform in all three axis modes (%d)" % axes.size())
 	check.call(looks.size() == 2, "room 2 has a Hub-Plattform with both looks (%d)" % looks.size())
 	check.call(behaviours.size() == 2, "room 2 has a Foerderband per behaviour (%d)" % behaviours.size())
-	check.call(modes.size() == 3, "room 2 has a Dampfduese in all three modes, JUMP, UPDRAFT and WALL (%d)" % modes.size())
+	# Plan 05.1-03 cut the launch and push-back modes (D-06, KIT-04): the nozzle is an updraft only.
+	check.call(modes.size() == 1 and modes.has(SteamNozzle.Mode.UPDRAFT), "room 2 has a Dampfduese, updraft only (%d modes)" % modes.size())
 	check.call(pendulums >= 1, "room 2 has a Pendel (%d)" % pendulums)
 	check.call(unwired == 0, "every moving mechanism in Zone_MechanismRooms has a source (%d unwired)" % unwired)
 
@@ -378,10 +379,12 @@ func _check_field_stations(zone: Node, check: Callable) -> void:
 			unwired += 1
 		if child is ForceField:
 			field_modes[(child as ForceField).mode] = true
-		elif child is WallPad:
-			pad_modes[(child as WallPad).mode] = true
+	# Plan 05.1-03: the wall pads are Wall surface kit blocks (no source), one per surface at least.
+	for child: Node in zone.get_children():
+		if child is WallSurface:
+			pad_modes[(child as WallSurface).config.surface] = true
 	check.call(field_modes.size() == 2, "room 2 has a ForceField in both modes (%d)" % field_modes.size())
-	check.call(pad_modes.size() == 2, "room 2 has a WallPad in both modes (%d)" % pad_modes.size())
+	check.call(pad_modes.size() == 2, "room 2 has a Wall surface of both kinds, wall-run and wall-jump (%d)" % pad_modes.size())
 	for kind: String in kinds:
 		check.call(int(kinds[kind]) >= 1, "room 2 has a %s station (%d)" % [kind, int(kinds[kind])])
 	# Plan 05.1-02: the slingshot cage (FREE_AIM) and the steam cannon (FIXED) are both Catch & launch blocks.

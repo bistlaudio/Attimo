@@ -7,7 +7,7 @@ extends RefCounted
 ## Plan view (x east, z south): the hall east wall sits at x 42.5. The door (Zahnrad-Tor) is its z 0 cell, the tracer lever
 ## stands on the hall side at (38, -3). Room 2 is the showcase east of the door, x 43..219, z -32..32. A main corridor at z -4..4 runs
 ## from the west door to the east exit (z 0..4). Seven closed rooms (ZONES, 4 m walls, no ceiling) line it, four north and three
-## south, each with one doorway and a door sign; 4 m alleys separate them. They hold the 32 stations, grouped by what the mechanism
+## south, each with one doorway and a door sign; 4 m alleys separate them. They hold the 31 stations, grouped by what the mechanism
 ## does to the player. The Phase 4 puzzle rooms behind the east wall were removed in plan 05.1-02 (D-29: they depended on cut
 ## triggers); their AND / OR / timer ideas return as target-based stations in plan 05.1-14. The east wall is closed.
 
@@ -30,7 +30,12 @@ const LOW_GRAVITY_SCENE: String = "res://scenes/mechanisms/low_gravity_zone.tscn
 const PLATE_SCENE: String = "res://scenes/mechanisms/pressure_plate.tscn"
 const GEYSER_SCENE: String = "res://scenes/mechanisms/geyser.tscn"
 const PISTON_SCENE: String = "res://scenes/mechanisms/piston_wall.tscn"
-const WALL_PAD_SCENE: String = "res://scenes/mechanisms/wall_pad.tscn"
+## Wall surface block looks (Phase 05.1-03): plain brass and steam look, wall-run 4 x 12 m and wall-jump 8 x 12 m.
+const WALL_PAD_SCENE: String = "res://scenes/kit/steampunk/wall_pad.tscn"
+const WALL_PAD_STEAM_SCENE: String = "res://scenes/kit/steampunk/wall_pad_steam.tscn"
+const WALL_JUMP_PAD_SCENE: String = "res://scenes/kit/steampunk/wall_jump_pad.tscn"
+## Wall-jump twin (Phase 05.1-03, D-06): the two pads stand this far apart centre to centre (the faces TWIN_FACE_GAP_MIN apart).
+const WALL_TWIN_PITCH: float = WallSurface.TWIN_FACE_GAP_MIN + WallSurface.PANEL_THICKNESS
 const FIELD_SCENE: String = "res://scenes/mechanisms/force_field.tscn"
 const SLINGSHOT_SCENE: String = "res://scenes/kit/steampunk/slingshot_core.tscn"
 const STEAM_CANNON_SCENE: String = "res://scenes/kit/steampunk/steam_cannon.tscn"
@@ -116,12 +121,12 @@ func build_into(zone: Node3D, builder: RefCounted) -> void:
 	build_showcase_stations(zone, builder)
 
 
-## Showcase stations (D-03, D-04): 32 stations on the slot grid, one row of STATIONS each, grouped by zone. Every station node is a
+## Showcase stations (D-03, D-04): 31 stations on the slot grid, one row of STATIONS each, grouped by zone. Every station node is a
 ## DIRECT child of the zone under its tag name (the gym tests iterate the direct children); its geometry props (pillars, steps,
 ## walkways) go into ZoneDecor. Every sign has two lines: Label_<tag> and Label_<tag>_Expect ("Erwartet: ...").
 ## kinds: valve, core, crank, plate (self-triggered, with a gate), and / or / timer (logic, with a gate), mover (own lever at `lever`
 ## from the station point), driven (always-on Driver<tag> SignalSource, sign at the lever position), kit (a Phase 05.1 kit block
-## that needs no signal source, sign at the lever position).
+## that needs no signal source, sign at the lever position: `lever` from the station point, default LEVER_OFFSET).
 ## Row keys: tag, zone, slots (one slot, or two for a half block: the midpoint), kind, scene, text, expect, and optional y (node
 ## height), yaw / pitch (degrees), offset (node offset from the station point), lever (lever offset), sign_h, gate (gate offset),
 ## props (properties set on the mechanism).
@@ -139,18 +144,20 @@ const STATIONS: Array[Dictionary] = [
 	{"tag": "Attractor", "zone": "Kraft", "slots": [Vector2i(1, 0)], "kind": "mover", "scene": FIELD_SCENE, "text": "Anziehungsfeld", "expect": "Erwartet: Das Feld zieht dich zum Kern", "y": 4.0, "lever": Vector3(-4.0, 0.0, 4.0), "props": {"mode": ForceField.Mode.ATTRACT}},
 	{"tag": "WindTunnel", "zone": "Kraft", "slots": [Vector2i(2, 0), Vector2i(3, 0)], "kind": "mover", "scene": WIND_SCENE, "text": "Windkanal", "expect": "Erwartet: Rückenwind trägt dich weiter, der Hebel dreht den Wind", "yaw": -90.0, "lever": Vector3(-4.0, 0.0, 4.0)},
 	{"tag": "NozzleUpdraft", "zone": "Kraft", "slots": [Vector2i(0, 1)], "kind": "mover", "scene": NOZZLE_SCENE, "text": "Dampfdüse: Aufwind", "expect": "Erwartet: Im Strahl schwebst du langsam nach oben", "lever": Vector3(-2.5, 0.0, 0.0), "props": {"mode": SteamNozzle.Mode.UPDRAFT}},
-	{"tag": "NozzleWall", "zone": "Kraft", "slots": [Vector2i(1, 1)], "kind": "mover", "scene": NOZZLE_SCENE, "text": "Dampfdüse: Wand", "expect": "Erwartet: Der Strahl drückt dich zurück", "yaw": 90.0, "lever": Vector3(0.0, 0.0, -2.5), "props": {"mode": SteamNozzle.Mode.WALL}},
 	{"tag": "LowGravity", "zone": "Kraft", "slots": [Vector2i(2, 1)], "kind": "mover", "scene": LOW_GRAVITY_SCENE, "text": "Schwerkraft-Zone", "expect": "Erwartet: Sprünge hoch, weit und langsam", "lever": Vector3(6.5, 0.0, 0.0), "sign_h": 3.2},
 	# Hoch hinaus (einmaliger Stoß nach oben)
 	{"tag": "Bounce", "zone": "Hoch", "slots": [Vector2i(0, 0)], "kind": "driven", "scene": BOUNCE_SCENE, "text": "Sprungpolster", "expect": "Erwartet: Je tiefer du fällst, desto höher springst du"},
-	{"tag": "NozzleJump", "zone": "Hoch", "slots": [Vector2i(0, 1)], "kind": "mover", "scene": NOZZLE_SCENE, "text": "Dampfdüse: Sprung", "expect": "Erwartet: Reinlaufen schleudert dich senkrecht hoch", "lever": Vector3(-2.5, 0.0, 0.0), "props": {"mode": SteamNozzle.Mode.JUMP}},
-	{"tag": "Geyser", "zone": "Hoch", "slots": [Vector2i(1, 1)], "kind": "driven", "scene": GEYSER_SCENE, "text": "Druckventil-Geysir", "expect": "Erwartet: Anzeige füllt sich, dann schießt Dampf dich hoch"},
+	{"tag": "Geyser", "zone": "Hoch", "slots": [Vector2i(0, 1)], "kind": "driven", "scene": GEYSER_SCENE, "text": "Druckventil-Geysir", "expect": "Erwartet: Anzeige füllt sich, dann schießt Dampf dich hoch"},
 	# Stoßen (Gefahr)
 	{"tag": "Pendulum", "zone": "Stossen", "slots": [Vector2i(0, 0)], "kind": "mover", "scene": PENDULUM_SCENE, "text": "Pendel: Knockback", "expect": "Erwartet: Treffer stößt dich weg, kein Schaden", "y": RAISED, "lever": Vector3(2.5, 0.0, 4.0), "sign_h": 7.5},
 	{"tag": "PistonWall", "zone": "Stossen", "slots": [Vector2i(1, 0)], "kind": "driven", "scene": PISTON_SCENE, "text": "Kolbenwand", "expect": "Erwartet: Kolben schlägt aus und stößt dich weg", "yaw": 180.0},
 	# Wand
-	{"tag": "WallRun", "zone": "Wand", "slots": [Vector2i(0, 1), Vector2i(1, 1)], "kind": "driven", "scene": WALL_PAD_SCENE, "text": "Wandlauf-Platte", "expect": "Erwartet: Schnell anlaufen und an der Platte entlang laufen", "offset": Vector3(3.0, 0.0, -3.0), "props": {"mode": WallPad.Mode.WALL_RUN}},
-	{"tag": "WallJump", "zone": "Wand", "slots": [Vector2i(0, 0), Vector2i(1, 0)], "kind": "driven", "scene": WALL_PAD_SCENE, "text": "Wandsprung-Platte", "expect": "Erwartet: In der Luft an die Platte, Sprung stößt dich ab", "offset": Vector3(0.0, 0.0, -2.0), "props": {"mode": WallPad.Mode.WALL_JUMP}},
+	# The plain pad and its steam look stand side by side, parallel, 6 m apart, over the same x span (parity station, D-06); each is a
+	# wall-run surface on both faces. The wall-jump twin: two 8 m pads with 6 m between the faces (WallSurface layout rule), centred on
+	# the station point, so a held kick reaches the far pad instead of sailing over it.
+	{"tag": "WallRun", "zone": "Wand", "slots": [Vector2i(0, 1)], "kind": "kit", "scene": WALL_PAD_SCENE, "text": "Wandlauf-Platte", "expect": "Erwartet: Beide Platten laufen und springen genau gleich", "offset": Vector3(9.0, 0.0, -3.0), "lever": Vector3(-3.0, 0.0, -5.0)},
+	{"tag": "WallRunSteam", "zone": "Wand", "slots": [Vector2i(1, 1)], "kind": "kit", "scene": WALL_PAD_STEAM_SCENE, "text": "Wandlauf-Platte (Dampf-Look)", "expect": "Erwartet: Beide Platten laufen und springen genau gleich", "offset": Vector3(-3.0, 0.0, 3.0), "lever": Vector3(-15.0, 0.0, 0.0)},
+	{"tag": "WallJump", "zone": "Wand", "slots": [Vector2i(0, 0), Vector2i(1, 0)], "kind": "kit", "scene": WALL_JUMP_PAD_SCENE, "text": "Wandsprung-Platten", "expect": "Erwartet: Abstoßen trägt dich zur Gegenwand, nicht darüber", "offset": Vector3(3.0, 0.0, -WALL_TWIN_PITCH * 0.5), "lever": Vector3(-8.0, 0.0, 0.0), "sign_h": 4.2},
 	# Tragen (du stehst drauf)
 	{"tag": "RotatingLying", "zone": "Tragen", "slots": [Vector2i(0, 0)], "kind": "mover", "scene": ROTATING_SCENE, "text": "Dreh-Plattform: liegend (Zahnrad)", "expect": "Erwartet: Dreht sich und trägt dich, ohne zu rutschen", "y": RAISED, "lever": Vector3(0.0, 0.0, 5.5), "sign_h": 4.5, "props": {"axis_mode": RotatingPlatform.AxisMode.LYING}},
 	{"tag": "RotatingStanding", "zone": "Tragen", "slots": [Vector2i(1, 0)], "kind": "mover", "scene": ROTATING_SCENE, "text": "Dreh-Plattform: stehend (Uhrzeiger)", "expect": "Erwartet: Schwingt hin und her, du bleibst drauf", "y": RAISED, "lever": Vector3(2.5, 0.0, 4.0), "sign_h": 4.5, "props": {"axis_mode": RotatingPlatform.AxisMode.STANDING}},
@@ -237,7 +244,7 @@ func _place_station(zone: Node3D, builder: RefCounted, row: Dictionary, at: Vect
 		"driven":
 			_station_driven(zone, builder, tag, scene, node_at, basis, props, text, expect, float(row.get("sign_h", 3.2)), at + LEVER_OFFSET)
 		"kit":
-			_station_kit(zone, builder, tag, scene, node_at, basis, props, text, expect, float(row.get("sign_h", 3.2)), at + LEVER_OFFSET)
+			_station_kit(zone, builder, tag, scene, node_at, basis, props, text, expect, float(row.get("sign_h", 3.2)), at + (row.get("lever", LEVER_OFFSET) as Vector3))
 		_:
 			builder.set(&"failure", "unknown station kind %s" % String(row["kind"]))
 
@@ -317,10 +324,10 @@ func _station_extras(zone: Node3D, builder: RefCounted, tag: String, at: Vector3
 			builder.call(&"_instance", props, BEAM_SCENE, "PendulumWalkA", at + Vector3(0.0, 0.0, -2.0), yaw_z)
 			builder.call(&"_instance", props, BEAM_SCENE, "PendulumWalkB", at + Vector3(0.0, 0.0, 2.0), yaw_z)
 		"WallJump":
-			# Two WALL_JUMP pads face each other 4 m apart along z, so the player can kick from one to the other.
-			var second: Node3D = builder.call(&"_instance", zone, WALL_PAD_SCENE, "WallJump2", at + Vector3(0.0, 0.0, 2.0)) as Node3D
-			second.set("mode", WallPad.Mode.WALL_JUMP)
-			second.set("source", zone.get_node("DriverWallJump"))
+			# The far pad of the twin: WALL_TWIN_PITCH south of the first, so the faces are WallSurface.TWIN_FACE_GAP_MIN apart and both
+			# pads are WallSurface.JUMP_PAD_HEIGHT_MIN tall (the preset); always on, no source (kit block).
+			var near: Node3D = zone.get_node("WallJump") as Node3D
+			builder.call(&"_instance", zone, WALL_JUMP_PAD_SCENE, "WallJump2", near.position + Vector3(0.0, 0.0, WALL_TWIN_PITCH))
 		"Crumbling":
 			# The deck is 2 m up: a 1 m beam step flush with its south edge makes it reachable with a normal jump.
 			builder.call(&"_instance", props, BEAM_SCENE, "CrumblingStep", at + Vector3(0.0, 0.0, 2.5))

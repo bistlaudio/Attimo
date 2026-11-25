@@ -94,8 +94,8 @@ Rules:
 | `hand_controller` | now (Phase 4) | The `HandController` under the Player |
 | `energy_source` | now (Phase 5) | Every `EnergySource` (capsule, broken machine): the Extractor's candidates; also in `mechanism` |
 | `carrying_platform` | now (Phase 4) | Rotating platforms with chord carry (plan 04-04) |
-| `wall_run_surface` | now (Phase 04.1) | The `Panel` body of an active `WallPad` in WALL_RUN mode; the player wall-runs on it (MOVE-12, D-09) |
-| `wall_jump_surface` | now (Phase 04.1) | The `Panel` body of an active `WallPad` in WALL_JUMP mode; a jump press against it is a wall-jump (D-09) |
+| `wall_run_surface` | now (Phase 04.1) | The `Panel` body of a `WallSurface` kit block with surface WALL_RUN (always on since 05.1-03); the player wall-runs on it (MOVE-12, D-09) |
+| `wall_jump_surface` | now (Phase 04.1) | The `Panel` body of a `WallSurface` kit block with surface WALL_JUMP (always on since 05.1-03); a jump press against it is a wall-jump (D-09) |
 | `anchor` | reserved, Phase 5 | Hook and anchor points |
 | `enemy` | reserved, Phase 6 | Enemies |
 | `hazard` | reserved, Phase 6 | Kill zones and damage volumes |

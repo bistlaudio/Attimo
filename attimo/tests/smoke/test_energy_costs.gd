@@ -137,24 +137,20 @@ func _scenario_hop_costs(tree: SceneTree, check: Callable) -> void:
 	await _end(player)
 
 
-const PAD_SCENE: String = "res://scenes/mechanisms/wall_pad.tscn"
+## The wall-run look of the Wall surface block (05.1-03), always on.
+const PAD_SCENE: String = "res://scenes/kit/steampunk/wall_pad.tscn"
 
 
-## A floor, an active wall-run pad and a player launched at it. Returns [player, floor, source, pad].
+## A floor, a wall-run surface and a player launched at it. Returns [player, floor, null (the old source slot), pad].
 func _wall_setup(tree: SceneTree, energy: float) -> Array:
-	var source: SignalSource = SignalSource.new()
-	tree.root.add_child(source)
 	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)
-	var pad: WallPad = (load(PAD_SCENE) as PackedScene).instantiate() as WallPad
-	pad.mode = WallPad.Mode.WALL_RUN
-	pad.source = source
+	var pad: WallSurface = (load(PAD_SCENE) as PackedScene).instantiate() as WallSurface
 	tree.root.add_child(pad)
-	source.set_active(true)
 	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(-7.0, 2.0, 2.25))
 	await Fixtures.wait_physics(tree, 3)
 	Fixtures.set_energy(player, energy)
 	player.launch_along(Vector3(0.6, 0.2, -0.8), 10.0, false)
-	return [player, floor_body, source, pad]
+	return [player, floor_body, null, pad]
 
 
 func _wall_free(tree: SceneTree, parts: Array) -> void:
