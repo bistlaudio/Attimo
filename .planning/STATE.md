@@ -1,19 +1,17 @@
 ---
-gsd_state_version: "1.0"
+gsd_state_version: 1.0
 milestone: v0.11.0.4
-current_phase: "05.1"
+milestone_name: milestone
 status: executing
-stopped_at: Phase 05.1 context updated with playtest feedback (D-34..D-58); design docs and replanning pending
-last_updated: "2026-11-25T10:02:35.862Z"
-last_activity: 2026-11-25
-last_activity_desc: "Plan 05.1-06 complete (gym cutover: kit layer areas steampunk / energy / nature behind the hall east door; old mechanism rooms, lift, crank, pressure plate deleted)"
-state_head: 68cbb6baef0627f7c608900f77711624af9a7f25
+stopped_at: Phase 05.1 replanned (plans 05.1-07..22 against D-34..D-62); ready to execute 05.1-07
+last_updated: "2026-11-25T20:30:04.630Z"
+last_activity: 2026-11-25 -- Phase 05.1 planning complete
 progress:
   total_phases: 17
   completed_phases: 6
-  total_plans: 66
+  total_plans: 68
   completed_plans: 52
-milestone_name: milestone
+  percent: 35
 ---
 
 # Project State
@@ -28,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 05.1
-Plan: 7 of 20 (05.1-01 to 05.1-06 complete)
+Plan: 7 of 22 (05.1-01 to 05.1-06 complete; 07-22 replanned 2026-11-25)
 Status: Ready to execute
-Last activity: 2026-11-25 -- Plan 05.1-06 complete (gym cutover: kit layer areas steampunk / energy / nature behind the hall east door; old mechanism rooms, lift, crank, pressure plate deleted)
+Last activity: 2026-11-25 -- Phase 05.1 planning complete
 
 Progress: [████████░░] 79%
 

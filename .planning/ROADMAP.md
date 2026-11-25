@@ -286,7 +286,7 @@ Plans:
   8. The Loader is paid by holding (1-3 steps on a smaller segmented ring, no trajectory line) and flies a straight line with the speed formula own speed + push + steps x (push step + k x own speed) and the overflow-to-distance rule; the camera can look almost straight up everywhere; the Loader field lets a Loader with >= 2 steps glide through with a brake.
   9. The shot, its stations and the gear-disc targets are gone; left click is only the Extractor, with a visible beam; the wall run is diagonal with the head away from the wall.
 
-**Plans**: 20 plans (sequential waves 1-20; D-33 deviation, see 05.1-01-PLAN.md). **Replan required (2026-11-25):** plans 01-06 are executed; plans 07-20 predate the playtest decisions D-34..D-58 in `05.1-CONTEXT.md` (energy clock first, shot and target removal, Loader rework, then the remaining kit without targets and gates) and must be revised with `/gsd-plan-phase 05.1`.
+**Plans**: 22 plans (06 executed + 16 replanned, strictly sequential waves; D-33 deviation stated in 05.1-07-PLAN.md "Plan set notes"). Replanned 2026-11-25 after the playtest decisions D-34..D-58: plans 01-06 stay executed; 07-22 replace the deleted pre-playtest plans 07-20 (order D-58: shot removal and energy clock first, then the Loader, then the remaining kit without targets and gates, mixed course last).
 
 Plans:
 - [x] 05.1-01-PLAN.md — Kit skeleton (KitBlock, config pattern, coupling + contract tests) and slingshot as Loader (CAGE source)
@@ -295,20 +295,22 @@ Plans:
 - [x] 05.1-04-PLAN.md — Timed motion SWEEP/TILT always on, clock-hand floor-snap / clearance fix, take-off vertical carry
 - [x] 05.1-05-PLAN.md — Slingshot presentation (pressure gauge, brass dashes, steam cues) and F2 Kit section
 - [x] 05.1-06-PLAN.md — Gym cutover: steampunk / energy / nature layer areas; old rooms, lift, crank, plate deleted
-- [ ] 05.1-07-PLAN.md — Trigger block: atomic SignalSource rename, logic nodes extend Trigger
-- [ ] 05.1-08-PLAN.md — Gear-disc targets and heavy preset; logic nodes moved into the kit
-- [ ] 05.1-09-PLAN.md — Force volume block: updraft, geyser, steam stream; old nozzle / geyser / wind tunnel deleted
-- [ ] 05.1-10-PLAN.md — Nature look pass, DRAG profile: leaf storm, resin pool
-- [ ] 05.1-11-PLAN.md — Energy source block: capsule and broken machine moved, in-place path swaps
-- [ ] 05.1-12-PLAN.md — EnergyCost component: energy core pay-in, attraction-field trap; old core and force field deleted
-- [ ] 05.1-13-PLAN.md — Lever/valve retired: test port, Zone_Energy in-place target swaps
-- [ ] 05.1-14-PLAN.md — Receiver component: gear gate, drawbridge, charge gate, AND/OR/timer stations
-- [ ] 05.1-15-PLAN.md — Steampunk platforms: paternoster, rail cart, piston steps
-- [ ] 05.1-16-PLAN.md — Impulse block: speed pads (one switched), boost ring, bounce pad; conveyor cut
-- [ ] 05.1-17-PLAN.md — Amplification component: bounce pad with core, gravity zone
-- [ ] 05.1-18-PLAN.md — DamagePush + player_hit: pendulum, piston wall, steam hammer
-- [ ] 05.1-19-PLAN.md — Reaction to load: nature objects and force-field barrier
-- [ ] 05.1-20-PLAN.md — Mixed course, final cleanup, kit metrics, design-doc sync
+- [ ] 05.1-07-PLAN.md — Shot removed (remote_trigger, projectile, targeting, PulseHit, shot signals); module system dormant, Extractor default
+- [ ] 05.1-08-PLAN.md — Energy clock logic: ArmEnergy int 0..12, passive/R accumulator, every ability paid with refusal, Extractor steps, F2/metrics ints, Energy_Track removed
+- [ ] 05.1-09-PLAN.md — HUD clock face (hour + second hand), refusal shake/flash/klack, wall run diagonal with the head away from the wall
+- [ ] 05.1-10-PLAN.md — Extractor beam; Energy source kit block (capsule +3, machine +5) replacing the old scenes in place
+- [ ] 05.1-11-PLAN.md — Loader paid hold (1-3 steps), speed formula with cap and overflow, straight gravity-free flight, cage on the line, loader_released(steps)
+- [ ] 05.1-12-PLAN.md — Loader 3-segment smaller ring, smaller crosshair and gauge, camera 89 degrees, Zone_Loader re-derived from 1 vs 3 steps
+- [ ] 05.1-13-PLAN.md — Reaction to load block: Loader field (>= 2 steps glide through with brake); Zone_Energy shot stations swapped; lever / valve / gear gate cut
+- [ ] 05.1-14-PLAN.md — Slingshot smaller, catches only inside; steampunk income hook (+1 step, cooldown, GIVES + accent) on slingshot and cannon
+- [ ] 05.1-15-PLAN.md — Force volume block + nature look pass: updraft, geyser, steam stream, leaf storm, resin pool
+- [ ] 05.1-16-PLAN.md — Impulse block + Amplification: boost ring, speed pad (conveyors cut), bounce pad, bounce pad with core, gravity zone
+- [ ] 05.1-17-PLAN.md — Trigger block (SignalSource rename), Receiver, charge gate, drawbridge (HINGE), switched speed pad, timer station
+- [ ] 05.1-18-PLAN.md — EnergyCost component: energy core pay-in (3/6/9) and attraction-field fast escape; AND / OR stations
+- [ ] 05.1-19-PLAN.md — Timed motion platforms: paternoster, rail cart, piston steps
+- [ ] 05.1-20-PLAN.md — DamagePush + player_hit: pendulum, piston wall, steam hammer
+- [ ] 05.1-21-PLAN.md — Reaction to load nature objects: crumbling platform, collapse, sinking debris, tipping trunk, falling debris, snap bloom
+- [ ] 05.1-22-PLAN.md — Mixed course, cut-file gate, Kit values in MOVEMENT-METRICS, design-doc sync, human walkthrough
 **UI hint**: yes
 **Notes**: Design source of truth: `docs/GAME-DESIGN.md` sections 2-6 (since 2026-11-25 also the energy clock, governing rule, Loader and Extractor sections) and `05.1-CONTEXT.md` D-34..D-58. Known fixes: the steam wall jump must feel like the normal wall jump (currently it flings Rino away), the wall run on it runs with the head to the wall, clock-hand platform floor bugs. Final looks are designed in Group B; greybox looks per layer are enough here.
 
@@ -501,7 +503,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 04.1 → 5 → 05.1 →
 | 3. Animated Mannequin & Aim Mode | 10/10 | Complete    | 2026-11-20 |
 | 4. Fernauslöser & Mechanism Kit | 5/5 | Complete   | 2026-11-23 |
 | 5. Energy Arm & Loader | 5/5 | Complete   | 2026-11-24 |
-| 05.1. Kit Rework | 6/20 | In Progress|  |
+| 05.1. Kit Rework | 6/22 | In Progress|  |
 | 6. Extractor, Enemies & Recovery | 0/TBD | Not started | - |
 | 7. Level Blockout & Game Flow | 0/TBD | Not started | - |
 | 8. Boss & Ending | 0/TBD | Not started | - |

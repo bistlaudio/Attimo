@@ -55,7 +55,7 @@ The whole energy system counts in **whole steps**. There are no percentages and 
 | Charge key R (hold while standing still; moving, jumping or dashing cancels) | +1 every 5 s (instead of the passive tick, not on top) |
 | Energy capsule (Extractor) | +3 |
 | Broken machine (Extractor) | +5 |
-| Using a steampunk element (slingshot, steam cannon, updraft, geyser, boost ring, speed pad, bounce pad) | +1 per use, with a per-element cooldown |
+| Using a steampunk element (slingshot, steam cannon, updraft, geyser, steam stream, boost ring, speed pad, bounce pad) | +1 per use, with a per-element cooldown |
 | Enemies (Phase 6: Extractor drain, Loader hit) | set in Phase 6, whole steps |
 | Any move that costs steps (dash, hop, wall run, wall jump, Loader) | never |
 
@@ -157,7 +157,7 @@ Every world object gets a profile on three axes. Role defines the chapters; ener
 | Role | Objects |
 |---|---|
 | Platforms | Clock-hand platform (vertical rotation, always on, fix floor bugs), tilting platform (always on), paternoster, **rail cart** (moves along a track), **piston steps** (extend from and retract into a wall in rhythm), **drawbridge** (folds down when an energy core threshold is reached) |
-| Environment | Updraft (continuous lift), geyser (pulsed burst), **steam stream** (horizontal, replaces the wind tunnel) |
+| Environment | Updraft (continuous lift), geyser (pulsed burst), **steam stream** (horizontal, replaces the wind tunnel); each gives +1 step per use (per-element cooldown, small turquoise accent) |
 | Obstacles | Pendulum, piston wall, **steam hammer** (timed stamper from above) |
 | Boosters | Slingshot core (Loader counterpart, free aim, see 6.6), steam cannon (fixed direction), boost ring (air-dash counterpart), speed pad (dash-hop counterpart, replaces conveyors, **steam boost-nozzle look**; some switched by energy cores), wall pad (wall-run counterpart, brass and steam look), bounce pad base version. **Each booster gives +1 step per use** (per-element cooldown) |
 | Mechanisms | The output side: platforms, the drawbridge and speed pads switched by energy cores and charge gates (no gates or doors) |
@@ -168,7 +168,7 @@ Layer 1, free, no energy bonus. Must feel exactly like the Loader (same input, s
 
 1. **Enter:** a small brass cage/ring catches Rino with a steam hiss only when he is actually inside it (no suction from outside), momentum freezes, Rino hangs in the ring.
 2. **Hold:** same slow motion and free camera as the Loader. The charge ring becomes a smaller **pressure gauge** (needle climbs with the stored speed); there is no trajectory line (same as the Loader); the crosshair is drawn smaller; auto-launch after the max hold time.
-3. **Release:** steam blast, launch in the view direction on the Loader's straight line at `max(entry speed, fixed push)`, no steps paid, and +1 step for using it.
+3. **Release:** steam blast, then the cage discharges like a **free 2-step Loader**: speed = `own speed + push + 2 x (push per step + k x own speed)`, capped at 22 m/s, straight flight of the 2-step base distance (10 m) plus the overflow, in the view direction. No steps are paid, and using it gives +1 step.
 
 It teaches the Loader without a tutorial: same input and timing, only the look says "free and mechanical".
 
@@ -247,7 +247,7 @@ Look rule: a look may change freely **within its layer**, but must never break t
 
 ### 6.10 Rules fixed in the Phase 05.1 discuss
 
-1. **Slingshot input:** entering the cage catches Rino and starts the hold at once (Loader slow motion, cap and free camera, same values). If RMB is held, its release fires. If not, a press continues the hold and the release fires (a tap fires at once). With no input the cage auto-launches at the Loader's hold cap. The launch adds no bonus and spends no steps; since 2026-11-25 it gives +1 step (steampunk income) and flies the Loader's straight line. It refills the Loader's one air use and leaves the air dash alone.
+1. **Slingshot input:** entering the cage catches Rino and starts the hold at once (Loader slow motion, cap and free camera, same values). If RMB is held, its release fires. If not, a press continues the hold and the release fires (a tap fires at once). With no input the cage auto-launches at the Loader's hold cap. The launch adds no bonus and spends no steps; since 2026-11-25 it gives +1 step (steampunk income) and flies the Loader's straight line as a free 2-step discharge (2026-11-25 replan). It refills the Loader's one air use and leaves the air dash alone.
 2. **Steam cannon:** the fixed-direction catch & launch. A short fixed hold with no slow motion and no input, then a launch along the barrel at a fixed speed that does not depend on the entry speed, so the arc is always the same.
 3. **Steam wall:** the steam nozzle wall push is gone. A steam-look wall pad behaves exactly like the plain wall pad (same wall run, same wall jump, no extra push). ~~Rino runs along the wall upright, leaning slightly toward it.~~ **2026-11-25:** Rino runs diagonally, feet on the wall and head leaning away from it.
 4. **Clock-hand platform:** a hand pivoted at one end that sweeps back and forth, always on, clamped below the floor angle so it never throws the rider off. It does not do a full 360-degree turn. To be confirmed in playtest.
@@ -277,3 +277,4 @@ Look rule: a look may change freely **within its layer**, but must never break t
 | 2026-11-24 | Phase 5 executed: Loader room and energy area in the gym (doorway from the Loader room, charge track, capsules, broken machine, drain plates, injected-move and shot stations), capsules next to every shot puzzle, signs rewritten for hip fire (tap or charge, no aim hold); Extractor on capsules and machines, charged projectile shot with bend, energy-gated glow, notched shot ring; Loader pitch raised to about 75 degrees while holding; energy rows added to the metrics doc. Numbers (7 degree assist, 540 degrees per second bend, 40 m/s, 4 m extract range) are F2 starting values. |
 | 2026-11-24 | Phase 05.1 discuss (auto run): section 6.10 added (slingshot input, steam cannon fixed speed, steam wall = plain wall pad behaviour, clock hand as a bounded always-on sweep, shot-only targets, energy core pay-in with E and thresholds, barrier and attraction-field rules, showroom merged into the gym layer areas); 6.8 components: energy cost also covers the energy core pay-in, damage only pushes until Phase 6. |
 | 2026-11-25 | Playtest feedback, live 05.1 discuss (05.1-CONTEXT D-34..D-58): energy becomes a **clock with 12 whole steps** (no percentages or fractions; Moto 6, respawn 3, arm cores = 3 steps each); new governing rule "running and the jump chain are free, every ability costs steps" (dash and air dash 1, hop stages +1, wall run 2 + 1/s, wall jump 1, Loader 1-3); refusal with clock shake, red flash, arm flicker and klack; income: passive tick +1/10 s, R +1/5 s, capsule +3, machine +5, steampunk booster +1 per use; costing moves never charge (momentum charge removed); shot, gear-disc targets and gates removed, Extractor only (beam visual), module switch dormant; Loader paid by holding, straight-line flight with the formula own speed + push + steps x (push step + k x own speed), overflow lengthens the straight flight, no trajectory line, smaller segmented ring; camera up to ~89 degrees everywhere; force-field barrier replaced by the Loader field (>= 2 steps, brake); slingshot smaller, catches only inside; wall run diagonal, head away from the wall; Phase 6 enemies beaten by Extractor and Loader hits. Section 0 explains why the clock fits the theme. |
+| 2026-11-25 | Replan answers (05.1-CONTEXT D-59..D-62): the slingshot core discharges as a **free 2-step Loader flight** (formula with 2 steps, cap 22 m/s, 10 m straight flight plus overflow, no cost, +1 step; 6.6, 6.10); the **steam stream** joins the steampunk +1-step income list (3, 6.5); the Phase 5 Loader room keeps its positions while its gap and ledge are re-sized for 1 vs 3 steps. |

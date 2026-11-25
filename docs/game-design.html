@@ -436,7 +436,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
     <div class="tbl"><table>
       <tr><th>Role</th><th>Objects</th></tr>
       <tr><td>Platforms</td><td>Clock-hand platform, tilting platform, paternoster, rail cart, piston steps, drawbridge (switched by an energy core)</td></tr>
-      <tr><td>Environment</td><td>Updraft (continuous), geyser (pulsed), steam stream (horizontal)</td></tr>
+      <tr><td>Environment</td><td>Updraft (continuous), geyser (pulsed), steam stream (horizontal); each gives +1 step per use</td></tr>
       <tr><td>Obstacles</td><td>Pendulum, piston wall, steam hammer</td></tr>
       <tr><td>Boosters</td><td>Slingshot core, steam cannon (fixed direction), boost ring, speed pad (steam boost-nozzle look), wall pad (brass and steam look), bounce pad; each gives +1 step per use</td></tr>
       <tr><td>Mechanisms</td><td>The output side: platforms, the drawbridge and speed pads switched by energy cores and charge gates (no gates or doors)</td></tr>
@@ -472,7 +472,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
     <ol class="steps">
       <li><b>Enter:</b> a small brass cage catches Rino with a steam hiss only when he is inside it (no suction), momentum freezes.</li>
       <li><b>Hold:</b> same slow motion and free camera as the Loader; a smaller pressure gauge instead of the charge ring, no trajectory line, smaller crosshair, auto-launch after the max hold.</li>
-      <li><b>Release:</b> steam blast, launch on the Loader's straight line at <code>max(entry speed, fixed push)</code>, no steps paid, +1 step for using it.</li>
+      <li><b>Release:</b> steam blast, the cage discharges like a free 2-step Loader: <code>own speed + push + 2 x (push per step + k x own speed)</code>, capped at 22 m/s, straight flight of 10 m plus overflow; no steps paid, +1 step for using it.</li>
     </ol>
     <p class="muted">Same input and timing as the Loader, so it teaches the Loader without a tutorial. It refills the Loader's air use and leaves the air dash alone.</p>
   </div>

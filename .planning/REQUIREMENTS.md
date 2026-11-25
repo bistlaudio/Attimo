@@ -218,7 +218,7 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | HAND-04 | Phase 5 | Complete |
 | HAND-05 | Phase 6 | Pending |
 | HAND-06 | Phase 6 | Pending |
-| EXTR-01 | Phase 6 | Pending |
+| EXTR-01 | Phase 05.1 (beam and whole-step income from capsules and machines) + Phase 6 (enemies) | Partial (05.1 part planned in 05.1-08 / 05.1-10; enemy part pending in Phase 6) |
 | ENRG-01 | Phase 5 | Complete |
 | ENRG-02 | Phase 5 | Complete |
 | ENRG-03 | Phase 5 | Complete |
