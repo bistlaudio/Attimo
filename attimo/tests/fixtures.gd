@@ -51,6 +51,37 @@ static func head_to_wall_distance(player: PlayerController, wall_point: Vector3,
 	return (head - wall_point).dot(wall_normal.normalized())
 
 
+## Signed local y in m of the player's feet (its origin) above the top face of `deck_body` (05.1-04, D-07): the player origin in the
+## deck's frame minus the top of the deck's first BoxShape3D (shape position y + half its height). NAN without a box shape.
+static func deck_offset(player: PlayerController, deck_body: CollisionObject3D) -> float:
+	var top: float = NAN
+	for child: Node in deck_body.get_children():
+		var shape_node: CollisionShape3D = child as CollisionShape3D
+		if shape_node != null and shape_node.shape is BoxShape3D:
+			top = shape_node.position.y + (shape_node.shape as BoxShape3D).size.y * 0.5
+			break
+	if is_nan(top):
+		return NAN
+	return (deck_body.global_transform.affine_inverse() * player.global_position).y - top
+
+
+const PROBE_SOURCE: String = "extends Node\nvar hook: Callable\nfunc _physics_process(_delta: float) -> void:\n\tif hook.is_valid():\n\t\thook.call()\n"
+
+
+## A plain Node under `root` that calls `hook` every physics tick at `priority` (05.1-04). Priority 50 samples after the player
+## (0) has moved and before a reference-frame carrier (100) moves, so the rider and the deck pose of one tick are read together.
+static func spawn_physics_probe(root: Node, priority: int, hook: Callable) -> Node:
+	var script: GDScript = GDScript.new()
+	script.source_code = PROBE_SOURCE
+	script.reload()
+	var probe: Node = Node.new()
+	probe.set_script(script)
+	probe.set(&"hook", hook)
+	probe.process_physics_priority = priority
+	root.add_child(probe)
+	return probe
+
+
 const CAMERA_RIG_SCENE: String = "res://scenes/camera/camera_rig.tscn"
 
 

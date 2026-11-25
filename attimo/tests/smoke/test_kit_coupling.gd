@@ -26,6 +26,8 @@ const KIT_OBJECTS: Dictionary = {
 	"res://scenes/kit/steampunk/wall_pad_steam.tscn": "res://tests/smoke/test_wall_surface.gd",
 	"res://scenes/kit/steampunk/wall_jump_pad.tscn": "res://tests/smoke/test_wall_surface.gd",
 	"res://scenes/kit/steampunk/wall_jump_pad_steam.tscn": "res://tests/smoke/test_wall_surface.gd",
+	"res://scenes/kit/steampunk/clock_hand_platform.tscn": "res://tests/smoke/test_timed_motion.gd",
+	"res://scenes/kit/steampunk/tilting_platform.tscn": "res://tests/smoke/test_timed_motion.gd",
 }
 
 
