@@ -5,12 +5,20 @@ extends CanvasLayer
 ## drop it (REL-03). debug_tuning (F2 / 8) toggles it, hidden at start; showing it frees the mouse and hiding it
 ## recaptures the mouse (never in a headless run).
 ## A generated "Hand" section tunes the HandController's hand_* range floats the same way (D-05, D-14); they are never saved.
+## A generated "Kit" section (plan 05.1-05, D-05, D-12) tunes the nearest kit block: every KIT_SCAN_INTERVAL of real time (not per
+## frame, T-05.1-15) it finds the nearest node of group kit_block within KIT_RANGE of the player and, when that changes, rebuilds one
+## slider per range float of the block's `config` under "Kit: <node name>". The sliders write the block's own duplicated config
+## (KitBlock.own_config), never a loaded resource (a config with a resource_path is refused, T-05.1-14) and are never saved. Values
+## a block reads only in _ready (trigger radius, barrel pitch) change on the next load; values read at use time act at once.
 ## Gameplay code never calls the panel. The panel never writes anything to user://, and it never saves the
 ## shared res:// config outside the editor (T-02-16).
 
 const LABEL_WIDTH: float = 150.0
 const VALUE_WIDTH: float = 52.0
 const SLIDER_WIDTH: float = 150.0
+## Kit section: real seconds between two nearest-block scans, and the scan reach in m around the player.
+const KIT_SCAN_INTERVAL: float = 0.25
+const KIT_RANGE: float = 8.0
 
 ## Where the camera settings are saved (user:// only, CameraSettings.save_to refuses anything else).
 @export var settings_path: String = CameraSettings.DEFAULT_PATH
@@ -23,6 +31,12 @@ var _hand: HandController
 var _hand_rows: VBoxContainer
 var _hand_sliders: Dictionary[StringName, HSlider] = {}
 var _hand_value_labels: Dictionary[StringName, Label] = {}
+var _kit_rows: VBoxContainer
+var _kit_block: Node3D
+var _kit_config: Resource
+var _kit_sliders: Dictionary[StringName, HSlider] = {}
+var _kit_value_labels: Dictionary[StringName, Label] = {}
+var _kit_scan_left: float = 0.0
 ## True between drag_started and drag_ended of the sensitivity slider: ticks apply to the rig but do not save (WR-04).
 var _sensitivity_dragging: bool = false
 
@@ -39,6 +53,8 @@ func _ready() -> void:
 	# The hand rows live in their own container after the movement rows, so build order does not matter.
 	_hand_rows = VBoxContainer.new()
 	_rows.get_parent().add_child(_hand_rows)
+	_kit_rows = VBoxContainer.new()
+	_rows.get_parent().add_child(_kit_rows)
 	# The camera controls take their range and choices from CameraSettings, so panel and settings cannot disagree.
 	_sensitivity_slider.min_value = CameraSettings.SENSITIVITY_MIN
 	_sensitivity_slider.max_value = CameraSettings.SENSITIVITY_MAX
@@ -84,6 +100,75 @@ func set_hand_value(property: StringName, value: float) -> void:
 		return
 	slider.set_value_no_signal(value)
 	_apply(slider.value, property, _hand, _hand_value_labels)
+
+
+## Number of kit sliders: one per range float of the nearest kit block's config (0 with no block within KIT_RANGE).
+func kit_row_count() -> int:
+	return _kit_sliders.size()
+
+
+## Moves the slider of the kit `property` (clamped to its range) and with it the bound block's own config value (D-12: the node-local
+## duplicate, never the preset). An unknown property is ignored. Never saved.
+func set_kit_value(property: StringName, value: float) -> void:
+	var slider: HSlider = _kit_sliders.get(property) as HSlider
+	if slider == null or _kit_config == null:
+		return
+	slider.set_value_no_signal(value)
+	_apply(slider.value, property, _kit_config, _kit_value_labels)
+
+
+## Polls the nearest kit block every KIT_SCAN_INTERVAL of real time, shown or hidden, so the section is ready when F2 opens.
+func _process(delta: float) -> void:
+	_kit_scan_left -= TimeFx.unscaled(delta)
+	if _kit_scan_left > 0.0:
+		return
+	_kit_scan_left = KIT_SCAN_INTERVAL
+	var nearest: Node3D = _nearest_kit_block()
+	if nearest != _kit_block or (_kit_block != null and not is_instance_valid(_kit_block)):
+		_bind_kit(nearest)
+
+
+## The nearest kit block within KIT_RANGE of the player whose config is a node-local copy, or null.
+func _nearest_kit_block() -> Node3D:
+	var player: Node3D = get_tree().get_first_node_in_group(&"player") as Node3D
+	if player == null:
+		return null
+	var best: Node3D = null
+	var best_distance: float = KIT_RANGE
+	for node: Node in get_tree().get_nodes_in_group(&"kit_block"):
+		var block: Node3D = node as Node3D
+		if block == null or not is_instance_valid(block) or not block.is_inside_tree():
+			continue
+		var config: Resource = block.get(&"config") as Resource
+		# T-05.1-14 / D-12: a config that still points at a loaded file is shared; never bind it.
+		if config == null or not config.resource_path.is_empty():
+			continue
+		var distance: float = block.global_position.distance_to(player.global_position)
+		if distance <= best_distance:
+			best = block
+			best_distance = distance
+	return best
+
+
+## Rebuilds the Kit section for `block` (null clears it).
+func _bind_kit(block: Node3D) -> void:
+	for child: Node in _kit_rows.get_children():
+		_kit_rows.remove_child(child)
+		child.queue_free()
+	_kit_sliders.clear()
+	_kit_value_labels.clear()
+	_kit_block = block
+	_kit_config = null if block == null else block.get(&"config") as Resource
+	if _kit_config == null:
+		_kit_block = null
+		return
+	var header: Label = Label.new()
+	header.text = "Kit: %s" % block.name
+	_kit_rows.add_child(header)
+	for info: Dictionary in _kit_config.get_property_list():
+		if info.type != TYPE_FLOAT or (info.usage & PROPERTY_USAGE_EDITOR) == 0 or info.hint != PROPERTY_HINT_RANGE:
+			continue
+		_add_row(_kit_config, info.name as StringName, info.hint_string as String, _kit_rows, _kit_sliders, _kit_value_labels)
 
 
 ## Sets the mouse sensitivity multiplier (clamped to the CameraSettings range), applies it to the rig and saves it.
@@ -145,6 +230,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed(&"debug_tuning"):
 		_set_shown(not visible)
+		_kit_scan_left = 0.0
 
 
 func _set_shown(shown: bool) -> void:
