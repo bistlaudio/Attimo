@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.11.0.4
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05.1-05-PLAN.md
-last_updated: "2026-11-25T00:54:41.860Z"
-last_activity: 2026-11-25 -- Plan 05.1-05 complete (source-aware Loader presentation: cage brass gauge / brass arc / brass vignette, cannon hold quiet, steam puff and blast cues, F2 Kit section)
+stopped_at: Completed 05.1-06-PLAN.md
+last_updated: "2026-11-25T05:38:17.532Z"
+last_activity: 2026-11-25 -- Plan 05.1-06 complete (gym cutover: kit layer areas steampunk / energy / nature behind the hall east door; old mechanism rooms, lift, crank, pressure plate deleted)
 progress:
   total_phases: 17
   completed_phases: 6
   total_plans: 66
-  completed_plans: 51
+  completed_plans: 52
   percent: 35
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 05.1
-Plan: 6 of 20 (05.1-01 to 05.1-05 complete)
+Plan: 7 of 20 (05.1-01 to 05.1-06 complete)
 Status: Ready to execute
-Last activity: 2026-11-25 -- Plan 05.1-05 complete (source-aware Loader presentation: cage brass gauge / brass arc / brass vignette, cannon hold quiet, steam puff and blast cues, F2 Kit section)
+Last activity: 2026-11-25 -- Plan 05.1-06 complete (gym cutover: kit layer areas steampunk / energy / nature behind the hall east door; old mechanism rooms, lift, crank, pressure plate deleted)
 
-Progress: [████████░░] 77%
+Progress: [████████░░] 79%
 
 ## Performance Metrics
 
@@ -97,6 +97,7 @@ Progress: [████████░░] 77%
 | Phase 05.1 P02 | 55min | 3 tasks | 30 files |
 | Phase 05.1 P03 | 55min | 3 tasks | 30 files |
 | Phase 05.1 P04 | 60 min | 3 tasks | 23 files |
+| Phase 05.1 P06 | 60 min | 3 tasks | 31 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,7 @@ Progress: [████████░░] 77%
 Decisions are logged in the PROJECT.md Key Decisions table.
 Recent decisions that affect current work:
 
+- [Phase 05.1-06]: Kit showroom = three layer areas behind the hall east door (Zone_KitSteampunk x 43..151, Zone_KitEnergy x 155..227, Zone_KitNature x 231..291, corridor z -4..4), shell in kit_area_shell.gd; old mechanism rooms, lift, crank, pressure plate deleted
 - [Phase 05.1-04]: The D-07 floor fix is geometric: Timed motion stations stand at TimedMotion.min_pivot_height (floor + 0.3 + reach*sin(limit) + thickness; hand 5.39 m, plate 2.80 m)
 - [Phase 05.1-04]: A take-off off a reference-frame carrier keeps the deck's vertical chord (clamped +-6 m/s, PlayerController.MAX_DECK_TAKEOFF_SPEED); engine-carried floors unchanged
 - [Phase 05.1-04]: RotatingPlatform folded into TimedMotion (Profile SWEEP/TILT, Timing ALWAYS_ON/SWITCHED) with unchanged values; LYING gear cut
@@ -220,6 +222,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-25T00:36:37.747Z
+Last session: 2026-11-25T05:38:13.044Z
 Stopped at: Completed 05.1-05-PLAN.md
 Resume file: None

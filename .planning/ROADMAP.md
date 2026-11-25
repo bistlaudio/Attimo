@@ -289,7 +289,7 @@ Plans:
 - [x] 05.1-03-PLAN.md — Wall surface block, plain/steam looks, head clearance clamp, twin-pad layout fix
 - [x] 05.1-04-PLAN.md — Timed motion SWEEP/TILT always on, clock-hand floor-snap / clearance fix, take-off vertical carry
 - [x] 05.1-05-PLAN.md — Slingshot presentation (pressure gauge, brass dashes, steam cues) and F2 Kit section
-- [ ] 05.1-06-PLAN.md — Gym cutover: steampunk / energy / nature layer areas; old rooms, lift, crank, plate deleted
+- [x] 05.1-06-PLAN.md — Gym cutover: steampunk / energy / nature layer areas; old rooms, lift, crank, plate deleted
 - [ ] 05.1-07-PLAN.md — Trigger block: atomic SignalSource rename, logic nodes extend Trigger
 - [ ] 05.1-08-PLAN.md — Gear-disc targets and heavy preset; logic nodes moved into the kit
 - [ ] 05.1-09-PLAN.md — Force volume block: updraft, geyser, steam stream; old nozzle / geyser / wind tunnel deleted
@@ -496,7 +496,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 04.1 → 5 → 05.1 →
 | 3. Animated Mannequin & Aim Mode | 10/10 | Complete    | 2026-11-20 |
 | 4. Fernauslöser & Mechanism Kit | 5/5 | Complete   | 2026-11-23 |
 | 5. Energy Arm & Loader | 5/5 | Complete   | 2026-11-24 |
-| 05.1. Kit Rework | 5/20 | In Progress|  |
+| 05.1. Kit Rework | 6/20 | In Progress|  |
 | 6. Extractor, Shot, Enemies & Recovery | 0/TBD | Not started | - |
 | 7. Level Blockout & Game Flow | 0/TBD | Not started | - |
 | 8. Boss & Ending | 0/TBD | Not started | - |
