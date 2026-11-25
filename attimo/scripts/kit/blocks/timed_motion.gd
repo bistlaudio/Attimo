@@ -6,7 +6,7 @@ extends KitBlock
 ## below the player's floor angle, so a rider never inverts and never slides off by physics. ALWAYS_ON runs from _ready (D-07),
 ## SWITCHED runs while a child Receiver is on (plan 05.1-14).
 ##
-## Carry contract (folded unchanged from the old RotatingPlatform, D-09): the Body is an AnimatableBody3D in the group
+## Carry contract (folded unchanged from the old rotating platform, D-09): the Body is an AnimatableBody3D in the group
 ## carrying_platform with sync_to_physics off, a direct child of this node. PlayerController carries the rider by reference frame
 ## (it re-places the rider at the same local point of the deck every tick), which needs the block to tick AFTER the player: physics
 ## priority 100. carry_velocity_at() is the chord of one tick, used for the take-off momentum (horizontal and, since 05.1-04,

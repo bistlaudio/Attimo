@@ -19,7 +19,7 @@ const STATION_TAGS: Array[String] = [
 	"Valve", "EnergyCore", "Crank", "PressurePlate", "LogicAnd", "LogicOr", "LogicTimer",
 	"SteamCannon", "NozzleUpdraft", "Geyser",
 	"Pendulum", "PistonWall", "WallRun", "WallRunSteam", "WallJump", "Repulsor", "Attractor", "Slingshot",
-	"WindTunnel", "LowGravity", "RotatingLying", "RotatingStanding", "RotatingTilting", "Crumbling",
+	"WindTunnel", "LowGravity", "RotatingStanding", "RotatingTilting", "Crumbling",
 	"LiftPiston", "LiftChain", "Paternoster", "BoostRing", "Bounce", "ConveyorRun", "ConveyorReverse",
 ]
 ## Stations that own a gate Gate_<tag>.
@@ -222,13 +222,14 @@ func _check_ray_guard(tree: SceneTree, gym: Node, check: Callable) -> void:
 	for node: Node in _all(gym):
 		if node is Conveyor:
 			bodies.append(node.get_node("Belt") as CollisionObject3D)
-		elif node is LiftPlatform or node is RotatingPlatform or node is CrumblingPlatform:
+		elif node is LiftPlatform or node is TimedMotion or node is CrumblingPlatform:
 			bodies.append(node.get_node("Body") as CollisionObject3D)
 		elif node is Paternoster:
 			for deck: AnimatableBody3D in (node as Paternoster).decks():
 				bodies.append(deck)
-	# 12 since plan 05.1-02 removed the puzzle rooms with their lift, rotating platform and conveyor (15 before).
-	check.call(bodies.size() >= 12, "the ray guard covers the moving and vanishing bodies (%d bodies)" % bodies.size())
+	# 12 since plan 05.1-02 removed the puzzle rooms with their lift, rotating platform and conveyor (15 before); 11 since plan
+	# 05.1-04 cut the LYING gear (the clock hand and tilt plate are TimedMotion decks).
+	check.call(bodies.size() >= 11, "the ray guard covers the moving and vanishing bodies (%d bodies)" % bodies.size())
 	var space: PhysicsDirectSpaceState3D = (gym as Node3D).get_world_3d().direct_space_state
 	var wrong: PackedStringArray = PackedStringArray()
 	for body: CollisionObject3D in bodies:

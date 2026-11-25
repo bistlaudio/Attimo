@@ -306,7 +306,7 @@ func _check_signs(check: Callable) -> void:
 			expects += 1
 	# 47 since plan 05.1-02 removed the pneumatic tube station (48 before); 46 since plan 05.1-03 cut the nozzle wall and jump
 	# stations and added the steam-look wall-run pad.
-	check.call(expects >= 46, "the gym has at least 46 'Erwartet:' lines (got %d)" % expects)
+	check.call(expects >= 45, "the gym has at least 45 'Erwartet:' lines (got %d)" % expects)
 	check.call(labels >= 40, "at least 40 labels (%d)" % labels)
 
 

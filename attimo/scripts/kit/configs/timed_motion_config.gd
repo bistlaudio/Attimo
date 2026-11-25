@@ -4,7 +4,7 @@ extends Resource
 ## SWEEP is the clock-hand platform (a hand pivoted at one end that sweeps back and forth about the block's local X axis), TILT the
 ## tilting platform (a square plate pivoted in its centre that rocks about local X). Later plans append GATE, HINGE, PATH, LOOP,
 ## EXTEND, SWING and STAMP. ALWAYS_ON runs from _ready with no receiver (D-07); SWITCHED runs only while a child Receiver is on
-## (plan 05.1-14). The values are the tuned ones of the old RotatingPlatform, folded unchanged (D-09). Presets live in
+## (plan 05.1-14). The values are the tuned ones of the old rotating platform, folded unchanged (D-09). Presets live in
 ## resources/kit/timed_motion/. Divisor fields have a strictly positive minimum (T-05.1-13). A loaded preset is never written at
 ## runtime: the block duplicates it in _ready (D-12).
 

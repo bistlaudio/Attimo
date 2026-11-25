@@ -1,10 +1,11 @@
 extends RefCounted
-## MECH-03 / D-18 / D-22: Dreh-Plattform reversal and Hub-Plattform travel. Both bodies sit on WORLD and never join the gym
-## group moving_platform. Rotation carry itself is test_mechanism_carry.
+## MECH-03 / D-18 / D-22: Hub-Plattform travel and rider. The lift and the Timed motion deck (clock hand) sit on WORLD and never join
+## the gym group moving_platform. The old rotating platform's lever reversal went with the always-on Timed motion block (plan 05.1-04,
+## D-07); its carry is test_mechanism_carry, its floor clearance and take-off test_timed_motion.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
-const ROTATING_SCENE: String = "res://scenes/mechanisms/rotating_platform.tscn"
+const HAND_SCENE: String = "res://scenes/kit/steampunk/clock_hand_platform.tscn"
 const LIFT_SCENE: String = "res://scenes/mechanisms/lift_platform.tscn"
 const SHIPPED_TPS: int = 60
 const DIAGNOSTIC_TPS: int = 10
@@ -13,7 +14,6 @@ const DIAGNOSTIC_TPS: int = 10
 func run(tree: SceneTree, check: Callable) -> void:
 	await tree.process_frame
 	Engine.physics_ticks_per_second = SHIPPED_TPS
-	await _scenario_reverse(tree, check)
 	await _scenario_lift_travel(tree, check)
 	await _scenario_layers(tree, check)
 	for tps: int in [SHIPPED_TPS, DIAGNOSTIC_TPS]:
@@ -35,29 +35,6 @@ func _free(tree: SceneTree, nodes: Array) -> void:
 			(node as Node).queue_free()
 	await tree.process_frame
 	await tree.process_frame
-
-
-# REVERSE_ON_SIGNAL: always runs, the signal reverses the direction through an eased ramp (D-18, D-22).
-func _scenario_reverse(tree: SceneTree, check: Callable) -> void:
-	var source: SignalSource = SignalSource.new()
-	tree.root.add_child(source)
-	var platform: RotatingPlatform = _spawn(tree, ROTATING_SCENE, check) as RotatingPlatform
-	platform.behaviour = Mechanism.Behaviour.REVERSE_ON_SIGNAL
-	platform.source = source
-	tree.root.add_child(platform)
-	await Fixtures.wait_physics(tree, 40)
-	var before: float = platform.angular_velocity()
-	check.call(before > 0.9, "REVERSE_ON_SIGNAL runs without a signal (%.2f rad/s)" % before)
-	source.set_active(true)
-	var worst_step: float = 0.0
-	var previous: float = before
-	for i: int in 40:
-		await Fixtures.wait_physics(tree, 1)
-		worst_step = maxf(worst_step, absf(platform.angular_velocity() - previous))
-		previous = platform.angular_velocity()
-	check.call(previous < -0.9, "the signal reverses the direction (%.2f rad/s)" % previous)
-	check.call(worst_step < 0.2, "the reversal is eased, the largest step is %.3f rad/s per tick" % worst_step)
-	await _free(tree, [platform, source])
 
 
 # The lift reaches B while on and A while off.
@@ -83,14 +60,15 @@ func _scenario_lift_travel(tree: SceneTree, check: Callable) -> void:
 
 func _scenario_layers(tree: SceneTree, check: Callable) -> void:
 	var lift: LiftPlatform = _spawn(tree, LIFT_SCENE, check) as LiftPlatform
-	var rotating: RotatingPlatform = _spawn(tree, ROTATING_SCENE, check) as RotatingPlatform
+	var rotating: TimedMotion = _spawn(tree, HAND_SCENE, check) as TimedMotion
+	rotating.position = Vector3(0.0, -50.0, 0.0)
 	tree.root.add_child(rotating)
 	if lift != null:
 		tree.root.add_child(lift)
 		var lift_body: AnimatableBody3D = lift.get_node("Body") as AnimatableBody3D
 		check.call(lift_body.collision_layer == PhysicsLayers.WORLD and not lift_body.is_in_group(&"moving_platform"), "the lift body is on WORLD and not in group moving_platform")
 	var body: AnimatableBody3D = rotating.body()
-	check.call(body.collision_layer == PhysicsLayers.WORLD and not body.is_in_group(&"moving_platform"), "the rotating platform body is on WORLD and not in group moving_platform")
+	check.call(body.collision_layer == PhysicsLayers.WORLD and not body.is_in_group(&"moving_platform"), "the Timed motion deck body is on WORLD and not in group moving_platform")
 	await _free(tree, [lift, rotating])
 
 

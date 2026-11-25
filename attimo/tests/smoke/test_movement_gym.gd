@@ -331,8 +331,10 @@ func _check_moving_stations(zone: Node, check: Callable) -> void:
 	var pendulums: int = 0
 	var unwired: int = 0
 	for child: Node in zone.get_children():
-		if child is RotatingPlatform:
-			axes[(child as RotatingPlatform).axis_mode] = true
+		if child is TimedMotion:
+			# Kit block (plan 05.1-04): always on, no source (D-13); the LYING gear is cut (KIT-04).
+			axes[(child as TimedMotion).config.profile] = true
+			continue
 		elif child is LiftPlatform:
 			looks[(child as LiftPlatform).look] = true
 		elif child is SteamNozzle:
@@ -345,7 +347,7 @@ func _check_moving_stations(zone: Node, check: Callable) -> void:
 			continue
 		if (child as Mechanism).source == null:
 			unwired += 1
-	check.call(axes.size() == 3, "room 2 has a Dreh-Plattform in all three axis modes (%d)" % axes.size())
+	check.call(axes.size() == 2 and axes.has(TimedMotionConfig.Profile.SWEEP) and axes.has(TimedMotionConfig.Profile.TILT), "room 2 has a Timed motion clock hand (SWEEP) and tilt plate (TILT), no gear (%d profiles)" % axes.size())
 	check.call(looks.size() == 2, "room 2 has a Hub-Plattform with both looks (%d)" % looks.size())
 	check.call(behaviours.size() == 2, "room 2 has a Foerderband per behaviour (%d)" % behaviours.size())
 	# Plan 05.1-03 cut the launch and push-back modes (D-06, KIT-04): the nozzle is an updraft only.

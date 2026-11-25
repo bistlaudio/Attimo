@@ -7,7 +7,7 @@ extends RefCounted
 ## Plan view (x east, z south): the hall east wall sits at x 42.5. The door (Zahnrad-Tor) is its z 0 cell, the tracer lever
 ## stands on the hall side at (38, -3). Room 2 is the showcase east of the door, x 43..219, z -32..32. A main corridor at z -4..4 runs
 ## from the west door to the east exit (z 0..4). Seven closed rooms (ZONES, 4 m walls, no ceiling) line it, four north and three
-## south, each with one doorway and a door sign; 4 m alleys separate them. They hold the 31 stations, grouped by what the mechanism
+## south, each with one doorway and a door sign; 4 m alleys separate them. They hold the 30 stations, grouped by what the mechanism
 ## does to the player. The Phase 4 puzzle rooms behind the east wall were removed in plan 05.1-02 (D-29: they depended on cut
 ## triggers); their AND / OR / timer ideas return as target-based stations in plan 05.1-14. The east wall is closed.
 
@@ -21,7 +21,16 @@ const CRANK_SCENE: String = "res://scenes/mechanisms/crank.tscn"
 const AND_SCENE: String = "res://scenes/mechanisms/logic_and.tscn"
 const OR_SCENE: String = "res://scenes/mechanisms/logic_or.tscn"
 const TIMER_SCENE: String = "res://scenes/mechanisms/logic_timer.tscn"
-const ROTATING_SCENE: String = "res://scenes/mechanisms/rotating_platform.tscn"
+## Timed motion block looks (Phase 05.1-04): the always-on clock hand (SWEEP) and tilt plate (TILT). Their pivot height comes from
+## TimedMotion.min_pivot_height of the preset (row key "deck_preset"), so the swept deck never dips into the floor (D-07).
+const CLOCK_HAND_SCENE: String = "res://scenes/kit/steampunk/clock_hand_platform.tscn"
+const CLOCK_HAND_PRESET: String = "res://resources/kit/timed_motion/clock_hand.tres"
+const TILT_PLATE_SCENE: String = "res://scenes/kit/steampunk/tilting_platform.tscn"
+const TILT_PLATE_PRESET: String = "res://resources/kit/timed_motion/tilting_platform.tres"
+## The stepped start ledge of a Timed motion station: no step is higher than this (the held plain jump reaches 2.0 m,
+## docs/MOVEMENT-METRICS.md), and the top step stays this far under the pivot so it is never coplanar with the deck.
+const DECK_STEP_MAX: float = 1.5
+const DECK_LEDGE_GAP: float = 0.25
 const LIFT_SCENE: String = "res://scenes/mechanisms/lift_platform.tscn"
 const CONVEYOR_SCENE: String = "res://scenes/mechanisms/conveyor.tscn"
 const NOZZLE_SCENE: String = "res://scenes/mechanisms/steam_nozzle.tscn"
@@ -121,7 +130,7 @@ func build_into(zone: Node3D, builder: RefCounted) -> void:
 	build_showcase_stations(zone, builder)
 
 
-## Showcase stations (D-03, D-04): 31 stations on the slot grid, one row of STATIONS each, grouped by zone. Every station node is a
+## Showcase stations (D-03, D-04): 30 stations on the slot grid, one row of STATIONS each, grouped by zone. Every station node is a
 ## DIRECT child of the zone under its tag name (the gym tests iterate the direct children); its geometry props (pillars, steps,
 ## walkways) go into ZoneDecor. Every sign has two lines: Label_<tag> and Label_<tag>_Expect ("Erwartet: ...").
 ## kinds: valve, core, crank, plate (self-triggered, with a gate), and / or / timer (logic, with a gate), mover (own lever at `lever`
@@ -159,9 +168,10 @@ const STATIONS: Array[Dictionary] = [
 	{"tag": "WallRunSteam", "zone": "Wand", "slots": [Vector2i(1, 1)], "kind": "kit", "scene": WALL_PAD_STEAM_SCENE, "text": "Wandlauf-Platte (Dampf-Look)", "expect": "Erwartet: Beide Platten laufen und springen genau gleich", "offset": Vector3(-3.0, 0.0, 3.0), "lever": Vector3(-15.0, 0.0, 0.0)},
 	{"tag": "WallJump", "zone": "Wand", "slots": [Vector2i(0, 0), Vector2i(1, 0)], "kind": "kit", "scene": WALL_JUMP_PAD_SCENE, "text": "Wandsprung-Platten", "expect": "Erwartet: Abstoßen trägt dich zur Gegenwand, nicht darüber", "offset": Vector3(3.0, 0.0, -WALL_TWIN_PITCH * 0.5), "lever": Vector3(-8.0, 0.0, 0.0), "sign_h": 4.2},
 	# Tragen (du stehst drauf)
-	{"tag": "RotatingLying", "zone": "Tragen", "slots": [Vector2i(0, 0)], "kind": "mover", "scene": ROTATING_SCENE, "text": "Dreh-Plattform: liegend (Zahnrad)", "expect": "Erwartet: Dreht sich und trägt dich, ohne zu rutschen", "y": RAISED, "lever": Vector3(0.0, 0.0, 5.5), "sign_h": 4.5, "props": {"axis_mode": RotatingPlatform.AxisMode.LYING}},
-	{"tag": "RotatingStanding", "zone": "Tragen", "slots": [Vector2i(1, 0)], "kind": "mover", "scene": ROTATING_SCENE, "text": "Dreh-Plattform: stehend (Uhrzeiger)", "expect": "Erwartet: Schwingt hin und her, du bleibst drauf", "y": RAISED, "lever": Vector3(2.5, 0.0, 4.0), "sign_h": 4.5, "props": {"axis_mode": RotatingPlatform.AxisMode.STANDING}},
-	{"tag": "RotatingTilting", "zone": "Tragen", "slots": [Vector2i(2, 0)], "kind": "mover", "scene": ROTATING_SCENE, "text": "Dreh-Plattform: kippend", "expect": "Erwartet: Kippt, und du rutschst nicht ab", "y": RAISED, "lever": Vector3(0.0, 0.0, 5.5), "sign_h": 4.5, "props": {"axis_mode": RotatingPlatform.AxisMode.TILTING}},
+	# Timed motion (plan 05.1-04, D-07): always on, no lever; the pivot stands at TimedMotion.min_pivot_height of the preset and a
+	# stepped ledge of floor tiles leads up to the fixed point of the deck (the hand's pivot end, the plate's axis edge).
+	{"tag": "RotatingStanding", "zone": "Tragen", "slots": [Vector2i(1, 0)], "kind": "kit", "scene": CLOCK_HAND_SCENE, "deck_preset": CLOCK_HAND_PRESET, "text": "Uhrzeiger-Plattform", "expect": "Erwartet: Läuft immer, schwingt hin und her, du bleibst auf dem Deck", "lever": Vector3(2.5, 0.0, 4.0), "sign_h": 4.5},
+	{"tag": "RotatingTilting", "zone": "Tragen", "slots": [Vector2i(2, 0)], "kind": "kit", "scene": TILT_PLATE_SCENE, "deck_preset": TILT_PLATE_PRESET, "text": "Kipp-Plattform", "expect": "Erwartet: Läuft immer, schwingt hin und her, du bleibst auf dem Deck", "lever": Vector3(0.0, 0.0, 5.5), "sign_h": 4.5},
 	{"tag": "Crumbling", "zone": "Tragen", "slots": [Vector2i(3, 0)], "kind": "driven", "scene": CRUMBLING_SCENE, "text": "Bröckel-Plattform", "expect": "Erwartet: Wackelt, fällt runter, kommt nach 3 s zurück", "y": 2.0, "sign_h": 4.2},
 	{"tag": "Paternoster", "zone": "Tragen", "slots": [Vector2i(4, 0)], "kind": "mover", "scene": PATERNOSTER_SCENE, "text": "Paternoster", "expect": "Erwartet: Kabinen fahren im Kreis, auf- und abspringen", "y": RAISED, "lever": Vector3(-6.0, 0.0, 4.0)},
 	{"tag": "LiftPiston", "zone": "Tragen", "slots": [Vector2i(0, 1)], "kind": "mover", "scene": LIFT_SCENE, "text": "Hub-Plattform: Kolben", "expect": "Erwartet: Hebel an fährt hoch, Hebel aus fährt runter", "y": RAISED, "lever": Vector3(0.0, 0.0, 4.5), "sign_h": 7.0, "props": {"look": LiftPlatform.Look.PISTON}},
@@ -215,6 +225,8 @@ func _place_station(zone: Node3D, builder: RefCounted, row: Dictionary, at: Vect
 	var text: String = String(row["text"])
 	var expect: String = String(row["expect"])
 	var height: float = float(row.get("y", 0.0))
+	if row.has("deck_preset"):
+		height = _deck_pivot_height(String(row["deck_preset"]))
 	var node_at: Vector3 = at + (row.get("offset", Vector3.ZERO) as Vector3) + Vector3(0.0, height, 0.0)
 	var basis: Basis = _row_basis(row)
 	var props: Dictionary = row.get("props", {}) as Dictionary
@@ -328,6 +340,14 @@ func _station_extras(zone: Node3D, builder: RefCounted, tag: String, at: Vector3
 			# pads are WallSurface.JUMP_PAD_HEIGHT_MIN tall (the preset); always on, no source (kit block).
 			var near: Node3D = zone.get_node("WallJump") as Node3D
 			builder.call(&"_instance", zone, WALL_JUMP_PAD_SCENE, "WallJump2", near.position + Vector3(0.0, 0.0, WALL_TWIN_PITCH))
+		"RotatingStanding":
+			# The clock hand points +z from its pivot; the ledge stands behind the pivot end (the deck's lower edge swings
+			# +-0.5 * sin(limit) there, so the top step keeps 0.5 m off) and steps down westward into the free slot (0, 0).
+			_deck_stairs(props, builder, tag, zone.get_node(tag).position.y, at + Vector3(0.0, 0.0, -2.5), Vector3(-4.0, 0.0, 0.0))
+		"RotatingTilting":
+			# The plate rocks about its x axis; the midpoint of its west edge stays put, so the ledge stands west of it and steps down
+			# southward.
+			_deck_stairs(props, builder, tag, zone.get_node(tag).position.y, at + Vector3(-6.5, 0.0, 0.0), Vector3(0.0, 0.0, 4.0))
 		"Crumbling":
 			# The deck is 2 m up: a 1 m beam step flush with its south edge makes it reachable with a normal jump.
 			builder.call(&"_instance", props, BEAM_SCENE, "CrumblingStep", at + Vector3(0.0, 0.0, 2.5))
@@ -428,3 +448,24 @@ func _build_room_reset(zone: Node3D, builder: RefCounted) -> void:
 	var area: FallReset = builder.call(&"_fall_reset", "FallResetRoom2", centre, Vector3(reset_x1 - reset_x0, 4.0, 132.0), marker, rig) as FallReset
 	builder.call(&"_adopt", zone, area, "FallResetRoom2", centre)
 	builder.call(&"_owner_children", area)
+
+
+## The pivot height of a Timed motion station on the room floor (top y 0): TimedMotion.min_pivot_height of its preset (D-07).
+func _deck_pivot_height(preset_path: String) -> float:
+	var motion: TimedMotionConfig = load(preset_path) as TimedMotionConfig
+	return TimedMotion.min_pivot_height(motion, 0.0)
+
+
+## A stepped ledge of stacked floor tiles up to just under a Timed motion pivot: the first column at `first` holds the top step
+## (DECK_LEDGE_GAP or more under the pivot, rounded down to 0.5 m), each further column `step` away is one equal step lower, and no
+## step is higher than DECK_STEP_MAX.
+func _deck_stairs(props: Node3D, builder: RefCounted, tag: String, pivot_y: float, first: Vector3, step: Vector3) -> void:
+	var highest: float = floorf((pivot_y - DECK_LEDGE_GAP) * 2.0) * 0.5
+	var columns: int = maxi(ceili(highest / DECK_STEP_MAX), 1)
+	for column: int in columns:
+		var top: float = highest * float(columns - column) / float(columns)
+		var cell: Vector3 = first + step * float(column)
+		var layer: int = 0
+		while top - float(layer) > 0.0:
+			builder.call(&"_floor_tile", props, "%sStep_%d_%d" % [tag, column, layer], cell.x, top - float(layer), cell.z)
+			layer += 1
