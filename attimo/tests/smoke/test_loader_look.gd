@@ -10,6 +10,11 @@ const Fixtures := preload("res://tests/fixtures.gd")
 const LOOK_SCENE: String = "res://scenes/ui/loader_look.tscn"
 const SHIPPED_TPS: int = 60
 const FADE_OUT_SECONDS: float = 0.3
+## Plan 05.1-05 (D-01, D-05, D-26): the cage tints the vignette brass, the cannon's FIXED hold shows no look at all.
+const CAGE_SCENE: String = "res://scenes/kit/steampunk/slingshot_core.tscn"
+const CANNON_SCENE: String = "res://scenes/kit/steampunk/steam_cannon.tscn"
+const PREVIEW_SCRIPT: String = "res://scripts/player/loader_preview.gd"
+const TURQUOISE: Color = Color(0.25, 0.9, 0.85, 1.0)
 
 var _bus: Node
 var _floor: StaticBody3D
@@ -31,6 +36,8 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_camera(tree, check)
 	await _scenario_hitstop(tree, check)
 	await _scenario_pitch(tree, check)
+	await _scenario_cage_tint(tree, check)
+	await _scenario_cannon_quiet(tree, check)
 
 
 func _begin(tree: SceneTree, with_look: bool = true) -> void:
@@ -93,6 +100,7 @@ func _scenario_look(tree: SceneTree, check: Callable) -> void:
 	check.call(environment.adjustment_saturation >= 1.0 - _look.desaturation - 0.001, "(l2) the saturation stays above the target %.2f (got %.3f)" % [1.0 - _look.desaturation, environment.adjustment_saturation])
 	var hum: PlaceholderTone = _look.get_node("Hum") as PlaceholderTone
 	check.call(hum.sounding(), "(l3) the hum sounds during the hold")
+	check.call(_vignette_tint().is_equal_approx(TURQUOISE), "(05.1-05) the arm Loader vignette stays turquoise (got %s)" % _vignette_tint())
 	Input.action_release(&"loader")
 	await _wait_real(tree, FADE_OUT_SECONDS)
 	check.call(not vignette.visible, "(l4) the vignette is hidden within %.1f s of real time after the release" % FADE_OUT_SECONDS)
@@ -205,4 +213,77 @@ func _scenario_release_fade(tree: SceneTree, check: Callable) -> void:
 			Input.action_release(&"loader")
 	check.call(last_held > 0.0, "(e1) the vignette is on at the end of a short hold (%.3f)" % last_held)
 	check.call(after_max >= 0.0 and after_max <= last_held + 0.0001, "(e1) after the release the vignette only fades: max %.3f <= last held %.3f" % [after_max, last_held])
+	await _end(tree)
+
+
+## The vignette shader's tint of the current LoaderLook.
+func _vignette_tint() -> Color:
+	var material: ShaderMaterial = (_look.get_node("Vignette") as ColorRect).material as ShaderMaterial
+	return material.get_shader_parameter(&"tint") as Color
+
+
+## LoaderPreview.BRASS_COLOR by reflection, or an impossible colour while it does not exist.
+func _brass() -> Color:
+	var script: GDScript = load(PREVIEW_SCRIPT) as GDScript
+	return script.get_script_constant_map().get("BRASS_COLOR", Color(-1.0, -1.0, -1.0, -1.0)) as Color
+
+
+# Plan 05.1-05 (D-01, D-26): a cage hold keeps the "geladen" look but tints the vignette brass, even with a full core; the fade-out
+# after the throw stays brass.
+func _scenario_cage_tint(tree: SceneTree, check: Callable) -> void:
+	await _begin(tree)
+	var cage: Node3D = Fixtures.spawn_scene(tree.root, CAGE_SCENE, Vector3(0.0, 10.0, 0.0))
+	await Fixtures.wait_physics(tree, 2)
+	_player.teleport(Vector3(-4.0, 9.0, 0.0))
+	_player.launch_along(Vector3.RIGHT, 9.0, false)
+	var entered: int = await Fixtures.wait_until(tree, func() -> bool: return _player.loader_active(), 40)
+	await _wait_real(tree, 0.1)
+	var vignette: ColorRect = _look.get_node("Vignette") as ColorRect
+	check.call(entered >= 0 and vignette.visible, "(k1) the cage hold shows the vignette (entered %d)" % entered)
+	check.call(_vignette_tint().is_equal_approx(_brass()), "(k1) the cage vignette is brass (got %s, brass %s)" % [_vignette_tint(), _brass()])
+	check.call(not _vignette_tint().is_equal_approx(TURQUOISE), "(k1) the cage vignette is not turquoise with a full core")
+	await Fixtures.tap_action(tree, &"loader", 1)
+	await Fixtures.wait_until(tree, func() -> bool: return not _player.loader_active(), 6)
+	await tree.process_frame
+	check.call(not vignette.visible or _vignette_tint().is_equal_approx(_brass()), "(k2) the fade-out after the cage throw stays brass (got %s)" % _vignette_tint())
+	await _wait_real(tree, FADE_OUT_SECONDS)
+	check.call(not vignette.visible, "(k2) the vignette is gone within %.1f s after the cage throw" % FADE_OUT_SECONDS)
+	cage.queue_free()
+	await _end(tree)
+
+
+# Plan 05.1-05 (D-05): the cannon's 0.2 s FIXED hold shows no vignette, no desaturation and no hum.
+func _scenario_cannon_quiet(tree: SceneTree, check: Callable) -> void:
+	await _begin(tree)
+	var cannon: Node3D = (load(CANNON_SCENE) as PackedScene).instantiate() as Node3D
+	cannon.rotation.y = deg_to_rad(-90.0)
+	cannon.position = Vector3(10.0, 0.0, 0.0)
+	tree.root.add_child(cannon)
+	await Fixtures.wait_physics(tree, 2)
+	_player.teleport(cannon.global_position - Vector3.RIGHT * 3.2)
+	await tree.physics_frame
+	var speed: float = _player.config.run_speed
+	_player.launch_along(Vector3.RIGHT, speed, false)
+	var entered: int = -1
+	for i: int in 40:
+		if _player.loader_active():
+			entered = i
+			break
+		_player.move_velocity = Vector3.RIGHT * speed
+		await tree.physics_frame
+	check.call(entered >= 0, "(n1) the cannon catches Rino into a FIXED hold (entered %d)" % entered)
+	var vignette: ColorRect = _look.get_node("Vignette") as ColorRect
+	var hum: PlaceholderTone = _look.get_node("Hum") as PlaceholderTone
+	var environment: Environment = _environment.environment
+	var frames: int = 0
+	var seen: bool = false
+	var guard: int = 0
+	while _player.loader_active() and guard < 400:
+		await tree.process_frame
+		guard += 1
+		frames += 1
+		seen = seen or vignette.visible or hum.sounding() or environment.adjustment_enabled
+	check.call(frames > 0, "(n2) the cannon hold was sampled over %d process frames" % frames)
+	check.call(not seen, "(n2) the cannon hold shows no vignette, no desaturation and no hum")
+	cannon.queue_free()
 	await _end(tree)

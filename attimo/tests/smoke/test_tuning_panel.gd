@@ -8,6 +8,11 @@ const Fixtures := preload("res://tests/fixtures.gd")
 const PANEL_SCENE: String = "res://scenes/debug/tuning_panel.tscn"
 const CONFIG_PATH: String = "res://resources/player/movement_default.tres"
 const TEST_SETTINGS_PATH: String = "user://test_tuning_settings.cfg"
+## Plan 05.1-05 (D-05, D-12): the generated Kit section edits the nearest kit block's own config copy.
+const CANNON_SCENE: String = "res://scenes/kit/steampunk/steam_cannon.tscn"
+const CANNON_PRESET: String = "res://resources/kit/catch_launch/steam_cannon_default.tres"
+## Real seconds to wait for the 0.25 s nearest-block scan, with a margin.
+const KIT_SCAN_WAIT: float = 0.4
 
 
 func run(tree: SceneTree, check: Callable) -> void:
@@ -22,6 +27,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_aim_rows(tree, check)
 	await _scenario_slider_save(tree, check)
 	await _scenario_hand_rows(tree, check)
+	await _scenario_kit_rows(tree, check)
 	_cleanup_file(TEST_SETTINGS_PATH)
 
 
@@ -233,4 +239,65 @@ func _scenario_hand_rows(tree: SceneTree, check: Callable) -> void:
 			if key.begins_with("hand_"):
 				hand_keys += 1
 	check.call(hand_keys == 0, "(9) the settings file contains no hand_ key (%d)" % hand_keys)
+	await _free_all(tree, nodes)
+
+
+## The panel's kit_row_count() by reflection (plan 05.1-05), or -1 while the method does not exist.
+func _kit_rows(panel: TuningPanel) -> int:
+	return int(panel.call(&"kit_row_count")) if panel.has_method(&"kit_row_count") else -1
+
+
+func _kit_header(panel: TuningPanel) -> String:
+	for label: Node in panel.find_children("*", "Label", true, false):
+		var text: String = (label as Label).text
+		if text.begins_with("Kit:"):
+			return text
+	return ""
+
+
+func _expected_kit_rows() -> int:
+	var count: int = 0
+	for info: Dictionary in CatchLaunchConfig.new().get_property_list():
+		if info.type == TYPE_FLOAT and (info.usage & PROPERTY_USAGE_EDITOR) != 0 and info.hint == PROPERTY_HINT_RANGE:
+			count += 1
+	return count
+
+
+# (10) Plan 05.1-05 (D-05, D-12, T-05.1-14/15): within 0.25 s the Kit section binds the nearest kit block within 8 m and lists one row
+# per range float of its config; set_kit_value writes only that node's duplicated config (clamped to the range). A second cannon and
+# the shared preset keep fixed_hold 0.2. Moving to the second cannon rebinds the section to it.
+func _scenario_kit_rows(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree)
+	var player: PlayerController = nodes[1] as PlayerController
+	var panel: TuningPanel = nodes[3] as TuningPanel
+	var near: Node3D = Fixtures.spawn_scene(tree.root, CANNON_SCENE, Vector3(0.0, 0.0, -4.0))
+	near.name = "CannonNear"
+	var far: Node3D = Fixtures.spawn_scene(tree.root, CANNON_SCENE, Vector3(0.0, 0.0, -40.0))
+	far.name = "CannonFar"
+	nodes.append(near)
+	nodes.append(far)
+	await tree.create_timer(KIT_SCAN_WAIT, true, false, true).timeout
+	var expected: int = _expected_kit_rows()
+	check.call(expected >= 4 and _kit_rows(panel) == expected, "(10) the Kit section lists the %d range floats of the nearest block's config (got %d)" % [expected, _kit_rows(panel)])
+	check.call(_kit_header(panel) == "Kit: CannonNear", "(10) the Kit header names the nearest block (got '%s')" % _kit_header(panel))
+	check.call(panel.has_method(&"set_kit_value"), "(10) the panel has set_kit_value")
+	if panel.has_method(&"set_kit_value"):
+		panel.call(&"set_kit_value", &"fixed_hold", 0.3)
+		panel.call(&"set_kit_value", &"not_a_property", 1.0)
+	var near_config: Resource = near.get("config") as Resource
+	var far_config: Resource = far.get("config") as Resource
+	check.call(is_equal_approx(float(near_config.get("fixed_hold")), 0.3), "(10) set_kit_value changes the near cannon's fixed_hold to 0.3 (got %.2f)" % float(near_config.get("fixed_hold")))
+	check.call(is_equal_approx(float(far_config.get("fixed_hold")), 0.2), "(10) the far cannon keeps fixed_hold 0.2 (D-12, got %.2f)" % float(far_config.get("fixed_hold")))
+	var preset: Resource = load(CANNON_PRESET)
+	check.call(is_equal_approx(float(preset.get("fixed_hold")), 0.2), "(10) the shared preset keeps fixed_hold 0.2 (D-12, got %.2f)" % float(preset.get("fixed_hold")))
+	if panel.has_method(&"set_kit_value"):
+		panel.call(&"set_kit_value", &"fixed_speed", 999.0)
+	check.call(float(near_config.get("fixed_speed")) <= 40.0, "(10) a kit value is clamped to its range (fixed_speed %.1f)" % float(near_config.get("fixed_speed")))
+	check.call(panel.row_count() == _expected_rows() and panel.hand_row_count() >= 8, "(10) the movement and hand rows are unchanged by the Kit section")
+	player.teleport(Vector3(0.0, 0.0, -37.0))
+	await tree.create_timer(KIT_SCAN_WAIT, true, false, true).timeout
+	check.call(_kit_header(panel) == "Kit: CannonFar", "(10) moving to the far cannon rebinds the Kit section (got '%s')" % _kit_header(panel))
+	player.teleport(Vector3(0.0, 0.0, 30.0))
+	await tree.create_timer(KIT_SCAN_WAIT, true, false, true).timeout
+	check.call(_kit_rows(panel) == 0, "(10) with no kit block within 8 m the Kit section is empty (got %d)" % _kit_rows(panel))
 	await _free_all(tree, nodes)

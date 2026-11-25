@@ -23,6 +23,9 @@ const ENTRY_SPEED: float = 9.0
 ## The deterministic throw direction (debug_loader_direction), slightly up and to the north.
 const THROW_DIRECTION: Vector3 = Vector3(0.0, 0.3, -1.0)
 const FAR: Vector3 = Vector3(0.0, 10.0, 60.0)
+## Plan 05.1-05: the steam cues and the brass preview.
+const PREVIEW_SCRIPT: String = "res://scripts/player/loader_preview.gd"
+const BLAST_HIDE_SECONDS: float = 0.3
 
 var _bus: Node
 var _floor: StaticBody3D
@@ -48,6 +51,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_tap(tree, check, false)
 	await _scenario_arm_hold_not_caught(tree, check)
 	await _scenario_rearm(tree, check)
+	await _scenario_presentation(tree, check)
 	Engine.physics_ticks_per_second = SHIPPED_TPS
 
 
@@ -300,3 +304,57 @@ func _scenario_rearm(tree: SceneTree, check: Callable) -> void:
 	var caught: int = await _fly_in(tree, player, true)
 	check.call(caught >= 0, "(rearm) after rearm_time outside the radius the cage catches again (%d)" % caught)
 	await _end(tree, check, "rearm")
+
+
+## LoaderPreview.BRASS_COLOR by reflection, or an impossible colour while it does not exist.
+func _brass() -> Color:
+	var script: GDScript = load(PREVIEW_SCRIPT) as GDScript
+	return script.get_script_constant_map().get("BRASS_COLOR", Color(-1.0, -1.0, -1.0, -1.0)) as Color
+
+
+# Plan 05.1-05 (D-01, D-26, ROADMAP criterion 3): the cage reads steampunk at every cue. The catch shows the SteamPuff mesh; the hold
+# draws ONE brass arc (no turquoise bonus arc even with a full core); the throw shows the SteamBlast column on the release tick, gone
+# again within 0.3 s of real time. Both cue meshes are hidden before the catch.
+func _scenario_presentation(tree: SceneTree, check: Callable) -> void:
+	var player: PlayerController = await _begin(tree)
+	var puff: Node3D = _cage.find_child("SteamPuff", true, false) as Node3D
+	var blast: Node3D = _cage.find_child("SteamBlast", true, false) as Node3D
+	check.call(puff != null and blast != null, "(cues) the cage scene has a SteamPuff and a SteamBlast mesh")
+	if puff == null or blast == null:
+		await _end(tree, check, "cues")
+		return
+	check.call(not puff.visible and not blast.visible, "(cues) both cue meshes are hidden before the catch")
+	var blast_on_release: Array[bool] = []
+	var on_release_deferred: Callable = func(_p: Vector3, _d: Vector3, _s: float, _b: bool) -> void: blast_on_release.append(blast.visible)
+	_bus.connect(&"loader_released", on_release_deferred, CONNECT_DEFERRED)
+	var entered: int = await _fly_in(tree, player, true)
+	if not await _check_catch(tree, check, player, entered, "cues"):
+		_bus.disconnect(&"loader_released", on_release_deferred)
+		await _end(tree, check, "cues")
+		return
+	check.call(puff.visible, "(cues) the catch shows the SteamPuff")
+	await Fixtures.wait_process(tree, 3)
+	var preview: LoaderPreview = player.get_node("LoaderPreview") as LoaderPreview
+	check.call(preview.visible, "(cues) the trajectory preview shows during the cage hold")
+	var arcs: Variant = preview.get(&"arcs_drawn")
+	check.call(arcs != null and int(arcs) == 1, "(cues) the cage preview draws one arc, no bonus arc with a full core (got %s)" % arcs)
+	var brass: Color = _brass()
+	var used: int = preview.multimesh.visible_instance_count
+	var all_brass: bool = used > 0
+	var turquoise: int = 0
+	for i: int in used:
+		var tint: Color = preview.multimesh.get_instance_color(i)
+		all_brass = all_brass and tint.is_equal_approx(brass)
+		if tint.is_equal_approx(LoaderPreview.BONUS_COLOR):
+			turquoise += 1
+	check.call(all_brass, "(cues) every dash of the cage preview is brass (%d dashes)" % used)
+	check.call(turquoise == 0, "(cues) no dash is turquoise (%d)" % turquoise)
+	await Fixtures.tap_action(tree, &"loader", 1)
+	await Fixtures.wait_until(tree, func() -> bool: return not _released.is_empty(), 4)
+	await tree.process_frame
+	check.call(blast_on_release.size() == 1 and blast_on_release[0], "(cues) the SteamBlast shows on the release tick (%s)" % [blast_on_release])
+	await tree.create_timer(BLAST_HIDE_SECONDS, true, false, true).timeout
+	check.call(not blast.visible, "(cues) the SteamBlast is hidden again within %.1f s of real time" % BLAST_HIDE_SECONDS)
+	check.call(not puff.visible, "(cues) the SteamPuff is hidden again")
+	_bus.disconnect(&"loader_released", on_release_deferred)
+	await _end(tree, check, "cues")

@@ -6,6 +6,12 @@ extends RefCounted
 const Fixtures := preload("res://tests/fixtures.gd")
 const CROSSHAIR_SCENE: String = "res://scenes/ui/crosshair.tscn"
 const MAX_LAYER: int = 99
+## Plan 05.1-05 (D-01, D-05, D-26): the kit hold sources. The cage shows a brass pressure gauge, the cannon shows nothing.
+const CAGE_SCENE: String = "res://scenes/kit/steampunk/slingshot_core.tscn"
+const CANNON_SCENE: String = "res://scenes/kit/steampunk/steam_cannon.tscn"
+const PREVIEW_SCRIPT: String = "res://scripts/player/loader_preview.gd"
+const BRASS_LOOK: String = "res://resources/mechanisms/look_brass.tres"
+const CAGE_CENTRE: Vector3 = Vector3(0.0, 10.0, 0.0)
 
 
 func run(tree: SceneTree, check: Callable) -> void:
@@ -61,6 +67,8 @@ func run(tree: SceneTree, check: Callable) -> void:
 	crosshair.free()
 	await _check_loader_ring(tree, check)
 	await _check_shot_ring(tree, check)
+	await _check_cage_gauge(tree, check)
+	await _check_cannon_quiet(tree, check)
 
 
 # Plan 05-02 (D-14): while the Loader holds, a double ring turns counter-clockwise (the angle decreases), it is turquoise with a full
@@ -84,6 +92,7 @@ func _check_loader_ring(tree: SceneTree, check: Callable) -> void:
 	check.call(ring.loader_ring_speed_deg > 0.0, "the ring speed is positive; the shot arc stays clockwise (start at the top, angle increases)")
 	check.call(ring.loader_ring_tint == ring.lock_color, "a full core draws the ring in the turquoise lock colour")
 	check.call(ring.loader_ring_hold > 0.0 and ring.loader_ring_hold <= 1.0, "the inner ring fills with the hold time (%.2f)" % ring.loader_ring_hold)
+	check.call(_ring_style(ring) == &"double", "(05.1-05) the arm Loader keeps the double ring style (got '%s')" % _ring_style(ring))
 	Input.action_release(&"loader")
 	await Fixtures.wait_until(tree, func() -> bool: return not player.loader_active(), 8)
 	await Fixtures.wait_process(tree, 3)
@@ -149,5 +158,96 @@ func _check_shot_ring(tree: SceneTree, check: Callable) -> void:
 	ring.queue_free()
 	player.queue_free()
 	floor_body.queue_free()
+	await tree.process_frame
+	await tree.process_frame
+
+
+## Crosshair.loader_ring_style() by reflection (plan 05.1-05), or &"" while the method does not exist.
+func _ring_style(ring: Crosshair) -> StringName:
+	return ring.call(&"loader_ring_style") as StringName if ring.has_method(&"loader_ring_style") else &""
+
+
+## LoaderPreview.BRASS_COLOR by reflection, or an impossible colour while it does not exist.
+static func brass_color() -> Color:
+	var script: GDScript = load(PREVIEW_SCRIPT) as GDScript
+	return script.get_script_constant_map().get("BRASS_COLOR", Color(-1.0, -1.0, -1.0, -1.0)) as Color
+
+
+# Plan 05.1-05 (D-01, D-26): while the cage holds Rino the ring is a brass pressure gauge whose needle stands at the stored speed
+# (stored_ratio), brass even with a full core (never the turquoise lock colour, never the grey empty-arm colour).
+func _check_cage_gauge(tree: SceneTree, check: Callable) -> void:
+	var brass: Color = brass_color()
+	var look: StandardMaterial3D = load(BRASS_LOOK) as StandardMaterial3D
+	check.call(brass.is_equal_approx(look.albedo_color), "(g0) LoaderPreview.BRASS_COLOR is the look_brass.tres albedo %s (got %s)" % [look.albedo_color, brass])
+	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root, Vector3(300.0, 1.0, 300.0))
+	var cage: Node3D = Fixtures.spawn_scene(tree.root, CAGE_SCENE, CAGE_CENTRE)
+	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(0.0, 10.0, 60.0))
+	var ring: Crosshair = (load(CROSSHAIR_SCENE) as PackedScene).instantiate() as Crosshair
+	tree.root.add_child(ring)
+	Fixtures.set_energy(player, 25.0)
+	await Fixtures.wait_physics(tree, 3)
+	player.teleport(CAGE_CENTRE + Vector3(-4.0, -1.0, 0.0))
+	player.launch_along(Vector3.RIGHT, 9.0, false)
+	var entered: int = await Fixtures.wait_until(tree, func() -> bool: return player.loader_active(), 40)
+	await Fixtures.wait_process(tree, 3)
+	check.call(entered >= 0 and ring.loader_ring_visible, "(g1) the cage hold shows the Loader ring (entered %d)" % entered)
+	var state: LoaderState = player.loader_state()
+	check.call(_ring_style(ring) == &"gauge", "(g1) the cage hold draws the pressure gauge style (got '%s')" % _ring_style(ring))
+	var needle: Variant = ring.get(&"loader_gauge_needle")
+	check.call(needle != null and state != null and state.stored_ratio() > 0.0 and absf(float(needle) - state.stored_ratio()) < 0.001, "(g2) the gauge needle stands at the stored ratio (needle %s, stored %.3f)" % [needle, state.stored_ratio() if state != null else -1.0])
+	check.call(ring.loader_ring_tint.is_equal_approx(brass), "(g3) the gauge is brass with a full core (got %s)" % ring.loader_ring_tint)
+	check.call(ring.loader_ring_tint != ring.lock_color and ring.loader_ring_tint != ring.loader_empty_color, "(g3) the gauge is neither turquoise nor the grey empty-arm colour")
+	await Fixtures.tap_action(tree, &"loader", 1)
+	await Fixtures.wait_until(tree, func() -> bool: return not player.loader_active(), 6)
+	await Fixtures.wait_process(tree, 3)
+	check.call(not ring.loader_ring_visible, "(g4) the gauge is hidden after the cage throw")
+	Input.action_release(&"loader")
+	Fixtures.restore_time()
+	for node: Node in [ring, player, cage, floor_body]:
+		node.queue_free()
+	await tree.process_frame
+	await tree.process_frame
+
+
+# Plan 05.1-05 (D-05): the steam cannon's 0.2 s FIXED hold has no input, so it shows no Loader ring and no trajectory preview.
+func _check_cannon_quiet(tree: SceneTree, check: Callable) -> void:
+	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root, Vector3(300.0, 1.0, 300.0))
+	var cannon: Node3D = (load(CANNON_SCENE) as PackedScene).instantiate() as Node3D
+	cannon.rotation.y = deg_to_rad(-90.0)
+	tree.root.add_child(cannon)
+	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(0.0, 0.0, 40.0))
+	var ring: Crosshair = (load(CROSSHAIR_SCENE) as PackedScene).instantiate() as Crosshair
+	tree.root.add_child(ring)
+	var preview: Node3D = player.get_node("LoaderPreview") as Node3D
+	Fixtures.set_energy(player, 25.0)
+	await Fixtures.wait_physics(tree, 3)
+	player.teleport(cannon.global_position - Vector3.RIGHT * 3.2)
+	await tree.physics_frame
+	var speed: float = player.config.run_speed
+	player.launch_along(Vector3.RIGHT, speed, false)
+	var entered: int = -1
+	for i: int in 40:
+		if player.loader_active():
+			entered = i
+			break
+		player.move_velocity = Vector3.RIGHT * speed
+		await tree.physics_frame
+	check.call(entered >= 0, "(q1) the cannon catches Rino into a FIXED hold (entered %d)" % entered)
+	var frames: int = 0
+	var ring_seen: bool = false
+	var preview_seen: bool = false
+	var guard: int = 0
+	while player.loader_active() and guard < 400:
+		await tree.process_frame
+		guard += 1
+		frames += 1
+		ring_seen = ring_seen or ring.loader_ring_visible
+		preview_seen = preview_seen or preview.visible
+	check.call(frames > 0, "(q2) the cannon hold was sampled over %d process frames" % frames)
+	check.call(not ring_seen, "(q2) the cannon hold shows no Loader ring")
+	check.call(not preview_seen, "(q2) the cannon hold shows no trajectory preview")
+	Fixtures.restore_time()
+	for node: Node in [ring, player, cannon, floor_body]:
+		node.queue_free()
 	await tree.process_frame
 	await tree.process_frame
