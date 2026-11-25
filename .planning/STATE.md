@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.11.0.4
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05.1-02-PLAN.md
-last_updated: "2026-11-24T23:29:34.897Z"
-last_activity: 2026-11-25 -- Plan 05.1-02 complete (steam cannon FIXED, Capture / tube / puzzle rooms removed)
+stopped_at: Completed 05.1-03-PLAN.md
+last_updated: "2026-11-25T00:09:31.378Z"
+last_activity: 2026-11-25 -- Plan 05.1-03 complete (Wall surface block, head clearance clamp, twin layout, nozzle wall/jump cut)
 progress:
   total_phases: 17
   completed_phases: 6
   total_plans: 66
-  completed_plans: 48
+  completed_plans: 49
   percent: 35
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 05.1
-Plan: 3 of 20 (05.1-01, 05.1-02 complete)
+Plan: 4 of 20 (05.1-01 to 05.1-03 complete)
 Status: Ready to execute
-Last activity: 2026-11-25 -- Plan 05.1-02 complete (steam cannon FIXED, Capture / tube / puzzle rooms removed)
+Last activity: 2026-11-25 -- Plan 05.1-03 complete (Wall surface block, head clearance clamp, twin layout, nozzle wall/jump cut)
 
-Progress: [███████░░░] 73%
+Progress: [███████░░░] 74%
 
 ## Performance Metrics
 
@@ -95,6 +95,7 @@ Progress: [███████░░░] 73%
 | Phase 05 P05-04 | single session | 3 tasks | 30 files |
 | Phase 05.1 P01 | 40min | 3 tasks | 24 files |
 | Phase 05.1 P02 | 55min | 3 tasks | 30 files |
+| Phase 05.1 P03 | 55min | 3 tasks | 30 files |
 
 ## Accumulated Context
 
@@ -103,6 +104,9 @@ Progress: [███████░░░] 73%
 Decisions are logged in the PROJECT.md Key Decisions table.
 Recent decisions that affect current work:
 
+- [Phase 05.1-03]: Wall-run head clearance is a pose-only geometric clamp in ProceduralPose (WALL_RUN_HEAD_CLEARANCE 0.45 m, lean 4.38 deg); wall_run_lean_deg stays 18
+- [Phase 05.1-03]: Wall-jump twin layout rule WallSurface.TWIN_FACE_GAP_MIN 6 m between faces, JUMP_PAD_HEIGHT_MIN 8 m; no wall_jump_* retune
+- [Phase 05.1-03]: Wall surfaces are always-on kit blocks; SteamNozzle keeps only UPDRAFT; Geyser moved to Hoch slot (0,1)
 - [Phase 05.1-02]: Cannon path LoaderState FIXED (35 code lines, under the 40-line fallback); the Capture state is deleted
 - [Phase 05.1-02]: The FIXED discharge emits launched, refills only the Loader use and never calls TimeFx (no slow motion, no hitstop)
 - [Phase 05.1-02]: Phase 4 puzzle rooms removed (D-29); gym station SteamCannon (kind kit, yaw only), Slingshot moved to Werfen slot (1,1)
