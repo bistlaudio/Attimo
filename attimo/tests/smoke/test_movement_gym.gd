@@ -14,7 +14,7 @@ const MANNEQUIN_SCENE: String = "res://scenes/player/mannequin.tscn"
 const CONTRACT_NODES: Array[String] = [
 	"WorldEnvironment", "Sun", "Hall", "Spawn", "Player", "CameraRig",
 	"Zone_MeasurementStrip", "Zone_RampsStairs", "Zone_Gaps", "Zone_MovingPlatforms", "Zone_Conveyors",
-	"Zone_CameraTests", "Zone_Loader", "Zone_Energy", "FallResetHall", "EventLog", "MetricsOverlay", "TuningPanel", "Crosshair", "EnergyHud", "LoaderLook",
+	"Zone_CameraTests", "Zone_Loader", "Zone_Energy", "Zone_KitSteampunk", "Zone_KitEnergy", "Zone_KitNature", "FallResetHall", "EventLog", "MetricsOverlay", "TuningPanel", "Crosshair", "EnergyHud", "LoaderLook",
 ]
 const RISER_COUNT: int = 6
 const RISER_STEP: float = 0.15
@@ -107,7 +107,7 @@ func _check_composition(gym: Node, check: Callable) -> PlayerController:
 	if cameras.size() == 1:
 		_check_camera_rig(cameras[0], player, check)
 
-	_check_mechanism_rooms(gym, check)
+	_check_kit_areas(gym, check)
 	_check_platforms_and_conveyors(gym, check)
 	_check_fall_resets(gym, check)
 	_check_risers(gym, check)
@@ -279,117 +279,40 @@ func _layer_allowed(body: StaticBody3D) -> bool:
 	return false
 
 
-## The door into room 2 (D-26): a Zahnrad-Tor wired to a Lever in Zone_MechanismRooms, and no WallEast_0.
-func _check_mechanism_rooms(gym: Node, check: Callable) -> void:
-	var zone: Node = gym.get_node_or_null("Zone_MechanismRooms")
-	check.call(zone != null, "the gym has Zone_MechanismRooms")
+## The east door (Phase 05.1, D-28): a plain doorway (no WallEast_0, no gate) into the kit layer areas. The steampunk area holds
+## the kit blocks of plans 01-04, counted by class anywhere below the zone (stations nest them under Role_* / Station_* groups); the
+## area layout itself (roles, stations, "Erwartet:" signs, registry) is test_kit_gym_layout.
+func _check_kit_areas(gym: Node, check: Callable) -> void:
+	check.call(gym.find_child("WallEast_0", true, false) == null, "WallEast_0 is absent (the door cell)")
+	check.call(gym.find_child("ZahnradTor", true, false) == null, "the east door is a plain doorway, no gear gate")
+	var zone: Node = gym.get_node_or_null("Zone_KitSteampunk")
+	check.call(zone != null, "the gym has Zone_KitSteampunk")
 	if zone == null:
 		return
-	var gate: GearGate = zone.get_node_or_null("ZahnradTor") as GearGate
-	check.call(gate != null, "Zone_MechanismRooms holds a GearGate")
-	check.call(gate != null and gate.source is Lever, "the GearGate source is a Lever")
-	check.call(gym.find_child("WallEast_0", true, false) == null, "WallEast_0 is absent (the door cell)")
-	_check_showcase_stations(zone, check)
-	_check_moving_stations(zone, check)
-	_check_field_stations(zone, check)
-
-
-## Room 2 holds a station per trigger and logic node (D-27), and every wired node has its sources (T-04-08).
-func _check_showcase_stations(zone: Node, check: Callable) -> void:
-	var counts: Dictionary = {"Valve": 0, "EnergyCore": 0, "Crank": 0, "LogicAnd": 0, "LogicOr": 0, "LogicTimer": 0}
-	var unwired: int = 0
-	for child: Node in zone.get_children():
-		if child is Valve:
-			counts["Valve"] += 1
-		elif child is EnergyCore:
-			counts["EnergyCore"] += 1
-		elif child is Crank:
-			counts["Crank"] += 1
-		elif child is LogicAnd or child is LogicOr:
-			counts["LogicAnd" if child is LogicAnd else "LogicOr"] += 1
-			var sources: Array = child.get("sources")
-			if sources.is_empty() or sources.has(null):
-				unwired += 1
-		elif child is LogicTimer:
-			counts["LogicTimer"] += 1
-			if (child as LogicTimer).source == null:
-				unwired += 1
-		if child is Mechanism and (child as Mechanism).source == null:
-			unwired += 1
-	for kind: String in counts:
-		check.call(int(counts[kind]) >= 1, "room 2 has a %s station (%d)" % [kind, int(counts[kind])])
-	check.call(unwired == 0, "every Mechanism and logic node in Zone_MechanismRooms is wired (%d unwired)" % unwired)
-
-
-## Room 2 holds a station per moving mechanism and variant (D-27), each with a source. The group moving_platform stays at its three
-## test platforms (checked with the platform scenarios above).
-func _check_moving_stations(zone: Node, check: Callable) -> void:
-	var axes: Dictionary = {}
-	var looks: Dictionary = {}
-	var modes: Dictionary = {}
-	var behaviours: Dictionary = {}
-	var pendulums: int = 0
-	var unwired: int = 0
-	for child: Node in zone.get_children():
-		if child is TimedMotion:
-			# Kit block (plan 05.1-04): always on, no source (D-13); the LYING gear is cut (KIT-04).
-			axes[(child as TimedMotion).config.profile] = true
-			continue
-		elif child is LiftPlatform:
-			looks[(child as LiftPlatform).look] = true
-		elif child is SteamNozzle:
-			modes[(child as SteamNozzle).mode] = true
-		elif child is Conveyor:
-			behaviours[(child as Conveyor).behaviour] = true
-		elif child is Pendulum:
-			pendulums += 1
-		else:
-			continue
-		if (child as Mechanism).source == null:
-			unwired += 1
-	check.call(axes.size() == 2 and axes.has(TimedMotionConfig.Profile.SWEEP) and axes.has(TimedMotionConfig.Profile.TILT), "room 2 has a Timed motion clock hand (SWEEP) and tilt plate (TILT), no gear (%d profiles)" % axes.size())
-	check.call(looks.size() == 2, "room 2 has a Hub-Plattform with both looks (%d)" % looks.size())
-	check.call(behaviours.size() == 2, "room 2 has a Foerderband per behaviour (%d)" % behaviours.size())
-	# Plan 05.1-03 cut the launch and push-back modes (D-06, KIT-04): the nozzle is an updraft only.
-	check.call(modes.size() == 1 and modes.has(SteamNozzle.Mode.UPDRAFT), "room 2 has a Dampfduese, updraft only (%d modes)" % modes.size())
-	check.call(pendulums >= 1, "room 2 has a Pendel (%d)" % pendulums)
-	check.call(unwired == 0, "every moving mechanism in Zone_MechanismRooms has a source (%d unwired)" % unwired)
-
-
-## Phase 04.1 stations (MECH-04, MECH-05, MOVE-12): the new mechanisms each have a station with a source in room 2.
-func _check_field_stations(zone: Node, check: Callable) -> void:
-	var field_modes: Dictionary = {}
-	var pad_modes: Dictionary = {}
-	var kinds: Dictionary = {"WindTunnel": 0, "LowGravityZone": 0, "CatchLaunch": 0, "BouncePad": 0, "BoostRing": 0, "CrumblingPlatform": 0, "PistonWall": 0, "Geyser": 0, "Paternoster": 0}
-	var unwired: int = 0
-	var plate_gates: int = 0
-	var plates: Array[Node] = []
-	for child: Node in zone.get_children():
-		if child is PressurePlate:
-			plates.append(child)
-		if child is GearGate and plates.has((child as GearGate).source):
-			plate_gates += 1
-		# Kit blocks (Phase 05.1, e.g. CatchLaunch) count as kinds but carry no source (D-13), so they skip the wiring check.
-		if child is Mechanism or child is KitBlock:
-			for kind: String in kinds:
-				if str(child.get_script().get_global_name()) == kind:
-					kinds[kind] += 1
-		if not child is Mechanism:
-			continue
-		var mechanism: Mechanism = child as Mechanism
-		if mechanism.source == null:
-			unwired += 1
-		if child is ForceField:
-			field_modes[(child as ForceField).mode] = true
-	# Plan 05.1-03: the wall pads are Wall surface kit blocks (no source), one per surface at least.
-	for child: Node in zone.get_children():
-		if child is WallSurface:
-			pad_modes[(child as WallSurface).config.surface] = true
-	check.call(field_modes.size() == 2, "room 2 has a ForceField in both modes (%d)" % field_modes.size())
-	check.call(pad_modes.size() == 2, "room 2 has a Wall surface of both kinds, wall-run and wall-jump (%d)" % pad_modes.size())
-	for kind: String in kinds:
-		check.call(int(kinds[kind]) >= 1, "room 2 has a %s station (%d)" % [kind, int(kinds[kind])])
+	var launchers: Array[CatchLaunch] = []
+	var profiles: Dictionary = {}
+	var surfaces: Dictionary = {}
+	for node: Node in zone.find_children("*", "", true, false):
+		if node is CatchLaunch:
+			launchers.append(node as CatchLaunch)
+		elif node is TimedMotion:
+			profiles[(node as TimedMotion).config.profile] = true
+		elif node is WallSurface:
+			surfaces[(node as WallSurface).config.surface] = true
 	# Plan 05.1-02: the slingshot cage (FREE_AIM) and the steam cannon (FIXED) are both Catch & launch blocks.
-	check.call(int(kinds["CatchLaunch"]) == 2, "room 2 has two CatchLaunch stations, the cage and the cannon (%d)" % int(kinds["CatchLaunch"]))
-	check.call(plate_gates >= 1, "room 2 has a PressurePlate that drives a gate (%d)" % plate_gates)
-	check.call(unwired == 0, "every new mechanism in Zone_MechanismRooms has a source (%d unwired)" % unwired)
+	check.call(launchers.size() == 2, "the steampunk area has two CatchLaunch stations, the cage and the cannon (%d)" % launchers.size())
+	var fixed: CatchLaunch = null
+	for block: CatchLaunch in launchers:
+		if block.config != null and block.config.profile == CatchLaunchConfig.Profile.FIXED:
+			fixed = block
+	check.call(fixed != null, "one CatchLaunch uses the FIXED profile (the steam cannon)")
+	if fixed != null:
+		# Yaw only: the barrel pitch lives in the config, never on the node (fault A of plan 05.1-02 RESEARCH).
+		var up: Vector3 = fixed.global_basis.y.normalized()
+		check.call(up.dot(Vector3.UP) > 0.999, "the steam cannon node is not pitched (up %s)" % up)
+		var direction: Vector3 = fixed.barrel_direction()
+		check.call(direction.y > 0.6 and direction.x > 0.6, "the steam cannon barrel points up and east, along +X (%s)" % direction)
+	# Plan 05.1-04: the always-on clock hand (SWEEP) and tilt plate (TILT); the LYING gear is cut (KIT-04).
+	check.call(profiles.size() == 2 and profiles.has(TimedMotionConfig.Profile.SWEEP) and profiles.has(TimedMotionConfig.Profile.TILT), "the steampunk area has a Timed motion clock hand (SWEEP) and tilt plate (TILT) (%d profiles)" % profiles.size())
+	# Plan 05.1-03: the wall pads are Wall surface kit blocks, one per surface at least.
+	check.call(surfaces.size() == 2, "the steampunk area has a Wall surface of both kinds, wall-run and wall-jump (%d)" % surfaces.size())

@@ -129,17 +129,17 @@ func _build_walls(zone: Node3D, builder: RefCounted, x_min: float, x_max: float,
 	var columns: int = roundi((x_max - x_min) / TILE)
 	for column: int in columns:
 		var x: float = x_min + TILE * (column + 0.5)
-		builder.call(&"_wall", zone, "WallNorth_%d" % column, x, -Z_HALF - 0.5, 0.0)
-		builder.call(&"_wall", zone, "WallSouth_%d" % column, x, Z_HALF + 0.5, 0.0)
+		builder.call(&"_wall", zone, "AreaWallNorth_%d" % column, x, -Z_HALF - 0.5, 0.0)
+		builder.call(&"_wall", zone, "AreaWallSouth_%d" % column, x, Z_HALF + 0.5, 0.0)
 	var rows: int = roundi(Z_HALF * 2.0 / TILE)
 	var at_hall: bool = x_min - TILE * 0.5 < HALL_WALL_X
 	for row: int in rows:
 		var z: float = -Z_HALF + TILE * (row + 0.5)
 		var corridor: bool = absf(z) < CORRIDOR_HALF
 		if not at_hall and not corridor:
-			builder.call(&"_wall", zone, "WallWest_%d" % row, x_min - 0.5, z, 90.0)
+			builder.call(&"_wall", zone, "AreaWallWest_%d" % row, x_min - 0.5, z, 90.0)
 		if not (east_open and corridor):
-			builder.call(&"_wall", zone, "WallEast_%d" % row, x_max + 0.5, z, 90.0)
+			builder.call(&"_wall", zone, "AreaWallEast_%d" % row, x_max + 0.5, z, 90.0)
 
 
 ## A tint overlay AreaFloor in the layer colour and a large header AreaHeader over the area centre.

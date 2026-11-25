@@ -1,7 +1,7 @@
 extends RefCounted
 ## HAND-07 / D-07, D-07b: every mechanism and trigger scene carries a faceted GlowElement and shared brass, copper or iron
-## materials. The four interactable lenses (lever, valve, crank, energy core) are GlowElements named GlowLens, the glow
-## stages still switch their material_override, and nothing uses a sphere lens any more.
+## materials. The interactable lenses (lever, valve, energy core; the crank was cut in plan 05.1-06) are GlowElements named
+## GlowLens, the glow stages still switch their material_override, and nothing uses a sphere lens any more.
 
 const DIR: String = "res://scenes/mechanisms/"
 const BRASS: String = "res://resources/mechanisms/look_brass.tres"
@@ -12,7 +12,6 @@ const GLOW_TARGET: String = "res://resources/mechanisms/glow_target.tres"
 const LENS_STYLES: Dictionary = {
 	"lever": GlowElement.Style.DIAMOND,
 	"valve": GlowElement.Style.HUB,
-	"crank": GlowElement.Style.COG,
 	"energy_core": GlowElement.Style.CAGE,
 }
 
@@ -29,7 +28,8 @@ func run(tree: SceneTree, check: Callable) -> void:
 		if file.ends_with(".tscn") and file != "glow_element.tscn":
 			names.append(file)
 	names.sort()
-	check.call(names.size() >= 26, "at least 26 mechanism and trigger scenes (%d)" % names.size())
+	# 23 since plan 05.1-06 deleted the lift, crank and pressure plate scenes (26 before).
+	check.call(names.size() >= 23, "at least 23 mechanism and trigger scenes (%d)" % names.size())
 	for file: String in names:
 		var stem: String = file.get_basename()
 		var packed: PackedScene = load(DIR + file) as PackedScene

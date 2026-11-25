@@ -1,15 +1,13 @@
 extends RefCounted
-## MECH-04 F, G, H, I (D-06): the bounce pad, boost ring, pressure plate and crumbling platform. Each is driven by an active
-## SignalSource stub and moves the player only through launch_along, boost_along, refill_air_dash or the engine's platform
-## handling. Real player, real geometry, 60 Hz.
+## MECH-04 F, G, I (D-06): the bounce pad, boost ring and crumbling platform (the pressure plate was cut in plan 05.1-06, D-09).
+## Each is driven by an active SignalSource stub and moves the player only through launch_along, boost_along, refill_air_dash or
+## the engine's platform handling. Real player, real geometry, 60 Hz.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
 const BOUNCE_SCENE: String = "res://scenes/mechanisms/bounce_pad.tscn"
 const RING_SCENE: String = "res://scenes/mechanisms/boost_ring.tscn"
-const PLATE_SCENE: String = "res://scenes/mechanisms/pressure_plate.tscn"
 const CRUMBLE_SCENE: String = "res://scenes/mechanisms/crumbling_platform.tscn"
-const GATE_SCENE: String = "res://scenes/mechanisms/gear_gate.tscn"
 const SHIPPED_TPS: int = 60
 
 var _launched: int = 0
@@ -25,7 +23,6 @@ func run(tree: SceneTree, check: Callable) -> void:
 	EventBus.dash_refilled.connect(_on_refilled)
 	await _scenario_bounce(tree, check)
 	await _scenario_ring(tree, check)
-	await _scenario_plate(tree, check)
 	await _scenario_crumble(tree, check)
 	EventBus.launched.disconnect(_on_launched)
 	EventBus.boosted.disconnect(_on_boosted)
@@ -165,40 +162,6 @@ func _scenario_ring(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.wait_physics(tree, 3)
 	check.call(_boosted == 1, "ring: two crossings within the rearm time count once (%d)" % _boosted)
 	await _free(tree, [twice, ring, source])
-
-
-func _scenario_plate(tree: SceneTree, check: Callable) -> void:
-	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)
-	var plate: PressurePlate = (load(PLATE_SCENE) as PackedScene).instantiate() as PressurePlate
-	plate.position = Vector3(0.0, 0.0, 0.0)
-	tree.root.add_child(plate)
-	var gate: GearGate = (load(GATE_SCENE) as PackedScene).instantiate() as GearGate
-	gate.source = plate
-	gate.position = Vector3(0.0, 0.0, -10.0)
-	tree.root.add_child(gate)
-	var sensor: Area3D = plate.get_node("Sensor") as Area3D
-	check.call(sensor.collision_layer == 0 and sensor.collision_mask == PhysicsLayers.PLAYER, "the plate sensor is an Area3D on no layer that masks the Player")
-	await Fixtures.wait_physics(tree, 5)
-	check.call(not plate.is_active, "plate: not active at rest")
-	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(0.0, 0.1, 0.0))
-	var on_ticks: int = await Fixtures.wait_until(tree, func() -> bool: return plate.is_active, 60)
-	check.call(on_ticks >= 0 and on_ticks <= 3 and player.is_grounded(), "plate: active within 3 ticks of the player standing on it (%d ticks, grounded %s)" % [on_ticks, player.is_grounded()])
-	await Fixtures.wait_physics(tree, 40)
-	check.call(plate.is_active and gate.is_open(), "plate: a gate wired to it is open while the player stands on it")
-	player.global_position = Vector3(8.0, 0.2, 0.0)
-	player.reset_physics_interpolation()
-	var off_ticks: int = await Fixtures.wait_until(tree, func() -> bool: return not plate.is_active, 30)
-	check.call(off_ticks >= 0 and off_ticks <= 3, "plate: inactive within 3 ticks after the player leaves (%d)" % off_ticks)
-	player.global_position = Vector3(0.0, 0.5, 0.0)
-	player.reset_physics_interpolation()
-	await Fixtures.wait_physics(tree, 30)
-	check.call(plate.is_active, "plate: active again after stepping back on")
-	player.global_position = Vector3(8.0, 0.2, 0.0)
-	await Fixtures.wait_physics(tree, 10)
-	plate.set_active(true)
-	plate.reset()
-	check.call(not plate.is_active, "plate: reset() restores the inactive state")
-	await _free(tree, [player, gate, plate, floor_body])
 
 
 func _crumble(tree: SceneTree, source: SignalSource, at: Vector3) -> CrumblingPlatform:

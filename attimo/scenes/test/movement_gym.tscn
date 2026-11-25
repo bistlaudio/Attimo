@@ -4484,275 +4484,275 @@ collision_mask = 0
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 42.5, -1, 0)
 collision_mask = 0
 
-[node name="WallNorth_0" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_0" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_0" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_0" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_1" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_1" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_1" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_1" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_2" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_2" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 53, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_2" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_2" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 53, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_3" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_3" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 57, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_3" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_3" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 57, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_4" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_4" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 61, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_4" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_4" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 61, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_5" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_5" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 65, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_5" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_5" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 65, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_6" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_6" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 69, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_6" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_6" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 69, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_7" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_7" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 73, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_7" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_7" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 73, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_8" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_8" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 77, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_8" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_8" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 77, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_9" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_9" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 81, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_9" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_9" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 81, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_10" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_10" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 85, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_10" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_10" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 85, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_11" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_11" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 89, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_11" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_11" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 89, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_12" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_12" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 93, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_12" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_12" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 93, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_13" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_13" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 97, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_13" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_13" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 97, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_14" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_14" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 101, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_14" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_14" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 101, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_15" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_15" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 105, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_15" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_15" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 105, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_16" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_16" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 109, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_16" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_16" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 109, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_17" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_17" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 113, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_17" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_17" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 113, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_18" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_18" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 117, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_18" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_18" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 117, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_19" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_19" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 121, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_19" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_19" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 121, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_20" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_20" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 125, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_20" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_20" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 125, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_21" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_21" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 129, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_21" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_21" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 129, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_22" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_22" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 133, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_22" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_22" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 133, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_23" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_23" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 137, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_23" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_23" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 137, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_24" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_24" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 141, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_24" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_24" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 141, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_25" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_25" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 145, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_25" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_25" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 145, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_26" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_26" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 149, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_26" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_26" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 149, 0, 32.5)
 collision_mask = 0
 
-[node name="WallEast_0" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_0" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 151.5, 0, -30)
 collision_mask = 0
 
-[node name="WallEast_1" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_1" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 151.5, 0, -26)
 collision_mask = 0
 
-[node name="WallEast_2" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_2" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 151.5, 0, -22)
 collision_mask = 0
 
-[node name="WallEast_3" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_3" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 151.5, 0, -18)
 collision_mask = 0
 
-[node name="WallEast_4" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_4" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 151.5, 0, -14)
 collision_mask = 0
 
-[node name="WallEast_5" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_5" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 151.5, 0, -10)
 collision_mask = 0
 
-[node name="WallEast_6" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_6" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 151.5, 0, -6)
 collision_mask = 0
 
-[node name="WallEast_9" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_9" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 151.5, 0, 6)
 collision_mask = 0
 
-[node name="WallEast_10" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_10" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 151.5, 0, 10)
 collision_mask = 0
 
-[node name="WallEast_11" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_11" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 151.5, 0, 14)
 collision_mask = 0
 
-[node name="WallEast_12" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_12" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 151.5, 0, 18)
 collision_mask = 0
 
-[node name="WallEast_13" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_13" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 151.5, 0, 22)
 collision_mask = 0
 
-[node name="WallEast_14" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_14" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 151.5, 0, 26)
 collision_mask = 0
 
-[node name="WallEast_15" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_15" type="StaticBody3D" parent="Zone_KitSteampunk" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 151.5, 0, 30)
 collision_mask = 0
 
@@ -6232,259 +6232,259 @@ collision_mask = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 153, 0, 4.5)
 collision_mask = 0
 
-[node name="WallNorth_0" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_0" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 157, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_0" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_0" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 157, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_1" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_1" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 161, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_1" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_1" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 161, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_2" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_2" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 165, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_2" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_2" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 165, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_3" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_3" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 169, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_3" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_3" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 169, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_4" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_4" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 173, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_4" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_4" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 173, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_5" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_5" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 177, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_5" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_5" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 177, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_6" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_6" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 181, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_6" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_6" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 181, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_7" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_7" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 185, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_7" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_7" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 185, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_8" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_8" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 189, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_8" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_8" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 189, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_9" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_9" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 193, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_9" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_9" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 193, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_10" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_10" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 197, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_10" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_10" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 197, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_11" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_11" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 201, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_11" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_11" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 201, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_12" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_12" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 205, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_12" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_12" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 205, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_13" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_13" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 209, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_13" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_13" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 209, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_14" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_14" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 213, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_14" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_14" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 213, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_15" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_15" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 217, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_15" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_15" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 217, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_16" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_16" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 221, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_16" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_16" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 221, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_17" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_17" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 225, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_17" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_17" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 225, 0, 32.5)
 collision_mask = 0
 
-[node name="WallWest_0" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_0" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 154.5, 0, -30)
 collision_mask = 0
 
-[node name="WallEast_0" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_0" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 227.5, 0, -30)
 collision_mask = 0
 
-[node name="WallWest_1" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_1" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 154.5, 0, -26)
 collision_mask = 0
 
-[node name="WallEast_1" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_1" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 227.5, 0, -26)
 collision_mask = 0
 
-[node name="WallWest_2" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_2" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 154.5, 0, -22)
 collision_mask = 0
 
-[node name="WallEast_2" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_2" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 227.5, 0, -22)
 collision_mask = 0
 
-[node name="WallWest_3" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_3" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 154.5, 0, -18)
 collision_mask = 0
 
-[node name="WallEast_3" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_3" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 227.5, 0, -18)
 collision_mask = 0
 
-[node name="WallWest_4" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_4" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 154.5, 0, -14)
 collision_mask = 0
 
-[node name="WallEast_4" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_4" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 227.5, 0, -14)
 collision_mask = 0
 
-[node name="WallWest_5" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_5" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 154.5, 0, -10)
 collision_mask = 0
 
-[node name="WallEast_5" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_5" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 227.5, 0, -10)
 collision_mask = 0
 
-[node name="WallWest_6" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_6" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 154.5, 0, -6)
 collision_mask = 0
 
-[node name="WallEast_6" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_6" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 227.5, 0, -6)
 collision_mask = 0
 
-[node name="WallWest_9" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_9" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 154.5, 0, 6)
 collision_mask = 0
 
-[node name="WallEast_9" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_9" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 227.5, 0, 6)
 collision_mask = 0
 
-[node name="WallWest_10" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_10" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 154.5, 0, 10)
 collision_mask = 0
 
-[node name="WallEast_10" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_10" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 227.5, 0, 10)
 collision_mask = 0
 
-[node name="WallWest_11" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_11" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 154.5, 0, 14)
 collision_mask = 0
 
-[node name="WallEast_11" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_11" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 227.5, 0, 14)
 collision_mask = 0
 
-[node name="WallWest_12" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_12" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 154.5, 0, 18)
 collision_mask = 0
 
-[node name="WallEast_12" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_12" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 227.5, 0, 18)
 collision_mask = 0
 
-[node name="WallWest_13" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_13" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 154.5, 0, 22)
 collision_mask = 0
 
-[node name="WallEast_13" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_13" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 227.5, 0, 22)
 collision_mask = 0
 
-[node name="WallWest_14" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_14" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 154.5, 0, 26)
 collision_mask = 0
 
-[node name="WallEast_14" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_14" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 227.5, 0, 26)
 collision_mask = 0
 
-[node name="WallWest_15" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_15" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 154.5, 0, 30)
 collision_mask = 0
 
-[node name="WallEast_15" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_15" type="StaticBody3D" parent="Zone_KitEnergy" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 227.5, 0, 30)
 collision_mask = 0
 
@@ -7528,243 +7528,243 @@ collision_mask = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 229, 0, 4.5)
 collision_mask = 0
 
-[node name="WallNorth_0" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_0" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 233, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_0" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_0" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 233, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_1" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_1" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 237, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_1" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_1" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 237, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_2" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_2" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 241, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_2" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_2" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 241, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_3" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_3" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 245, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_3" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_3" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 245, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_4" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_4" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 249, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_4" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_4" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 249, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_5" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_5" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 253, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_5" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_5" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 253, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_6" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_6" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 257, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_6" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_6" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 257, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_7" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_7" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 261, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_7" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_7" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 261, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_8" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_8" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 265, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_8" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_8" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 265, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_9" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_9" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 269, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_9" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_9" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 269, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_10" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_10" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 273, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_10" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_10" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 273, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_11" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_11" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 277, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_11" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_11" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 277, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_12" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_12" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 281, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_12" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_12" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 281, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_13" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_13" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 285, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_13" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_13" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 285, 0, 32.5)
 collision_mask = 0
 
-[node name="WallNorth_14" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallNorth_14" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 289, 0, -32.5)
 collision_mask = 0
 
-[node name="WallSouth_14" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallSouth_14" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 289, 0, 32.5)
 collision_mask = 0
 
-[node name="WallWest_0" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_0" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 230.5, 0, -30)
 collision_mask = 0
 
-[node name="WallEast_0" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_0" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 291.5, 0, -30)
 collision_mask = 0
 
-[node name="WallWest_1" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_1" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 230.5, 0, -26)
 collision_mask = 0
 
-[node name="WallEast_1" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_1" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 291.5, 0, -26)
 collision_mask = 0
 
-[node name="WallWest_2" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_2" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 230.5, 0, -22)
 collision_mask = 0
 
-[node name="WallEast_2" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_2" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 291.5, 0, -22)
 collision_mask = 0
 
-[node name="WallWest_3" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_3" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 230.5, 0, -18)
 collision_mask = 0
 
-[node name="WallEast_3" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_3" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 291.5, 0, -18)
 collision_mask = 0
 
-[node name="WallWest_4" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_4" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 230.5, 0, -14)
 collision_mask = 0
 
-[node name="WallEast_4" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_4" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 291.5, 0, -14)
 collision_mask = 0
 
-[node name="WallWest_5" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_5" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 230.5, 0, -10)
 collision_mask = 0
 
-[node name="WallEast_5" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_5" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 291.5, 0, -10)
 collision_mask = 0
 
-[node name="WallWest_6" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_6" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 230.5, 0, -6)
 collision_mask = 0
 
-[node name="WallEast_6" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_6" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 291.5, 0, -6)
 collision_mask = 0
 
-[node name="WallEast_7" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_7" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 291.5, 0, -2)
 collision_mask = 0
 
-[node name="WallEast_8" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_8" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 291.5, 0, 2)
 collision_mask = 0
 
-[node name="WallWest_9" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_9" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 230.5, 0, 6)
 collision_mask = 0
 
-[node name="WallEast_9" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_9" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 291.5, 0, 6)
 collision_mask = 0
 
-[node name="WallWest_10" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_10" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 230.5, 0, 10)
 collision_mask = 0
 
-[node name="WallEast_10" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_10" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 291.5, 0, 10)
 collision_mask = 0
 
-[node name="WallWest_11" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_11" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 230.5, 0, 14)
 collision_mask = 0
 
-[node name="WallEast_11" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_11" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 291.5, 0, 14)
 collision_mask = 0
 
-[node name="WallWest_12" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_12" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 230.5, 0, 18)
 collision_mask = 0
 
-[node name="WallEast_12" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_12" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 291.5, 0, 18)
 collision_mask = 0
 
-[node name="WallWest_13" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_13" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 230.5, 0, 22)
 collision_mask = 0
 
-[node name="WallEast_13" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_13" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 291.5, 0, 22)
 collision_mask = 0
 
-[node name="WallWest_14" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_14" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 230.5, 0, 26)
 collision_mask = 0
 
-[node name="WallEast_14" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_14" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 291.5, 0, 26)
 collision_mask = 0
 
-[node name="WallWest_15" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallWest_15" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 230.5, 0, 30)
 collision_mask = 0
 
-[node name="WallEast_15" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
+[node name="AreaWallEast_15" type="StaticBody3D" parent="Zone_KitNature" instance=ExtResource("2_c2e8x")]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 291.5, 0, 30)
 collision_mask = 0
 

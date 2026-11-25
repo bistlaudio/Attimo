@@ -16,7 +16,7 @@ extends CanvasLayer
 ## value), plus a thin inner arc for the hold time; brass (LoaderPreview.BRASS_COLOR) whatever the core, because the cage spends no
 ## energy and turquoise means energy. A FIXED hold (steam cannon, 0.2 s, no input) shows no ring at all. loader_ring_style() tells the
 ## shapes apart for the tests (double / gauge).
-## The NearPrompt child is a cream "E" keycap over HandController.prompt_target (the nearest grabbable lever or crank in
+## The NearPrompt child is a cream "E" keycap over HandController.prompt_target (the nearest grabbable lever in
 ## reach); it hides during near contact, out of range and when the point is behind the camera.
 ## It polls the hand_controller group (read only, it never drives the hand). The Reticle and NearPrompt children ignore
 ## the mouse, so the HUD never eats gameplay or F2 panel clicks.

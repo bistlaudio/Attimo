@@ -1,12 +1,12 @@
 extends RefCounted
 ## D-06 audit: every mechanism that moves the player does so, measurably, and only through the PlayerController request API.
-## One scenario per existing mover (lift, nozzle UPDRAFT, pendulum; the nozzle launch and push-back modes were cut in plan 05.1-03), each with a real player on real geometry.
+## One scenario per existing mover (nozzle UPDRAFT, pendulum; the nozzle launch and push-back modes were cut in plan 05.1-03, the lift
+## in plan 05.1-06), each with a real player on real geometry.
 ## The rotating platform carry has its own test (test_mechanism_carry); the belt carry is test_conveyor_pendulum. Later plans add
 ## their movers to this file. The source guard keeps mechanism scripts from writing the player's velocity fields at all.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
-const LIFT_SCENE: String = "res://scenes/mechanisms/lift_platform.tscn"
 const NOZZLE_SCENE: String = "res://scenes/mechanisms/steam_nozzle.tscn"
 const PENDULUM_SCENE: String = "res://scenes/mechanisms/pendulum.tscn"
 const MECHANISM_DIR: String = "res://scripts/mechanisms"
@@ -29,7 +29,6 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await tree.process_frame
 	Engine.physics_ticks_per_second = SHIPPED_TPS
 	EventBus.knocked_back.connect(_on_knocked)
-	await _scenario_lift(tree, check)
 	await _scenario_nozzle_updraft(tree, check)
 	await _scenario_pendulum(tree, check)
 	EventBus.knocked_back.disconnect(_on_knocked)
@@ -63,26 +62,6 @@ func _nozzle(check: Callable, mode: SteamNozzle.Mode, source: SignalSource) -> S
 		nozzle.mode = mode
 		nozzle.source = source
 	return nozzle
-
-
-# Lift: a rider is carried up at least 3 m.
-func _scenario_lift(tree: SceneTree, check: Callable) -> void:
-	var source: SignalSource = SignalSource.new()
-	tree.root.add_child(source)
-	var lift: LiftPlatform = _spawn(LIFT_SCENE, check) as LiftPlatform
-	if lift == null:
-		await _free(tree, [source])
-		return
-	lift.source = source
-	tree.root.add_child(lift)
-	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3.ZERO)
-	await Fixtures.wait_physics(tree, 20)
-	var start_y: float = player.global_position.y
-	source.set_active(true)
-	await Fixtures.wait_physics(tree, 4 * SHIPPED_TPS)
-	var rise: float = player.global_position.y - start_y
-	check.call(rise >= 3.0, "lift: the rider rises %.2f m (at least 3)" % rise)
-	await _free(tree, [lift, player, source])
 
 
 # Nozzle UPDRAFT: the column holds the player up, a rise of at least 1.5 m.
