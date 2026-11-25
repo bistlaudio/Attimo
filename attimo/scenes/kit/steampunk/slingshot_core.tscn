@@ -9,6 +9,22 @@ outer_radius = 1.0
 rings = 16
 ring_segments = 8
 
+[sub_resource type="CylinderMesh" id="CylinderMesh_blast"]
+top_radius = 0.7
+bottom_radius = 0.3
+height = 2.4
+radial_segments = 8
+
+[sub_resource type="SphereMesh" id="SphereMesh_puff"]
+radius = 0.35
+height = 0.7
+radial_segments = 8
+rings = 4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_steam"]
+transparency = 1
+albedo_color = Color(0.85, 0.86, 0.88, 0.35)
+
 [node name="SlingshotCage" instance=ExtResource("1_base")]
 layer = 0
 energy_relation = 0
@@ -24,3 +40,29 @@ mesh = SubResource("TorusMesh_ring")
 [node name="RingC" type="MeshInstance3D" parent="."]
 transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("TorusMesh_ring")
+
+[node name="SteamBlast" type="Node3D" parent="."]
+visible = false
+
+[node name="Plume" type="MeshInstance3D" parent="SteamBlast"]
+position = Vector3(0, 1.4, 0)
+mesh = SubResource("CylinderMesh_blast")
+surface_material_override/0 = SubResource("StandardMaterial3D_steam")
+
+[node name="SteamPuff" type="Node3D" parent="."]
+visible = false
+
+[node name="PuffA" type="MeshInstance3D" parent="SteamPuff"]
+position = Vector3(1, 0, 0)
+mesh = SubResource("SphereMesh_puff")
+surface_material_override/0 = SubResource("StandardMaterial3D_steam")
+
+[node name="PuffB" type="MeshInstance3D" parent="SteamPuff"]
+position = Vector3(-0.5, 0.8, 0)
+mesh = SubResource("SphereMesh_puff")
+surface_material_override/0 = SubResource("StandardMaterial3D_steam")
+
+[node name="PuffC" type="MeshInstance3D" parent="SteamPuff"]
+position = Vector3(-0.5, -0.8, 0)
+mesh = SubResource("SphereMesh_puff")
+surface_material_override/0 = SubResource("StandardMaterial3D_steam")

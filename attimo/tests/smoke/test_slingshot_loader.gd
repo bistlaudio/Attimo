@@ -339,16 +339,9 @@ func _scenario_presentation(tree: SceneTree, check: Callable) -> void:
 	var arcs: Variant = preview.get(&"arcs_drawn")
 	check.call(arcs != null and int(arcs) == 1, "(cues) the cage preview draws one arc, no bonus arc with a full core (got %s)" % arcs)
 	var brass: Color = _brass()
-	var used: int = preview.multimesh.visible_instance_count
-	var all_brass: bool = used > 0
-	var turquoise: int = 0
-	for i: int in used:
-		var tint: Color = preview.multimesh.get_instance_color(i)
-		all_brass = all_brass and tint.is_equal_approx(brass)
-		if tint.is_equal_approx(LoaderPreview.BONUS_COLOR):
-			turquoise += 1
-	check.call(all_brass, "(cues) every dash of the cage preview is brass (%d dashes)" % used)
-	check.call(turquoise == 0, "(cues) no dash is turquoise (%d)" % turquoise)
+	var tints: Array = preview.get(&"arc_tints") as Array if preview.get(&"arc_tints") != null else []
+	check.call(tints.size() == 1 and (tints[0] as Color).is_equal_approx(brass), "(cues) the cage arc is brass (tints %s, %d dashes)" % [tints, preview.multimesh.visible_instance_count])
+	check.call(not tints.has(LoaderPreview.BONUS_COLOR), "(cues) no arc is turquoise")
 	await Fixtures.tap_action(tree, &"loader", 1)
 	await Fixtures.wait_until(tree, func() -> bool: return not _released.is_empty(), 4)
 	await tree.process_frame

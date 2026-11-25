@@ -32,6 +32,18 @@ radial_segments = 8
 transparency = 1
 albedo_color = Color(0.85, 0.86, 0.88, 0.35)
 
+[sub_resource type="CylinderMesh" id="CylinderMesh_blast"]
+top_radius = 0.8
+bottom_radius = 0.4
+height = 2.0
+radial_segments = 8
+
+[sub_resource type="SphereMesh" id="SphereMesh_puff"]
+radius = 0.3
+height = 0.6
+radial_segments = 8
+rings = 4
+
 [node name="SteamCannon" instance=ExtResource("1_base")]
 layer = 0
 energy_relation = 0
@@ -63,4 +75,33 @@ mesh = SubResource("TorusMesh_muzzle")
 position = Vector3(0, 0, -2.9)
 rotation = Vector3(-1.570796, 0, 0)
 mesh = SubResource("CylinderMesh_steam")
+surface_material_override/0 = SubResource("StandardMaterial3D_steam")
+
+[node name="SteamBlast" type="Node3D" parent="Barrel"]
+visible = false
+position = Vector3(0, 0, -1.4)
+rotation = Vector3(-1.570796, 0, 0)
+
+[node name="Plume" type="MeshInstance3D" parent="Barrel/SteamBlast"]
+position = Vector3(0, 1, 0)
+mesh = SubResource("CylinderMesh_blast")
+surface_material_override/0 = SubResource("StandardMaterial3D_steam")
+
+[node name="SteamPuff" type="Node3D" parent="."]
+visible = false
+position = Vector3(0, 1, 0)
+
+[node name="PuffA" type="MeshInstance3D" parent="SteamPuff"]
+position = Vector3(0.6, 0, 0)
+mesh = SubResource("SphereMesh_puff")
+surface_material_override/0 = SubResource("StandardMaterial3D_steam")
+
+[node name="PuffB" type="MeshInstance3D" parent="SteamPuff"]
+position = Vector3(-0.6, 0, 0)
+mesh = SubResource("SphereMesh_puff")
+surface_material_override/0 = SubResource("StandardMaterial3D_steam")
+
+[node name="PuffC" type="MeshInstance3D" parent="SteamPuff"]
+position = Vector3(0, 0.2, 0.6)
+mesh = SubResource("SphereMesh_puff")
 surface_material_override/0 = SubResource("StandardMaterial3D_steam")

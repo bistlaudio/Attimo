@@ -127,7 +127,7 @@ func _check_shot_ring(tree: SceneTree, check: Callable) -> void:
 	var hand: HandController = player.get_node("HandController") as HandController
 	await Fixtures.wait_physics(tree, 10)
 	check.call(not ring.shot_ring_visible, "(s1) the shot ring is hidden before a charge")
-	check.call(Crosshair.shot_ring_style != Crosshair.loader_ring_style, "(s2) the shot ring and the Loader ring have different styles (%s, %s)" % [Crosshair.shot_ring_style, Crosshair.loader_ring_style])
+	check.call(Crosshair.shot_ring_style != Crosshair.LOADER_RING_DOUBLE, "(s2) the shot ring and the Loader ring have different styles (%s, %s)" % [Crosshair.shot_ring_style, Crosshair.LOADER_RING_DOUBLE])
 	Fixtures.set_energy(player, 100.0)
 	var flashes: Array = []
 	var on_full: Callable = func(_p: Vector3) -> void: flashes.append(1)
@@ -219,6 +219,11 @@ func _check_cannon_quiet(tree: SceneTree, check: Callable) -> void:
 	var ring: Crosshair = (load(CROSSHAIR_SCENE) as PackedScene).instantiate() as Crosshair
 	tree.root.add_child(ring)
 	var preview: Node3D = player.get_node("LoaderPreview") as Node3D
+	var blast: Node3D = cannon.find_child("SteamBlast", true, false) as Node3D
+	var blast_on_launch: Array[bool] = []
+	var bus: Node = tree.root.get_node("EventBus")
+	var on_launch: Callable = func(_p: Vector3, _d: Vector3, _s: float) -> void: blast_on_launch.append(blast != null and blast.visible)
+	bus.connect(&"launched", on_launch, CONNECT_DEFERRED)
 	Fixtures.set_energy(player, 25.0)
 	await Fixtures.wait_physics(tree, 3)
 	player.teleport(cannon.global_position - Vector3.RIGHT * 3.2)
@@ -233,6 +238,8 @@ func _check_cannon_quiet(tree: SceneTree, check: Callable) -> void:
 		player.move_velocity = Vector3.RIGHT * speed
 		await tree.physics_frame
 	check.call(entered >= 0, "(q1) the cannon catches Rino into a FIXED hold (entered %d)" % entered)
+	# The entry push of this test emits `launched` too; only the cannon's own launch counts.
+	blast_on_launch.clear()
 	var frames: int = 0
 	var ring_seen: bool = false
 	var preview_seen: bool = false
@@ -246,6 +253,12 @@ func _check_cannon_quiet(tree: SceneTree, check: Callable) -> void:
 	check.call(frames > 0, "(q2) the cannon hold was sampled over %d process frames" % frames)
 	check.call(not ring_seen, "(q2) the cannon hold shows no Loader ring")
 	check.call(not preview_seen, "(q2) the cannon hold shows no trajectory preview")
+	await tree.process_frame
+	check.call(blast != null and not blast_on_launch.is_empty() and blast_on_launch[0], "(q3) the cannon's SteamBlast shows on its launch (%s)" % [blast_on_launch])
+	check.call(blast_on_launch.size() == 1, "(q3) one launch fact after the catch (%d)" % blast_on_launch.size())
+	await tree.create_timer(0.3, true, false, true).timeout
+	check.call(blast != null and not blast.visible, "(q3) the cannon's SteamBlast is hidden again within 0.3 s")
+	bus.disconnect(&"launched", on_launch)
 	Fixtures.restore_time()
 	for node: Node in [ring, player, cannon, floor_body]:
 		node.queue_free()

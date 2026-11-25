@@ -6,6 +6,9 @@ extends MultiMeshInstance3D
 ## turquoise, shown only while the arm holds a full core. Every other segment is drawn, so the path reads as dashes. Presentation
 ## only: it reads the Loader state and never writes the player. The MultiMesh has a fixed instance count (MAX_POINTS) and only
 ## visible_instance_count changes per frame (T-05-04: bounded work), the paths stop at the first World hit.
+## Phase 05.1 (D-01, D-26): the preview reads LoaderState.source(). ARM is unchanged; a CAGE hold (slingshot) draws only the no-bonus
+## arc, in brass (BRASS_COLOR, the look_brass.tres albedo: turquoise means energy and the cage spends none); a FIXED hold (steam
+## cannon) has no input to aim, so nothing is drawn.
 
 ## Points per arc and the instance count of the MultiMesh.
 const MAX_POINTS: int = 60
@@ -15,7 +18,15 @@ const STEP: float = 0.025
 const START_HEIGHT: float = 0.9
 const BASE_COLOR: Color = Color(0.96, 0.93, 0.85, 1.0)
 const BONUS_COLOR: Color = Color(0.25, 0.9, 0.85, 1.0)
+## The steampunk brass of the kit cues (albedo of resources/mechanisms/look_brass.tres; test_crosshair asserts the two match). The
+## crosshair gauge and the LoaderLook vignette of a cage hold use it too.
+const BRASS_COLOR: Color = Color(0.72, 0.55, 0.25, 1.0)
 const DASH_THICKNESS: float = 0.07
+
+## Arcs drawn on the last frame (0 hidden, 1 base only, 2 base and bonus) and their tints in draw order; read by the tests (a
+## headless run cannot read MultiMesh colours back).
+var arcs_drawn: int = 0
+var arc_tints: Array[Color] = []
 
 var _player: PlayerController
 
@@ -42,23 +53,29 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	if _player == null or not _player.loader_active():
+	var state: LoaderState = null if _player == null or not _player.loader_active() else _player.loader_state()
+	if state == null or state.source() == LoaderProfile.Source.FIXED:
 		visible = false
 		multimesh.visible_instance_count = 0
+		arcs_drawn = 0
+		arc_tints.clear()
 		return
-	var state: LoaderState = _player.loader_state()
-	if state == null:
-		return
+	var cage: bool = state.source() == LoaderProfile.Source.CAGE
 	global_transform = Transform3D.IDENTITY
 	var config: MovementConfig = _player.config
 	var space: PhysicsDirectSpaceState3D = get_world_3d().direct_space_state
 	var origin: Vector3 = _player.global_position + Vector3.UP * START_HEIGHT
 	var used: int = 0
 	var base: PackedVector3Array = LoaderMath.trajectory(origin, state.preview_velocity_for(false), config, STEP, MAX_POINTS, space, PhysicsLayers.WORLD)
-	used = _draw_dashes(base, BASE_COLOR, used)
-	if state.bonus_ready():
+	var base_tint: Color = BRASS_COLOR if cage else BASE_COLOR
+	used = _draw_dashes(base, base_tint, used)
+	arcs_drawn = 1
+	arc_tints = [base_tint]
+	if not cage and state.bonus_ready():
 		var bonus: PackedVector3Array = LoaderMath.trajectory(origin, state.preview_velocity_for(true), config, STEP, MAX_POINTS, space, PhysicsLayers.WORLD)
 		used = _draw_dashes(bonus, BONUS_COLOR, used)
+		arcs_drawn = 2
+		arc_tints.append(BONUS_COLOR)
 	multimesh.visible_instance_count = used
 	visible = used > 0
 

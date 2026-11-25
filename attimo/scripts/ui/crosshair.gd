@@ -11,6 +11,11 @@ extends CanvasLayer
 ## (stored / loader_max_speed), the inner arc with the hold time (hold / loader_hold_cap). It is turquoise with a full core and grey
 ## without one. It differs from the single, notched, clockwise shot ring in shape (two rings) and in rotation direction, so the two
 ## are never told apart by colour alone (colour-blind safe). Both advance in real time (TimeFx.unscaled).
+## Phase 05.1 (D-01, D-05, D-26): the Loader ring reads LoaderState.source(). ARM keeps the double ring above. A CAGE hold (slingshot)
+## draws a brass PRESSURE GAUGE instead: a still dial with tick marks and a needle at the stored speed (stored_ratio, the outer ring's
+## value), plus a thin inner arc for the hold time; brass (LoaderPreview.BRASS_COLOR) whatever the core, because the cage spends no
+## energy and turquoise means energy. A FIXED hold (steam cannon, 0.2 s, no input) shows no ring at all. loader_ring_style() tells the
+## shapes apart for the tests (double / gauge).
 ## The NearPrompt child is a cream "E" keycap over HandController.prompt_target (the nearest grabbable lever or crank in
 ## reach); it hides during near contact, out of range and when the point is behind the camera.
 ## It polls the hand_controller group (read only, it never drives the hand). The Reticle and NearPrompt children ignore
@@ -48,6 +53,9 @@ var loader_ring_angle: float = -PI * 0.5
 var loader_ring_stored: float = 0.0
 var loader_ring_hold: float = 0.0
 var loader_ring_tint: Color = Color(0.25, 0.9, 0.85, 1.0)
+## True while the ring on screen is the cage's pressure gauge; loader_gauge_needle is its needle, 0 .. 1 (the stored ratio).
+var loader_ring_gauge: bool = false
+var loader_gauge_needle: float = 0.0
 ## Shot ring (D-14): shown while a shot charges. The angle (radians) starts at the top and INCREASES (clockwise on screen). shot_flash_left is
 ## the remaining time of the one flash on the full charge.
 var shot_ring_visible: bool = false
@@ -56,7 +64,15 @@ var shot_flash_left: float = 0.0
 
 ## Ring styles, so a test can tell the two rings apart by shape and not by colour (colour-blind safe, D-14).
 const shot_ring_style: StringName = &"notched_single"
-const loader_ring_style: StringName = &"double"
+## The arm Loader's double ring and the cage's pressure gauge (loader_ring_style() returns the one on screen).
+const LOADER_RING_DOUBLE: StringName = &"double"
+const LOADER_RING_GAUGE: StringName = &"gauge"
+## Pressure gauge: the dial spans GAUGE_SWEEP radians clockwise from GAUGE_START (lower left, through the top, to lower right), with
+## GAUGE_TICKS tick marks; the needle runs from the reticle ring out past the dial.
+const GAUGE_START: float = PI * 0.75
+const GAUGE_SWEEP: float = PI * 1.5
+const GAUGE_TICKS: int = 7
+const GAUGE_TICK_LENGTH: float = 3.0
 ## Shot ring: notch count, notch length in pixels, turn speed in degrees per second at charge 0 and gain at full charge, flash time.
 const SHOT_NOTCHES: int = 10
 const SHOT_NOTCH_LENGTH: float = 3.5
@@ -134,19 +150,34 @@ func _on_shot_fully_charged(_position: Vector3) -> void:
 func _update_loader_ring(delta: float) -> void:
 	var player: PlayerController = get_tree().get_first_node_in_group(&"player") as PlayerController
 	var state: LoaderState = null if player == null else player.loader_state()
-	var active: bool = player != null and state != null and player.loader_active()
+	# D-05: the cannon's FIXED hold has no input, so it shows no ring.
+	var active: bool = player != null and state != null and player.loader_active() and state.source() != LoaderProfile.Source.FIXED
 	if not active:
 		if loader_ring_visible:
 			loader_ring_visible = false
+			loader_ring_gauge = false
 			loader_ring_angle = -PI * 0.5
 			_reticle.queue_redraw()
 		return
 	loader_ring_visible = true
-	loader_ring_angle -= deg_to_rad(loader_ring_speed_deg) * TimeFx.unscaled(delta)
 	loader_ring_stored = state.stored_ratio()
 	loader_ring_hold = state.hold_ratio()
-	loader_ring_tint = lock_color if state.bonus_ready() else loader_empty_color
+	loader_ring_gauge = state.source() == LoaderProfile.Source.CAGE
+	if loader_ring_gauge:
+		# D-01 / D-26: a still brass gauge, never turquoise and never the grey empty-arm colour.
+		loader_gauge_needle = loader_ring_stored
+		loader_ring_tint = LoaderPreview.BRASS_COLOR
+	else:
+		loader_ring_angle -= deg_to_rad(loader_ring_speed_deg) * TimeFx.unscaled(delta)
+		loader_ring_tint = lock_color if state.bonus_ready() else loader_empty_color
 	_reticle.queue_redraw()
+
+
+## The style of the Loader ring on screen: LOADER_RING_GAUGE for a cage hold, LOADER_RING_DOUBLE for the arm, &"" with no ring.
+func loader_ring_style() -> StringName:
+	if not loader_ring_visible:
+		return &""
+	return LOADER_RING_GAUGE if loader_ring_gauge else LOADER_RING_DOUBLE
 
 
 ## Sets the reticle state (a Targeting.State value). VALID and VALID_BIG are the turquoise lock.
@@ -220,7 +251,10 @@ func _draw_reticle() -> void:
 	if shot_ring_visible:
 		_draw_shot_ring(centre, radius)
 	if loader_ring_visible:
-		_draw_loader_ring(centre, radius)
+		if loader_ring_gauge:
+			_draw_gauge(centre, radius)
+		else:
+			_draw_loader_ring(centre, radius)
 
 
 ## The shot ring: ONE ring with notches (gear teeth) turning clockwise (the angle increases), its arc filled by the charge from the top.
@@ -250,6 +284,24 @@ func _draw_loader_ring(centre: Vector2, radius: float) -> void:
 	var inner_sweep: float = maxf(TAU * loader_ring_hold, LOADER_MIN_SWEEP)
 	_arc(centre, outer, loader_ring_angle, loader_ring_angle + outer_sweep, loader_ring_tint, ring_width * 1.6 * _u)
 	_arc(centre, inner, loader_ring_angle, loader_ring_angle + inner_sweep, loader_ring_tint, ring_width * 1.2 * _u)
+
+
+## The cage's pressure gauge (D-01): a brass dial over GAUGE_SWEEP with tick marks, a needle at the stored speed and a thin inner arc
+## that fills with the hold time. It does not turn: a gauge reads, the arm ring spins.
+func _draw_gauge(centre: Vector2, radius: float) -> void:
+	var dial: float = radius + LOADER_OUTER_GAP * _u
+	var inner: float = radius + LOADER_INNER_GAP * _u
+	var track: Color = Color(loader_ring_tint.r, loader_ring_tint.g, loader_ring_tint.b, 0.35)
+	_arc(centre, dial, GAUGE_START, GAUGE_START + GAUGE_SWEEP, loader_ring_tint, ring_width * 1.6 * _u)
+	for i: int in GAUGE_TICKS:
+		var tick_angle: float = GAUGE_START + GAUGE_SWEEP * float(i) / float(GAUGE_TICKS - 1)
+		var tick: Vector2 = Vector2(cos(tick_angle), sin(tick_angle))
+		_line(centre + tick * dial, centre + tick * (dial + GAUGE_TICK_LENGTH * _u), loader_ring_tint, ring_width * _u)
+	_arc(centre, inner, GAUGE_START, GAUGE_START + GAUGE_SWEEP, track, ring_width * _u)
+	_arc(centre, inner, GAUGE_START, GAUGE_START + maxf(GAUGE_SWEEP * loader_ring_hold, LOADER_MIN_SWEEP), loader_ring_tint, ring_width * 1.2 * _u)
+	var needle_angle: float = GAUGE_START + GAUGE_SWEEP * clampf(loader_gauge_needle, 0.0, 1.0)
+	var needle: Vector2 = Vector2(cos(needle_angle), sin(needle_angle))
+	_line(centre + needle * (radius + 2.0 * _u), centre + needle * (dial + GAUGE_TICK_LENGTH * _u), loader_ring_tint, ring_width * 1.4 * _u)
 
 
 ## A line with a dark outline under it.

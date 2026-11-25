@@ -8,6 +8,10 @@ extends CanvasLayer
 ## Layer 6 sits below the EnergyHud (9), the Crosshair (10) and the debug overlays (100+), so nothing here covers the HUD.
 ## Cleanup (T-05-05): the ease-out ends with the Environment's original adjustment state restored exactly (saturation 1.0 and
 ## adjustment off in the gym), and _exit_tree restores it too, so a freed LoaderLook never leaves the world grey.
+## Phase 05.1 (D-01, D-05, D-26): the look reads LoaderState.source(). ARM keeps the turquoise vignette; a CAGE hold (slingshot) keeps
+## the whole "geladen" look but tints the vignette brass (turquoise means energy, the cage spends none); a FIXED hold (steam cannon,
+## 0.2 s, no input, no slow world) counts as no hold here, so it shows no vignette, no desaturation and no hum. The tint is written on
+## every held frame (the vignette material is shared by every instance of the scene) and kept for the fade-out.
 
 ## Alpha of the vignette at the screen corners at a full hold.
 @export_range(0.0, 1.0, 0.01) var vignette_strength: float = 0.55
@@ -15,6 +19,8 @@ extends CanvasLayer
 @export_range(0.0, 1.0, 0.01) var desaturation: float = 0.55
 ## Real seconds the cues take to fade in or out; raise it for a softer fade.
 @export_range(0.02, 1.0, 0.01) var ease_time: float = 0.12
+## Vignette tint of an arm hold (energy turquoise). A cage hold uses LoaderPreview.BRASS_COLOR.
+@export var arm_tint: Color = Color(0.25, 0.9, 0.85, 1.0)
 ## The environment whose saturation is lowered. Empty: the first WorldEnvironment of the tree.
 @export var world_environment: WorldEnvironment
 ## Hum pitch in Hz at the start and at the end of the hold, and its level.
@@ -24,6 +30,8 @@ extends CanvasLayer
 
 ## 0 .. 1, how far the cues have faded in (eased in real time).
 var level: float = 0.0
+## The vignette tint of the last held frame (arm turquoise or cage brass); the fade-out keeps it.
+var tint: Color = Color(0.25, 0.9, 0.85, 1.0)
 
 var _environment: Environment
 var _original_enabled: bool = false
@@ -45,7 +53,9 @@ func _process(delta: float) -> void:
 	var real: float = TimeFx.unscaled(delta)
 	var player: PlayerController = get_tree().get_first_node_in_group(&"player") as PlayerController
 	var state: LoaderState = null if player == null else player.loader_state()
-	var holding: bool = player != null and state != null and player.loader_active()
+	var holding: bool = player != null and state != null and player.loader_active() and state.source() != LoaderProfile.Source.FIXED
+	if holding:
+		tint = LoaderPreview.BRASS_COLOR if state.source() == LoaderProfile.Source.CAGE else arm_tint
 	var ratio: float = state.hold_ratio() if holding else 0.0
 	level = move_toward(level, 1.0 if holding else 0.0, real / maxf(ease_time, 0.001))
 	if holding:
@@ -65,7 +75,9 @@ func _apply(amount: float) -> void:
 		_restore()
 		return
 	_vignette.visible = true
-	(_vignette.material as ShaderMaterial).set_shader_parameter(&"strength", vignette_strength * amount)
+	var material: ShaderMaterial = _vignette.material as ShaderMaterial
+	material.set_shader_parameter(&"strength", vignette_strength * amount)
+	material.set_shader_parameter(&"tint", tint)
 	var environment: Environment = _find_environment()
 	if environment == null:
 		return
