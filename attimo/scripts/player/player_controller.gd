@@ -355,6 +355,7 @@ func launch_along(direction: Vector3, speed: float, keep_sideways: bool = true) 
 	if not direction.is_finite() or not is_finite(speed) or direction.length_squared() < 0.0001:
 		return
 	var dir: Vector3 = direction.normalized()
+	speed *= kit_launch_scale()
 	var v: Vector3 = Vector3(move_velocity.x, vertical_speed, move_velocity.z)
 	if keep_sideways:
 		v = v - dir * v.dot(dir) + dir * speed
@@ -372,13 +373,20 @@ func launch_along(direction: Vector3, speed: float, keep_sideways: bool = true) 
 ## adding `add` (`maxf(along + add, min_speed)`), so a boost never slows a faster player. The rest of the velocity is kept.
 ## Leaves Dash, LongJump and Jump for Fall, lifts the air cap to the new speed and emits EventBus.boosted. Mechanisms call this
 ## with call_deferred. A non-finite argument or a zero direction is ignored.
+## The feel-test multiplier on kit launches (MovementConfig.kit_launch_scale), never below 1.0 and 1.0 for a non-finite value.
+func kit_launch_scale() -> float:
+	if config == null or not is_finite(config.kit_launch_scale):
+		return 1.0
+	return maxf(config.kit_launch_scale, 1.0)
+
+
 func boost_along(direction: Vector3, min_speed: float, add: float = 0.0) -> void:
 	if not direction.is_finite() or not is_finite(min_speed) or not is_finite(add) or direction.length_squared() < 0.0001:
 		return
 	var dir: Vector3 = direction.normalized()
 	var v: Vector3 = Vector3(move_velocity.x, vertical_speed, move_velocity.z)
 	var along: float = v.dot(dir)
-	var new_along: float = maxf(along + add, min_speed)
+	var new_along: float = maxf(along + add * kit_launch_scale(), min_speed * kit_launch_scale())
 	v += dir * (new_along - along)
 	move_velocity = Vector3(v.x, 0.0, v.z)
 	vertical_speed = clampf(v.y, -config.terminal_speed, config.terminal_speed)

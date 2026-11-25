@@ -112,10 +112,10 @@ func _scenario_hygiene(check: Callable, presentation: ArmEnergyPresentation) -> 
 	stack.append_array(attachments)
 	while not stack.is_empty():
 		var node: Node = stack.pop_back()
-		if node is GPUParticles3D or node is CPUParticles3D:
+		if (node is GPUParticles3D or node is CPUParticles3D) and not node.has_meta(&"energy_fx"):
 			particles += 1
 		if node is CanvasLayer or node is CanvasItem:
 			layers += 1
 		stack.append_array(node.get_children())
-	check.call(particles == 0, "(h1) the presentation has no particle node")
+	check.call(particles == 0, "(h1) the presentation has no particle node of its own (the tagged EnergyFx sparks are separate)")
 	check.call(layers == 0, "(h2) nothing of the presentation is a CanvasLayer or a screen effect")

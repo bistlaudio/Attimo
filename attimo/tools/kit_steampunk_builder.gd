@@ -5,7 +5,7 @@ extends RefCounted
 ##
 ## Plan view (slot (column, row), see kit_area_shell.gd; every station a Station_<object> with an "Erwartet:" sign):
 ##   south, Role_Platforms   ClockHand (1, 0)  TiltPlate (2, 0)   (slot (0, 0) holds the clock hand's stepped ledge)
-##   south, Role_Boosters    WallJump twin (3..4, 0)  WallRun (3, 1)  WallRunSteam (4, 1)  SteamCannon (5, 1)  Slingshot (6, 1)
+##   south, Role_Boosters    WallJump twin (3..4, 0)  WallRun (3, 1)  WallRunSteam (4, 1)  SteamCannon (5, 1)  Slingshot (6, 0, out of the cannon line)
 ##   north                   Role_Environment, Role_Obstacles, Role_Mechanisms: empty until their blocks land (plans 09-19)
 ## Each station keeps the offsets, heights and sign spots it had in the old mechanism rooms (plans 01-04), relative to its slot point.
 
@@ -136,5 +136,5 @@ func _build_wall_pads(role: Node3D, builder: RefCounted) -> void:
 func _build_catch_launch(role: Node3D, builder: RefCounted) -> void:
 	var cannon: Node3D = _station(role, builder, "SteamCannon", _slot("S", 5, 1), "Dampfkanone", "Erwartet: Fängt dich am Rohr, kurz Halt, dann immer der gleiche Bogen", Vector3(-4.0, 3.2, 4.0))
 	builder.call(&"_instance", cannon, STEAM_CANNON_SCENE, "SteamCannon", Vector3.ZERO, builder.call(&"_yaw", -90.0))
-	var cage: Node3D = _station(role, builder, "Slingshot", _slot("S", 6, 1), "Schleuderkern (wie der Loader)", "Erwartet: Fängt dich, Zeitlupe; Rechtsklick loslassen oder antippen wirft in Blickrichtung, sonst automatisch nach 1,2 s", Vector3(-4.0, 3.2, 4.0))
+	var cage: Node3D = _station(role, builder, "Slingshot", _slot("S", 6, 0), "Schleuderkern (wie der Loader)", "Erwartet: Fängt dich, Zeitlupe; Rechtsklick loslassen oder antippen wirft in Blickrichtung, sonst automatisch nach 1,2 s", Vector3(-4.0, 3.2, 4.0))
 	builder.call(&"_instance", cage, SLINGSHOT_SCENE, "Slingshot", Vector3(0.0, SLINGSHOT_HANG, 0.0))

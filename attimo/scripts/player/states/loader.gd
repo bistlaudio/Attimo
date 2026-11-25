@@ -155,10 +155,17 @@ func preview_velocity() -> Vector3:
 func preview_velocity_for(with_bonus: bool) -> Vector3:
 	var config: MovementConfig = actor.config
 	if source() == LoaderProfile.Source.FIXED:
-		return actor.loader_profile.direction.normalized() * actor.loader_profile.speed
+		return actor.loader_profile.direction.normalized() * _fixed_speed()
 	var bonus: float = config.loader_bonus_speed if with_bonus and source() == LoaderProfile.Source.ARM else 0.0
 	var speed: float = LoaderMath.discharge_speed(stored_velocity.length(), _min_push(), bonus, config.loader_max_speed)
+	if source() == LoaderProfile.Source.CAGE:
+		speed *= actor.kit_launch_scale()
 	return LoaderMath.discharge_velocity(actor.loader_direction(), speed)
+
+
+## FIXED: the profile speed, never faster than the Loader's own ceiling (T-05.1-05), times the feel-test kit_launch_scale.
+func _fixed_speed() -> float:
+	return minf(actor.loader_profile.speed, actor.config.loader_max_speed) * actor.kit_launch_scale()
 
 
 ## The smallest throw speed: the profile's for a kit source, else MovementConfig.loader_min_push.
@@ -176,6 +183,9 @@ func _discharge() -> StringName:
 	# D-03: the cage throw has no bonus and never touches the energy.
 	var bonus: bool = false if cage else actor.arm_energy.try_spend(config.loader_bonus_cost, &"loader")
 	var speed: float = LoaderMath.discharge_speed(stored_velocity.length(), _min_push(), config.loader_bonus_speed if bonus else 0.0, config.loader_max_speed)
+	if cage:
+		# Feel test: the cage throw scales with MovementConfig.kit_launch_scale (the preview uses the same factor).
+		speed *= actor.kit_launch_scale()
 	var velocity: Vector3 = LoaderMath.discharge_velocity(direction, speed)
 	actor.move_velocity = Vector3(velocity.x, 0.0, velocity.z)
 	actor.vertical_speed = clampf(velocity.y, -config.terminal_speed, config.terminal_speed)
@@ -204,8 +214,7 @@ func _discharge() -> StringName:
 func _discharge_fixed() -> StringName:
 	var config: MovementConfig = actor.config
 	var direction: Vector3 = actor.loader_profile.direction.normalized()
-	# T-05.1-05: never faster than the Loader's own ceiling, whatever the config says.
-	var speed: float = minf(actor.loader_profile.speed, config.loader_max_speed)
+	var speed: float = _fixed_speed()
 	var velocity: Vector3 = direction * speed
 	actor.move_velocity = Vector3(velocity.x, 0.0, velocity.z)
 	actor.vertical_speed = clampf(velocity.y, -config.terminal_speed, config.terminal_speed)

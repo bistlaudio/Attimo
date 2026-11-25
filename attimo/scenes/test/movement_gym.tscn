@@ -5031,7 +5031,7 @@ script = ExtResource("29_ykvr3")
 config = ExtResource("30_g6ni1")
 
 [node name="Station_Slingshot" type="Node3D" parent="Zone_KitSteampunk/Role_Boosters"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 125, 0, 22)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 125, 0, 10)
 
 [node name="Label_Slingshot" type="Label3D" parent="Zone_KitSteampunk/Role_Boosters/Station_Slingshot"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 3.2, 4)

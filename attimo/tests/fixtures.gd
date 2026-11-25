@@ -28,6 +28,9 @@ static func spawn_floor(root: Node, size: Vector3 = Vector3(60, 1, 60), top_cent
 static func spawn_player(root: Node, position: Vector3) -> PlayerController:
 	var scene: PackedScene = load(PLAYER_SCENE) as PackedScene
 	var player: PlayerController = scene.instantiate() as PlayerController
+	# The smoke tests check the designed launch numbers; the feel-test multiplier (kit_launch_scale, 1.8 in the shipped config) is
+	# neutral here. test_player_launch checks the multiplier itself.
+	player.config.kit_launch_scale = 1.0
 	player.position = position
 	root.add_child(player)
 	player.reset_physics_interpolation()

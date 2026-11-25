@@ -72,7 +72,7 @@ func _check_composition(scene: Node, check: Callable) -> PlayerController:
 			if not _has_sanctioned_ancestor(node):
 				unsanctioned += 1
 				check.call(false, "%s has no Prototype Bits or Mannequin ancestor" % scene.get_path_to(node))
-		if node is GPUParticles3D or node is CPUParticles3D or node is GPUParticles2D or node is CPUParticles2D:
+		if (node is GPUParticles3D or node is CPUParticles3D or node is GPUParticles2D or node is CPUParticles2D) and not node.has_meta(&"energy_fx"):
 			particles += 1
 		if node is Camera3D:
 			cameras.append(node as Camera3D)
@@ -84,7 +84,7 @@ func _check_composition(scene: Node, check: Callable) -> PlayerController:
 			logs.append(node as EventLog)
 	check.call(bodies > 0 and meshes > 0, "scene has static bodies (%d) and meshes (%d)" % [bodies, meshes])
 	check.call(unsanctioned == 0, "every mesh sits under a Prototype Bits wrapper or the Mannequin (%d meshes)" % meshes)
-	check.call(particles == 0, "no particle node (got %d)" % particles)
+	check.call(particles == 0, "no particle node apart from the tagged energy and movement fx (got %d)" % particles)
 
 	check.call(environments.size() == 1 and environments[0] != null, "exactly one WorldEnvironment with an Environment")
 	if environments.size() == 1 and environments[0] != null:

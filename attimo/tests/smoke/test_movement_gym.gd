@@ -78,7 +78,7 @@ func _check_composition(gym: Node, check: Callable) -> PlayerController:
 			meshes += 1
 			if not _has_sanctioned_ancestor(node):
 				unsanctioned.append(str(gym.get_path_to(node)))
-		if node is GPUParticles3D or node is CPUParticles3D or node is GPUParticles2D or node is CPUParticles2D:
+		if (node is GPUParticles3D or node is CPUParticles3D or node is GPUParticles2D or node is CPUParticles2D) and not node.has_meta(&"energy_fx"):
 			particles += 1
 		if node is Camera3D:
 			cameras.append(node as Camera3D)
@@ -91,7 +91,7 @@ func _check_composition(gym: Node, check: Callable) -> PlayerController:
 	check.call(meshes > 0 and bodies > 0, "the gym has static bodies (%d) and meshes (%d)" % [bodies, meshes])
 	check.call(unsanctioned.is_empty(), "every mesh sits under a Prototype Bits wrapper or the Mannequin (unsanctioned: %s)" % ", ".join(unsanctioned))
 	check.call(off_world.is_empty(), "every StaticBody3D is on the World layer (off: %s)" % ", ".join(off_world))
-	check.call(particles == 0, "no particle node (got %d)" % particles)
+	check.call(particles == 0, "no particle node apart from the tagged energy and movement fx (got %d)" % particles)
 	check.call(labels >= 40, "the gym carries Label3D markings (got %d)" % labels)
 	check.call(lights == 1, "exactly one DirectionalLight3D (got %d)" % lights)
 

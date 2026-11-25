@@ -21,6 +21,8 @@
 [ext_resource type="Resource" path="res://resources/hand/module_registry.tres" id="16_registry"]
 [ext_resource type="Script" path="res://scripts/hand/hand_presentation.gd" id="17_presentation"]
 [ext_resource type="Script" path="res://scripts/player/arm_energy_presentation.gd" id="24_arm_presentation"]
+[ext_resource type="Script" path="res://scripts/fx/movement_puffs.gd" id="25_movement_puffs"]
+[ext_resource type="Script" path="res://scripts/fx/energy_fx.gd" id="26_energy_fx"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.5
@@ -101,3 +103,11 @@ mannequin = NodePath("../VisualRoot/Mannequin")
 script = ExtResource("24_arm_presentation")
 player = NodePath("..")
 mannequin = NodePath("../VisualRoot/Mannequin")
+
+[node name="MovementPuffs" type="Node3D" parent="."]
+script = ExtResource("25_movement_puffs")
+
+[node name="EnergyFx" type="Node" parent="." node_paths=PackedStringArray("player", "presentation")]
+script = ExtResource("26_energy_fx")
+player = NodePath("..")
+presentation = NodePath("../ArmEnergyPresentation")

@@ -118,6 +118,12 @@ extends Resource
 ## "Geladen" cue (D-04): how far in m the camera pulls back at a full hold, eased with the hold (never a cut); raise it for more tension.
 @export_range(0.0, 1.5, 0.05) var loader_camera_pullback: float = 0.35
 
+@export_group("Kit")
+## FEEL TEST (user request 2026-11-25): multiplier on every kit launch: slingshot cage, steam cannon, bounce pad, geyser and
+## boost ring. 1.0 = the designed values; raise it to throw much further and test an exaggerated feel. Above ~1.3 a throw can
+## exceed loader_max_speed (22 m/s), the tested tunnelling and camera envelope, so thin walls may be passed at the top end.
+@export_range(1.0, 3.0, 0.05) var kit_launch_scale: float = 1.0
+
 @export_group("Energy")
 ## Horizontal speed in m/s from which the arm charges by itself (D-05); plain running at run_speed stays below it, so only the dash, the hop and the Loader earn energy. Raise it to make passive charge rarer.
 @export_range(5.0, 20.0, 0.1) var energy_passive_start_speed: float = 10.0

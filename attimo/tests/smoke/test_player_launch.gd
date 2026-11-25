@@ -32,10 +32,28 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_lock_air_control(tree, check)
 	await _scenario_air_cap_after_push(tree, check)
 	await _scenario_new_api_non_finite(tree, check)
+	await _scenario_kit_launch_scale(tree, check)
 	EventBus.launched.disconnect(_on_launched)
 	EventBus.knocked_back.disconnect(_on_knocked)
 	EventBus.dash_refilled.disconnect(_on_refilled)
 	EventBus.boosted.disconnect(_on_boosted)
+
+
+## Feel test (2026-11-25): kit_launch_scale multiplies launch_along and boost_along; 1.0 is neutral.
+func _scenario_kit_launch_scale(tree: SceneTree, check: Callable) -> void:
+	var player: PlayerController = await _airborne_player(tree)
+	player.config.kit_launch_scale = 2.0
+	player.launch_along(Vector3.UP, 10.0, false)
+	check.call(is_equal_approx(player.vertical_speed, 20.0), "(ks1) kit_launch_scale 2 doubles launch_along (got %.2f)" % player.vertical_speed)
+	player.move_velocity = Vector3.ZERO
+	player.vertical_speed = 0.0
+	player.boost_along(Vector3.RIGHT, 8.0, 0.0)
+	check.call(is_equal_approx(player.move_velocity.x, 16.0), "(ks2) kit_launch_scale 2 doubles the boost_along minimum (got %.2f)" % player.move_velocity.x)
+	player.config.kit_launch_scale = 0.5
+	check.call(is_equal_approx(player.kit_launch_scale(), 1.0), "(ks3) a scale below 1 counts as 1")
+	player.config.kit_launch_scale = 1.0
+	player.queue_free()
+	await tree.process_frame
 
 
 func _on_launched(_position: Vector3, _direction: Vector3, speed: float) -> void:
