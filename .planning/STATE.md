@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.11.0.4
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05.1-04-PLAN.md
-last_updated: "2026-11-25T00:36:37.758Z"
-last_activity: 2026-11-25 -- Plan 05.1-04 complete (Timed motion block SWEEP/TILT always on, floor clearance fix, take-off vertical carry, RotatingPlatform deleted)
+stopped_at: Completed 05.1-05-PLAN.md
+last_updated: "2026-11-25T00:54:41.860Z"
+last_activity: 2026-11-25 -- Plan 05.1-05 complete (source-aware Loader presentation: cage brass gauge / brass arc / brass vignette, cannon hold quiet, steam puff and blast cues, F2 Kit section)
 progress:
   total_phases: 17
   completed_phases: 6
   total_plans: 66
-  completed_plans: 50
+  completed_plans: 51
   percent: 35
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 05.1
-Plan: 5 of 20 (05.1-01 to 05.1-04 complete)
+Plan: 6 of 20 (05.1-01 to 05.1-05 complete)
 Status: Ready to execute
-Last activity: 2026-11-25 -- Plan 05.1-04 complete (Timed motion block SWEEP/TILT always on, floor clearance fix, take-off vertical carry, RotatingPlatform deleted)
+Last activity: 2026-11-25 -- Plan 05.1-05 complete (source-aware Loader presentation: cage brass gauge / brass arc / brass vignette, cannon hold quiet, steam puff and blast cues, F2 Kit section)
 
-Progress: [████████░░] 76%
+Progress: [████████░░] 77%
 
 ## Performance Metrics
 
@@ -108,6 +108,9 @@ Recent decisions that affect current work:
 - [Phase 05.1-04]: The D-07 floor fix is geometric: Timed motion stations stand at TimedMotion.min_pivot_height (floor + 0.3 + reach*sin(limit) + thickness; hand 5.39 m, plate 2.80 m)
 - [Phase 05.1-04]: A take-off off a reference-frame carrier keeps the deck's vertical chord (clamped +-6 m/s, PlayerController.MAX_DECK_TAKEOFF_SPEED); engine-carried floors unchanged
 - [Phase 05.1-04]: RotatingPlatform folded into TimedMotion (Profile SWEEP/TILT, Timing ALWAYS_ON/SWITCHED) with unchanged values; LYING gear cut
+- [Phase 05.1-05]: Loader presentation is source-aware: ARM unchanged, CAGE = still brass pressure gauge + one brass arc + brass vignette (LoaderPreview.BRASS_COLOR = look_brass albedo), FIXED = no ring, preview or LoaderLook
+- [Phase 05.1-05]: Kit steam cues are optional SteamPuff / SteamBlast child meshes timed in real time by CatchLaunch (0.25 s / 0.22 s), no particles
+- [Phase 05.1-05]: F2 Kit section binds the nearest kit_block within 8 m (scan every 0.25 s real time) and edits only node-local configs (resource_path configs refused)
 - [Phase 05.1-03]: Wall-run head clearance is a pose-only geometric clamp in ProceduralPose (WALL_RUN_HEAD_CLEARANCE 0.45 m, lean 4.38 deg); wall_run_lean_deg stays 18
 - [Phase 05.1-03]: Wall-jump twin layout rule WallSurface.TWIN_FACE_GAP_MIN 6 m between faces, JUMP_PAD_HEIGHT_MIN 8 m; no wall_jump_* retune
 - [Phase 05.1-03]: Wall surfaces are always-on kit blocks; SteamNozzle keeps only UPDRAFT; Geyser moved to Hoch slot (0,1)
@@ -218,5 +221,5 @@ Items acknowledged and deferred at milestone close, most recent first:
 ## Session Continuity
 
 Last session: 2026-11-25T00:36:37.747Z
-Stopped at: Completed 05.1-04-PLAN.md
+Stopped at: Completed 05.1-05-PLAN.md
 Resume file: None
