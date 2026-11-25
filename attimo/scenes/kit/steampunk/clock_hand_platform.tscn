@@ -1,0 +1,41 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/kit/timed_motion_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://resources/kit/timed_motion/clock_hand.tres" id="2_config"]
+[ext_resource type="Material" path="res://resources/mechanisms/look_brass.tres" id="3_brass"]
+[ext_resource type="Material" path="res://resources/mechanisms/look_iron.tres" id="4_iron"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_hub"]
+top_radius = 0.22
+bottom_radius = 0.22
+height = 3.1
+radial_segments = 10
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_boss"]
+top_radius = 0.55
+bottom_radius = 0.55
+height = 0.15
+radial_segments = 10
+
+[node name="ClockHandPlatform" instance=ExtResource("1_base")]
+layer = 0
+energy_relation = 0
+config = ExtResource("2_config")
+
+[node name="Mesh" parent="Body" index="1"]
+material_override = ExtResource("3_brass")
+
+[node name="AxleHousing" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, -0.25, 0)
+mesh = SubResource("CylinderMesh_hub")
+material_override = ExtResource("4_iron")
+
+[node name="AxleCapLeft" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, -1.6, -0.25, 0)
+mesh = SubResource("CylinderMesh_boss")
+material_override = ExtResource("3_brass")
+
+[node name="AxleCapRight" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 1.6, -0.25, 0)
+mesh = SubResource("CylinderMesh_boss")
+material_override = ExtResource("3_brass")

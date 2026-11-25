@@ -90,6 +90,8 @@ var wall_run_cooldown_timer: float = 0.0
 
 ## A rotating platform never carries further than this per tick (a guard against a bad transform).
 const MAX_CARRY_SHIFT: float = 2.0
+## The vertical deck chord a take-off off a reference-frame carrier keeps is clamped to +- this in m/s (05.1-04, T-05.1-11).
+const MAX_DECK_TAKEOFF_SPEED: float = 6.0
 
 @onready var visual_root: Node3D = $VisualRoot
 @onready var state_machine: StateMachine = $StateMachine
@@ -704,10 +706,15 @@ func _leave_floor() -> void:
 	loader_ground_throw = false
 	move_velocity.x += _last_platform_velocity.x * config.platform_carry
 	move_velocity.z += _last_platform_velocity.z * config.platform_carry
+	# A reference-frame carrier (Timed motion deck, group carrying_platform) also hands over its vertical chord, so a jump off a
+	# rising deck keeps the deck's speed (05.1-04, D-07). Engine-carried floors (lift, paternoster) are left alone: their motion is
+	# already in the move, adding it again would double count. After the coyote check, so a walk-off keeps its coyote time.
+	if _floor_carrier != null and _carry_active and is_finite(_last_platform_velocity.y):
+		vertical_speed += clampf(_last_platform_velocity.y, -MAX_DECK_TAKEOFF_SPEED, MAX_DECK_TAKEOFF_SPEED)
 	air_speed_cap = maxf(config.run_speed, horizontal_speed())
 
 
-## Rotating platforms (group carrying_platform), MECH-03: the rider is carried by reference frame, not by velocity. The engine
+## Reference-frame carriers (group carrying_platform: the Timed motion block, MECH-03, 05.1-04): the rider is carried by reference frame, not by velocity. The engine
 ## would move it along the tangent of the platform point, which drifts outward on a circle, and a surface that moves through the
 ## rider's feet makes any velocity based carry double count its normal motion. So the engine carry is switched off for these
 ## floors (platform_floor_layers), and at the start of the tick the rider is placed at the same local point of the platform

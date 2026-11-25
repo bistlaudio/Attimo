@@ -34,6 +34,19 @@ const BLOCKS: Dictionary = {
 		"positive": ["height", "width"],
 		"profile_presets": {"res://resources/kit/wall_surface/wall_run.tres": "WALL_RUN", "res://resources/kit/wall_surface/wall_jump.tres": "WALL_JUMP"},
 	},
+	# Plan 05.1-04: the Timed motion block (SWEEP clock hand, TILT plate). Its timing is the second enum (Timing, D-11); ramp_time is a
+	# divisor (T-05.1-13).
+	"TimedMotion": {
+		"script": "res://scripts/kit/blocks/timed_motion.gd",
+		"config_class": "TimedMotionConfig",
+		"config_script": "res://scripts/kit/configs/timed_motion_config.gd",
+		"profiles": ["SWEEP", "TILT"],
+		"preset": "res://resources/kit/timed_motion/clock_hand.tres",
+		"scene": "res://scenes/kit/steampunk/clock_hand_platform.tscn",
+		"probe": "angular_speed",
+		"positive": ["angular_speed", "ramp_time", "sweep_limit_deg", "tilt_limit_deg", "hand_length", "hand_width", "plate_size", "plate_thickness"],
+		"profile_presets": {"res://resources/kit/timed_motion/clock_hand.tres": "SWEEP", "res://resources/kit/timed_motion/tilting_platform.tres": "TILT"},
+	},
 }
 ## Source fragments a block script must not contain: direct writes of the player's motion (D-17).
 const FORBIDDEN_WRITES: Array[String] = [".move_velocity =", ".vertical_speed =", ".move_velocity +=", ".vertical_speed +=", ".velocity ="]
