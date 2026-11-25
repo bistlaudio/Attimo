@@ -109,7 +109,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
 <header class="hero">
   <div class="eyebrow">Uni prototype · 3D third-person platformer · Godot 4.7</div>
   <h1>Atti<span>mo</span></h1>
-  <p class="tag">Speed becomes energy. Energy becomes more speed. And when it counts, you freeze the moment and aim.</p>
+  <p class="tag">Energy is time. Every ability costs a moment from the clock on your arm. And when it counts, you freeze the moment, aim and launch.</p>
   <div class="facts">
     <span class="chip">Hero <b>Rino</b></span>
     <span class="chip">Boost state <b>Moto Perpetuo</b></span>
@@ -127,7 +127,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
     <a href="#rule">Governing rule</a>
     <a href="#resource">Energy</a>
     <a href="#loader">Loader</a>
-    <a href="#modules">Modules</a>
+    <a href="#modules">Extractor</a>
     <a href="#kit">Mechanism kit</a>
     <a href="#roadmap">Roadmap</a>
   </nav>
@@ -143,8 +143,8 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
 
 <section class="panel" id="ee">
   <div class="eyebrow">Essential experience</div>
-  <p class="ee">Feel like a <em>perpetual motion machine</em>: every bit of speed charges your arm, and every charge throws you faster through an overgrown steampunk ruin, until you stop time, aim, and launch.</p>
-  <p class="muted">Attimo means "the moment". The player should leave with two feelings: the rush of never slowing down, and the calm control of the frozen second in which they decide where all that speed goes.</p>
+  <p class="ee">Feel like a <em>perpetual motion machine</em> that runs on time: every ability costs a moment from the clock on your arm, the steampunk world winds it back up, and when you stop time, aim and launch, you choose how many moments to spend.</p>
+  <p class="muted">Attimo means "the moment", and moment and momentum share one root. The player should leave with two feelings: the rush of never slowing down, and the calm control of the frozen second in which they decide where all that speed goes.</p>
 </section>
 
 <section class="panel" id="pillars">
@@ -152,18 +152,18 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
   <div class="pillars">
     <div class="pillar" style="--c: var(--teal)">
       <span class="k">Pillar 1</span>
-      <h3>Momentum is power</h3>
-      <p>Speed charges Rino's arm, and energy buys more speed. Every move feeds one loop: speed, energy, more speed.</p>
+      <h3>Energy is time</h3>
+      <p>Rino's arm is a clock of 12 steps. Every ability (dash, dash hop, wall run, wall jump, Loader) costs whole steps; running and the jump chain stay free.</p>
     </div>
     <div class="pillar" style="--c: var(--fg)">
       <span class="k">Pillar 2</span>
       <h3>Freeze the moment</h3>
-      <p>The Loader stops time on demand: hold to freeze your momentum in slow motion, look around, release to discharge it where you aim.</p>
+      <p>The Loader stops time on demand: hold to freeze your momentum in slow motion, load one to three steps, release to fly a straight line where you aim.</p>
     </div>
     <div class="pillar" style="--c: var(--brass)">
       <span class="k">Pillar 3</span>
-      <h3>Free base, charged power</h3>
-      <p>Every move works without energy. Energy injects it: higher, longer, further. There is never a "failed" moment, only a stronger option.</p>
+      <h3>The world winds you up</h3>
+      <p>Steampunk machines move you for free and tick the clock forward. Capsules and broken machines refill it. Moves that cost steps never charge.</p>
     </div>
     <div class="pillar" style="--c: var(--moss)">
       <span class="k">Pillar 4</span>
@@ -175,38 +175,35 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
 
 <section class="panel" id="loops">
   <div class="eyebrow">Core loop diagrams</div>
-  <h3>1 · The momentum loop (seconds)</h3>
-  <div class="diagram" role="img" aria-label="Momentum loop: move fast, the arm charges, spend energy on injected moves and the Loader, gain more speed, move fast again. Above 50 energy the player is in Moto Perpetuo.">
+  <h3>1 · The time loop (seconds)</h3>
+  <div class="diagram" role="img" aria-label="Time loop: ride the world (steampunk boosters, capsules, machines), the clock fills in whole steps, spend steps on abilities and the Loader, gain speed, ride the world again. From 6 steps the player is in Moto Perpetuo.">
     <svg viewBox="0 0 720 440" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#9aa39f"/></marker>
         <marker id="aht" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#3fd6c6"/></marker>
       </defs>
       <circle cx="360" cy="220" r="150" fill="none" stroke="#2f3a43" stroke-width="2" stroke-dasharray="4 8"/>
-      <!-- center -->
       <circle cx="360" cy="220" r="74" fill="#212930" stroke="#3fd6c6" stroke-width="2"/>
       <text x="360" y="210" text-anchor="middle" fill="#3fd6c6" font-family="Bricolage Grotesque, Segoe UI, sans-serif" font-weight="700" font-size="18">Moto Perpetuo</text>
-      <text x="360" y="234" text-anchor="middle" fill="#9aa39f" font-family="JetBrains Mono, Consolas, monospace" font-size="13">energy ≥ 50</text>
+      <text x="360" y="234" text-anchor="middle" fill="#9aa39f" font-family="JetBrains Mono, Consolas, monospace" font-size="13">clock ≥ 6 steps</text>
       <text x="360" y="252" text-anchor="middle" fill="#9aa39f" font-family="JetBrains Mono, Consolas, monospace" font-size="13">+10–15 % run speed</text>
-      <!-- nodes -->
       <g font-family="Inter, Segoe UI, sans-serif" text-anchor="middle">
-        <rect x="270" y="22" width="180" height="56" rx="10" fill="#1a2026" stroke="#e7e3da" stroke-width="1.5"/>
-        <text x="360" y="47" fill="#e7e3da" font-weight="600" font-size="16">Move fast</text>
-        <text x="360" y="66" fill="#9aa39f" font-size="12">run · jump chain · dash hop</text>
+        <rect x="270" y="22" width="180" height="56" rx="10" fill="#1a2026" stroke="#d1a35a" stroke-width="1.5"/>
+        <text x="360" y="47" fill="#e7e3da" font-weight="600" font-size="16">Ride the world</text>
+        <text x="360" y="66" fill="#9aa39f" font-size="12">steampunk boosters · capsules</text>
 
         <rect x="530" y="190" width="176" height="60" rx="10" fill="#1a2026" stroke="#3fd6c6" stroke-width="1.5"/>
-        <text x="618" y="215" fill="#e7e3da" font-weight="600" font-size="16">Arm charges</text>
-        <text x="618" y="235" fill="#9aa39f" font-size="12">+3–6 /s above ~10 m/s</text>
+        <text x="618" y="215" fill="#e7e3da" font-weight="600" font-size="16">Clock fills</text>
+        <text x="618" y="235" fill="#9aa39f" font-size="12">whole steps · +1 tick / 10 s</text>
 
         <rect x="250" y="362" width="220" height="60" rx="10" fill="#1a2026" stroke="#3fd6c6" stroke-width="1.5"/>
-        <text x="360" y="387" fill="#e7e3da" font-weight="600" font-size="16">Spend energy</text>
-        <text x="360" y="407" fill="#9aa39f" font-size="12">injected moves · Loader discharge</text>
+        <text x="360" y="387" fill="#e7e3da" font-weight="600" font-size="16">Spend steps</text>
+        <text x="360" y="407" fill="#9aa39f" font-size="12">dash · hop · wall run · Loader</text>
 
         <rect x="14" y="190" width="176" height="60" rx="10" fill="#1a2026" stroke="#e7e3da" stroke-width="1.5"/>
         <text x="102" y="215" fill="#e7e3da" font-weight="600" font-size="16">More speed</text>
         <text x="102" y="235" fill="#9aa39f" font-size="12">further, higher, faster</text>
       </g>
-      <!-- arrows along the ring -->
       <path d="M455 60 Q 590 80 612 184" fill="none" stroke="#3fd6c6" stroke-width="2.2" marker-end="url(#aht)"/>
       <path d="M612 256 Q 590 360 476 386" fill="none" stroke="#3fd6c6" stroke-width="2.2" marker-end="url(#aht)"/>
       <path d="M244 386 Q 130 360 108 256" fill="none" stroke="#9aa39f" stroke-width="2.2" marker-end="url(#ah)"/>
@@ -215,48 +212,48 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
   </div>
 
   <h3>2 · The energy economy (minutes)</h3>
-  <div class="diagram" role="img" aria-label="Energy economy: sources (momentum, capsules and broken machines, extracting enemies, shooting enemies into shards, charge button) fill the arm's four cores; the arm spends on Loader, injected moves, shots and mechanisms; this opens routes and speed, which lead to new sources.">
+  <div class="diagram" role="img" aria-label="Energy economy in whole steps: income (passive clock tick, charge key, capsules, broken machines, steampunk boosters, enemies in Phase 6) fills the 12-step clock; the clock pays for dash, dash hop, wall run, wall jump, Loader and energy cores; this opens routes and speed, which lead to new sources. Moves that cost steps never charge.">
     <svg viewBox="0 0 760 330" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <marker id="ah2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#9aa39f"/></marker>
       </defs>
       <g font-family="Inter, Segoe UI, sans-serif">
-        <!-- sources -->
         <rect x="10" y="10" width="220" height="234" rx="10" fill="#1a2026" stroke="#2f3a43"/>
-        <text x="26" y="38" fill="#9aa39f" font-family="JetBrains Mono, Consolas, monospace" font-size="12" letter-spacing="1.5">INCOME</text>
+        <text x="26" y="38" fill="#9aa39f" font-family="JetBrains Mono, Consolas, monospace" font-size="12" letter-spacing="1.5">INCOME (steps)</text>
         <g font-size="13" fill="#e7e3da">
-          <text x="26" y="68">Momentum <tspan fill="#9aa39f">+3–6 /s</tspan></text>
-          <text x="26" y="98">Capsule / machine <tspan fill="#9aa39f">+40</tspan></text>
-          <text x="26" y="128">Extract enemy <tspan fill="#9aa39f">+35</tspan></text>
-          <text x="26" y="158">Shoot → shards <tspan fill="#9aa39f">net +15</tspan></text>
-          <text x="26" y="188">Charge button <tspan fill="#9aa39f">+5 /s</tspan></text>
-          <text x="26" y="222" fill="#9aa39f" font-size="12">Extracting = efficient, shooting = fun</text>
+          <text x="26" y="66">Clock tick <tspan fill="#9aa39f">+1 / 10 s</tspan></text>
+          <text x="26" y="92">Charge key R <tspan fill="#9aa39f">+1 / 5 s</tspan></text>
+          <text x="26" y="118">Capsule <tspan fill="#9aa39f">+3</tspan></text>
+          <text x="26" y="144">Broken machine <tspan fill="#9aa39f">+5</tspan></text>
+          <text x="26" y="170">Steampunk booster <tspan fill="#9aa39f">+1</tspan></text>
+          <text x="26" y="196">Enemies <tspan fill="#9aa39f">Phase 6</tspan></text>
+          <text x="26" y="226" fill="#9aa39f" font-size="12">Paid moves never charge</text>
         </g>
-        <!-- arm -->
-        <rect x="290" y="58" width="180" height="138" rx="12" fill="#212930" stroke="#3fd6c6" stroke-width="2"/>
-        <text x="380" y="88" text-anchor="middle" fill="#e7e3da" font-weight="600" font-size="16">Rino's arm</text>
-        <g>
-          <circle cx="323" cy="128" r="15" fill="#3fd6c6" stroke="#d1a35a" stroke-width="2.5"/>
-          <circle cx="358" cy="128" r="15" fill="#3fd6c6" stroke="#d1a35a" stroke-width="2.5"/>
-          <circle cx="393" cy="128" r="15" fill="none" stroke="#d1a35a" stroke-width="2.5"/>
-          <circle cx="428" cy="128" r="15" fill="none" stroke="#d1a35a" stroke-width="2.5"/>
+        <rect x="290" y="40" width="180" height="176" rx="12" fill="#212930" stroke="#3fd6c6" stroke-width="2"/>
+        <text x="380" y="66" text-anchor="middle" fill="#e7e3da" font-weight="600" font-size="16">Rino's clock</text>
+        <g transform="translate(380 132)">
+          <circle r="44" fill="#12161a" stroke="#d1a35a" stroke-width="3"/>
+          <circle r="22" fill="none" stroke="#3fd6c6" stroke-width="44" stroke-dasharray="57.6 80.6" transform="rotate(-90)" opacity="0.55"/>
+          <g stroke="#e7e3da" stroke-width="2">
+            <line y1="-44" y2="-36"/><line y1="-44" y2="-36" transform="rotate(30)"/><line y1="-44" y2="-36" transform="rotate(60)"/><line y1="-44" y2="-36" transform="rotate(90)"/><line y1="-44" y2="-36" transform="rotate(120)"/><line y1="-44" y2="-36" transform="rotate(150)"/><line y1="-44" y2="-36" transform="rotate(180)"/><line y1="-44" y2="-36" transform="rotate(210)"/><line y1="-44" y2="-36" transform="rotate(240)"/><line y1="-44" y2="-36" transform="rotate(270)"/><line y1="-44" y2="-36" transform="rotate(300)"/><line y1="-44" y2="-36" transform="rotate(330)"/>
+          </g>
+          <line x1="0" y1="0" x2="0" y2="-32" stroke="#e7e3da" stroke-width="3.5" stroke-linecap="round" transform="rotate(150)"/>
+          <circle r="4" fill="#d1a35a"/>
         </g>
-        <text x="380" y="176" text-anchor="middle" fill="#9aa39f" font-family="JetBrains Mono, Consolas, monospace" font-size="12">0–100 · 4 cores × 25</text>
-        <!-- sinks -->
+        <text x="380" y="200" text-anchor="middle" fill="#9aa39f" font-family="JetBrains Mono, Consolas, monospace" font-size="12">0–12 · 4 cores × 3</text>
         <rect x="530" y="10" width="220" height="234" rx="10" fill="#1a2026" stroke="#2f3a43"/>
-        <text x="546" y="38" fill="#9aa39f" font-family="JetBrains Mono, Consolas, monospace" font-size="12" letter-spacing="1.5">SPENDING</text>
+        <text x="546" y="38" fill="#9aa39f" font-family="JetBrains Mono, Consolas, monospace" font-size="12" letter-spacing="1.5">SPENDING (steps)</text>
         <g font-size="13" fill="#e7e3da">
-          <text x="546" y="68">Loader bonus <tspan fill="#9aa39f">25</tspan></text>
-          <text x="546" y="98">Dash hop 2 / 3 <tspan fill="#9aa39f">15 each</tspan></text>
-          <text x="546" y="128">Air dash <tspan fill="#9aa39f">10</tspan></text>
-          <text x="546" y="158">Wall run &gt; 0.6 s <tspan fill="#9aa39f">15 /s</tspan></text>
-          <text x="546" y="188">Shot <tspan fill="#9aa39f">10</tspan></text>
-          <text x="546" y="218">Energy core <tspan fill="#9aa39f">any amount</tspan></text>
+          <text x="546" y="66">Dash / air dash <tspan fill="#9aa39f">1</tspan></text>
+          <text x="546" y="92">Dash hop 2 / 3 <tspan fill="#9aa39f">+1 each</tspan></text>
+          <text x="546" y="118">Wall run <tspan fill="#9aa39f">2, then 1 / s</tspan></text>
+          <text x="546" y="144">Wall jump <tspan fill="#9aa39f">1</tspan></text>
+          <text x="546" y="170">Loader <tspan fill="#9aa39f">1–3</tspan></text>
+          <text x="546" y="196">Energy core <tspan fill="#9aa39f">any, 3/6/9</tspan></text>
+          <text x="546" y="226" fill="#9aa39f" font-size="12">Unpaid: no fire, klack</text>
         </g>
-        <!-- arrows -->
         <path d="M232 127 L 284 127" stroke="#9aa39f" stroke-width="2.2" marker-end="url(#ah2)"/>
         <path d="M472 127 L 524 127" stroke="#9aa39f" stroke-width="2.2" marker-end="url(#ah2)"/>
-        <!-- return -->
         <path d="M640 248 L 640 292 L 120 292 L 120 252" fill="none" stroke="#3fd6c6" stroke-width="2.2" stroke-dasharray="6 5" marker-end="url(#ah2)"/>
         <rect x="246" y="276" width="268" height="32" rx="8" fill="#12161a" stroke="#3fd6c6"/>
         <text x="380" y="297" text-anchor="middle" fill="#e7e3da" font-size="13">speed + opened routes → new sources</text>
@@ -273,11 +270,11 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
       <h4 class="teal">In scope</h4>
       <ul>
         <li>Movement set: run, triple jump, dash, dash hop, wall run</li>
-        <li>Energy arm with 4 cores and Moto Perpetuo</li>
-        <li>Loader (right click) with slow motion and trajectory</li>
-        <li>Extractor and Shot modules on the mouse wheel</li>
+        <li>Energy clock with 12 steps, 4 arm cores and Moto Perpetuo</li>
+        <li>Loader (right click): slow motion, 1–3 steps, straight-line flight</li>
+        <li>Extractor (left click) with its beam</li>
         <li>Mechanism kit: 8 logic blocks, 3 themed layers</li>
-        <li>1–2 simple enemy types, health, checkpoints</li>
+        <li>1–2 simple enemy types (Extractor and Loader hits), health, checkpoints</li>
         <li>One level, one boss, title to end screen</li>
         <li>Final hero, steampunk world, juice, audio</li>
         <li>Windows build, KB+M first, controller late</li>
@@ -288,7 +285,8 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
       <ul>
         <li>More looks per logic block (variants without new code)</li>
         <li>More nature objects for the world layer</li>
-        <li>Third hand module</li>
+        <li>A clock face on the arm itself</li>
+        <li>Another hand module (the module system is dormant, ready for it)</li>
         <li>Collectibles (hidden gears and cores)</li>
         <li>Ledge grab</li>
       </ul>
@@ -298,7 +296,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
       <ul>
         <li>Multiple levels</li>
         <li>Dialogue and cutscenes (story only through the world)</li>
-        <li>Full combat system, weapons, many enemy types</li>
+        <li>Shooting, weapons, a full combat system, many enemy types</li>
         <li>Pull/push and the old aim mode</li>
         <li>Skill trees, save slots, localization</li>
         <li>Custom animation authoring (KayKit clips only)</li>
@@ -312,7 +310,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
 <div class="part" id="design">
   <div class="eyebrow">Part 2 · Full design reference</div>
   <h2>Everything we decided</h2>
-  <p class="muted">Rendered from <code>docs/GAME-DESIGN.md</code>, the single source of truth. All numbers are starting values for the F2 tuning panel, not locked balance.</p>
+  <p class="muted">Rendered from <code>docs/GAME-DESIGN.md</code>, the single source of truth. All numbers are starting values for the F2 tuning panel, not locked balance. All energy values are whole steps.</p>
 </div>
 
 <section class="ref" id="identity">
@@ -321,87 +319,98 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
     <tr><th>Item</th><th>Decision</th></tr>
     <tr><td>Game</td><td><b>Attimo</b> ("the moment"). The Loader's slow-motion hold literally freezes the moment.</td></tr>
     <tr><td>Premise</td><td>The protagonist caused the apocalypse when something went wrong in their lab, and fights back to it through a destroyed, overgrown world.</td></tr>
-    <tr><td>Character</td><td><b>Rino</b>, with a steampunk prosthetic arm that stores energy in four glowing turquoise cores.</td></tr>
-    <tr><td>Boost state</td><td><b>Moto Perpetuo</b>, energy ≥ 50.</td></tr>
+    <tr><td>Character</td><td><b>Rino</b>, with a steampunk prosthetic arm that stores energy as time: a <b>clock of 12 steps</b>, shown on the HUD and by four glowing turquoise cores on the arm (3 steps each).</td></tr>
+    <tr><td>Boost state</td><td><b>Moto Perpetuo</b>, from 6 steps (half the clock).</td></tr>
     <tr><td>Core value</td><td>Fluid, fast movement. If everything else wobbles, this must work.</td></tr>
     <tr><td>Themes</td><td><span class="brass">Steampunk</span> (incl. clockwork), <span class="teal">arcane energy</span> (turquoise, spacey), <span class="moss">overgrown nature</span>.</td></tr>
+    <tr><td>Why a clock</td><td>Moment and momentum share one root, so "energy is time": every ability costs a moment. Clockwork is a theme, Moto Perpetuo is the perpetual-motion idea, the Loader stretches the moment, 12 = 4 cores × 3, and a clock keeps ticking by itself (the small passive income).</td></tr>
   </table></div>
 </section>
 
 <section class="ref" id="rule">
   <h3>Governing rule</h3>
-  <div class="rule">The base version is free; <span>the injected version costs energy.</span></div>
+  <div class="rule">Running and the jump chain are free; <span>every ability costs time (steps).</span></div>
   <div class="tbl"><table>
-    <tr><th>Move</th><th>Free (base)</th><th>Injected (costs energy)</th></tr>
-    <tr><td>Triple jump 1-2-3</td><td>always, normal heights</td><td>at ≥ 50 buffed (higher, faster), no cost</td></tr>
-    <tr><td>Dash</td><td>ground dash, always</td><td>air dash; with an empty arm it does not fire</td></tr>
-    <tr><td>Dash hop</td><td>1 stage</td><td>up to 3 stages, each costs; not spammable</td></tr>
-    <tr><td>Wall run</td><td>~0.6 s; jumping off always free</td><td>longer, costs per second</td></tr>
-    <tr><td>Loader</td><td>redirect only, stored speed, cooldown</td><td>discharge with bonus speed</td></tr>
+    <tr><th>Move</th><th>Free</th><th>Costs steps</th></tr>
+    <tr><td>Run, triple jump 1-2-3</td><td>always; at ≥ 6 steps Jump 3 is buffed, still free</td><td class="muted">–</td></tr>
+    <tr><td>Dash (ground and air)</td><td class="muted">–</td><td class="n">1</td></tr>
+    <tr><td>Dash hop</td><td class="muted">–</td><td>stage 1 is the dash; stages 2 and 3 cost +1 each (fall back to stage 1 without the step)</td></tr>
+    <tr><td>Wall run</td><td class="muted">–</td><td>2 on entry, then 1 every 1 s; Rino drops off when the next tick cannot be paid</td></tr>
+    <tr><td>Wall jump</td><td class="muted">–</td><td class="n">1</td></tr>
+    <tr><td>Loader</td><td class="muted">–</td><td>1–3, loaded by holding</td></tr>
   </table></div>
-  <p class="muted">Without enough energy the base version fires automatically, so there is no failed moment. Only the air dash simply does not fire.</p>
+  <p class="muted"><b>Refusal:</b> an ability the clock cannot pay does not fire, and the player always sees and hears why: the clock shakes and flashes red, the arm flickers, an empty "klack" plays. No weak emergency version. The free counterpart of every ability lives in the world: the steampunk boosters, which even add a step. Wall run look: Rino runs diagonally, head leaning away from the wall.</p>
 </section>
 
 <section class="ref" id="resource">
-  <h3>The energy resource</h3>
-  <div class="cores" aria-label="Example: two of four cores full, 50 energy, Moto Perpetuo">
-    <span class="core">25</span><span class="core">50</span><span class="core off">75</span><span class="core off">100</span>
-    <span class="lbl">example: 50 → Moto Perpetuo</span>
+  <h3>The energy clock</h3>
+  <div class="cores" aria-label="Example: clock at 5 of 12 steps">
+    <svg viewBox="-50 -50 100 100" width="96" height="96" aria-hidden="true">
+      <circle r="44" fill="#12161a" stroke="#d1a35a" stroke-width="3"/>
+      <circle r="22" fill="none" stroke="#3fd6c6" stroke-width="44" stroke-dasharray="57.6 80.6" transform="rotate(-90)" opacity="0.55"/>
+      <line x1="0" y1="0" x2="0" y2="-32" stroke="#e7e3da" stroke-width="3.5" stroke-linecap="round" transform="rotate(150)"/>
+      <circle r="4" fill="#d1a35a"/>
+    </svg>
+    <span class="lbl">example: 5 of 12 steps (Moto Perpetuo from 6)</span>
   </div>
   <ul class="plain">
-    <li>Scale 0–100, split into 4 cores of 25, shown diegetically on the arm.</li>
-    <li>Moto Perpetuo from 50: +10–15 % run speed, buffed Jump 3; the arm glows brighter, both feet and a point on the back glow too.</li>
-    <li>Respawn and checkpoints: always exactly one core (25). Fair, no soft-lock, no farming.</li>
+    <li><b>Whole steps only:</b> 0–12, no percentages, no fractions. Time only appears as a tick interval ("1 step every X s").</li>
+    <li>HUD top left: clock face with an hour hand, filled turquoise up to the hand. Spending: the hand jumps back with a klack. Income: it jumps forward with a tick; a small second hand shows the progress of the timed income.</li>
+    <li>The four arm cores stay the diegetic read: each core = one quarter = 3 steps.</li>
+    <li>Moto Perpetuo from 6: +10–15 % run speed, buffed Jump 3; the arm glows brighter, both feet and a point on the back glow too.</li>
+    <li>Respawn and checkpoints: always exactly 3 steps. Fair, no soft-lock, no farming.</li>
   </ul>
   <div class="grid2">
     <div class="tbl"><table>
-      <tr><th>Income</th><th>Value</th></tr>
-      <tr><td>Momentum, passive above ~10 m/s (plain running never charges)</td><td class="n">+3–6 /s</td></tr>
-      <tr><td>Energy capsule / broken machine (left-click extract)</td><td class="n">+40 / ~+60</td></tr>
-      <tr><td>Extract from an enemy (~2 s, vulnerable)</td><td class="n">+35</td></tr>
-      <tr><td>Shoot, then absorb shards</td><td class="n">−10 / +25</td></tr>
-      <tr><td>Charge button (R, standing still), emergency only</td><td class="n">+5 /s</td></tr>
+      <tr><th>Income</th><th>Steps</th></tr>
+      <tr><td>Passive: the clock ticks by itself, always</td><td class="n">+1 / 10 s</td></tr>
+      <tr><td>Charge key R (hold, standing still; instead of the passive tick)</td><td class="n">+1 / 5 s</td></tr>
+      <tr><td>Energy capsule (Extractor)</td><td class="n">+3</td></tr>
+      <tr><td>Broken machine (Extractor)</td><td class="n">+5</td></tr>
+      <tr><td>Using a steampunk booster (with cooldown)</td><td class="n">+1</td></tr>
+      <tr><td>Enemies (Phase 6)</td><td class="n">tbd</td></tr>
+      <tr><td>Moves that cost steps</td><td class="n">never</td></tr>
     </table></div>
     <div class="tbl"><table>
-      <tr><th>Spending</th><th>Cost</th></tr>
-      <tr><td>Loader discharge with bonus</td><td class="n">25</td></tr>
-      <tr><td>Dash hop stage 2 / 3</td><td class="n">15 each</td></tr>
-      <tr><td>Air dash</td><td class="n">10</td></tr>
-      <tr><td>Wall run after 0.6 s</td><td class="n">15 /s</td></tr>
-      <tr><td>Shot (tap / full charge)</td><td class="n">10 / 25</td></tr>
-      <tr><td>Fast escape from an attraction field</td><td class="n">20 /s</td></tr>
-      <tr><td>Energy core (mechanism)</td><td class="n">any</td></tr>
+      <tr><th>Spending</th><th>Steps</th></tr>
+      <tr><td>Dash / air dash</td><td class="n">1</td></tr>
+      <tr><td>Dash hop stage 2 / 3</td><td class="n">+1 / +1</td></tr>
+      <tr><td>Wall run</td><td class="n">2, then 1 / s</td></tr>
+      <tr><td>Wall jump</td><td class="n">1</td></tr>
+      <tr><td>Loader</td><td class="n">1–3</td></tr>
+      <tr><td>Loader field pass</td><td class="n">Loader ≥ 2</td></tr>
+      <tr><td>Fast escape from an attraction field</td><td class="n">1 / 0.5 s</td></tr>
+      <tr><td>Energy core (thresholds 3 / 6 / 9)</td><td class="n">any</td></tr>
     </table></div>
   </div>
-  <p class="muted">Extract vs. shoot is a real choice: the Extractor is more efficient (+35 vs. net +15) but slow and risky; shoot-and-absorb stays in the flow and is more fun.</p>
 </section>
 
 <section class="ref" id="loader">
-  <h3>Right click: the Loader <span class="badge">replaces aim mode</span></h3>
+  <h3>Right click: the Loader <span class="badge">paid in steps</span></h3>
   <ol class="steps">
-    <li><b>Hold:</b> momentum freezes and is stored; Rino brakes hard or hangs in the air. Slow motion ~0.25×, free camera, capped at ~1.2 s real time, then it discharges on its own.</li>
-    <li><b>Release:</b> discharge in the view direction (also up and down) at <code>max(stored speed, minimum push) + bonus</code>, capped.</li>
-    <li><b>Look:</b> the crosshair becomes a charge ring that fills with the stored speed, a dashed trajectory preview, slight desaturation and a turquoise vignette. Empty arm: grey ring, no bonus segment.</li>
-    <li><b>Rules:</b> on the ground Rino brakes hard and stands, the discharge may go up. One use per air phase, refilled on landing. Independent of the air dash; ~0.15 s air-control lock after the release.</li>
-    <li><b>As built:</b> while holding, the camera pitch limit eases to about 75 degrees so a near-vertical discharge (super jump) works; the dashed preview is turquoise only with a full core. In the gym only a discharge with a full core clears the 7 m gap and the 5 m ledge.</li>
-    <li><b>Feel: "geladen", a loaded spring.</b> Holding builds tension (ring, rising hum, slight camera pull-back); the release is sharp with a short hitstop. The Loader ring turns the other way and looks clearly different from the shot charge ring.</li>
-    <li><b>Removed:</b> goggle HUD, zoom, shoulder offset, aim pose, pull and push. The small crosshair and target aim assist stay.</li>
+    <li><b>Hold:</b> momentum freezes and is stored; Rino brakes hard or hangs in the air. Slow motion ~0.25×, free camera. The ring fills <b>step by step</b> (~0.3 s real time each), each step paid at once from the clock; max 3. Empty clock: no start (refusal). Capped at ~1.2 s real time, then it discharges on its own.</li>
+    <li><b>Release:</b> a <b>straight line, no parabola</b>, in the view direction (also up and down). Speed = <code>own speed + push + steps × (push per step + k × own speed)</code> (start: push 4, push per step 2 m/s, k 0.1, cap 22 m/s). Straight flight without gravity for 6 / 10 / 14 m by step count; speed above the cap lengthens it. Then gravity resumes and the speed carries on.</li>
+    <li><b>Look:</b> a smaller charge ring split into 3 step segments that light up as steps load. <b>No trajectory line</b>: the crosshair direction is the flight line. Slight desaturation and a turquoise vignette.</li>
+    <li><b>Rules:</b> on the ground Rino brakes hard and stands, the discharge may go up. One use per air phase, refilled on landing. Independent of the air dash; ~0.15 s air-control lock after the release. A Loader hit damages enemies (Phase 6).</li>
+    <li><b>Camera:</b> looks up almost vertically (~89°) everywhere, but never flips over the top to look backward.</li>
+    <li><b>Feel: "geladen", a loaded spring.</b> Holding builds tension (segments, rising hum, slight camera pull-back); the release is sharp with a short hitstop.</li>
+    <li><b>Removed:</b> goggle HUD, zoom, shoulder offset, aim pose, pull and push; the free redirect and the dashed trajectory preview.</li>
   </ol>
 </section>
 
 <section class="ref" id="modules">
-  <h3>Left click: two modules on the mouse wheel</h3>
+  <h3>Left click: the Extractor</h3>
   <div class="grid2">
     <div class="layer" style="--c: var(--teal)">
       <h4>Extractor <span class="badge">hold</span></h4>
-      <p>Key 2. Cone in front of the hand (35 degrees, 4 m). Drains energy capsules and broken machines (enemies and shards in Phase 6). Brings energy; the source goes dark and refills after its respawn time.</p>
+      <p>Cone in front of the hand (35 degrees, 4 m). Drains energy capsules (+3) and broken machines (+5); enemies in Phase 6. A turquoise beam runs from the hand to the source; the source goes dark and refills after its respawn time.</p>
     </div>
-    <div class="layer" style="--c: var(--teal)">
-      <h4>Shot <span class="badge">tap or hold</span></h4>
-      <p>A flying projectile, never a beam (Mega Man / Samus). Key 1. Tap = 10 (reach 15 m); holding drains energy continuously while the shot grows, up to 25 (reach 25 m, the only shot that turns heavy mechanisms), with a clear full-charge tell (notched clockwise ring, palm flash, beep). Under 10 it does not fire; targets only glow as shootable while the arm can pay. Strong snap assist bends the shot to the locked target; targets hit in motion are gear discs. Targets hit from the hip replace levers.</p>
+    <div class="layer" style="--c: var(--danger)">
+      <h4>Shot <span class="badge">removed</span></h4>
+      <p>The shot, its charge ring and the gear-disc targets were removed on 2026-11-25. The module system stays in code but is dormant: the mouse wheel and keys 1/2 switch nothing until a later module arrives. Phase 6 enemies are beaten by the Extractor and Loader hits.</p>
     </div>
   </div>
-  <p class="muted"><b>HUD</b> (top left): 4 core chambers, Moto Perpetuo state, active module and a momentum gauge; health joins it in Phase 6. Both modules and the HUD arrived in Phase 5 (Extractor on capsules and machines only). The mouse wheel and keys 1 and 2 only switch modules, there is no camera zoom. The gym area <code>Zone_Energy</code> behind the Loader room shows it all: a 114 m charge track, capsule, broken machine, charge spot, a drain plate and a capsule next to every injected move, and shot stations; every shot puzzle has a capsule at hand.</p>
+  <p class="muted"><b>HUD</b> (top left): the energy clock, Moto Perpetuo state and a momentum gauge; health joins it in Phase 6. The crosshair is drawn smaller while the Loader is held and inside the slingshot core. The gym area <code>Zone_Energy</code> is converted to steps in 05.1: the charge track goes, the shot stations become Loader-field obstacles without gates, and the move stations show their step costs.</p>
 </section>
 
 <section class="ref" id="kit">
@@ -409,10 +418,10 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
   <p>Every world object has a profile on three axes: <b>role</b> (platform, environment, obstacle, booster, mechanism), <b>energy relation</b> (free, costs, amplified) and <b>theme</b> (steampunk, energy, nature). The cube is deliberately sparse; empty cells are intended.</p>
   <div class="tbl"><table>
     <tr><th>Base rule</th><th>Meaning</th></tr>
-    <tr><td>Coupling</td><td><span class="brass">Steampunk</span> = free and mechanical, it helps you. <span class="teal">Turquoise</span> = energy; anything that costs or is amplified shows turquoise. <span class="moss">Nature</span> = world and danger, never helps you.</td></tr>
+    <tr><td>Coupling</td><td><span class="brass">Steampunk</span> = free and mechanical, it helps you; never costs, but each booster use gives +1 step (gear spark, clock tick, small turquoise accent). <span class="teal">Turquoise</span> = energy; anything that costs or is amplified shows turquoise. <span class="moss">Nature</span> = world and danger, never helps you.</td></tr>
     <tr><td>Platforms are neutral</td><td>They never cost, charge or get amplified; they only interact with the world and themselves (crumble, tilt, sink).</td></tr>
-    <tr><td>Booster rule</td><td>Every energy move has a free counterpart in the world, so a level section can dial how much energy it demands.</td></tr>
-    <tr><td>Only source</td><td>The only energy source in the world is extracting capsules and broken machines.</td></tr>
+    <tr><td>Booster rule</td><td>Every ability has a free counterpart in the world, so a level section can dial how many steps it demands.</td></tr>
+    <tr><td>Sources</td><td>Capsules (+3) and broken machines (+5) via the Extractor, +1 per steampunk booster use, the clock tick and the charge key.</td></tr>
   </table></div>
 
   <div class="tbl"><table>
@@ -426,11 +435,11 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
     <h3>Steampunk · free, mechanical</h3>
     <div class="tbl"><table>
       <tr><th>Role</th><th>Objects</th></tr>
-      <tr><td>Platforms</td><td>Clock-hand platform, tilting platform, paternoster, rail cart, piston steps, drawbridge (switched by a target)</td></tr>
+      <tr><td>Platforms</td><td>Clock-hand platform, tilting platform, paternoster, rail cart, piston steps, drawbridge (switched by an energy core)</td></tr>
       <tr><td>Environment</td><td>Updraft (continuous), geyser (pulsed), steam stream (horizontal)</td></tr>
       <tr><td>Obstacles</td><td>Pendulum, piston wall, steam hammer</td></tr>
-      <tr><td>Boosters</td><td>Slingshot core, steam cannon (fixed direction), boost ring, speed pad (steam boost-nozzle look), wall pad (brass and steam look), bounce pad</td></tr>
-      <tr><td>Mechanisms</td><td>The output side: gates, gear gates and platforms switched by targets and energy cores</td></tr>
+      <tr><td>Boosters</td><td>Slingshot core, steam cannon (fixed direction), boost ring, speed pad (steam boost-nozzle look), wall pad (brass and steam look), bounce pad; each gives +1 step per use</td></tr>
+      <tr><td>Mechanisms</td><td>The output side: platforms, the drawbridge and speed pads switched by energy cores and charge gates (no gates or doors)</td></tr>
     </table></div>
   </div>
 
@@ -439,12 +448,12 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
     <div class="tbl"><table>
       <tr><th>Role</th><th>Costs</th><th>Amplified</th></tr>
       <tr><td>Platforms</td><td class="muted">neutral</td><td class="muted">neutral</td></tr>
-      <tr><td>Environment</td><td>Attraction field: slow escape free, fast escape costs</td><td>Gravity zone: float longer with energy</td></tr>
-      <tr><td>Obstacles</td><td>Force-field barrier: breaks only to a charged Loader</td><td class="muted">deliberately empty</td></tr>
+      <tr><td>Environment</td><td>Attraction field: slow escape free, fast escape 1 step / 0.5 s</td><td>Gravity zone: float longer with more steps</td></tr>
+      <tr><td>Obstacles</td><td>Loader field: does not break; a Loader with ≥ 2 steps glides through with a brake</td><td class="muted">deliberately empty</td></tr>
       <tr><td>Boosters</td><td class="muted">deliberately empty (the Loader is the paid booster)</td><td>Bounce pad with core</td></tr>
-      <tr><td>Mechanisms</td><td>Energy core (pay in any amount), target (shot costs)</td><td>Charge gate: opens only if you arrive with ≥ X</td></tr>
+      <tr><td>Mechanisms</td><td>Energy core (pay in steps, thresholds 3 / 6 / 9 switch outputs)</td><td>Charge gate: switches a receiver while you are inside with ≥ X steps; not a door</td></tr>
     </table></div>
-    <p class="muted">Source: energy capsule (small, quick) and broken machine (large, slower, more).</p>
+    <p class="muted">Sources: energy capsule (+3, quick) and broken machine (+5, slower). Gear-disc targets and gates were removed with the shot.</p>
   </div>
 
   <div class="layer" style="--c: var(--moss)">
@@ -461,11 +470,11 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
   <div class="layer" style="--c: var(--brass)">
     <h3>Slingshot core · the Loader you can touch</h3>
     <ol class="steps">
-      <li><b>Enter:</b> a brass cage catches Rino with a steam hiss, momentum freezes.</li>
-      <li><b>Hold:</b> same slow motion and free camera as the Loader; a pressure gauge instead of the charge ring, brass trajectory dashes, auto-launch after the max hold.</li>
-      <li><b>Release:</b> steam blast, launch in the view direction at <code>max(entry speed, fixed push)</code>, no energy bonus.</li>
+      <li><b>Enter:</b> a small brass cage catches Rino with a steam hiss only when he is inside it (no suction), momentum freezes.</li>
+      <li><b>Hold:</b> same slow motion and free camera as the Loader; a smaller pressure gauge instead of the charge ring, no trajectory line, smaller crosshair, auto-launch after the max hold.</li>
+      <li><b>Release:</b> steam blast, launch on the Loader's straight line at <code>max(entry speed, fixed push)</code>, no steps paid, +1 step for using it.</li>
     </ol>
-    <p class="muted">Same input and timing as the Loader, so it teaches the Loader without a tutorial. Entering starts the hold at once; releasing RMB (or a tap) fires, otherwise it auto-launches at the Loader cap. It refills the Loader's air use and leaves the air dash alone.</p>
+    <p class="muted">Same input and timing as the Loader, so it teaches the Loader without a tutorial. It refills the Loader's air use and leaves the air dash alone.</p>
   </div>
 
   <h3>Architecture · 8 logic blocks + 4 components + looks</h3>
@@ -475,29 +484,28 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
     <tr><td>Force volume</td><td>updraft, geyser, steam stream, gravity zone, attraction field, leaf storm, resin pool</td></tr>
     <tr><td>Impulse</td><td>speed pad, boost ring, bounce pad (base and with core)</td></tr>
     <tr><td>Catch &amp; launch</td><td>slingshot core, steam cannon</td></tr>
-    <tr><td>Timed motion</td><td>clock-hand and tilting platform, paternoster, rail cart, piston steps, drawbridge, gates, pendulum, steam hammer, piston wall</td></tr>
-    <tr><td>Reaction to load</td><td>crumbling platform, collapse, sinking debris, tipping trunk, falling debris, snap bloom, force-field barrier</td></tr>
-    <tr><td>Trigger</td><td>target, energy core, charge gate (+ invisible AND / OR / timer logic)</td></tr>
+    <tr><td>Timed motion</td><td>clock-hand and tilting platform, paternoster, rail cart, piston steps, drawbridge, pendulum, steam hammer, piston wall</td></tr>
+    <tr><td>Reaction to load</td><td>crumbling platform, collapse, sinking debris, tipping trunk, falling debris, snap bloom, Loader field</td></tr>
+    <tr><td>Trigger</td><td>energy core, charge gate (+ invisible AND / OR / timer logic)</td></tr>
     <tr><td>Energy source</td><td>energy capsule, broken machine</td></tr>
     <tr><td>Wall surface</td><td>wall pad</td></tr>
   </table></div>
   <div class="tbl"><table>
     <tr><th>Component</th><th>Does</th><th>Examples</th></tr>
-    <tr><td>Receiver</td><td>switched by a trigger signal</td><td>switched speed pad, drawbridge, gates</td></tr>
+    <tr><td>Receiver</td><td>switched by a trigger signal</td><td>switched speed pad, drawbridge, parkour pieces</td></tr>
     <tr><td>Damage / push</td><td>hurts or pushes on contact (only pushes until health arrives in Phase 6)</td><td>pendulum, steam hammer, piston wall, snap bloom, falling debris</td></tr>
-    <tr><td>Amplification</td><td>reads the arm charge, acts stronger</td><td>bounce pad with core, gravity zone</td></tr>
-    <tr><td>Energy cost</td><td>drains energy while used</td><td>fast escape from the attraction field, paying into an energy core</td></tr>
+    <tr><td>Amplification</td><td>reads the clock, acts stronger</td><td>bounce pad with core, gravity zone</td></tr>
+    <tr><td>Energy cost</td><td>costs whole steps per tick while used</td><td>fast escape from the attraction field, paying into an energy core</td></tr>
   </table></div>
   <p class="muted">Parallels between layers come from components: a steampunk object plus amplification becomes its energy counterpart. A look may change freely within its layer but never breaks the coupling.</p>
-  <h3>Rules fixed in the Phase 05.1 discuss</h3>
+  <h3>Rules fixed in the Phase 05.1 discussions</h3>
   <ul>
     <li><b>Steam cannon:</b> short fixed hold, then a launch along the barrel at a fixed speed, independent of the entry speed.</li>
-    <li><b>Steam wall:</b> the nozzle push is gone; a steam-look wall pad runs and jumps exactly like the plain pad, with Rino upright along the wall.</li>
+    <li><b>Steam wall:</b> the nozzle push is gone; a steam-look wall pad runs and jumps exactly like the plain pad. Rino runs diagonally, head away from the wall.</li>
     <li><b>Clock hand:</b> a bounded back-and-forth sweep, always on, never steeper than the floor angle (no full turn; confirm in playtest).</li>
-    <li><b>Targets:</b> gear discs fired only by a shot, with a capsule nearby; a heavy gear disc needs a full-charge shot and replaces the valve.</li>
-    <li><b>Energy core:</b> hold E to pay in; the amount stays, and each threshold (25 / 50 / 75) switches one more output.</li>
-    <li><b>Barrier and attraction field:</b> only a Loader discharge with bonus breaks the barrier; walking out of the attraction field is free, a fast escape costs 20/s.</li>
-    <li><b>Showroom = gym:</b> one area per layer, grouped by role, plus a mixed course; the Phase 5 Loader room and energy area keep their layout, with levers and the valve swapped in place for gear discs.</li>
+    <li><b>Energy core:</b> hold E to pay in, one step per tick; the amount stays, and each threshold (3 / 6 / 9 steps) switches one more output, never a door.</li>
+    <li><b>Loader field and attraction field:</b> the field never breaks, a Loader with ≥ 2 steps glides through with a brake; walking out of the attraction field is free, a fast escape costs 1 step every 0.5 s.</li>
+    <li><b>Showroom = gym:</b> one area per layer, grouped by role, plus a mixed course; the Phase 5 Loader room and energy area keep their layout, the shot stations become Loader-field obstacles.</li>
   </ul>
 </section>
 
@@ -505,15 +513,15 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
   <h3>Roadmap mapping</h3>
   <div class="tbl"><table>
     <tr><th>Phase</th><th>Delivers</th></tr>
-    <tr><td class="n">5</td><td>Energy Arm &amp; Loader: resource, Moto Perpetuo, income without enemies, energy costs, Loader, aim mode removed, Extractor (capsules, machines), charged shot, energy HUD</td></tr>
-    <tr><td class="n">05.1</td><td>Kit Rework: kit cube, 8 blocks + 4 components, three layers, showroom regrouped</td></tr>
-    <tr><td class="n">6</td><td>Extractor, Shot, Enemies &amp; Recovery: extends the Phase 5 Extractor, shot and HUD to enemies, shards, health: enemies, shards, shot damage, health, pickup and teaching rooms</td></tr>
+    <tr><td class="n">5</td><td>Energy Arm &amp; Loader: first energy version (0–100, 4 cores), Moto Perpetuo, Loader, aim mode removed, Extractor (capsules, machines), shot (removed again in 05.1), energy HUD</td></tr>
+    <tr><td class="n">05.1</td><td>Kit Rework: kit cube, 8 blocks + 4 components, three layers, showroom regrouped; plus the energy clock in whole steps, paid abilities with refusal feedback, passive tick and steampunk income, Extractor beam, shot and targets removed, straight-line Loader, camera pitch, slingshot and crosshair changes</td></tr>
+    <tr><td class="n">6</td><td>Extractor, Enemies &amp; Recovery: enemies beaten by the Extractor and Loader hits, enemy income in steps, health next to the clock, checkpoints and fast respawn</td></tr>
     <tr><td class="n">7</td><td>Level blockout with the "charge the level" gimmick</td></tr>
-    <tr><td class="n">8</td><td>Boss beaten through Loader discharges and shots on weak points</td></tr>
+    <tr><td class="n">8</td><td>Boss beaten through Loader discharges on weak points</td></tr>
   </table></div>
 </section>
 
-<footer>Attimo · generated from <code>docs/GAME-DESIGN.md</code> on 2026-11-24. When the design doc changes, update this page too.</footer>
+<footer>Attimo · generated from <code>docs/GAME-DESIGN.md</code> on 2026-11-25. When the design doc changes, update this page too.</footer>
 </div>
 </body>
 </html>

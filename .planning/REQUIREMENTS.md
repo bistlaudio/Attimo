@@ -47,7 +47,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [x] **HAND-03**: Module 1 "Fernauslöser": player aims and fires a turquoise pulse (tap = small, hold = big) that triggers mechanisms at range
 - [x] **HAND-04**: Right-click Loader: holding freezes and stores momentum in slow motion with a free camera, charge ring and trajectory preview; releasing discharges in the view direction (bonus costs one core, empty arm only redirects). Replaces aim mode and Pull/Push (docs/GAME-DESIGN.md section 4)
 - [ ] **HAND-05**: Picking up a module is a clear moment (pickup feedback, HUD icon) and unlocks the module permanently
-- [ ] **EXTR-01**: Extractor module (hold, cone in front of the hand) drains enemies, shards, energy capsules and broken machines for energy; switched with the Shot via the mouse wheel (module, capsules and broken machines built in Phase 5; enemies and shards in Phase 6)
+- [ ] **EXTR-01**: Extractor (hold, cone in front of the hand, the only left-click action) drains energy capsules (+3 steps), broken machines (+5 steps) and enemies for energy, with a visible beam from the hand to the source (capsules and machines built in Phase 5, beam and steps in 05.1, enemies in Phase 6)
 - [ ] **HAND-06**: Each module has a teaching room: safe first use, then a test, then a twist
 - [x] **HAND-07**: Every interactable's glow element is a steampunk primitive element (brass bezel or gear ring around a faceted turquoise core) shaped to fit its mechanic, built from shared primitives and materials; the glow stages still switch on the core
 
@@ -71,14 +71,19 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 
 - [ ] **KIT-01**: The kit runs on 8 logic blocks and 4 attachable components; values in `.tres` configs, looks as inherited scenes
 - [ ] **KIT-02**: All objects of the steampunk, energy and nature layers exist as block + components + look, honouring the coupling rule
-- [ ] **KIT-03**: The slingshot core plays like the Loader in a steampunk look; targets replace levers, pressure plates, valves and cranks
+- [ ] **KIT-03**: The slingshot core plays like the Loader in a steampunk look (smaller core, catches only when Rino is inside, no trajectory line, gives +1 step); levers, pressure plates, valves and cranks are cut, and energy cores and charge gates are the remaining triggers (gear-disc targets removed 2026-11-25)
+- [ ] **ENRG-06**: The energy is a clock of 12 whole steps (no percentages or fractions): HUD clock with hour hand (and a second hand for timed income), the 4 arm cores = 3 steps each, Moto Perpetuo from 6, respawn with 3; costs and income only in whole steps, time only as tick intervals
+- [ ] **ENRG-07**: Running and the jump chain are free; every ability costs steps (dash and air dash 1, dash hop stages 2/3 +1 each, wall run 2 + 1 every 1 s, wall jump 1, Loader 1-3); an unpaid ability does not fire and always shows the refusal (clock shake and red flash, arm flicker, empty klack sound)
+- [ ] **ENRG-08**: Income in whole steps: passive clock tick (+1 every 10 s), charge key R (+1 every 5 s), capsule +3, broken machine +5, +1 per steampunk booster use with a cooldown; moves that cost steps never charge (momentum charge removed)
+- [ ] **ENRG-09**: The Loader is paid by holding (1-3 steps, one segment per step on a smaller ring, no trajectory line) and flies a straight line: speed = own speed + push + steps x (push step + k x own speed), capped, overflow lengthens the straight flight; the camera can look up almost vertically everywhere without flipping backward
+- [ ] **ENRG-10**: The shot and the gear-disc targets are removed; left click is only the Extractor and the module switch is dormant; the force-field barrier becomes a Loader field that does not break and lets a Loader with >= 2 steps glide through with a brake
 - [ ] **KIT-04**: Cut stations removed, reworked stations replaced, showroom regrouped by layer and role with a station and smoke test per object
 
 ### Shooting & Enemies (exact design defined in its phase)
 
-- [ ] **SHOOT-01**: The Shot module (tap 10 or charged hold up to 25, a projectile, never a beam; module and charge built in Phase 5) costs energy and hits targets, objects and enemies; shot enemies burst into shards the player can extract
-- [ ] **SHOOT-02**: Destructible/reactive objects (e.g. barrels, crates, pipes) react to pulse hits
-- [ ] **SHOOT-03**: 1–2 simple enemy types (e.g. small machines turned evil) with simple behaviour (patrol, notice, attack), defeated by the pulse
+- [ ] **SHOOT-01**: Enemies are beaten with the Extractor (drain at close range, player vulnerable) and with Loader hits (a discharge into the enemy); there is no shot (removed 2026-11-25); enemy income is paid in whole steps
+- [ ] **SHOOT-02**: Destructible/reactive objects (e.g. barrels, crates, pipes) react to Loader hits
+- [ ] **SHOOT-03**: 1–2 simple enemy types (e.g. small machines turned evil) with simple behaviour (patrol, notice, attack), defeated by the Extractor and Loader hits
 - [ ] **SHOOT-04**: Hits on objects and enemies give clear feedback (hit reaction, VFX, hit-stop)
 
 ### Progression & Health
@@ -99,7 +104,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 
 - [ ] **BOSS-01**: One object-boss (an object turned evil by the catastrophe) with 2–3 phases
 - [ ] **BOSS-02**: Every boss attack is telegraphed and has a recovery window
-- [ ] **BOSS-03**: Boss is damaged through Loader discharges and shots on its weak points plus arena mechanisms, no separate combat system
+- [ ] **BOSS-03**: Boss is damaged through Loader discharges (and the Extractor) on its weak points plus arena mechanisms, no shot and no separate combat system
 - [ ] **BOSS-04**: Boss health is readable (e.g. glowing cores going out)
 
 ### Feel & Juice
@@ -123,7 +128,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [ ] **ART-01**: Final Meshy hero replaces the Mannequin: rigged onto KayKit Rig_Medium as rigid segments (~6–9k tris), all existing KayKit clip mappings keep working
 - [ ] **ART-02**: Steampunk prop/environment kit in the palette atlas, within poly budgets, consistent with KayKit style
 - [ ] **ART-03**: Lighting and atmosphere: warm directional light, turquoise emissive glow, fog, steam particles
-- [ ] **ART-04**: Loader, Extractor and Shot poses are composed from kit clips via the AnimationTree upper-body layer, no new clips
+- [ ] **ART-04**: Loader and Extractor poses are composed from kit clips via the AnimationTree upper-body layer, no new clips
 
 ### Menus & UX
 
@@ -168,7 +173,7 @@ Deferred. Tracked but not in the current roadmap.
 | Visual arm swapping per module | Too much work; arm always looks the same, modules are abilities |
 | Dialogue and cutscenes | Story is told only through world and look |
 | Multiple levels | Vertical slice: one level, one boss |
-| Full combat system (weapons, many enemy types, combat arenas) | Only pulse shooting + 1–2 simple enemy types; boss is a puzzle boss using modules and mechanisms |
+| Full combat system (weapons, many enemy types, combat arenas) | No shooting (removed 2026-11-25): Extractor and Loader hits + 1–2 simple enemy types; boss is a puzzle boss using the Loader and mechanisms |
 | Skill trees, save slots | Not needed for a slice |
 | Localization | Uni prototype |
 | Playtest study / questionnaires / consent forms | User decision: just the game, juice tuned to one fixed strong level |
@@ -223,6 +228,11 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | KIT-02 | Phase 05.1 | Pending |
 | KIT-03 | Phase 05.1 | Pending |
 | KIT-04 | Phase 05.1 | Pending |
+| ENRG-06 | Phase 05.1 | Pending |
+| ENRG-07 | Phase 05.1 | Pending |
+| ENRG-08 | Phase 05.1 | Pending |
+| ENRG-09 | Phase 05.1 | Pending |
+| ENRG-10 | Phase 05.1 | Pending |
 | HAND-07 | Phase 04.1 | Complete |
 | MECH-01 | Phase 4 | Complete |
 | MECH-02 | Phase 4 | Complete |
@@ -278,4 +288,4 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 
 ---
 *Requirements defined: 2026-11-02*
-*Last updated: 2026-11-24 after Phase 5 plan 05-05 (EXTR-01 marked as partly built in Phase 5: module, capsules and machines; ENRG-05 confirmed in Phase 5). Earlier: 2026-11-23 after the energy-momentum rework (Phase 5 rescoped to Energy Arm & Loader, Phase 05.1 Kit Rework inserted; HAND-04, FEEL-10, ART-04, SHOOT-01, BOSS-03 reworded; ENRG-01..05, EXTR-01, KIT-01..04, LEVEL-04 added; source docs/GAME-DESIGN.md)*
+*Last updated: 2026-11-25 after the 05.1 playtest-feedback discuss (ENRG-06..10 added for 05.1; EXTR-01, KIT-03, SHOOT-01..03, BOSS-03, ART-04 reworded: energy clock in steps, shot and targets removed). Earlier: 2026-11-24 after Phase 5 plan 05-05 (EXTR-01 marked as partly built in Phase 5: module, capsules and machines; ENRG-05 confirmed in Phase 5). Earlier: 2026-11-23 after the energy-momentum rework (Phase 5 rescoped to Energy Arm & Loader, Phase 05.1 Kit Rework inserted; HAND-04, FEEL-10, ART-04, SHOOT-01, BOSS-03 reworded; ENRG-01..05, EXTR-01, KIT-01..04, LEVEL-04 added; source docs/GAME-DESIGN.md)*

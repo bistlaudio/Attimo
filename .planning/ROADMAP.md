@@ -39,8 +39,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Animated Mannequin & Aim Mode** - The Mannequin animates with every movement state from kit clips, plus aim mode with crosshair (completed 2026-11-20)
 - [x] **Phase 4: Fernauslöser & Mechanism Kit** - Hand module framework, turquoise highlight with aim assist, Module 1 remote-trigger pulse, and the greybox D-15/D-16 mechanism kit (levers, valves, energy cores, cranks, gear gates, rotating and lift platforms, conveyors, steam nozzles, pendulums) with AND, OR and timer logic (completed 2026-11-23)
 - [x] **Phase 5: Energy Arm & Loader** - Energy resource in 4 arm cores with Moto Perpetuo, passive and capsule income, energy costs for injected moves, the right-click Loader with charge ring and trajectory preview, aim mode removed (completed 2026-11-24)
-- [ ] **Phase 05.1: Kit Rework** (INSERTED) - Mechanism kit rebuilt as 8 logic blocks + 4 components + looks in steampunk, energy and nature layers, showroom regrouped
-- [ ] **Phase 6: Extractor, Shot, Enemies & Recovery** - Extends the Phase 5 Extractor, shot and energy HUD to enemies and shards, shards, 1-2 greybox enemy types, energy HUD next to health, module pickup and teaching rooms, checkpoints and near-instant respawn
+- [ ] **Phase 05.1: Kit Rework** (INSERTED) - Mechanism kit rebuilt as 8 logic blocks + 4 components + looks in steampunk, energy and nature layers, showroom regrouped; plus (playtest 2026-11-25) the energy clock in 12 whole steps, every ability paid, the shot and targets removed and the straight-line Loader
+- [ ] **Phase 6: Extractor, Enemies & Recovery** - Enemies beaten by the Extractor and Loader hits (no shot), 1-2 greybox enemy types, health next to the energy clock, Extractor and Loader teaching rooms, checkpoints and near-instant respawn
 - [ ] **Phase 7: Level Blockout & Game Flow** - The full Prototype Bits level with ability gating, the "charge the level" gimmick and reset paths, plus title, pause and settings menus
 - [ ] **Phase 8: Boss & Ending** - A greybox object-boss with 2-3 telegraphed phases, beaten through hand modules and arena mechanisms, followed by the end screen
 
@@ -49,7 +49,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 9: Style Contract & Final Hero** - Style contract first, then the final Meshy hero on Rig_Medium replaces the Mannequin
 - [ ] **Phase 10: Steampunk World Building** - Steampunk prop/environment kit, the level, arena and boss rebuilt with it, warm lighting, fog and steam, and storytelling through the world alone
 - [ ] **Phase 11: Movement & Camera Juice** - Data-driven cue catalogue, squash/stretch, dust and steam on every move, FOV kicks, camera shake and hit-stop at one fixed, strong level
-- [ ] **Phase 12: Hand & Combat Juice + Polish** - Feedback for Loader, Extractor, Shot, energy, mechanisms and hits, then a polish pass that retunes all mechanics together and fixes rough spots
+- [ ] **Phase 12: Hand & Combat Juice + Polish** - Feedback for Loader, Extractor, energy clock, mechanisms and hits, then a polish pass that retunes all mechanics together and fixes rough spots
 - [ ] **Phase 13: Controller Support** - Gamepad bindings for everything, plus stick look and aim assist tuned for controller
 - [ ] **Phase 14: Audio** - Sound effects through the catalogue SFX slots, level and boss music, and a hit-stop/shake retune with sound
 - [ ] **Phase 15: Windows Release & Performance** - Standalone Windows build, profiling on a weaker laptop at 60 fps, and debug tools stripped
@@ -270,18 +270,23 @@ Plans:
 
 **Group:** A (Prototyp)
 **Goal:** As a level designer, I want the mechanism kit rebuilt as a few logic blocks with attachable components and looks, sorted into steampunk, energy and nature layers, so that the world reads at a glance and new objects are assembled instead of coded.
+**Goal (added 2026-11-25, playtest feedback):** As a player, I want energy to be a clock of 12 whole steps that every ability pays from, and a Loader that flies a straight line, so that the costs read at a glance and the arm feels like spending moments of time.
 **Mode:** mvp
 **Depends on:** Phase 5
-**Requirements**: KIT-01, KIT-02, KIT-03, KIT-04
+**Requirements**: KIT-01, KIT-02, KIT-03, KIT-04, ENRG-06, ENRG-07, ENRG-08, ENRG-09, ENRG-10, EXTR-01 (beam and steps only)
 **Success Criteria** (what must be TRUE):
 
   1. The kit runs on 8 logic blocks (force volume, impulse, catch & launch, timed motion, reaction to load, trigger, energy source, wall surface) and 4 components (receiver, damage/push, amplification, energy cost); each block keeps its values in a `.tres` config and its look in an inherited scene.
   2. Every object of the three layers in `docs/GAME-DESIGN.md` section 6 exists as block + components + look, and the coupling holds: steampunk is free, anything that costs or is amplified shows turquoise, nature never helps the player.
-  3. The slingshot core plays exactly like the Loader (same input and timing) in a steampunk look (brass cage, pressure gauge, brass trajectory, steam blast); targets replace levers, pressure plates, valves and cranks.
+  3. The slingshot core plays exactly like the Loader (same input and timing) in a steampunk look (small brass cage that catches only when Rino is inside, smaller pressure gauge, no trajectory line, steam blast, +1 step); levers, pressure plates, valves and cranks are cut, and energy cores and charge gates are the remaining triggers (no targets, no gates).
   4. The cut stations are removed, the reworked ones replace their old versions, and the showroom is regrouped by layer and role with a station and smoke test per object.
   5. The movement gym is rebuilt around the new kit: one area per layer (steampunk, energy, nature), each object with a station and an "Erwartet:" sign, plus a mixed course that combines the layers.
+  6. The energy is a clock of 12 whole steps (HUD clock with hour hand, 4 arm cores of 3 steps, Moto Perpetuo from 6, respawn with 3), and no cost or income anywhere is a fraction or a percentage.
+  7. Every ability pays its steps (dash, air dash, dash hop stages, wall run, wall jump, Loader), an unpaid ability does not fire and shows the refusal (clock shake and red flash, arm flicker, klack), and moves that cost steps never charge; income comes from the passive tick, the R key, capsules, machines and steampunk boosters.
+  8. The Loader is paid by holding (1-3 steps on a smaller segmented ring, no trajectory line) and flies a straight line with the speed formula own speed + push + steps x (push step + k x own speed) and the overflow-to-distance rule; the camera can look almost straight up everywhere; the Loader field lets a Loader with >= 2 steps glide through with a brake.
+  9. The shot, its stations and the gear-disc targets are gone; left click is only the Extractor, with a visible beam; the wall run is diagonal with the head away from the wall.
 
-**Plans**: 20 plans (sequential waves 1-20; D-33 deviation, see 05.1-01-PLAN.md)
+**Plans**: 20 plans (sequential waves 1-20; D-33 deviation, see 05.1-01-PLAN.md). **Replan required (2026-11-25):** plans 01-06 are executed; plans 07-20 predate the playtest decisions D-34..D-58 in `05.1-CONTEXT.md` (energy clock first, shot and target removal, Loader rework, then the remaining kit without targets and gates) and must be revised with `/gsd-plan-phase 05.1`.
 
 Plans:
 - [x] 05.1-01-PLAN.md — Kit skeleton (KitBlock, config pattern, coupling + contract tests) and slingshot as Loader (CAGE source)
@@ -305,27 +310,27 @@ Plans:
 - [ ] 05.1-19-PLAN.md — Reaction to load: nature objects and force-field barrier
 - [ ] 05.1-20-PLAN.md — Mixed course, final cleanup, kit metrics, design-doc sync
 **UI hint**: yes
-**Notes**: Design source of truth: `docs/GAME-DESIGN.md` section 6 (kit cube, base rules, layers, architecture, showroom verdict). Known fixes: the steam wall jump must feel like the normal wall jump (currently it flings Rino away), the wall run on it runs with the head to the wall, clock-hand platform floor bugs. Final looks are designed in Group B; greybox looks per layer are enough here.
+**Notes**: Design source of truth: `docs/GAME-DESIGN.md` sections 2-6 (since 2026-11-25 also the energy clock, governing rule, Loader and Extractor sections) and `05.1-CONTEXT.md` D-34..D-58. Known fixes: the steam wall jump must feel like the normal wall jump (currently it flings Rino away), the wall run on it runs with the head to the wall, clock-hand platform floor bugs. Final looks are designed in Group B; greybox looks per layer are enough here.
 
-### Phase 6: Extractor, Shot, Enemies & Recovery
+### Phase 6: Extractor, Enemies & Recovery
 
 **Group:** A (Prototyp)
-**Goal:** As a player, I want to drain or shoot enemies for energy and recover quickly after dying, so that danger feeds the energy loop without frustration.
+**Goal:** As a player, I want to beat enemies with the Extractor and Loader hits for energy and recover quickly after dying, so that danger feeds the energy loop without frustration.
 **Mode:** mvp
 **Depends on**: Phase 05.1
 **Requirements**: SHOOT-01, SHOOT-02, SHOOT-03, EXTR-01, HAND-05, HAND-06, ART-04, PROG-01, PROG-03, PROG-04
 **Success Criteria** (what must be TRUE):
 
-  1. The two left-click modules built in Phase 5 (Extractor and Shot, switched with the mouse wheel) are extended: the Extractor (hold, cone in front of the hand) also drains enemies (up to +35 over about 2 s, player vulnerable) and shards, next to the capsules and broken machines it already drains; the Shot (a projectile, tap 10 or charged up to 25) also hits enemies.
-  2. Shot enemies burst into shards the player extracts (shot -10, shards +25), so the Extractor is more efficient and shooting is faster and more fun. Prototype Bits barrels, crates and targets react visibly to shots.
-  3. 1-2 simple greybox enemy types (small machines turned evil, built from Prototype Bits) patrol, notice the player and attack.
-  4. The player has 3-5 health points; health joins the Phase 5 energy HUD (diegetic cores on the arm plus a minimal readout). Taking damage is obvious from a kit Hit clip. At 0 health the player respawns at the last checkpoint with one core.
-  5. Reaching a checkpoint visibly changes its state and saves progress, including unlocked modules. After a death or a fall into a kill zone, the player is back in control within about 1 second. Picking up a module plays the kit PickUp clip, shows its HUD icon and unlocks it for good; each module has a teaching room (safe use, test, twist). Loader, Extractor and Shot each show a readable pose from kit clips.
-  6. The movement gym is extended with an Extractor and Shot area: training enemies, shard pickups, targets for hip shots and a short course that mixes extracting, shooting and the Loader.
+  1. The Extractor (hold, cone in front of the hand, with its beam) also drains enemies at close range for whole steps while the player is vulnerable, next to the capsules and broken machines it already drains. There is no shot (removed in 05.1).
+  2. A Loader discharge into an enemy damages it (a Loader hit), so movement and combat connect; Prototype Bits barrels, crates and pipes react visibly to Loader hits. The enemy income is set in whole steps.
+  3. 1-2 simple greybox enemy types (small machines turned evil, built from Prototype Bits) patrol, notice the player and attack, and are beaten by the Extractor and Loader hits.
+  4. The player has 3-5 health points; health joins the energy clock HUD (diegetic cores on the arm plus a minimal readout). Taking damage is obvious from a kit Hit clip. At 0 health the player respawns at the last checkpoint with 3 steps.
+  5. Reaching a checkpoint visibly changes its state and saves progress. After a death or a fall into a kill zone, the player is back in control within about 1 second. The Extractor and the Loader each have a teaching room (safe use, test, twist) and a readable pose from kit clips; module pickup (HAND-05) applies only if a new module is added, the module switch stays dormant otherwise.
+  6. The movement gym is extended with an enemy area: training enemies to drain and to hit with the Loader, and a short course that mixes extracting, Loader hits and movement.
 
 **Plans**: TBD
 **UI hint**: yes
-**Notes**: The exact shooting and enemy designs are confirmed at the start of the phase. Here a hit shows only through the target's own reaction. Sparks, hit VFX and hit-stop (SHOOT-04) come in Phases 11-12. Added 2026-11-23 (user request): a dash readout belongs in the HUD next to health (dash cooldown, air dash available, dash-hop long-jump combo stage). The stamina question is resolved by the energy resource (`docs/GAME-DESIGN.md` section 3): energy is a real resource, but base moves stay free. Design source for the modules: `docs/GAME-DESIGN.md` section 5.
+**Notes**: Rescoped 2026-11-25 (05.1 playtest discuss, `05.1-CONTEXT.md` D-56): the shot is gone, enemies are beaten by the Extractor and Loader hits. Enemy designs are confirmed at the start of the phase. Here a hit shows only through the target's own reaction. Sparks, hit VFX and hit-stop (SHOOT-04) come in Phases 11-12. Added 2026-11-23 (user request): a dash readout belongs in the HUD next to health (dash available, dash-hop long-jump combo stage). Energy is the 12-step clock (`docs/GAME-DESIGN.md` section 3): running and the jump chain are free, every ability costs steps. Design source: `docs/GAME-DESIGN.md` sections 3-5.
 
 ### Phase 7: Level Blockout & Game Flow
 
@@ -350,7 +355,7 @@ Plans:
 ### Phase 8: Boss & Ending
 
 **Group:** A (Prototyp)
-**Goal:** As a player, I want to defeat an object-boss with Loader discharges and shots, so that the slice has a climax and an ending.
+**Goal:** As a player, I want to defeat an object-boss with Loader discharges, so that the slice has a climax and an ending.
 **Mode:** mvp
 **Depends on**: Phase 7
 **Requirements**: BOSS-01, BOSS-02, BOSS-03, BOSS-04, UX-04
@@ -358,7 +363,7 @@ Plans:
 
   1. At the end of the level, the player fights one greybox object-boss, an object turned evil by the catastrophe, through 2-3 distinct phases.
   2. Every boss attack is announced by a readable telegraph (pose, motion or colour change, no particles) and followed by a recovery window the player can use.
-  3. The boss takes damage only through Loader discharges and shots on its weak points, plus arena mechanisms. There is no separate combat system.
+  3. The boss takes damage only through Loader discharges (and the Extractor) on its weak points, plus arena mechanisms. There is no shot and no separate combat system.
   4. Boss health can be read at a glance from its glowing cores going out.
   5. Defeating the boss leads to an end screen. The whole slice plays from title to ending in the prototype look, and all mechanics are signed off. This closes Group A.
 
@@ -426,7 +431,7 @@ Plans:
 **Requirements**: FEEL-03, SHOOT-04, POLISH-01, POLISH-02
 **Success Criteria** (what must be TRUE):
 
-  1. Loader, Extractor, Shot, energy gain and spend, and mechanism activation each show distinct visual feedback: Loader charge and discharge burst, extract stream, shot flash and impact, core fill and drain, and the mechanism activation pulse. Module pickup is a clear moment, with a brief freeze and the HUD icon popping in.
+  1. Loader, Extractor, energy gain and spend, and mechanism activation each show distinct visual feedback: Loader step charge and discharge burst, extract beam, clock and core fill and drain, and the mechanism activation pulse. Module pickup is a clear moment, with a brief freeze and the HUD icon popping in.
   2. Every hit on an object or enemy gives clear feedback: a hit reaction on the next frame, sparks and a short hit-stop. Big moments (module pickup, boss hit, death) feel stronger than small ones (jump, landing).
   3. Movement, camera, both modules, shooting, enemies, mechanisms and the boss are retuned together over full playthroughs. The movement and Loader metrics tables are updated to the final values.
   4. Rough spots found while playing the full slice (stuck spots, unclear moments, timing problems) are logged and fixed. A final playthrough from title to end screen finds none left open.
@@ -497,7 +502,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 04.1 → 5 → 05.1 →
 | 4. Fernauslöser & Mechanism Kit | 5/5 | Complete   | 2026-11-23 |
 | 5. Energy Arm & Loader | 5/5 | Complete   | 2026-11-24 |
 | 05.1. Kit Rework | 6/20 | In Progress|  |
-| 6. Extractor, Shot, Enemies & Recovery | 0/TBD | Not started | - |
+| 6. Extractor, Enemies & Recovery | 0/TBD | Not started | - |
 | 7. Level Blockout & Game Flow | 0/TBD | Not started | - |
 | 8. Boss & Ending | 0/TBD | Not started | - |
 | 9. Style Contract & Final Hero | 0/TBD | Not started | - |

@@ -56,6 +56,8 @@ The right-click Loader (HAND-04): hold to store the momentum in slow motion, rel
 
 ## Energy
 
+> **Superseded 2026-11-25 (05.1 playtest discuss, GAME-DESIGN.md section 3):** energy becomes a clock of 12 whole steps; the 0-100 values below are the Phase 5 state and are rewritten in steps when 05.1 builds the energy clock. Do not size new stations from them.
+
 The arm energy (ENRG-01 to ENRG-05, FEEL-10): what charges it and what each move costs. Passive rows run ArmEnergy.tick at an exact horizontal speed for one second; the charge button is held 2 s in Idle; capsule and machine are drained tick by tick through EnergySource.extract; the cost rows are the config values; the Moto rows run the real Player with a full arm. The gym area Zone_Energy sizes its stations from these numbers.
 
 | Verb | Value | Note |
