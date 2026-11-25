@@ -11,6 +11,9 @@ extends RefCounted
 ##   conveyors (z 12 and 20, x -26..-10), pillar forest (x -6..10, z 10..31), moving platforms (x 14..38, z 10..34).
 ##   west door (z -2..2, no WallWest_0) into the west wing: Zone_Loader (x -43..-115, z -26..26, tools/loader_room_builder.gd), whose
 ##   west wall has an open doorway (z -2..2) into Zone_Energy (x -115..-239, z -26..26, tools/energy_area_builder.gd).
+##   east door (z -2..2, no WallEast_0, a plain doorway) into the kit showroom (Phase 05.1, D-28): a corridor z -4..4 through the layer
+##   areas Zone_KitSteampunk (x 43..151), Zone_KitEnergy (x 155..227) and Zone_KitNature (x 231..291), z -32..32 each, shell in
+##   tools/kit_area_shell.gd, stations in tools/kit_<layer>_builder.gd; the mixed course Zone_KitCourse (x 295..395) follows in plan 20.
 
 const PROTO: String = "res://scenes/proto/"
 const FLOOR: String = PROTO + "primitive_floor.tscn"
@@ -68,7 +71,7 @@ func build() -> Node3D:
 	_build_moving_platforms(_group(_root, "Zone_MovingPlatforms"))
 	_build_conveyors(_group(_root, "Zone_Conveyors"))
 	_build_camera_tests(_group(_root, "Zone_CameraTests"))
-	_build_mechanism_rooms(_group(_root, "Zone_MechanismRooms"))
+	_build_kit_areas()
 	_build_loader_room(_group(_root, "Zone_Loader"))
 	_build_energy_area(_group(_root, "Zone_Energy"))
 	_build_hall(hall)
@@ -230,7 +233,7 @@ func _build_hall(hall: Node3D) -> void:
 		_wall(hall, "WallNorth_%s" % _cell_name(i), i * TILE, z_north, 0.0)
 		_wall(hall, "WallSouth_%s" % _cell_name(i), i * TILE, z_south, 0.0)
 	for j: int in range(CELLS_Z.x, CELLS_Z.y + 1):
-		# Cell 0 is the door into room 2 (the Zahnrad-Tor of Zone_MechanismRooms).
+		# Cell 0 is the east door into the kit showroom, a plain doorway (no gate).
 		if j != 0:
 			_wall(hall, "WallEast_%s" % _cell_name(j), x_edge, j * TILE, 90.0)
 		# Cell 0 is the west door into Zone_Loader.
@@ -424,16 +427,26 @@ func _conveyor_strip(zone: Node3D, prefix: String, z: float, velocity: Vector3) 
 		tile.constant_linear_velocity = velocity
 
 
-# --- Zone_MechanismRooms ------------------------------------------------------------------------------------
+# --- Kit layer areas (Phase 05.1) -------------------------------------------------------------------------------------------------
 
 
-func _build_mechanism_rooms(zone: Node3D) -> void:
-	var script: GDScript = load("res://tools/mechanism_rooms_builder.gd") as GDScript
-	if script == null or not script.can_instantiate():
-		failure = "cannot load res://tools/mechanism_rooms_builder.gd"
-		return
-	var worker: RefCounted = script.new() as RefCounted
-	worker.call(&"build_into", zone, self)
+## The kit showroom behind the east door (D-28, D-29): one group per layer area, each built by its worker, loaded at run time.
+const KIT_AREAS: Array[Array] = [
+	["Zone_KitSteampunk", "res://tools/kit_steampunk_builder.gd"],
+	["Zone_KitEnergy", "res://tools/kit_energy_builder.gd"],
+	["Zone_KitNature", "res://tools/kit_nature_builder.gd"],
+]
+
+
+func _build_kit_areas() -> void:
+	for entry: Array in KIT_AREAS:
+		var path: String = String(entry[1])
+		var script: GDScript = load(path) as GDScript
+		if script == null or not script.can_instantiate():
+			failure = "cannot load %s" % path
+			return
+		var worker: RefCounted = script.new() as RefCounted
+		worker.call(&"build_into", _group(_root, String(entry[0])), self)
 
 
 # --- Zone_Loader --------------------------------------------------------------------------------------------

@@ -267,17 +267,10 @@ func _live_capsule(tree: SceneTree, check: Callable) -> void:
 	_release_inputs()
 
 
-## Every shot station has a respawning capsule within reach: the Auslöser stations that need a shot, the Loader room's gap and
-## super jump, and (above) the Zone_Energy shot stations. (The Phase 4 puzzle rooms were removed in plan 05.1-02, D-29.)
+## Every shot station has a respawning capsule within reach: the Loader room's gap and super jump, and (above) the Zone_Energy shot
+## stations. (The Phase 4 puzzle rooms were removed in plan 05.1-02, D-29; the old Auslöser stations of the mechanism rooms went with
+## the rooms in plan 05.1-06, and target stations in the kit layer areas carry their own capsule, kit_area_shell.gd capsule_beside.)
 func _check_capsules_near_shots(check: Callable) -> void:
-	var mech: Node3D = _gym.get_node("Zone_MechanismRooms") as Node3D
-	for entry: Variant in mech.get_meta(&"stations", []) as Array:
-		var data: Dictionary = entry as Dictionary
-		if str(data.get("zone", "")) != "Ausloeser" or not ["Valve", "EnergyCore", "LogicAnd", "LogicOr", "LogicTimer"].has(str(data.get("tag", ""))):
-			continue
-		var at: Vector3 = data["at"] as Vector3
-		var capsule: EnergySource = _nearest_capsule(at)
-		check.call(capsule != null and capsule.respawn_time > 0.0 and capsule.global_position.distance_to(at) <= CAPSULE_REACH, "Auslöser station %s has a respawning capsule within %.0f m" % [data["tag"], CAPSULE_REACH])
 	var loader: Node3D = _gym.get_node("Zone_Loader") as Node3D
 	for tag: String in ["Loader_Gap", "Loader_SuperJump"]:
 		var launch: Marker3D = loader.get_node("%s/Launch" % tag) as Marker3D
@@ -298,15 +291,15 @@ func _check_signs(check: Callable) -> void:
 	check.call(stale.is_empty(), "no sign names aiming or the old pulse sizes (%s)" % [stale])
 	var shot: Label3D = _zone.get_node("Shot_TapVsFull/Label_Shot_TapVsFull") as Label3D
 	check.call(shot.text.contains("tippen") and shot.text.contains("laden"), "the shot station sign speaks of tapping and charging (%s)" % shot.text)
-	var valve_sign: Label3D = _gym.find_child("Label_Valve", true, false) as Label3D
-	check.call(valve_sign != null and valve_sign.text.contains("voll geladener Schuss"), "the Valve sign names the fully charged shot")
 	var expects: int = 0
 	for node: Node in _gym.find_children("Label_*_Expect", "Label3D", true, false):
 		if (node as Label3D).text.begins_with("Erwartet:"):
 			expects += 1
 	# 47 since plan 05.1-02 removed the pneumatic tube station (48 before); 46 since plan 05.1-03 cut the nozzle wall and jump
-	# stations and added the steam-look wall-run pad.
-	check.call(expects >= 45, "the gym has at least 45 'Erwartet:' lines (got %d)" % expects)
+	# stations and added the steam-look wall-run pad; 45 after plan 05.1-04. 22 since plan 05.1-06 replaced the old mechanism rooms
+	# (30 lines) by the kit layer areas (7 steampunk stations so far; later plans add a station per object): Zone_Energy 11,
+	# Zone_Loader 4, Zone_KitSteampunk 7.
+	check.call(expects >= 22, "the gym has at least 22 'Erwartet:' lines (got %d)" % expects)
 	check.call(labels >= 40, "at least 40 labels (%d)" % labels)
 
 
