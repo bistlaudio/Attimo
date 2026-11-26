@@ -19,6 +19,8 @@ const HAND_SCENE: String = "res://scenes/kit/steampunk/clock_hand_platform.tscn"
 const TILT_SCENE: String = "res://scenes/kit/steampunk/tilting_platform.tscn"
 const HAND_PRESET: String = "res://resources/kit/timed_motion/clock_hand.tres"
 const TILT_PRESET: String = "res://resources/kit/timed_motion/tilting_platform.tres"
+const BRIDGE_SCENE: String = "res://scenes/kit/steampunk/drawbridge.tscn"
+const BRIDGE_PRESET: String = "res://resources/kit/timed_motion/drawbridge.tres"
 const PATERNOSTER_SCENE: String = "res://scenes/mechanisms/paternoster.tscn"
 const SHIPPED_TPS: int = 60
 ## Ticks to let the rider land and the always-on ramp start before sampling.
@@ -62,6 +64,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	var static_speed: float = await _static_takeoff(tree, check)
 	await _deck_takeoff(tree, check, hand_pivot, static_speed)
 	await _paternoster_takeoff(tree, check, static_speed)
+	await _hinge(tree, check)
 	Engine.physics_ticks_per_second = SHIPPED_TPS
 
 
@@ -261,3 +264,55 @@ func _paternoster_takeoff(tree: SceneTree, check: Callable, static_speed: float)
 	var speed: float = float(result.get("speed", NAN))
 	check.call(absf(speed - static_speed) <= STATIC_TAKEOFF_TOLERANCE, "paternoster: take-off vertical speed %.4f equals the static jump %.4f (no double count, tolerance %.2f)" % [speed, static_speed, STATIC_TAKEOFF_TOLERANCE])
 	await _free(tree, [player, lift, source])
+
+
+## Plan 05.1-17 (D-18, GAME-DESIGN 6.5): the HINGE profile, the drawbridge. It folds from raised (hinge_angle_deg) to flat while its child
+## Receiver is on, with the same carry contract as the sweep: AnimatableBody3D in carrying_platform, priority 100, carry_velocity_at.
+func _hinge(tree: SceneTree, check: Callable) -> void:
+	var exists: bool = ResourceLoader.exists(BRIDGE_SCENE) and ResourceLoader.exists(BRIDGE_PRESET)
+	check.call(exists, "the drawbridge scene and preset exist")
+	if not exists:
+		return
+	var profiles: Dictionary = (load(CONFIG_SCRIPT) as GDScript).get_script_constant_map().get("Profile", {}) as Dictionary
+	check.call(profiles.has("HINGE"), "TimedMotionConfig.Profile has HINGE (%s)" % [profiles])
+	var preset: Resource = load(BRIDGE_PRESET) as Resource
+	check.call(int(preset.get("profile")) == int(profiles.get("HINGE", -1)), "drawbridge.tres is the HINGE profile")
+	check.call(int(preset.get("timing")) == 1, "drawbridge.tres is SWITCHED")
+	var driver: Node3D = Fixtures.spawn_signal_driver(tree.root, false)
+	var bridge: Node3D = (load(BRIDGE_SCENE) as PackedScene).instantiate() as Node3D
+	bridge.get_node("Receiver").set(&"source", driver)
+	tree.root.add_child(bridge)
+	var length: float = float(preset.get("hand_length"))
+	var hinge_time: float = float(preset.get("hinge_time"))
+	var deck: Node3D = bridge.call(&"body") as Node3D
+	await Fixtures.wait_physics(tree, 5)
+	var raised_tip: float = (deck.global_transform * Vector3(0.0, 0.0, length)).y
+	check.call(raised_tip > length * 0.9, "hinge: raised at rest, deck tip y %.2f (deck %.1f m)" % [raised_tip, length])
+	check.call(deck is AnimatableBody3D and deck.is_in_group(&"carrying_platform") and not (deck as AnimatableBody3D).sync_to_physics, "hinge: the deck is an AnimatableBody3D in carrying_platform, sync_to_physics off")
+	check.call(bridge.process_physics_priority == 100, "hinge: the block ticks after the player (priority %d)" % bridge.process_physics_priority)
+	driver.call(&"set_active", true)
+	await Fixtures.wait_physics(tree, int(hinge_time * 0.5 * float(SHIPPED_TPS)))
+	var dt: float = 1.0 / float(SHIPPED_TPS)
+	var mid: Vector3 = bridge.call(&"carry_velocity_at", deck.global_transform * Vector3(0.0, 0.0, length), dt) as Vector3
+	check.call(mid.y < -0.5, "hinge: mid-fold the deck tip moves down, chord y %.2f m/s" % mid.y)
+	await Fixtures.wait_physics(tree, int(ceil((hinge_time + 0.2) * float(SHIPPED_TPS))))
+	var tip: float = (deck.global_transform * Vector3(0.0, 0.0, length)).y
+	check.call(absf(tip) < 0.1, "hinge: lowered flat within hinge_time + 0.2 s (tip y %.3f)" % tip)
+	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(0.0, 0.05, 4.0))
+	var stats: Dictionary = {"tick": 0, "missing": 0, "worst": 0.0}
+	var sample: Callable = func() -> void:
+		stats["tick"] = int(stats["tick"]) + 1
+		if int(stats["tick"]) <= 20:
+			return
+		var on_deck: bool = false
+		for index: int in player.get_slide_collision_count():
+			var hit: KinematicCollision3D = player.get_slide_collision(index)
+			if hit.get_collider() == deck and hit.get_normal().y > 0.5:
+				on_deck = true
+		if not (on_deck and player.is_on_floor()):
+			stats["missing"] = int(stats["missing"]) + 1
+		stats["worst"] = maxf(float(stats["worst"]), absf(Fixtures.deck_offset(player, deck as CollisionObject3D)))
+	var probe: Node = Fixtures.spawn_physics_probe(tree.root, 50, sample)
+	await Fixtures.wait_physics(tree, 80)
+	check.call(int(stats["missing"]) == 0 and float(stats["worst"]) <= MAX_DECK_OFFSET, "hinge: a rider stands on the lowered deck on every tick, floor snap works (missing %d, worst offset %.3f m)" % [int(stats["missing"]), float(stats["worst"])])
+	await _free(tree, [probe, player, bridge, driver])

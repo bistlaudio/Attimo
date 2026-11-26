@@ -71,6 +71,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 			_check_roles(zone, check)
 			_check_stations(zone, AREAS[area] as Rect2, check)
 	_check_registry(gym, check)
+	_check_signal_stations(gym, check)
 	_check_cut_scenes(gym, check)
 	gym.queue_free()
 	await gym.tree_exited
@@ -145,3 +146,28 @@ func _check_cut_scenes(gym: Node, check: Callable) -> void:
 		if CUT_SCENES.has(node.scene_file_path):
 			hits.append("%s (%s)" % [gym.get_path_to(node), node.scene_file_path])
 	check.call(hits.is_empty(), "no gym node instances a cut scene (%s)" % ", ".join(hits))
+
+
+## Plan 05.1-17: the signal stations exist and every Receiver in them is wired (a Receiver without a source would sit silently dead).
+const SIGNAL_STATIONS: Dictionary = {
+	"Station_Drawbridge": "Zone_KitSteampunk",
+	"Station_SwitchedSpeedPad": "Zone_KitSteampunk",
+	"Station_ChargeGate": "Zone_KitEnergy",
+}
+
+
+func _check_signal_stations(gym: Node, check: Callable) -> void:
+	for station_name: String in SIGNAL_STATIONS:
+		var zone: Node = gym.get_node_or_null(str(SIGNAL_STATIONS[station_name]))
+		var found: Array[Node] = zone.find_children(station_name, "Node3D", true, false) if zone != null else []
+		check.call(found.size() == 1, "%s exists once under %s" % [station_name, SIGNAL_STATIONS[station_name]])
+		if found.size() != 1:
+			continue
+		var gates: int = 0
+		for node: Node in found[0].find_children("*", "", true, false):
+			var script: Script = node.get_script() as Script
+			if script != null and String(script.get_global_name()) == "Receiver":
+				check.call(node.get("source") != null, "%s: the Receiver %s has a wired source" % [station_name, node.name])
+			if script != null and String(script.get_global_name()) == "Trigger":
+				gates += 1
+		check.call(gates >= 1, "%s holds a charge gate (Trigger)" % station_name)

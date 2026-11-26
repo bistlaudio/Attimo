@@ -40,12 +40,12 @@ const BLOCKS: Dictionary = {
 		"script": "res://scripts/kit/blocks/timed_motion.gd",
 		"config_class": "TimedMotionConfig",
 		"config_script": "res://scripts/kit/configs/timed_motion_config.gd",
-		"profiles": ["SWEEP", "TILT"],
+		"profiles": ["SWEEP", "TILT", "HINGE"],
 		"preset": "res://resources/kit/timed_motion/clock_hand.tres",
 		"scene": "res://scenes/kit/steampunk/clock_hand_platform.tscn",
 		"probe": "angular_speed",
-		"positive": ["angular_speed", "ramp_time", "sweep_limit_deg", "tilt_limit_deg", "hand_length", "hand_width", "plate_size", "plate_thickness"],
-		"profile_presets": {"res://resources/kit/timed_motion/clock_hand.tres": "SWEEP", "res://resources/kit/timed_motion/tilting_platform.tres": "TILT"},
+		"positive": ["angular_speed", "ramp_time", "sweep_limit_deg", "tilt_limit_deg", "hand_length", "hand_width", "plate_size", "plate_thickness", "hinge_angle_deg", "hinge_time"],
+		"profile_presets": {"res://resources/kit/timed_motion/clock_hand.tres": "SWEEP", "res://resources/kit/timed_motion/tilting_platform.tres": "TILT", "res://resources/kit/timed_motion/drawbridge.tres": "HINGE"},
 	},
 	# Plan 05.1-10: the Energy source block (capsule +3, broken machine +5). step_interval is a divisor-like timer (T-05.1-29).
 	"EnergySource": {
@@ -107,6 +107,18 @@ const BLOCKS: Dictionary = {
 			"res://resources/kit/impulse/bounce_pad.tres": "BOUNCE",
 			"res://resources/kit/impulse/bounce_pad_core.tres": "BOUNCE",
 		},
+	},
+	# Plan 05.1-17: the Trigger block (D-13), first profile CHARGE_GATE (D-21, D-47). threshold is a count with a positive minimum.
+	"Trigger": {
+		"script": "res://scripts/kit/blocks/trigger.gd",
+		"config_class": "TriggerConfig",
+		"config_script": "res://scripts/kit/configs/trigger_config.gd",
+		"profiles": ["CHARGE_GATE"],
+		"preset": "res://resources/kit/trigger/charge_gate.tres",
+		"scene": "res://scenes/kit/energy/charge_gate.tscn",
+		"probe": "threshold",
+		"positive": ["threshold"],
+		"profile_presets": {"res://resources/kit/trigger/charge_gate.tres": "CHARGE_GATE"},
 	},
 }
 ## Source fragments a block script must not contain: direct writes of the player's motion (D-17).

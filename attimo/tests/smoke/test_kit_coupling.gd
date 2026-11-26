@@ -42,6 +42,9 @@ const KIT_OBJECTS: Dictionary = {
 	"res://scenes/kit/steampunk/bounce_pad.tscn": "res://tests/smoke/test_impulse.gd",
 	"res://scenes/kit/energy/bounce_pad_core.tscn": "res://tests/smoke/test_amplification.gd",
 	"res://scenes/kit/energy/gravity_zone.tscn": "res://tests/smoke/test_amplification.gd",
+	"res://scenes/kit/energy/charge_gate.tscn": "res://tests/smoke/test_charge_gate.gd",
+	"res://scenes/kit/steampunk/drawbridge.tscn": "res://tests/smoke/test_charge_gate.gd",
+	"res://scenes/kit/steampunk/speed_pad_switched.tscn": "res://tests/smoke/test_charge_gate.gd",
 }
 
 
@@ -63,6 +66,11 @@ func run(tree: SceneTree, check: Callable) -> void:
 	# Guardrail 3 (plan 05.1-16): Amplification has exactly its two users, the bounce pad with core and the gravity zone.
 	var amp_users: Array = component_users.get("Amplification", []) as Array
 	check.call(amp_users.size() == 2 and amp_users.has("energy/bounce_pad_core.tscn") and amp_users.has("energy/gravity_zone.tscn"), "Amplification is found in exactly 2 scenes: bounce_pad_core and gravity_zone (%s)" % [amp_users])
+
+
+	# Plan 05.1-17 (D-13): the Receiver component has exactly its two users, the drawbridge and the switched speed pad.
+	var receiver_users: Array = component_users.get("Receiver", []) as Array
+	check.call(receiver_users.size() == 2 and receiver_users.has("steampunk/drawbridge.tscn") and receiver_users.has("steampunk/speed_pad_switched.tscn"), "Receiver is found in exactly 2 scenes: drawbridge and speed_pad_switched (%s)" % [receiver_users])
 
 
 func _collect(dir_path: String, into: Array[String]) -> void:
@@ -139,6 +147,15 @@ func _check_scene(path: String, check: Callable, component_users: Dictionary) ->
 		check.call(chain.has("Impulse"), "%s: the root is an Impulse (%s)" % [stem, chain])
 	if path.ends_with("/bounce_pad_core.tscn") or path.ends_with("/gravity_zone.tscn"):
 		check.call(layer == LAYER_ENERGY and relation == RELATION_AMPLIFIED and classes.has("GlowElement") and classes.has("Amplification"), "%s: an amplified energy object is ENERGY AMPLIFIED with a GlowElement core and an Amplification (relation %d)" % [stem, relation])
+	# Plan 05.1-17 (D-21, D-47): the charge gate is an ENERGY Trigger that never costs (FREE) and shows turquoise marks; the drawbridge is
+	# a FREE steampunk Timed motion with a Receiver; the switched speed pad is a GIVES Impulse with an accent and a Receiver.
+	if path.ends_with("/charge_gate.tscn"):
+		check.call(layer == LAYER_ENERGY and relation == RELATION_FREE and classes.has("GlowElement") and not classes.has("Receiver"), "%s: the charge gate is ENERGY FREE with GlowElement marks and no Receiver (relation %d)" % [stem, relation])
+		check.call(chain.has("Trigger"), "%s: the root is a Trigger (%s)" % [stem, chain])
+	if path.ends_with("/drawbridge.tscn"):
+		check.call(layer == 0 and relation == RELATION_FREE and classes.has("Receiver") and chain.has("TimedMotion"), "%s: the drawbridge is a FREE steampunk TimedMotion with a Receiver (relation %d, %s)" % [stem, relation, chain])
+	if path.ends_with("/speed_pad_switched.tscn"):
+		check.call(layer == 0 and relation == RELATION_GIVES and classes.has("Receiver") and classes.has("GlowElement") and chain.has("Impulse"), "%s: the switched speed pad is a steampunk GIVES Impulse with an accent and a Receiver (relation %d, %s)" % [stem, relation, chain])
 	if path.ends_with("/slingshot_core.tscn") or path.ends_with("/steam_cannon.tscn"):
 		check.call(relation == RELATION_GIVES, "%s: the catch element is GIVES (relation %d)" % [stem, relation])
 	if folder == "nature":
