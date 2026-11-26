@@ -463,11 +463,14 @@ func _piston_steps(tree: SceneTree, check: Callable) -> void:
 	var deck: AnimatableBody3D = decks[0] as AnimatableBody3D
 	var start: Vector3 = deck.global_position + Vector3(0.0, 0.1, 0.65)
 	var player: PlayerController = Fixtures.spawn_player(tree.root, start)
-	var rider: Dictionary = {"tick": 0, "missing": 0, "deepest": INF}
+	var rider: Dictionary = {"tick": 0, "missing": 0, "deepest": INF, "retracted": false}
 	var watch: Callable = func() -> void:
 		rider["tick"] = int(rider["tick"]) + 1
 		rider["deepest"] = minf(float(rider["deepest"]), player.global_position.z - block.global_position.z)
-		if int(rider["tick"]) <= 3 or float(block.call(&"step_extension", 0)) < 1.1:
+		# Only the first retraction counts: once the step dropped under 1.1 m the rider is allowed to fall.
+		if int(rider["tick"]) > 3 and float(block.call(&"step_extension", 0)) < 1.1:
+			rider["retracted"] = true
+		if int(rider["tick"]) <= 8 or bool(rider["retracted"]):
 			return
 		var on_deck: bool = false
 		for index: int in player.get_slide_collision_count():

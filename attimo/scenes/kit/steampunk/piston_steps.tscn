@@ -1,0 +1,41 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/kit/timed_motion_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://resources/kit/timed_motion/piston_steps.tres" id="2_config"]
+[ext_resource type="Material" path="res://resources/mechanisms/look_brass.tres" id="3_brass"]
+[ext_resource type="Material" path="res://resources/mechanisms/look_iron.tres" id="4_iron"]
+[ext_resource type="Material" path="res://resources/mechanisms/look_copper.tres" id="5_copper"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall"]
+size = Vector3(12, 5.5, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall"]
+size = Vector3(12, 5.5, 3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rod"]
+size = Vector3(0.3, 0.3, 2.5)
+
+[node name="PistonSteps" instance=ExtResource("1_base")]
+layer = 0
+energy_relation = 0
+config = ExtResource("2_config")
+
+[node name="Mesh" parent="Body" index="1"]
+material_override = ExtResource("3_brass")
+
+[node name="Rod" type="MeshInstance3D" parent="Body" index="2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, -2.5)
+mesh = SubResource("BoxMesh_rod")
+material_override = ExtResource("5_copper")
+
+[node name="Wall" type="StaticBody3D" parent="." index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 2.25, -1.5)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Wall"]
+shape = SubResource("BoxShape3D_wall")
+
+[node name="Mesh" type="MeshInstance3D" parent="Wall"]
+mesh = SubResource("BoxMesh_wall")
+material_override = ExtResource("4_iron")

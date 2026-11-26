@@ -1,0 +1,38 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/kit/timed_motion_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://resources/kit/timed_motion/paternoster.tres" id="2_config"]
+[ext_resource type="Material" path="res://resources/mechanisms/look_brass.tres" id="3_brass"]
+[ext_resource type="Material" path="res://resources/mechanisms/look_iron.tres" id="4_iron"]
+[ext_resource type="Material" path="res://resources/mechanisms/look_copper.tres" id="5_copper"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_back"]
+size = Vector3(10, 10, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_post"]
+size = Vector3(0.4, 10, 0.4)
+
+[node name="Paternoster" instance=ExtResource("1_base")]
+layer = 0
+energy_relation = 0
+config = ExtResource("2_config")
+
+[node name="Mesh" parent="Body" index="1"]
+material_override = ExtResource("3_brass")
+
+[node name="Frame" type="Node3D" parent="." index="1"]
+
+[node name="BackPlate" type="MeshInstance3D" parent="Frame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, -1.6)
+mesh = SubResource("BoxMesh_back")
+material_override = ExtResource("4_iron")
+
+[node name="PostLeft" type="MeshInstance3D" parent="Frame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.6, 4.5, -1.3)
+mesh = SubResource("BoxMesh_post")
+material_override = ExtResource("5_copper")
+
+[node name="PostRight" type="MeshInstance3D" parent="Frame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.6, 4.5, -1.3)
+mesh = SubResource("BoxMesh_post")
+material_override = ExtResource("5_copper")

@@ -10,6 +10,12 @@ extends KitBlock
 ## has no sin phase and no floor-angle clamp; the 0..1 fold progress lives in _speed_factor and drives _angle, _omega and
 ## _carry_omega, so the carry contract below holds unchanged.
 ##
+## PATH and STEPS (plan 05.1-19) only translate: every deck is an AnimatableBody3D child of this node that follows the same carry contract.
+## PATH moves path_deck_count level decks along config.path_points at path_speed (a closed route loops, an open one ping-pongs with
+## path_pause at the ends); STEPS puts step_count decks in a row along local X that each reach out of a wall along local +Z by
+## step_extension(i) = step_extend * (1 - cos(2 pi (t + step_phase * i) / step_period)) / 2. carry_velocity_at() then answers with the
+## chord of the deck nearest to the point (decks() lists them, body() is deck 0).
+##
 ## Carry contract (folded unchanged from the old rotating platform, D-09): the Body is an AnimatableBody3D in the group
 ## carrying_platform with sync_to_physics off, a direct child of this node. PlayerController carries the rider by reference frame
 ## (it re-places the rider at the same local point of the deck every tick), which needs the block to tick AFTER the player: physics
@@ -42,6 +48,13 @@ var _axis_local: Vector3 = Vector3.RIGHT
 var _rest_offset: Vector3 = Vector3.ZERO
 var _limit_rad: float = 0.0
 var _limit_from_player: bool = false
+## PATH and STEPS: all decks (deck 0 is the scene's Body), the local displacement per second of the last tick of each, and the clocks.
+var _decks: Array[AnimatableBody3D] = []
+var _deck_velocity: PackedVector3Array = PackedVector3Array()
+var _path_offset: float = 0.0
+var _path_dir: float = 1.0
+var _pause_left: float = 0.0
+var _clock: float = 0.0
 
 @onready var _body: AnimatableBody3D = $Body
 @onready var _shape_node: CollisionShape3D = $Body/CollisionShape3D
@@ -57,6 +70,7 @@ func _ready() -> void:
 	_body.collision_mask = 0
 	_body.add_to_group(&"carrying_platform")
 	_build_shape()
+	_build_decks()
 	_resolve_limit()
 	_angle = _rest_angle()
 	_apply()
@@ -64,6 +78,9 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if translates():
+		_tick_translating(delta)
+		return
 	if not _limit_from_player:
 		_resolve_limit()
 	var next: Vector3 = _next_state(delta)
@@ -115,6 +132,9 @@ static func min_pivot_height(motion: TimedMotionConfig, floor_top: float) -> flo
 func carry_velocity_at(point: Vector3, delta: float) -> Vector3:
 	if delta <= 0.0 or not is_finite(delta) or not point.is_finite():
 		return Vector3.ZERO
+	if translates():
+		var index: int = _nearest_deck(point)
+		return global_basis * _deck_velocity[index] if index >= 0 else Vector3.ZERO
 	var relative: Vector3 = point - global_position
 	var axis: Vector3 = (global_basis * _axis_local).normalized()
 	return (Basis(axis, _carry_omega * delta) * relative - relative) / delta
@@ -135,6 +155,53 @@ func pivot_position() -> Vector3:
 	return global_position
 
 
+## True for the profiles that only translate their decks (PATH, STEPS).
+func translates() -> bool:
+	return config != null and (config.profile == TimedMotionConfig.Profile.PATH or config.profile == TimedMotionConfig.Profile.STEPS)
+
+
+## PATH and STEPS: all deck bodies in order (deck 0 is body()).
+func decks() -> Array[AnimatableBody3D]:
+	return _decks
+
+
+## STEPS: how far in m step `index` reaches out of the wall right now (0 retracted .. step_extend).
+func step_extension(index: int) -> float:
+	var cycle: float = (_clock + config.step_phase * float(index)) / maxf(config.step_period, 0.2)
+	return config.step_extend * 0.5 * (1.0 - cos(TAU * cycle))
+
+
+## PATH: the length of the route in m (the closing leg of a loop is part of the points).
+func path_length() -> float:
+	var length: float = 0.0
+	for index: int in range(1, config.path_points.size()):
+		length += config.path_points[index - 1].distance_to(config.path_points[index])
+	return length
+
+
+## PATH: a closed route (first and last point equal) loops; an open one ping-pongs.
+func path_loops() -> bool:
+	var points: PackedVector3Array = config.path_points
+	return points.size() >= 3 and points[0].is_equal_approx(points[points.size() - 1])
+
+
+## PATH: the local point at `distance` m along the route (wrapped on a loop, clamped otherwise).
+func path_point(distance: float) -> Vector3:
+	var points: PackedVector3Array = config.path_points
+	if points.is_empty():
+		return Vector3.ZERO
+	var length: float = path_length()
+	if length <= 0.0001:
+		return points[0]
+	var travelled: float = fposmod(distance, length) if path_loops() else clampf(distance, 0.0, length)
+	for index: int in range(1, points.size()):
+		var leg: float = points[index - 1].distance_to(points[index])
+		if travelled <= leg or index == points.size() - 1:
+			return points[index - 1].lerp(points[index], clampf(travelled / maxf(leg, 0.0001), 0.0, 1.0))
+		travelled -= leg
+	return points[points.size() - 1]
+
+
 ## The physics body (the thing the player stands on).
 func body() -> AnimatableBody3D:
 	return _body
@@ -142,6 +209,10 @@ func body() -> AnimatableBody3D:
 
 func reset() -> void:
 	super.reset()
+	_path_offset = 0.0
+	_path_dir = 1.0
+	_pause_left = 0.0
+	_clock = 0.0
 	_speed_factor = 0.0
 	_angle = 0.0
 	_phase = 0.0
@@ -149,7 +220,10 @@ func reset() -> void:
 	_carry_omega = 0.0
 	_angle = _rest_angle()
 	_apply()
+	for deck: AnimatableBody3D in _decks:
+		deck.reset_physics_interpolation()
 	_body.reset_physics_interpolation()
+	_deck_velocity.fill(Vector3.ZERO)
 
 
 ## The speed target: 1 while running. ALWAYS_ON always runs (D-07); SWITCHED runs while a child Receiver (plan 05.1-17) is on.
@@ -160,6 +234,19 @@ func _target() -> float:
 	if receiver != null and receiver.has_method(&"is_on") and bool(receiver.call(&"is_on")):
 		return 1.0
 	return 0.0
+
+
+## The local position of every deck: along the route (PATH) or out of the wall (STEPS). A deck's node origin is its top face centre.
+func _place_decks() -> void:
+	var count: int = _decks.size()
+	for index: int in count:
+		var at: Vector3 = Vector3.ZERO
+		if config.profile == TimedMotionConfig.Profile.STEPS:
+			var depth: float = step_extension(index) - config.plate_size * 0.5
+			at = Vector3(config.step_pitch * float(index), config.step_rise * float(index), depth)
+		else:
+			at = path_point(_path_offset + path_length() / float(count) * float(index) if path_loops() else _path_offset)
+		_decks[index].transform = Transform3D(Basis.IDENTITY, at)
 
 
 ## The state after one more tick of `delta`: x = speed factor, y = phase, z = angle. Pure, nothing is stored.
@@ -218,6 +305,80 @@ func _build_shape() -> void:
 		_mesh_node.position = Vector3(0.0, -thickness * 0.5, 0.0)
 
 
+## PATH and STEPS tick: the speed factor eases the start, the route or the step clock advances, the decks are placed and each
+## deck's displacement per second is kept for the carry.
+func _tick_translating(delta: float) -> void:
+	var factor: float = move_toward(_speed_factor, _target(), delta / maxf(config.ramp_time, 0.01))
+	_speed_factor = factor
+	if config.profile == TimedMotionConfig.Profile.STEPS:
+		_clock += delta * factor
+	else:
+		_advance_path(delta, factor)
+	var before: PackedVector3Array = PackedVector3Array()
+	for deck: AnimatableBody3D in _decks:
+		before.append(deck.position)
+	_apply()
+	for index: int in _decks.size():
+		_deck_velocity[index] = (_decks[index].position - before[index]) / maxf(delta, 0.0001)
+
+
+func _advance_path(delta: float, factor: float) -> void:
+	var length: float = path_length()
+	if length <= 0.0001:
+		return
+	var step: float = config.path_speed * factor * delta
+	if path_loops():
+		_path_offset = fposmod(_path_offset + step, length)
+		return
+	if _pause_left > 0.0:
+		_pause_left = maxf(_pause_left - delta, 0.0)
+		return
+	_path_offset += _path_dir * step
+	if _path_offset >= length:
+		_path_offset = length
+		_path_dir = -1.0
+		_pause_left = config.path_pause
+	elif _path_offset <= 0.0:
+		_path_offset = 0.0
+		_path_dir = 1.0
+		_pause_left = config.path_pause
+
+
+## The index of the deck whose box lies nearest to the world `point` (the one the rider stands on), or -1 without decks.
+func _nearest_deck(point: Vector3) -> int:
+	var best: int = -1
+	var best_distance: float = INF
+	var half: Vector3 = Vector3(config.plate_size, config.plate_thickness, config.plate_size) * 0.5
+	for index: int in _decks.size():
+		var local: Vector3 = _decks[index].global_transform.affine_inverse() * point
+		local.y += config.plate_thickness * 0.5
+		var outside: Vector3 = Vector3(maxf(absf(local.x) - half.x, 0.0), maxf(absf(local.y) - half.y, 0.0), maxf(absf(local.z) - half.z, 0.0))
+		if outside.length_squared() < best_distance:
+			best_distance = outside.length_squared()
+			best = index
+	return best
+
+
+## PATH and STEPS: one body per deck. Deck 0 is the scene's Body, the others are copies of it (same shape, mesh and look children).
+func _build_decks() -> void:
+	_decks.clear()
+	_decks.append(_body)
+	if not translates():
+		_deck_velocity = PackedVector3Array([Vector3.ZERO])
+		return
+	var count: int = config.step_count if config.profile == TimedMotionConfig.Profile.STEPS else config.path_deck_count
+	for index: int in range(1, maxi(count, 1)):
+		var deck: AnimatableBody3D = _body.duplicate() as AnimatableBody3D
+		deck.name = "Deck%d" % index
+		add_child(deck)
+		_decks.append(deck)
+	_deck_velocity.resize(_decks.size())
+	_deck_velocity.fill(Vector3.ZERO)
+
+
 func _apply() -> void:
+	if translates():
+		_place_decks()
+		return
 	var rotation_basis: Basis = Basis(_axis_local, _angle)
 	_body.transform = Transform3D(rotation_basis, rotation_basis * _rest_offset)

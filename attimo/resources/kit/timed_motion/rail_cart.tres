@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TimedMotionConfig" format=3]
+
+[ext_resource type="Script" path="res://scripts/kit/configs/timed_motion_config.gd" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+profile = 3
+timing = 0
+ramp_time = 0.3
+path_points = PackedVector3Array(-6, 0, 0, 6, 0, 0)
+path_speed = 3.0
+path_pause = 0.8
+path_deck_count = 1
+plate_size = 3.0
+plate_thickness = 0.3
