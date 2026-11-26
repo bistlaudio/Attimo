@@ -4,7 +4,7 @@ milestone: v0.11.0.4
 milestone_name: milestone
 status: executing
 stopped_at: Phase 05.1 context updated with playtest feedback (D-34..D-58); design docs and replanning pending
-last_updated: "2026-11-26T07:11:12.420Z"
+last_updated: "2026-11-26T07:11:17.168Z"
 last_activity: 2026-11-26
 progress:
   total_phases: 17
@@ -98,6 +98,7 @@ Progress: [████████░░] 81%
 | Phase 05.1 P03 | 55min | 3 tasks | 30 files |
 | Phase 05.1 P04 | 60 min | 3 tasks | 23 files |
 | Phase 05.1 P06 | 60 min | 3 tasks | 31 files |
+| Phase 05.1 P09 | 1h | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -177,6 +178,7 @@ Recent decisions that affect current work:
 - [Phase 04.1]: MechanismLook hooks on NOTIFICATION_READY (subclasses override _ready without super)
 - [Phase 04.1-05]: D-12 fallback not needed (13 s to 12 s filtered gym run); room 2 stays 120 m x 72 m, nine zones, 33 stations on a 12 m slot grid
 - [Phase 05]: 05-04: shot bends toward the locked target instead of a snapped ray; pulse_fired fires at projectile impact, shot_fired at launch
+- [Phase 05.1]: Clock HUD with hour/second hand and refusal cue (D-35, D-39); wall-run lean head away from wall plus pose-only wall_run_feet_offset 0.35 m (D-40)
 
 ### Pending Todos
 
