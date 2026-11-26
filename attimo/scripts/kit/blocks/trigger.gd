@@ -18,7 +18,7 @@ extends KitBlock
 
 ## Glow materials of a ring mark that is reached / not yet reached (energy core).
 const RING_ON: StandardMaterial3D = preload("res://resources/mechanisms/glow_energy.tres")
-const RING_OFF: StandardMaterial3D = preload("res://resources/mechanisms/glow_idle.tres")
+const RING_OFF: StandardMaterial3D = preload("res://resources/kit/trigger/core_ring_off.tres")
 ## Height in m of the mark arc above the lintel.
 const MARK_ARC_HEIGHT: float = 0.7
 
@@ -183,7 +183,7 @@ func _top_threshold() -> int:
 	return top
 
 
-## The ring marks (GlowElements of the Rings node) light up one per reached level; the unreached ones show the idle glow.
+## The ring marks (GlowElements of the Rings node) light up one per reached level; the unreached ones show a dim own material (not the shared Interactable stage glow, which test_glow_stages reserves for Interactable lenses).
 func _light_rings() -> void:
 	var rings: Node = get_node_or_null(^"Rings")
 	if rings == null:

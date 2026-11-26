@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://assets/prototype_bits/Primitive_Pillar.gltf" id="5_pillar"]
 [ext_resource type="PackedScene" path="res://scenes/mechanisms/glow_element.tscn" id="6_glowel"]
 [ext_resource type="Material" path="res://resources/mechanisms/glow_idle.tres" id="7_idle"]
+[ext_resource type="Material" path="res://resources/kit/trigger/core_ring_off.tres" id="8_ring_off"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_frame"]
 albedo_color = Color(0.35, 0.33, 0.3, 1)
@@ -82,19 +83,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0, 0)
 style = 0
 size = 0.7
-material_override = ExtResource("7_idle")
+material_override = ExtResource("8_ring_off")
 
 [node name="Ring1" parent="Lantern/Rings" instance=ExtResource("6_glowel")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 0)
 style = 0
 size = 0.7
-material_override = ExtResource("7_idle")
+material_override = ExtResource("8_ring_off")
 
 [node name="Ring2" parent="Lantern/Rings" instance=ExtResource("6_glowel")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0, 0)
 style = 0
 size = 0.7
-material_override = ExtResource("7_idle")
+material_override = ExtResource("8_ring_off")
 
 [node name="AimPoint" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
