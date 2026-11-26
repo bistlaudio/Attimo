@@ -69,8 +69,8 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 
 ### Mechanism Kit (docs/GAME-DESIGN.md section 6)
 
-- [ ] **KIT-01**: The kit runs on 8 logic blocks and 4 attachable components; values in `.tres` configs, looks as inherited scenes
-- [ ] **KIT-02**: All objects of the steampunk, energy and nature layers exist as block + components + look, honouring the coupling rule
+- [x] **KIT-01**: The kit runs on 8 logic blocks and 4 attachable components; values in `.tres` configs, looks as inherited scenes
+- [x] **KIT-02**: All objects of the steampunk, energy and nature layers exist as block + components + look, honouring the coupling rule
 - [x] **KIT-03**: The slingshot core plays like the Loader in a steampunk look (smaller core, catches only when Rino is inside, no trajectory line, gives +1 step); levers, pressure plates, valves and cranks are cut, and energy cores and charge gates are the remaining triggers (gear-disc targets removed 2026-11-25)
 - [x] **ENRG-06**: The energy is a clock of 12 whole steps (no percentages or fractions): HUD clock with hour hand (and a second hand for timed income), the 4 arm cores = 3 steps each, Moto Perpetuo from 6, respawn with 3; costs and income only in whole steps, time only as tick intervals
 - [x] **ENRG-07**: Running and the jump chain are free; every ability costs steps (dash and air dash 1, dash hop stages 2/3 +1 each, wall run 2 + 1 every 1 s, wall jump 1, Loader 1-3); an unpaid ability does not fire and always shows the refusal (clock shake and red flash, arm flicker, empty klack sound)
@@ -224,8 +224,8 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | ENRG-03 | Phase 5 | Complete |
 | ENRG-04 | Phase 5 | Complete |
 | ENRG-05 | Phase 5 | Complete |
-| KIT-01 | Phase 05.1 | Pending |
-| KIT-02 | Phase 05.1 | Pending |
+| KIT-01 | Phase 05.1 | Complete |
+| KIT-02 | Phase 05.1 | Complete |
 | KIT-03 | Phase 05.1 | Complete |
 | KIT-04 | Phase 05.1 | Pending |
 | ENRG-06 | Phase 05.1 | Complete |
