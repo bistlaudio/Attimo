@@ -3,8 +3,8 @@ extends CanvasLayer
 ## Energy HUD (D-13, ENRG-05): top left, drawn in code in the crosshair's style (steel rim, dark plate, turquoise fill). Four core
 ## chambers show the arm energy with partial fill and mirror the diegetic cores on the forearm. Next to them: a Moto Perpetuo badge
 ## (lit while the arm is in Moto), the name plate of the active hand module and, below, a momentum gauge (horizontal speed 0..24 m/s,
-## marks at run speed, the passive charge start, the dash exit speed, the passive charge full speed and the Loader maximum, the part
-## above the passive start tinted turquoise) with a charge indicator while the charge button works. A slot to the right of the chambers
+## marks at run speed, the dash exit speed and the Loader maximum, the part
+## above run speed tinted turquoise; the energy clock face replaces the chambers in 05.1-09) with a charge indicator while the charge button works. A slot to the right of the chambers
 ## stays free for the health of Phase 6.
 ## It polls the player, its ArmEnergy and the HandController read only every frame, never writes gameplay state, ignores the mouse and
 ## sits below the crosshair (layer 10) and the debug overlays (100+). Everything is sized from the screen height (ui_reference_height).
@@ -46,13 +46,13 @@ var is_moto_shown: bool = false
 var module_name: String = ""
 ## The horizontal speed shown by the gauge needle, m/s.
 var speed_gauge_value: float = 0.0
-## The speeds of the gauge marks in m/s: run speed, passive charge start, dash exit speed, passive charge full speed, Loader maximum.
+## The speeds of the gauge marks in m/s: run speed, dash exit speed, Loader maximum.
 var gauge_marks: Array[float] = []
 ## True while the charge button charges the arm.
 var charging_shown: bool = false
 
 var _fills: Array[float] = [0.0, 0.0, 0.0, 0.0]
-var _passive_start: float = 10.0
+var _split_speed: float = 7.0
 var _u: float = 1.0
 var _time: float = 0.0
 
@@ -121,8 +121,8 @@ func _poll() -> bool:
 	speed_gauge_value = speed
 	if player != null:
 		var config: MovementConfig = player.config
-		gauge_marks = [config.run_speed, config.energy_passive_start_speed, config.dash_exit_speed, config.energy_passive_full_speed, config.loader_max_speed]
-		_passive_start = config.energy_passive_start_speed
+		gauge_marks = [config.run_speed, config.dash_exit_speed, config.loader_max_speed]
+		_split_speed = config.run_speed
 	return changed
 
 
@@ -176,13 +176,13 @@ func _draw_text(rect: Rect2, text: String, tint: Color, font_size: int) -> void:
 	panel.draw_string(font, baseline, text, HORIZONTAL_ALIGNMENT_CENTER, rect.size.x, size, tint)
 
 
-## The momentum gauge: an arc 0 .. gauge_max_speed, the part above the passive charge start tinted turquoise, a tick per config
+## The momentum gauge: an arc 0 .. gauge_max_speed, the part above run speed tinted turquoise, a tick per config
 ## speed, a needle at the horizontal speed and the speed as a number; a pulsing dot beside it while the charge button charges.
 func _draw_gauge(centre: Vector2) -> void:
 	var radius: float = GAUGE_RADIUS * _u
 	var width: float = 4.0 * _u
 	var limit: float = maxf(gauge_max_speed, 1.0)
-	var start_ratio: float = clampf(_passive_start / limit, 0.0, 1.0)
+	var start_ratio: float = clampf(_split_speed / limit, 0.0, 1.0)
 	var split: float = GAUGE_START + GAUGE_SWEEP * start_ratio
 	var end_angle: float = GAUGE_START + GAUGE_SWEEP
 	panel.draw_arc(centre, radius, GAUGE_START, end_angle, 48, outline_color, width + 2.0 * _u, true)

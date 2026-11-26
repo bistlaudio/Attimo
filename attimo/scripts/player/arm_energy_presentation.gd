@@ -21,7 +21,7 @@ const REFUSED_COLOR: Color = Color(0.55, 0.57, 0.6, 1.0)
 const FOREARM_BONE: StringName = &"lowerarm.r"
 const HAND_BONE: StringName = &"hand.r"
 const MOTO_BONES: Array[StringName] = [&"foot.l", &"foot.r", &"chest"]
-const CORE_SIZE: Vector3 = Vector3(0.04, 0.04, 0.08)
+const CORE_BOX_SIZE: Vector3 = Vector3(0.04, 0.04, 0.08)
 ## Spacing of the cores along the forearm (bone local Y is the bone axis).
 const CORE_SPACING: float = 0.06
 const CORE_OFFSET: Vector3 = Vector3(0.0, 0.1, 0.05)
@@ -90,7 +90,7 @@ func _ready() -> void:
 	for i: int in ArmEnergy.CORE_COUNT:
 		var material: StandardMaterial3D = _glow_material()
 		var box: BoxMesh = BoxMesh.new()
-		box.size = CORE_SIZE
+		box.size = CORE_BOX_SIZE
 		var core: MeshInstance3D = MeshInstance3D.new()
 		core.name = StringName("Core%d" % i)
 		core.mesh = box
@@ -190,7 +190,7 @@ func arm_boost() -> float:
 
 
 ## A refusal starts the grey flicker; one that arrives during a running flicker does not restart it (flash limit).
-func _on_energy_refused(_reason: StringName, _needed: float) -> void:
+func _on_energy_refused(_reason: StringName, _needed: int) -> void:
 	if _flicker_left <= 0.0:
 		_flicker_left = FLICKER_TIME
 

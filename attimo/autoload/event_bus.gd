@@ -42,19 +42,19 @@ signal loader_started(position: Vector3, stored_speed: float, in_air: bool)
 ## Emitted by the Loader state on the discharge (release or the hold cap). `direction` is the unit discharge direction, `speed` the
 ## discharge speed in m/s, `bonus` is true when the arm paid a core for the bonus. Listeners: the Loader presentation, juice, audio.
 signal loader_released(position: Vector3, direction: Vector3, speed: float, bonus: bool)
-## Emitted by ArmEnergy whenever the energy value changed through a discrete spend or reset. `value` is the new energy, 0 .. 100. Listeners: the HUD.
-signal energy_changed(value: float)
-## Emitted by ArmEnergy when an amount was paid. `reason` names the cost (&"loader" for the Loader bonus). Listeners: the arm cores, juice, audio.
-signal energy_spent(amount: float, reason: StringName)
-## Emitted by an energy source at the end of a continuous gain (the charge button when it stops; capsules and machines in plan 05-04).
-## `amount` is the total gained, `source` names the income. The passive charge never emits it (it would flood the log).
-signal energy_gained(amount: float, source: StringName)
-## Emitted by an EnergySource (capsule, broken machine) when its last energy was taken. `position` is where it stands, `amount` what it held.
+## Emitted by ArmEnergy whenever the energy value changed through a spend, a gain or a reset. `value` is the new energy in whole steps, 0 .. 12. Listeners: the HUD.
+signal energy_changed(value: int)
+## Emitted by ArmEnergy when `amount` whole steps were paid. `reason` names the cost (&"dash", &"air_dash", &"dash_hop", &"wall_run", &"wall_jump", &"loader"). Listeners: the arm cores, juice, audio.
+signal energy_spent(amount: int, reason: StringName)
+## Emitted when whole steps were earned: by ArmEnergy.tick for each timed step (`source` &"passive" or &"charge") and by the Extractor
+## at the end of a run (`amount` is the total of steps, `source` &"extractor").
+signal energy_gained(amount: int, source: StringName)
+## Emitted by an EnergySource (capsule, broken machine) when its last energy was taken. `position` is where it stands, `amount` the steps it held.
 ## Listeners: juice, audio, the debug event log.
-signal energy_source_emptied(position: Vector3, amount: float)
-## Emitted by ArmEnergy.refuse when a move that does not fire (the air dash, the shot) is refused for lack of energy. `reason` names the
-## move, `needed` the energy it would have cost. A base move that falls back never emits it (D-12). Listeners: the arm flicker, audio.
-signal energy_refused(reason: StringName, needed: float)
+signal energy_source_emptied(position: Vector3, amount: int)
+## Emitted by ArmEnergy.refuse when a move that does not fire (the dash, the air dash, the wall-run start, the wall jump) is refused for lack of
+## energy. `reason` names the move, `needed` the steps it would have cost. A base move that falls back never emits it (D-12). Listeners: the arm flicker, audio.
+signal energy_refused(reason: StringName, needed: int)
 ## Emitted by ArmEnergy when Moto Perpetuo turns on (true) or off (false), only on a flip (the off edge has a hysteresis margin). Listeners:
 ## the arm and body glow, the HUD, juice, audio.
 signal moto_changed(active: bool)

@@ -54,6 +54,8 @@ var loader_profile: LoaderProfile = null
 
 var _was_on_floor: bool = true
 var _dash_block_frame: int = -1
+## True after a wall-run start was refused for missing steps; cleared when the wall-run surface contact ends (once per contact, D-39).
+var _wall_refused: bool = false
 var _last_platform_velocity: Vector3 = Vector3.ZERO
 ## Test-only switch: true leaves rotating platforms to the engine's own platform velocity (A2 measurement).
 var debug_disable_custom_carry: bool = false
@@ -256,11 +258,15 @@ func can_coyote_jump() -> bool:
 
 
 ## Why a dash is locked right now, or &"" when no lockout applies (quick 261120-dik, reduced by quick 261120-ef9, aim removed in
-## phase 05). The one place both the ground and the air states ask. The one lockout is &"energy": an air dash while the arm cannot
-## pay air_dash_cost (the ground dash is free). The pirouette, the landing and the take-off never lock the dash (a dash hop on the landing tick
-## works). The cooldown and the air dash charge are not lockouts.
+## phase 05). The one place both the ground and the air states ask. The one lockout is &"energy": a dash the arm cannot pay (dash_cost on
+## the ground, air_dash_cost in the air, D-37; the air dash only while its charge is unspent). The pirouette, the landing and the take-off
+## never lock the dash (a dash hop on the landing tick works). The cooldown and the air dash charge are not lockouts.
 func dash_locked_reason() -> StringName:
-	if not is_grounded() and air_dash_available and dash_cooldown_timer <= 0.0 and not arm_energy.can_afford(config.air_dash_cost):
+	if dash_cooldown_timer > 0.0:
+		return &""
+	if is_grounded():
+		return &"" if arm_energy.can_afford(config.dash_cost) else &"energy"
+	if air_dash_available and not arm_energy.can_afford(config.air_dash_cost):
 		return &"energy"
 	return &""
 
@@ -296,7 +302,10 @@ func _block_dash(reason: StringName) -> void:
 	dash_twitch_timer = config.dash_blocked_twitch_time
 	EventBus.dash_blocked.emit(global_position, reason)
 	if reason == &"energy":
-		arm_energy.refuse(&"air_dash", config.air_dash_cost)
+		if is_grounded():
+			arm_energy.refuse(&"dash", config.dash_cost)
+		else:
+			arm_energy.refuse(&"air_dash", config.air_dash_cost)
 
 
 ## The Loader press check of the ground and the air states, Dash and WallRun (D-01). True when a loader press this tick may start
@@ -337,13 +346,16 @@ func loader_state() -> LoaderState:
 	return state_machine.get_node_or_null(^"Loader") as LoaderState
 
 
-## Called by the Dash state on enter: starts the cooldown, spends the air dash when airborne and remembers
-## the direction (the long jump of a later plan reads it).
+## Called by the Dash state on enter: starts the cooldown, pays the dash (dash_cost on the ground, air_dash_cost in the air, D-37),
+## spends the air dash charge when airborne and remembers the direction (the long jump reads it). The press was checked by
+## dash_locked_reason, so the payment succeeds.
 func start_dash(direction: Vector3, in_air: bool) -> void:
 	dash_cooldown_timer = config.dash_cooldown
 	if in_air:
 		air_dash_available = false
 		arm_energy.try_spend(config.air_dash_cost, &"air_dash")
+	else:
+		arm_energy.try_spend(config.dash_cost, &"dash")
 	last_dash_direction = direction
 
 
@@ -488,12 +500,24 @@ func wall_tangent() -> Vector3:
 	return tangent if along >= 0.0 else -tangent
 
 
-## True when a wall-run may start now: airborne, on a wall-run pad, fast enough on approach (wall_pre_velocity) and not in the cooldown (MOVE-12).
+## True when a wall-run may start now: airborne, on a wall-run pad, fast enough on approach (wall_pre_velocity), not in the cooldown
+## (MOVE-12) and able to pay wall_run_entry_cost. When everything else holds but the steps are missing, the contact is refused once
+## (D-39): `_wall_refused` latches until the wall-run surface contact ends.
 func can_wall_run() -> bool:
-	if is_grounded() or wall_run_cooldown_timer > 0.0 or not wall_surface(&"wall_run_surface"):
+	var on_pad: bool = wall_surface(&"wall_run_surface")
+	if not on_pad:
+		_wall_refused = false
+	if is_grounded() or wall_run_cooldown_timer > 0.0 or not on_pad:
 		return false
 	var flat: Vector2 = Vector2(wall_pre_velocity.x, wall_pre_velocity.z)
-	return flat.length() >= config.wall_run_min_speed
+	if flat.length() < config.wall_run_min_speed:
+		return false
+	if not arm_energy.can_afford(config.wall_run_entry_cost):
+		if not _wall_refused:
+			_wall_refused = true
+			arm_energy.refuse(&"wall_run", config.wall_run_entry_cost)
+		return false
+	return true
 
 
 ## True when a remembered jump press may become a wall-jump now: airborne, touching a wall-jump pad and not in the cooldown (D-09).
@@ -501,7 +525,19 @@ func can_wall_run() -> bool:
 func can_wall_jump() -> bool:
 	if is_grounded() or wall_run_cooldown_timer > 0.0 or not wants_jump():
 		return false
-	return wall_surface(&"wall_jump_surface")
+	if not wall_surface(&"wall_jump_surface"):
+		return false
+	return wall_jump_paid()
+
+
+## True when the arm can pay wall_jump_cost. When it cannot, the wanted jump is refused once and the buffered press is consumed
+## (D-39), so the press neither retries every tick nor turns into a ground jump on landing.
+func wall_jump_paid() -> bool:
+	if arm_energy.can_afford(config.wall_jump_cost):
+		return true
+	arm_energy.refuse(&"wall_jump", config.wall_jump_cost)
+	jump_buffer_timer = 0.0
+	return false
 
 
 func _enter_fall() -> void:
@@ -553,7 +589,7 @@ func advance_chain_for_ground_jump() -> int:
 ## Called by LongJump on enter. Returns the long-jump stage 1..3: one above the stack while it lives (a clean
 ## repeat), otherwise 1. The combo ends after stage 3: the stack is spent, so the next hop starts again at 1 (like
 ## the ground jump chain after Jump 3). Resets the ground-jump chain and closes the landing window; it reopens on landing.
-## Stage 1 is free; stage 2 and 3 pay long_jump_cost. Without the energy the hop silently becomes stage 1, the base version: no
+## Stage 1 is free; stage 2 and 3 pay long_jump_cost steps each (D-38). Without the energy the hop silently becomes stage 1, the base version: no
 ## refusal fact, no dash_blocked, no cue (D-12, ENRG-03).
 func advance_long_jump_stage() -> int:
 	var stage: int = long_jump_stage + 1 if long_jump_stage == 1 or long_jump_stage == 2 else 1
@@ -588,7 +624,7 @@ func _set_chain_stage(stage: int) -> void:
 ## sees the same timers. Polling just_pressed in the physics tick catches presses between two ticks.
 func _tick_timers(delta: float) -> void:
 	var state_name: StringName = &"" if state_machine.current == null else state_machine.current.name
-	arm_energy.tick(delta, horizontal_speed(), state_name, input_direction() == Vector3.ZERO)
+	arm_energy.tick(delta, state_name, input_direction() == Vector3.ZERO)
 	coyote_timer = maxf(coyote_timer - delta, 0.0)
 	jump_buffer_timer = maxf(jump_buffer_timer - delta, 0.0)
 	dash_cooldown_timer = maxf(dash_cooldown_timer - delta, 0.0)

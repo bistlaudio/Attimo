@@ -1,144 +1,123 @@
 class_name ArmEnergy
 extends Node
-## The single owner of the arm energy (checklist item 12: one owner with spend and gain APIs). Only this class writes `value`;
-## states, modules and mechanisms ask can_afford and try_spend (all or nothing), drain (partial) and gain (income), and learn the
+## The single owner of the arm energy (checklist item 12: one owner with spend and gain APIs). The energy is a clock of 12 whole
+## steps (D-34): every cost and every income is a whole number of steps and time appears only as tick intervals. Only this class
+## writes `value`; states, modules and mechanisms ask can_afford and try_spend (all or nothing) and gain (income), and learn the
 ## outcome from the EventBus facts, which carry numbers and never node references. Child of the Player.
 ##
-## Fallback rule (D-12, ENRG-03): spend, drain and gain are SILENT on failure. Only `refuse` makes a refusal visible, and only moves
-## that do not fire (the air dash, the shot) call it. A base move that falls back (a dash hop that becomes stage 1, a wall run that
-## runs dry) never calls refuse, so there is never a failure cue for it.
-## Every API ignores non-finite amounts and keeps the value inside 0 .. MAX_ENERGY (T-05-08).
-## energy_changed is quantised (T-05-09): once when the whole number changes or after a discrete spend or reset, at most once per
-## physics tick, so the passive charge at 60 Hz never floods the EventLog. energy_spent is never sent per tick either: drain() is
-## silent and a continuous spender (the wall run, the shot charge) reports its total once through report_spent() (WR-03).
+## Fallback rule (D-12, ENRG-03): spend and gain are SILENT on failure. Only `refuse` makes a refusal visible, and only moves that do
+## not fire (the dash, the air dash, the wall-run start, the wall jump) call it. A base move that falls back (a dash hop that becomes
+## stage 1, a wall run whose 1 s tick cannot be paid) never calls refuse.
+## Every API ignores non-finite or non-positive amounts and keeps the value inside 0 .. MAX_STEPS (T-05-08, T-05.1-24).
+## energy_changed is quantised (T-05-09): at most once per physics tick, a second change in the same tick is sent by the next tick.
+## Income (D-42): ONE accumulator, two rates. Always +1 every energy_passive_interval; while R is held standing still in Idle +1 every
+## energy_charge_interval INSTEAD (never stacking). Moves that cost steps never add one (D-41).
 
-## Energy of one core, the respawn value and the Loader bonus cost.
-const CORE_SIZE: float = 25.0
+## Steps of one core (a quarter of the clock).
+const CORE_STEPS: int = 3
 ## Number of cores on the arm.
 const CORE_COUNT: int = 4
-## Most energy the arm holds (CORE_COUNT cores).
-const MAX_ENERGY: float = 100.0
-## Smallest span of the passive curve (T-05-10: no division by zero when full speed is tuned onto the start speed).
-const MIN_SPAN: float = 0.01
+## Most energy the arm holds (CORE_COUNT cores of CORE_STEPS).
+const MAX_STEPS: int = 12
+## Steps at start and at a respawn (D-36).
+const CHECKPOINT_STEPS: int = 3
+## Smallest tick interval the accumulator divides by (T-05.1-23: no division by zero for a tuned-to-zero interval).
+const MIN_INTERVAL: float = 0.01
 
-## Current energy, 0 .. MAX_ENERGY. Starts as one core (the respawn value).
-var value: float = CORE_SIZE
+## Current energy in whole steps, 0 .. MAX_STEPS. Starts as the respawn value.
+var value: int = CHECKPOINT_STEPS
 
 ## True while the arm is held in the charge posture: the charge button is down in Idle without move input (D-06).
 var charging: bool = false
 
 var _moto: bool = false
-var _charge_total: float = 0.0
-var _last_floor: int = int(CORE_SIZE)
+var _progress: float = 0.0
+var _last_value: int = CHECKPOINT_STEPS
 var _emit_frame: int = -1
 var _pending_emit: bool = false
 
 
-## True when `amount` can be paid in full. A non-finite or negative amount cannot.
-func can_afford(amount: float) -> bool:
-	return is_finite(amount) and amount >= 0.0 and value >= amount
+## True when `steps` can be paid in full. A negative amount cannot.
+func can_afford(steps: int) -> bool:
+	return steps >= 0 and value >= steps
 
 
-## Pays `amount` all or nothing. On success emits EventBus.energy_spent(amount, reason) and energy_changed(value) and returns true;
+## Pays `steps` all or nothing. On success emits EventBus.energy_spent(steps, reason) and energy_changed(value) and returns true;
 ## on failure nothing changes, nothing is emitted and false comes back (the caller decides what the refusal looks like).
-func try_spend(amount: float, reason: StringName) -> bool:
-	if not can_afford(amount):
+func try_spend(steps: int, reason: StringName) -> bool:
+	if not can_afford(steps):
 		return false
-	_write(value - amount)
-	EventBus.energy_spent.emit(amount, reason)
+	if steps == 0:
+		return true
+	_write(value - steps)
+	EventBus.energy_spent.emit(steps, reason)
 	_announce(true)
 	return true
 
 
-## Pays as much of `amount` as the arm holds (a partial spend: the wall run per tick). Returns what was taken. Silent: no
-## energy_spent per call (the caller sums what it took and reports it once with report_spent), and a dry arm returns 0.0 so the
-## caller decides what happens (no refusal fact). A non-finite or negative amount takes nothing. `_reason` documents the cost.
-func drain(amount: float, _reason: StringName) -> float:
-	if not is_finite(amount) or amount <= 0.0:
-		return 0.0
-	var taken: float = minf(amount, value)
-	if taken <= 0.0:
-		return 0.0
-	_write(value - taken)
-	_announce(false)
-	return taken
-
-
-## Reports the total a continuous spender drained (one energy_spent at the end of a wall run or a shot charge, WR-03). A
-## non-finite or non-positive total sends nothing. Changes no energy: drain() already took it.
-func report_spent(total: float, reason: StringName) -> void:
-	if not is_finite(total) or total <= 0.0:
-		return
-	EventBus.energy_spent.emit(total, reason)
-
-
-## Adds `amount` (income), clamped to MAX_ENERGY. Returns what was added. Silent apart from the quantised energy_changed; sources
-## and the charge button report one EventBus.energy_gained at the end of a continuous gain. `source` names the income (&"passive",
-## &"charge", the Extractor in plan 05-04).
-func gain(amount: float, _source: StringName) -> float:
-	if not is_finite(amount) or amount <= 0.0:
-		return 0.0
-	var added: float = minf(amount, MAX_ENERGY - value)
-	if added <= 0.0:
-		return 0.0
+## Adds `steps` (income), clamped to MAX_STEPS. Returns what was added. Silent apart from the quantised energy_changed; the timed
+## income (tick) reports energy_gained(1, &"passive" or &"charge") and a source reports one energy_gained(total, source) at the end
+## of a continuous gain (the Extractor).
+func gain(steps: int, _source: StringName) -> int:
+	if steps <= 0:
+		return 0
+	var added: int = mini(steps, MAX_STEPS - value)
+	if added <= 0:
+		return 0
 	_write(value + added)
 	_announce(false)
 	return added
 
 
 ## Makes a refusal visible: emits EventBus.energy_refused(reason, needed). The ONLY refusal path, called only by moves that do not
-## fire (the air dash, the shot), never by a base move that falls back.
-func refuse(reason: StringName, needed: float) -> void:
-	if not is_finite(needed):
-		return
+## fire, never by a base move that falls back.
+func refuse(reason: StringName, needed: int) -> void:
 	EventBus.energy_refused.emit(reason, needed)
 
 
-## Sets the energy to `new_value` (clamped to 0 .. MAX_ENERGY; a non-finite value is ignored) and emits energy_changed.
-func reset_to(new_value: float) -> void:
-	if not is_finite(new_value):
-		return
-	_write(new_value)
+## Sets the energy to `steps` (clamped to 0 .. MAX_STEPS), zeroes the tick accumulator and emits energy_changed.
+func reset_to(steps: int) -> void:
+	_progress = 0.0
+	_write(steps)
 	_announce(true)
 
 
-## Respawn and checkpoint rule: exactly one core.
+## Respawn and checkpoint rule: exactly CHECKPOINT_STEPS (3).
 func reset_to_checkpoint() -> void:
-	reset_to(CORE_SIZE)
+	reset_to(CHECKPOINT_STEPS)
 
 
 ## Fill of core `index` (0 .. CORE_COUNT - 1), 0.0 (empty) .. 1.0 (full): the cores fill one after the other from index 0.
 func core_fill(index: int) -> float:
-	return clampf((value - float(index) * CORE_SIZE) / CORE_SIZE, 0.0, 1.0)
+	return clampi(value - index * CORE_STEPS, 0, CORE_STEPS) / float(CORE_STEPS)
 
 
-## Passive charge in energy per second at `horizontal_speed` (D-05): 0 below energy_passive_start_speed, then the rate rises from
-## energy_passive_rate_min to energy_passive_rate_max up to energy_passive_full_speed and stays there. Horizontal speed only.
-func passive_rate(horizontal_speed: float, config: MovementConfig) -> float:
-	if not is_finite(horizontal_speed) or horizontal_speed < config.energy_passive_start_speed:
+## Progress 0 .. 1 toward the next timed step (the HUD clock face reads it); 0 when the clock is full.
+func tick_progress() -> float:
+	if value >= MAX_STEPS:
 		return 0.0
-	var span: float = maxf(config.energy_passive_full_speed - config.energy_passive_start_speed, MIN_SPAN)
-	var t: float = clampf((horizontal_speed - config.energy_passive_start_speed) / span, 0.0, 1.0)
-	return lerpf(config.energy_passive_rate_min, config.energy_passive_rate_max, t)
+	return clampf(_progress, 0.0, 1.0)
 
 
-## Per physics tick, called by PlayerController before the states run: the passive charge from the horizontal speed (paused in the
-## Loader state: the speed there is stored or carried, not earned) and the charge button. The button adds
-## energy_charge_rate while it is held in Idle with no move input (`still`); anything else stops it at once, and the total of one
-## charge run is reported once as energy_gained(total, &"charge") when it stops.
-func tick(delta: float, horizontal_speed: float, state_name: StringName, still: bool) -> void:
+## Per physics tick, called by PlayerController before the states run (D-42): one accumulator that fills toward the next step. The
+## rate is energy_charge_interval while R is held in Idle with no move input (`still`), energy_passive_interval otherwise (also in
+## the Loader). Never both. Progress is a share of one step, so a rate change keeps what has been earned. A full clock adds nothing.
+func tick(delta: float, state_name: StringName, still: bool) -> void:
 	var config: MovementConfig = _config()
-	if config != null and state_name != &"Loader":
-		gain(passive_rate(horizontal_speed, config) * delta, &"passive")
-	var wants_charge: bool = config != null and state_name == &"Idle" and still and Input.is_action_pressed(&"charge")
-	if wants_charge and value < MAX_ENERGY:
-		_charge_total += gain(config.energy_charge_rate * delta, &"charge")
-		charging = true
+	if config == null or not is_finite(delta) or delta <= 0.0:
+		return
+	var wants_charge: bool = state_name == &"Idle" and still and Input.is_action_pressed(&"charge")
+	charging = wants_charge and value < MAX_STEPS
+	if value >= MAX_STEPS:
+		_progress = 0.0
 	else:
-		charging = false
-		if _charge_total > 0.0:
-			EventBus.energy_gained.emit(_charge_total, &"charge")
-			_charge_total = 0.0
+		var interval: float = config.energy_charge_interval if wants_charge else config.energy_passive_interval
+		_progress += delta / maxf(interval, MIN_INTERVAL)
+		if _progress >= 1.0 - 1e-6:
+			_progress = maxf(_progress - 1.0, 0.0)
+			var source: StringName = &"charge" if wants_charge else &"passive"
+			if gain(1, source) > 0:
+				EventBus.energy_gained.emit(1, source)
 	if _pending_emit:
 		_announce(false)
 
@@ -154,8 +133,8 @@ func is_moto() -> bool:
 
 
 ## The single write path of `value`. Also settles Moto Perpetuo, so a flip is emitted at once, only on a flip.
-func _write(new_value: float) -> void:
-	value = clampf(new_value, 0.0, MAX_ENERGY)
+func _write(new_value: int) -> void:
+	value = clampi(new_value, 0, MAX_STEPS)
 	var config: MovementConfig = _config()
 	if config == null:
 		return
@@ -169,11 +148,10 @@ func _write(new_value: float) -> void:
 		EventBus.moto_changed.emit(_moto)
 
 
-## Emits energy_changed when the whole number changed (or `force` after a discrete spend or reset), at most once per physics frame;
-## a second change in the same frame is sent by the next tick.
+## Emits energy_changed when the value changed (or `force` after a discrete spend or reset), at most once per physics frame; a second
+## change in the same frame is sent by the next tick.
 func _announce(force: bool) -> void:
-	var whole: int = floori(value)
-	if not force and whole == _last_floor and not _pending_emit:
+	if not force and value == _last_value and not _pending_emit:
 		return
 	var frame: int = Engine.get_physics_frames()
 	if frame == _emit_frame:
@@ -181,5 +159,5 @@ func _announce(force: bool) -> void:
 		return
 	_emit_frame = frame
 	_pending_emit = false
-	_last_floor = whole
+	_last_value = value
 	EventBus.energy_changed.emit(value)

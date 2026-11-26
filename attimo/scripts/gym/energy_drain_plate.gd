@@ -18,4 +18,4 @@ func _on_body_entered(body: Node3D) -> void:
 	var player: PlayerController = body as PlayerController
 	if player == null or player.arm_energy == null:
 		return
-	player.arm_energy.call_deferred(&"reset_to", 0.0)
+	player.arm_energy.call_deferred(&"reset_to", 0)

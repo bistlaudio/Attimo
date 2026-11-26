@@ -11,8 +11,8 @@ size = Vector3(1.6, 1.6, 1.2)
 
 [node name="BrokenMachine" type="Node3D" node_paths=PackedStringArray("glow_meshes", "core")]
 script = ExtResource("1_script")
-amount = 60.0
-duration = 2.0
+amount = 5
+step_interval = 0.4
 glow_meshes = [NodePath("Lens")]
 core = NodePath("Core")
 

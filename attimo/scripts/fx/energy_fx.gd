@@ -2,20 +2,20 @@ class_name EnergyFx
 extends Node
 ## Energy feedback (user request 2026-11-25, placeholder ahead of the Phase 12 juice and Phase 14 audio). Lives in scripts/fx, outside
 ## the gameplay folders the feedback guard watches: it only reads ArmEnergy and the EventBus and never writes gameplay state.
-## - Spending energy sprays turquoise sparks from the forearm cores ONLY: a burst for a discrete spend (Loader bonus, air dash, shot)
-##   and a thin stream while a continuous spender drains (wall run, shot charge). The dash hop shows no burst: its stages show the
-##   cream MovementPuffs instead, because movement visuals are never turquoise.
+## - Spending energy sprays turquoise sparks from the forearm cores ONLY: a burst for every spend (every cost is a whole step, D-34:
+##   dash, air dash, wall run, wall jump, Loader bonus). The dash hop shows no burst: its stages show the cream MovementPuffs instead,
+##   because movement visuals are never turquoise.
 ## - Gaining energy draws lighter turquoise sparks from a shell around the arm into the cores.
-## - Placeholder audio: a short beep per discrete spend, a low hum while draining, a soft charge hum whose pitch rises with the fill.
+## - Placeholder audio: a short beep per spend, a soft charge hum whose pitch rises with the fill.
 ## Detection: ArmEnergy.value is polled every frame, so every spender and every income is covered without new facts. The emitters hang
 ## on ArmEnergyPresentation.core_parent() (the forearm BoneAttachment3D) and carry the meta FX_META, so scene tests can tell them apart.
 
 const ENERGY_COLOR: Color = ArmEnergyPresentation.ENERGY_COLOR
 ## Meta set on every emitter of this node.
 const FX_META: StringName = &"energy_fx"
-## A drop of at least this much energy in one frame counts as a discrete spend (burst); smaller drops are a continuous drain (stream).
-const BURST_MIN_DROP: float = 2.0
-## Seconds the drain stream and hum, and the charge inflow and hum, keep running after the last change.
+## A drop of at least this many steps in one frame counts as a spend (burst); every spend is a whole step.
+const BURST_MIN_DROP: int = 1
+## Seconds the charge inflow and hum keep running after the last gain.
 const FX_LINGER: float = 0.15
 ## Spend reasons that show no turquoise burst (their move shows a movement puff).
 const NO_BURST_REASONS: Array[StringName] = [&"dash_hop"]
@@ -24,8 +24,6 @@ const NO_BURST_WINDOW_MS: int = 120
 const SPEND_BEEP_COOLDOWN: float = 0.08
 const SPEND_BEEP_HZ: float = 520.0
 const SPEND_BEEP_SECONDS: float = 0.07
-const DRAIN_HUM_HZ: float = 300.0
-const DRAIN_HUM_DB: float = -22.0
 ## Charge hum pitch: CHARGE_HUM_BASE_HZ at an empty arm, rising by CHARGE_HUM_SPAN_HZ to a full arm.
 const CHARGE_HUM_BASE_HZ: float = 220.0
 const CHARGE_HUM_SPAN_HZ: float = 220.0
@@ -38,14 +36,12 @@ const EMIT_OFFSET: Vector3 = Vector3(0.0, 0.19, 0.05)
 @export var presentation: ArmEnergyPresentation
 
 var burst_particles: CPUParticles3D
-var stream_particles: CPUParticles3D
 var charge_particles: CPUParticles3D
 
 var _arm: ArmEnergy
 var _spend_tone: PlaceholderTone
 var _charge_tone: PlaceholderTone
-var _prev_value: float = -1.0
-var _drain_left: float = 0.0
+var _prev_value: int = -1
 var _charge_left: float = 0.0
 var _spend_beep_cooldown: float = 0.0
 var _no_burst_until_ms: int = 0
@@ -70,11 +66,6 @@ func _exit_tree() -> void:
 		EventBus.energy_spent.disconnect(_on_energy_spent)
 
 
-## True while the drain stream runs (a continuous spend in the last FX_LINGER seconds).
-func drain_fx_active() -> bool:
-	return _drain_left > 0.0
-
-
 ## True while the charge inflow runs (a gain in the last FX_LINGER seconds).
 func charge_fx_active() -> bool:
 	return _charge_left > 0.0
@@ -86,9 +77,8 @@ func _attach_emitters() -> void:
 		return
 	burst_particles = _make_particles(&"SpendBurst", 28, 0.45, 0.9, 2.5)
 	burst_particles.one_shot = true
-	stream_particles = _make_particles(&"SpendStream", 14, 0.35, 0.0, 1.2)
 	charge_particles = _make_charge_particles()
-	for emitter: CPUParticles3D in [burst_particles, stream_particles, charge_particles]:
+	for emitter: CPUParticles3D in [burst_particles, charge_particles]:
 		emitter.position = EMIT_OFFSET
 		parent.add_child(emitter)
 
@@ -96,40 +86,31 @@ func _attach_emitters() -> void:
 func _process(delta: float) -> void:
 	var dt: float = TimeFx.unscaled(delta)
 	_spend_beep_cooldown = maxf(_spend_beep_cooldown - dt, 0.0)
-	_drain_left = maxf(_drain_left - dt, 0.0)
 	_charge_left = maxf(_charge_left - dt, 0.0)
 	if _arm == null:
 		return
-	var now: float = _arm.value
-	if _prev_value >= 0.0:
-		var change: float = now - _prev_value
+	var now: int = _arm.value
+	if _prev_value >= 0:
+		var change: int = now - _prev_value
 		if change <= -BURST_MIN_DROP:
 			if burst_particles != null and Time.get_ticks_msec() >= _no_burst_until_ms:
 				burst_particles.restart()
 			if _spend_beep_cooldown <= 0.0:
 				_spend_tone.beep(SPEND_BEEP_HZ, SPEND_BEEP_SECONDS)
 				_spend_beep_cooldown = SPEND_BEEP_COOLDOWN
-		elif change < -0.0001:
-			_drain_left = FX_LINGER
-		elif change > 0.0001:
+		elif change > 0:
 			_charge_left = FX_LINGER
 	_prev_value = now
-	if stream_particles != null:
-		stream_particles.emitting = _drain_left > 0.0
 	if charge_particles != null:
 		charge_particles.emitting = _charge_left > 0.0
-	if _drain_left > 0.0:
-		_spend_tone.set_hum(DRAIN_HUM_HZ, DRAIN_HUM_DB)
-	else:
-		_spend_tone.stop_hum()
 	if _charge_left > 0.0:
-		_charge_tone.set_hum(CHARGE_HUM_BASE_HZ + CHARGE_HUM_SPAN_HZ * clampf(now / ArmEnergy.MAX_ENERGY, 0.0, 1.0), CHARGE_HUM_DB)
+		_charge_tone.set_hum(CHARGE_HUM_BASE_HZ + CHARGE_HUM_SPAN_HZ * clampf(float(now) / float(ArmEnergy.MAX_STEPS), 0.0, 1.0), CHARGE_HUM_DB)
 	else:
 		_charge_tone.stop_hum()
 
 
 ## A spend whose move shows its own movement puff (the dash hop) suppresses the next turquoise burst; the beep still plays.
-func _on_energy_spent(_amount: float, reason: StringName) -> void:
+func _on_energy_spent(_amount: int, reason: StringName) -> void:
 	if reason in NO_BURST_REASONS:
 		_no_burst_until_ms = Time.get_ticks_msec() + NO_BURST_WINDOW_MS
 

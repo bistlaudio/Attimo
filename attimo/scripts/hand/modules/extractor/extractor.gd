@@ -2,36 +2,43 @@ class_name Extractor
 extends HandModule
 ## Extraktor (ENRG-02, D-07, D-11): hold the use button with an energy source (capsule, broken machine) near the crosshair and the
 ## arm drains it. The source must be within hand_extract_range of the chest and within hand_extract_angle of the crosshair
-## direction; the arm never takes more than it can hold and the source keeps the rest. Only ArmEnergy.gain writes the arm (T-05-14).
-## Rino may move while extracting. One energy_gained(total, &"extractor") is sent when a drain run ends.
+## direction; one whole step moves from the source into the arm every step_interval of that source (D-42: capsule 3 steps, machine 5), and
+## the arm never takes more than it can hold, the source keeps the rest. Only ArmEnergy.gain writes the arm (T-05-14).
+## Rino may move while extracting. One energy_gained(total steps, &"extractor") is sent when a drain run ends.
 
 const CHEST_HEIGHT: float = 1.3
 
 var _source: EnergySource = null
 var _draining: bool = false
-var _run_total: float = 0.0
+var _run_total: int = 0
+## Seconds since the last step of the current source.
+var _step_timer: float = 0.0
 
 
 func on_use_pressed() -> void:
-	_run_total = 0.0
+	_run_total = 0
+	_step_timer = 0.0
 
 
 func on_use_held(delta: float) -> void:
 	if ctx == null or ctx.player == null or ctx.controller == null:
 		return
 	var arm: ArmEnergy = ctx.player.arm_energy
-	var room: float = ArmEnergy.MAX_ENERGY - arm.value
-	var source: EnergySource = _pick_source() if room > 0.0 else null
+	var source: EnergySource = _pick_source() if arm.value < ArmEnergy.MAX_STEPS else null
 	if source == null:
 		_end_run()
 		return
-	var taken: float = source.extract(delta, room)
-	if taken > 0.0:
-		_run_total += arm.gain(taken, &"extractor")
-		_source = source
-		_draining = true
-	else:
-		_end_run()
+	if source != _source:
+		_step_timer = 0.0
+	_source = source
+	_draining = true
+	_step_timer += delta
+	var interval: float = maxf(source.step_interval, 0.01)
+	if _step_timer < interval:
+		return
+	_step_timer -= interval
+	if source.take_step() > 0:
+		_run_total += arm.gain(1, &"extractor")
 
 
 func on_use_released() -> void:
@@ -56,9 +63,10 @@ func arm_point() -> Vector3:
 func _end_run() -> void:
 	_draining = false
 	_source = null
-	if _run_total > 0.0:
+	_step_timer = 0.0
+	if _run_total > 0:
 		EventBus.energy_gained.emit(_run_total, &"extractor")
-	_run_total = 0.0
+	_run_total = 0
 
 
 ## The available source with the smallest angle to the crosshair direction inside hand_extract_angle and hand_extract_range, or null.

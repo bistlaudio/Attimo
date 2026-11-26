@@ -4,23 +4,21 @@ extends Node3D
 ## into the arm. It is the only income object next to the passive charge and the charge button (ENRG-02).
 ##
 ## Interface (guardrail 4):
-##   exports  amount (energy it holds), duration (seconds a full drain takes), respawn_time (seconds until it refills, 0 = never),
-##            glow_meshes (meshes switched between glow_energy and glow_off), core (the point the Extractor aims at)
-##   calls    extract(delta, limit) -> float taken, is_available(), target_point(), reset()
-##   signals  EventBus.energy_source_emptied(position, amount) once when the last energy is taken
+##   exports  amount (whole steps it holds, D-42: capsule 3, broken machine 5), step_interval (seconds between two steps of a drain),
+##            respawn_time (seconds until it refills, 0 = never), glow_meshes (meshes switched between glow_energy and glow_off),
+##            core (the point the Extractor aims at)
+##   calls    take_step() -> int (1 while steps are left, else 0), is_available(), target_point(), reset()
+##   signals  EventBus.energy_source_emptied(position, amount) once when the last step is taken
 ##   groups   energy_source (the Extractor's candidates) and mechanism (FallReset.reset)
 ## It never touches the player or ArmEnergy: the Extractor takes from here and calls ArmEnergy.gain itself (T-05-14).
 ## Contract test: tests/smoke/test_extractor.gd.
 
 const GLOW_ON: StandardMaterial3D = preload("res://resources/mechanisms/glow_energy.tres")
 const GLOW_OFF: StandardMaterial3D = preload("res://resources/mechanisms/glow_off.tres")
-## Below this much left the source counts as empty (float dust).
-const EMPTY_EPSILON: float = 0.001
-
-## Energy this source holds when full.
-@export_range(1.0, 200.0, 1.0) var amount: float = 40.0
-## Seconds a full drain takes (the drain rate is amount / duration).
-@export_range(0.05, 10.0, 0.05) var duration: float = 0.5
+## Whole steps this source holds when full.
+@export_range(1, 12, 1) var amount: int = 3
+## Seconds between two steps while the Extractor drains it (the capsule is quick, the machine slower).
+@export_range(0.05, 5.0, 0.05) var step_interval: float = 0.15
 ## Seconds after the last drop until it refills; 0 never refills (D-08).
 @export_range(0.0, 120.0, 0.5) var respawn_time: float = 0.0
 ## Meshes whose material the empty and full look switches.
@@ -29,7 +27,7 @@ const EMPTY_EPSILON: float = 0.001
 @export var core: Node3D
 
 ## Runtime state on the node (guardrail 2): what is left, whether it is empty, the refill countdown.
-var remaining: float = -1.0
+var remaining: int = -1
 var empty: bool = false
 var _refill_left: float = 0.0
 
@@ -48,23 +46,20 @@ func _physics_process(delta: float) -> void:
 		_fill()
 
 
-## Takes up to `limit` energy for `delta` seconds of draining: amount / duration per second, never more than is left. Returns what
-## was taken. A non-finite or non-positive input takes nothing. Goes empty (dark, one fact) when the last energy leaves.
-func extract(delta: float, limit: float) -> float:
-	if empty or not is_finite(delta) or not is_finite(limit) or delta <= 0.0 or limit <= 0.0:
-		return 0.0
-	var left: float = _left()
-	var taken: float = minf(minf(amount / maxf(duration, 0.001) * delta, left), limit)
-	remaining = left - taken
-	if remaining <= EMPTY_EPSILON:
-		remaining = 0.0
+## Takes one whole step for the Extractor: returns 1 while steps are left, else 0. Goes empty (dark, one fact) when the last step leaves.
+func take_step() -> int:
+	if empty or _left() <= 0:
+		return 0
+	remaining = _left() - 1
+	if remaining <= 0:
+		remaining = 0
 		_go_empty()
-	return taken
+	return 1
 
 
-## True while there is energy to take.
+## True while there are steps to take.
 func is_available() -> bool:
-	return not empty and _left() > EMPTY_EPSILON
+	return not empty and _left() > 0
 
 
 ## The world point the Extractor aims at and the arm points to.
@@ -77,8 +72,8 @@ func reset() -> void:
 	_fill()
 
 
-func _left() -> float:
-	return amount if remaining < 0.0 else remaining
+func _left() -> int:
+	return amount if remaining < 0 else remaining
 
 
 func _go_empty() -> void:

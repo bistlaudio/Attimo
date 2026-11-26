@@ -101,8 +101,6 @@ extends Resource
 @export_range(0.0, 24.0, 0.5) var loader_min_push: float = 12.0
 ## Speed in m/s the bonus adds on top of max(stored speed, loader_min_push); raise it for a bigger paid discharge.
 @export_range(0.0, 16.0, 0.5) var loader_bonus_speed: float = 8.0
-## Energy the bonus costs (one core, A7: below it the arm counts as empty); raise it to make the bonus rarer.
-@export_range(0.0, 100.0, 1.0) var loader_bonus_cost: float = 25.0
 ## Fastest discharge in m/s; 22 is the tunnelling and camera envelope (long_jump_speed_3), do not raise it without re-running those tests.
 @export_range(8.0, 24.0, 0.5) var loader_max_speed: float = 22.0
 ## Seconds before the next ground Loader may start after a discharge without the bonus (empty arm); raise it to punish an empty arm more.
@@ -125,30 +123,32 @@ extends Resource
 @export_range(1.0, 3.0, 0.05) var kit_launch_scale: float = 1.0
 
 @export_group("Energy")
-## Horizontal speed in m/s from which the arm charges by itself (D-05); plain running at run_speed stays below it, so only the dash, the hop and the Loader earn energy. Raise it to make passive charge rarer.
-@export_range(5.0, 20.0, 0.1) var energy_passive_start_speed: float = 10.0
-## Horizontal speed in m/s at which the passive charge reaches its top rate; keep it above the start speed (the curve guards a zero span). Raise it to make the top rate harder to reach.
-@export_range(10.5, 30.0, 0.1) var energy_passive_full_speed: float = 18.0
-## Passive charge in energy per second at energy_passive_start_speed; raise it for a faster charge at modest speed.
-@export_range(0.0, 20.0, 0.1) var energy_passive_rate_min: float = 3.0
-## Passive charge in energy per second at energy_passive_full_speed and above; raise it for a faster charge at top speed.
-@export_range(0.0, 20.0, 0.1) var energy_passive_rate_max: float = 6.0
-## Energy an air dash costs (the ground dash is free, D-12); raise it to make the air dash rarer.
-@export_range(0.0, 100.0, 1.0) var air_dash_cost: float = 10.0
-## Energy the dash hop pays from stage 2 on (stage 1 is free; without it the hop silently stays stage 1); raise it to make the hop stack rarer.
-@export_range(0.0, 100.0, 1.0) var long_jump_cost: float = 15.0
-## Seconds a wall run is free before it starts to drain; raise it for a longer free run.
-@export_range(0.0, 2.0, 0.05) var wall_run_free_time: float = 0.6
-## Energy per second a wall run drains after the free time, up to wall_run_time; a dry arm ends the run into Fall. Raise it to make long runs costlier.
-@export_range(0.0, 100.0, 1.0) var wall_run_cost_per_second: float = 15.0
-## Energy per second the charge button (R) adds while standing still in Idle (D-06); raise it for a faster refill.
-@export_range(0.0, 30.0, 0.5) var energy_charge_rate: float = 5.0
+## Steps a ground dash costs (D-37); without them the dash does not fire and the press is refused. Raise it to make the dash rarer.
+@export_range(0, 12, 1) var dash_cost: int = 1
+## Steps an air dash costs (D-37); without them it does not fire and the press is refused. Raise it to make the air dash rarer.
+@export_range(0, 12, 1) var air_dash_cost: int = 1
+## Steps the dash hop pays from stage 2 on, each (D-38; stage 1 is free; without them the hop silently stays stage 1). Raise it to make the hop stack rarer.
+@export_range(0, 12, 1) var long_jump_cost: int = 1
+## Steps a wall run costs on entry (D-37); without them the run does not start and the contact is refused once. Raise it to make wall runs rarer.
+@export_range(0, 12, 1) var wall_run_entry_cost: int = 2
+## Steps a wall run costs at every tick interval (D-37); an unpaid tick drops the run into Fall without a refusal. Raise it to make long runs costlier.
+@export_range(0, 12, 1) var wall_run_tick_cost: int = 1
+## Seconds between the wall-run tick payments (D-37); raise it for a cheaper long run.
+@export_range(0.1, 3.0, 0.05) var wall_run_tick_interval: float = 1.0
+## Steps a wall jump costs (D-37); without them it does not fire and the buffered press is refused and consumed. Raise it to make wall jumps rarer.
+@export_range(0, 12, 1) var wall_jump_cost: int = 1
+## Seconds for the passive +1 step (D-42); it always runs, also standing and in the Loader. Raise it for a slower free refill.
+@export_range(0.5, 60.0, 0.5) var energy_passive_interval: float = 10.0
+## Seconds for +1 step while the charge key (R) is held standing still in Idle (D-42); it replaces the passive tick, never stacks. Raise it for a slower charge.
+@export_range(0.5, 60.0, 0.5) var energy_charge_interval: float = 5.0
+## Steps the Loader bonus costs (interim, removed with the bonus path in 05.1-11); raise it to make the bonus rarer.
+@export_range(0, 12, 1) var loader_bonus_cost: int = 3
 
 @export_group("Moto Perpetuo")
-## Energy from which Moto Perpetuo turns on (two cores); raise it to demand a fuller arm.
-@export_range(25.0, 100.0, 1.0) var moto_threshold: float = 50.0
-## Energy below the threshold at which Moto Perpetuo turns off again (hysteresis, A9), so a spend at the edge does not flicker; raise it for a stickier state.
-@export_range(0.0, 10.0, 0.5) var moto_exit_margin: float = 2.5
+## Steps from which Moto Perpetuo turns on (D-36, two cores); raise it to demand a fuller arm.
+@export_range(1, 12, 1) var moto_threshold: int = 6
+## Steps below the threshold at which Moto Perpetuo turns off again (hysteresis, A9), so a spend at the edge does not flicker; raise it for a stickier state.
+@export_range(0, 4, 1) var moto_exit_margin: int = 1
 ## Extra share of the ground run speed in Moto Perpetuo (GAME-DESIGN +10 to 15 percent); raise it for a faster Moto run.
 @export_range(0.0, 0.3, 0.01) var moto_run_bonus: float = 0.12
 ## Height in m of Jump 3 in Moto Perpetuo, kept above jump_3_height; raise it for a higher buffed pirouette jump.

@@ -9,6 +9,7 @@ extends AirState
 func enter(_previous: StringName) -> void:
 	var config: MovementConfig = actor.config
 	actor.consume_jump()
+	actor.arm_energy.try_spend(config.wall_jump_cost, &"wall_jump")
 	var normal: Vector3 = actor.wall_normal
 	var flat: Vector3 = Vector3(actor.move_velocity.x, 0.0, actor.move_velocity.z)
 	var along: Vector3 = flat - normal * flat.dot(normal)

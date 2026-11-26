@@ -10,8 +10,8 @@ size = Vector3(0.5, 0.5, 0.5)
 
 [node name="EnergyCapsule" type="Node3D" node_paths=PackedStringArray("glow_meshes", "core")]
 script = ExtResource("1_script")
-amount = 40.0
-duration = 0.5
+amount = 3
+step_interval = 0.15
 glow_meshes = [NodePath("Lens")]
 core = NodePath("Core")
 
