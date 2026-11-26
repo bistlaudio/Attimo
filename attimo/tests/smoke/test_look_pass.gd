@@ -1,6 +1,6 @@
 extends RefCounted
 ## HAND-07 / D-07, D-07b: every mechanism and trigger scene carries a faceted GlowElement and shared brass, copper or iron
-## materials. The interactable lenses (lever, valve, energy core; the crank was cut in plan 05.1-06) are GlowElements named
+## materials. The interactable lenses (the energy core; the crank was cut in plan 05.1-06, lever and valve in 05.1-13) are GlowElements named
 ## GlowLens, the glow stages still switch their material_override, and nothing uses a sphere lens any more.
 
 const DIR: String = "res://scenes/mechanisms/"
@@ -10,8 +10,6 @@ const IRON: String = "res://resources/mechanisms/look_iron.tres"
 const ENERGY: String = "res://resources/mechanisms/glow_energy.tres"
 const GLOW_TARGET: String = "res://resources/mechanisms/glow_target.tres"
 const LENS_STYLES: Dictionary = {
-	"lever": GlowElement.Style.DIAMOND,
-	"valve": GlowElement.Style.HUB,
 	"energy_core": GlowElement.Style.CAGE,
 }
 
@@ -29,8 +27,8 @@ func run(tree: SceneTree, check: Callable) -> void:
 			names.append(file)
 	names.sort()
 	# 23 since plan 05.1-06 deleted the lift, crank and pressure plate scenes (26 before); 21 since plan 05.1-10 moved the energy
-	# capsule and the broken machine to scenes/kit/energy.
-	check.call(names.size() >= 21, "at least 21 mechanism and trigger scenes (%d)" % names.size())
+	# capsule and the broken machine to scenes/kit/energy; 18 since plan 05.1-13 deleted the lever, valve and gear gate scenes.
+	check.call(names.size() >= 18, "at least 18 mechanism and trigger scenes (%d)" % names.size())
 	for file: String in names:
 		var stem: String = file.get_basename()
 		var packed: PackedScene = load(DIR + file) as PackedScene
@@ -65,16 +63,16 @@ func run(tree: SceneTree, check: Callable) -> void:
 		instance.queue_free()
 		await tree.process_frame
 
-	var first: Node = (load(DIR + "lever.tscn") as PackedScene).instantiate()
-	var second: Node = (load(DIR + "lever.tscn") as PackedScene).instantiate()
+	var first: Node = (load(DIR + "energy_core.tscn") as PackedScene).instantiate()
+	var second: Node = (load(DIR + "energy_core.tscn") as PackedScene).instantiate()
 	tree.root.add_child(first)
 	tree.root.add_child(second)
 	await tree.process_frame
-	var lens_a: GlowElement = first.get_node("Handle/GlowLens") as GlowElement
-	var lens_b: GlowElement = second.get_node("Handle/GlowLens") as GlowElement
-	check.call(lens_a.mesh == lens_b.mesh, "two levers share the same core Mesh")
-	check.call(lens_a.get_node("Bezel").material_override == lens_b.get_node("Bezel").material_override, "two levers share the bezel material")
-	check.call(lens_a.get_node("Bezel").mesh == lens_b.get_node("Bezel").mesh, "two levers share the bezel Mesh")
+	var lens_a: GlowElement = (first.get_node("Interactable") as Interactable).glow_meshes[0] as GlowElement
+	var lens_b: GlowElement = (second.get_node("Interactable") as Interactable).glow_meshes[0] as GlowElement
+	check.call(lens_a.mesh == lens_b.mesh, "two energy cores share the same core Mesh")
+	check.call(lens_a.get_node("Bezel").material_override == lens_b.get_node("Bezel").material_override, "two energy cores share the bezel material")
+	check.call(lens_a.get_node("Bezel").mesh == lens_b.get_node("Bezel").mesh, "two energy cores share the bezel Mesh")
 	var interactable: Interactable = first.get_node("Interactable") as Interactable
 	interactable.set_glow_stage(Interactable.GlowStage.TARGET)
 	check.call(lens_a.material_override == load(GLOW_TARGET), "the target stage sets glow_target on the lens")

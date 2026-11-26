@@ -19,9 +19,8 @@ const SPELL_CLIPS: Dictionary[StringName, StringName] = {
 }
 const HAND_BONE: StringName = &"upperarm.l"
 const SETTLE_FRAMES: int = 30
-const LEVER_SCENE: String = "res://scenes/mechanisms/lever.tscn"
 const CAPSULE_SCENE: String = "res://scenes/kit/energy/energy_capsule.tscn"
-## A lever 1.2 m ahead: inside hand_near_range (2.2 m), so E starts near contact and the arm goes out.
+## A near target 1.2 m ahead: inside hand_near_range (2.2 m), so E starts near contact and the arm goes out.
 const NEAR_POSITION: Vector3 = Vector3(0.0, 0.0, 1.2)
 const MODIFIER_PATH: String = "VisualRoot/Mannequin/Rig_Medium/Skeleton3D/AimPoseModifier"
 const POINT_ERROR_LIMIT_DEG: float = 5.0
@@ -38,7 +37,7 @@ var _player: PlayerController
 var _rig: CameraRig
 var _animator: MannequinAnimator
 var _hand: HandController
-var _lever: Lever
+var _lever: Node3D
 var _modifier: AimPoseModifier
 var _anim_tree: AnimationTree
 var _library: AnimationLibrary
@@ -381,7 +380,7 @@ func _begin(tree: SceneTree, with_lever: bool = false) -> void:
 	_rig.pitch = 0.0
 	_lever = null
 	if with_lever:
-		_lever = Fixtures.spawn_scene(tree.root, LEVER_SCENE, NEAR_POSITION) as Lever
+		_lever = Fixtures.spawn_near_target(tree.root, NEAR_POSITION).get_parent() as Node3D
 	await Fixtures.wait_physics(tree, SETTLE_FRAMES)
 	_animator = _player.get_node("MannequinAnimator") as MannequinAnimator
 	_hand = _player.get_node("HandController") as HandController

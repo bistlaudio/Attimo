@@ -209,7 +209,7 @@ static func restore_time() -> void:
 	time_fx.call(&"clear_all")
 
 
-## A plain SignalSource under `root` that starts `active` (05.1-13): the signal driver for logic-node tests, replacing the cut Lever.
+## A plain SignalSource under `root` that starts `active` (05.1-13): the signal driver for logic-node tests, replacing the cut lever.
 static func spawn_signal_driver(root: Node, active: bool = false) -> SignalSource:
 	var source: SignalSource = SignalSource.new()
 	source.start_active = active
@@ -217,7 +217,7 @@ static func spawn_signal_driver(root: Node, active: bool = false) -> SignalSourc
 	return source
 
 
-## A bare Interactable that accepts near contact (05.1-13): the near-contact target, replacing the cut Lever. It sits on a holder
+## A bare Interactable that accepts near contact (05.1-13): the near-contact target, replacing the cut lever. It sits on a holder
 ## Node3D at `at` (the holder is the Interactable's parent, free it to remove the target) with a 0.6 m hit body on the Interactable layer.
 static func spawn_near_target(root: Node, at: Vector3) -> Interactable:
 	var holder: Node3D = Node3D.new()

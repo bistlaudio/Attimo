@@ -7,10 +7,7 @@ const Fixtures := preload("res://tests/fixtures.gd")
 const AND_SCENE: String = "res://scenes/mechanisms/logic_and.tscn"
 const OR_SCENE: String = "res://scenes/mechanisms/logic_or.tscn"
 const TIMER_SCENE: String = "res://scenes/mechanisms/logic_timer.tscn"
-const LEVER_SCENE: String = "res://scenes/mechanisms/lever.tscn"
-const GATE_SCENE: String = "res://scenes/mechanisms/gear_gate.tscn"
 const SHIPPED_TPS: int = 60
-const OPEN_TICKS: int = 30
 
 var _changes: Array[bool] = []
 
@@ -196,47 +193,42 @@ func _scenario_null_source(tree: SceneTree, check: Callable) -> void:
 
 
 func _scenario_round_trip(tree: SceneTree, check: Callable) -> void:
-	for path: String in [AND_SCENE, LEVER_SCENE, GATE_SCENE]:
-		if not ResourceLoader.exists(path):
-			check.call(false, "%s exists" % path)
-			return
+	if not ResourceLoader.exists(AND_SCENE):
+		check.call(false, "%s exists" % AND_SCENE)
+		return
 	var root: Node3D = Node3D.new()
 	root.name = "Rooms"
-	var lever_a: Lever = (load(LEVER_SCENE) as PackedScene).instantiate() as Lever
-	lever_a.name = "LeverA"
-	var lever_b: Lever = (load(LEVER_SCENE) as PackedScene).instantiate() as Lever
-	lever_b.name = "LeverB"
-	lever_b.position = Vector3(10.0, 0.0, 0.0)
+	var driver_a: SignalSource = SignalSource.new()
+	driver_a.name = "DriverA"
+	var driver_b: SignalSource = SignalSource.new()
+	driver_b.name = "DriverB"
 	var and_node: LogicAnd = (load(AND_SCENE) as PackedScene).instantiate() as LogicAnd
 	and_node.name = "And"
-	var gate: GearGate = (load(GATE_SCENE) as PackedScene).instantiate() as GearGate
-	gate.name = "Gate"
-	gate.position = Vector3(0.0, 0.0, 30.0)
-	for node: Node in [lever_a, lever_b, and_node, gate]:
+	var timer: LogicTimer = (load(TIMER_SCENE) as PackedScene).instantiate() as LogicTimer
+	timer.name = "Timer"
+	for node: Node in [driver_a, driver_b, and_node, timer]:
 		root.add_child(node)
 		node.owner = root
-	var wired: Array[SignalSource] = [lever_a, lever_b]
+	var wired: Array[SignalSource] = [driver_a, driver_b]
 	and_node.set("sources", wired)
-	gate.source = and_node
+	timer.source = and_node
 	var packed: PackedScene = PackedScene.new()
 	check.call(packed.pack(root) == OK, "the logic room packs")
 	root.free()
 	var copy: Node3D = packed.instantiate() as Node3D
 	tree.root.add_child(copy)
 	var new_and: LogicAnd = copy.get_node("And") as LogicAnd
-	var new_a: Lever = copy.get_node("LeverA") as Lever
-	var new_b: Lever = copy.get_node("LeverB") as Lever
-	var new_gate: GearGate = copy.get_node("Gate") as GearGate
+	var new_a: SignalSource = copy.get_node("DriverA") as SignalSource
+	var new_b: SignalSource = copy.get_node("DriverB") as SignalSource
+	var new_timer: LogicTimer = copy.get_node("Timer") as LogicTimer
 	check.call(new_and.sources.size() == 2, "the AND sources array keeps 2 entries (%d)" % new_and.sources.size())
-	check.call(new_and.sources.size() == 2 and new_and.sources[0] == new_a and new_and.sources[1] == new_b, "the AND sources point at the new lever instances")
-	check.call(new_gate.source == new_and, "the gate source points at the new AND")
+	check.call(new_and.sources.size() == 2 and new_and.sources[0] == new_a and new_and.sources[1] == new_b, "the AND sources point at the new driver instances")
+	check.call(new_timer.source == new_and, "the timer source points at the new AND")
 	await Fixtures.wait_physics(tree, 2)
-	(new_a.get_node("Interactable") as Interactable).near_begin()
-	await Fixtures.wait_physics(tree, OPEN_TICKS)
-	check.call(not new_gate.is_open(), "one lever does not open the AND gate")
-	(new_b.get_node("Interactable") as Interactable).near_begin()
-	await Fixtures.wait_physics(tree, OPEN_TICKS)
-	check.call(new_gate.is_open(), "both levers open the AND gate after the round trip (A1)")
+	new_a.set_active(true)
+	check.call(not new_and.is_active and not new_timer.is_active, "one driver does not switch the AND chain")
+	new_b.set_active(true)
+	check.call(new_and.is_active and new_timer.is_active, "both drivers switch the AND chain after the round trip (A1)")
 	await _free(tree, [copy])
 
 

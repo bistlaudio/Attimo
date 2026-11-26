@@ -121,18 +121,19 @@ func _check_stations(check: Callable) -> void:
 			var capsule: EnergySource = _nearest_capsule(marker.global_position)
 			check.call(capsule != null and capsule.respawn_time > 0.0 and capsule.global_position.distance_to(marker.global_position) <= CAPSULE_REACH, "%s has a respawning capsule within %.0f m" % [tag, CAPSULE_REACH])
 		var wanted: Vector2 = SHOT_POSITIONS[tag] as Vector2
-		check.call(absf(station.position.x - wanted.x) < 0.01 and absf(station.position.z - wanted.y) < 0.01, "%s stays at (%.0f, %.0f) (got %s)" % [tag, wanted.x, wanted.y, station.position])
+		var placed: Vector3 = station.get_meta(&"at", Vector3.ZERO) as Vector3
+		check.call(absf(placed.x - wanted.x) < 0.01 and absf(placed.z - wanted.y) < 0.01, "%s stays at (%.0f, %.0f) (got %s)" % [tag, wanted.x, wanted.y, placed])
 		var fields: int = 0
 		for node: Node in station.find_children("*", "Node3D", true, false):
 			if node.scene_file_path == LOADER_FIELD_SCENE:
 				fields += 1
 		check.call(fields == 1, "%s holds one Loader field instance (got %d)" % [tag, fields])
-	var stale: PackedStringArray = PackedStringArray()
-	for node: Node in _zone.find_children("*", "Node", true, false):
-		var script: Script = node.get_script() as Script
-		if script != null and ["Lever", "Valve", "GearGate"].has(String(script.get_global_name())):
-			stale.append(String(node.name))
-	check.call(stale.is_empty(), "no Lever, Valve or GearGate in Zone_Energy (%s)" % [stale])
+		var extra: PackedStringArray = PackedStringArray()
+		for child: Node in station.get_children():
+			if not ["Start", "Capsule", "LoaderField"].has(String(child.name)) and not child is Label3D:
+				extra.append(String(child.name))
+		check.call(extra.is_empty(), "%s holds only its labels, Start, Capsule and the Loader field (extra: %s)" % [tag, extra])
+
 
 
 func _nearest_plate(station: Node3D) -> EnergyDrainPlate:
