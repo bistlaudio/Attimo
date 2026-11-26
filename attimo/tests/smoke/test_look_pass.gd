@@ -29,8 +29,8 @@ func run(tree: SceneTree, check: Callable) -> void:
 	# 23 since plan 05.1-06 deleted the lift, crank and pressure plate scenes (26 before); 21 since plan 05.1-10 moved the energy
 	# capsule and the broken machine to scenes/kit/energy; 18 since plan 05.1-13 deleted the lever, valve and gear gate scenes; 15 since plan 05.1-15 turned the steam nozzle, geyser
 	# and wind tunnel into force volume presets (scenes/kit); 11 since plan 05.1-16 turned the boost ring, bounce pad and low-gravity zone into
-	# kit objects and cut the conveyor; 9 since plan 05.1-18 turned the energy core and the force field into kit objects; 8 since plan 05.1-19 turned the paternoster into a Timed motion preset; 6 since plan 05.1-20 turned the pendulum and piston wall into Timed motion presets.
-	check.call(names.size() >= 6, "at least 6 mechanism and trigger scenes (%d)" % names.size())
+	# kit objects and cut the conveyor; 9 since plan 05.1-18 turned the energy core and the force field into kit objects; 8 since plan 05.1-19 turned the paternoster into a Timed motion preset; 6 since plan 05.1-20 turned the pendulum and piston wall into Timed motion presets; 5 since plan 05.1-21 folded the crumbling platform into the Reaction to load CRUMBLE profile.
+	check.call(names.size() >= 5, "at least 5 mechanism and trigger scenes (%d)" % names.size())
 	for file: String in names:
 		var stem: String = file.get_basename()
 		var packed: PackedScene = load(DIR + file) as PackedScene
