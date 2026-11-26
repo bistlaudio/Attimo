@@ -64,12 +64,12 @@ const BLOCKS: Dictionary = {
 		"script": "res://scripts/kit/blocks/reaction_to_load.gd",
 		"config_class": "ReactionToLoadConfig",
 		"config_script": "res://scripts/kit/configs/reaction_to_load_config.gd",
-		"profiles": ["LOADER_FIELD"],
+		"profiles": ["LOADER_FIELD", "CRUMBLE", "SINK", "TIP", "DROP", "BITE"],
 		"preset": "res://resources/kit/reaction_to_load/loader_field.tres",
 		"scene": "res://scenes/kit/energy/loader_field.tscn",
 		"probe": "brake",
-		"positive": ["brake", "ripple_time", "push_back_speed"],
-		"profile_presets": {"res://resources/kit/reaction_to_load/loader_field.tres": "LOADER_FIELD"},
+		"positive": ["brake", "ripple_time", "push_back_speed", "delay", "fall_time", "respawn_time", "segment_delay", "sink_depth", "sink_speed", "rise_speed", "tip_angle_deg", "tip_time", "return_time", "trigger_radius", "drop_height", "windup", "cooldown"],
+		"profile_presets": {"res://resources/kit/reaction_to_load/loader_field.tres": "LOADER_FIELD", "res://resources/kit/reaction_to_load/crumbling_platform.tres": "CRUMBLE", "res://resources/kit/reaction_to_load/collapse.tres": "CRUMBLE", "res://resources/kit/reaction_to_load/sinking_debris.tres": "SINK", "res://resources/kit/reaction_to_load/tipping_trunk.tres": "TIP", "res://resources/kit/reaction_to_load/falling_debris.tres": "DROP", "res://resources/kit/reaction_to_load/snap_bloom.tres": "BITE"},
 	},
 	# Plan 05.1-15: the Force volume block (D-10, D-11): Profile { DIRECTIONAL, DRAG } and Timing { CONTINUOUS, PULSED }; sizes and timers
 	# are strictly positive (T-05.1-45).

@@ -42,6 +42,7 @@ const CUT_SCENES: Array[String] = [
 	"res://scenes/mechanisms/pressure_plate.tscn",
 	"res://scenes/mechanisms/pneumatic_tube.tscn",
 	"res://scenes/mechanisms/conveyor.tscn",
+	"res://scenes/mechanisms/crumbling_platform.tscn",
 	"res://scenes/mechanisms/pendulum.tscn",
 	"res://scenes/mechanisms/piston_wall.tscn",
 	"res://scenes/mechanisms/rotating_platform.tscn",
@@ -80,6 +81,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	_check_energy_stations(gym, check)
 	_check_platform_stations(gym, check)
 	_check_obstacle_stations(gym, check)
+	_check_nature_stations(gym, check)
 	_check_cut_scenes(gym, check)
 	gym.queue_free()
 	await gym.tree_exited
@@ -179,6 +181,32 @@ func _check_obstacle_stations(gym: Node, check: Callable) -> void:
 			elif name_of == "DamagePush":
 				pushes += 1
 		check.call(blocks == 1 and pushes == 1, "%s holds one Timed motion block and one DamagePush (%d, %d)" % [station_name, blocks, pushes])
+
+
+## Plan 05.1-21: the six Reaction to load nature stations stand once under Zone_KitNature (platforms and obstacles), each with one block.
+const NATURE_STATIONS: Dictionary = {
+	"Station_CrumblingPlatform": "Role_Platforms",
+	"Station_SinkingDebris": "Role_Platforms",
+	"Station_TippingTrunk": "Role_Platforms",
+	"Station_Collapse": "Role_Obstacles",
+	"Station_FallingDebris": "Role_Obstacles",
+	"Station_SnapBloom": "Role_Obstacles",
+}
+
+
+func _check_nature_stations(gym: Node, check: Callable) -> void:
+	var zone: Node = gym.get_node_or_null("Zone_KitNature")
+	for station_name: String in NATURE_STATIONS:
+		var role: Node = zone.find_child(String(NATURE_STATIONS[station_name]), true, false) if zone != null else null
+		var found: Array[Node] = role.find_children(station_name, "Node3D", true, false) if role != null else []
+		check.call(found.size() == 1, "%s exists once under %s of Zone_KitNature" % [station_name, NATURE_STATIONS[station_name]])
+		if found.size() != 1:
+			continue
+		var blocks: int = 0
+		for node: Node in found[0].find_children("*", "", true, false):
+			if _global_name(node) == "ReactionToLoad":
+				blocks += 1
+		check.call(blocks == 1, "%s holds one Reaction to load block (%d)" % [station_name, blocks])
 
 
 func _check_cut_scenes(gym: Node, check: Callable) -> void:

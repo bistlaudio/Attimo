@@ -53,6 +53,12 @@ const KIT_OBJECTS: Dictionary = {
 	"res://scenes/kit/steampunk/speed_pad_switched.tscn": "res://tests/smoke/test_charge_gate.gd",
 	"res://scenes/kit/energy/energy_core.tscn": "res://tests/smoke/test_energy_core.gd",
 	"res://scenes/kit/energy/attraction_field.tscn": "res://tests/smoke/test_attraction_field.gd",
+	"res://scenes/kit/nature/crumbling_platform.tscn": "res://tests/smoke/test_reaction_to_load.gd",
+	"res://scenes/kit/nature/collapse.tscn": "res://tests/smoke/test_reaction_to_load.gd",
+	"res://scenes/kit/nature/sinking_debris.tscn": "res://tests/smoke/test_reaction_to_load.gd",
+	"res://scenes/kit/nature/tipping_trunk.tscn": "res://tests/smoke/test_reaction_to_load.gd",
+	"res://scenes/kit/nature/falling_debris.tscn": "res://tests/smoke/test_reaction_to_load.gd",
+	"res://scenes/kit/nature/snap_bloom.tscn": "res://tests/smoke/test_reaction_to_load.gd",
 }
 
 
@@ -86,6 +92,8 @@ func run(tree: SceneTree, check: Callable) -> void:
 
 	# Plan 05.1-20 (D-14, D-15): DamagePush has its three users so far, the pendulum, the piston wall and the steam hammer (05.1-21 adds more).
 	var push_users: Array = component_users.get("DamagePush", []) as Array
+	# Plan 05.1-21 (D-15): falling debris and snap bloom carry the DamagePush as well.
+	check.call(push_users.has("nature/falling_debris.tscn") and push_users.has("nature/snap_bloom.tscn"), "DamagePush is found in the falling debris and snap bloom scenes (%s)" % [push_users])
 	check.call(push_users.size() >= 2 and push_users.has("steampunk/pendulum.tscn") and push_users.has("steampunk/piston_wall.tscn") and push_users.has("steampunk/steam_hammer.tscn"), "DamagePush is found in at least the pendulum, piston wall and steam hammer scenes (%s)" % [push_users])
 
 
@@ -185,6 +193,8 @@ func _check_scene(path: String, check: Callable, component_users: Dictionary) ->
 		check.call(chain.has("ForceVolume"), "%s: the attraction field root is a ForceVolume (%s)" % [stem, chain])
 	if path.ends_with("/slingshot_core.tscn") or path.ends_with("/steam_cannon.tscn"):
 		check.call(relation == RELATION_GIVES, "%s: the catch element is GIVES (relation %d)" % [stem, relation])
+	if path.contains("/nature/") and (path.ends_with("/crumbling_platform.tscn") or path.ends_with("/collapse.tscn") or path.ends_with("/sinking_debris.tscn") or path.ends_with("/tipping_trunk.tscn") or path.ends_with("/falling_debris.tscn") or path.ends_with("/snap_bloom.tscn")):
+		check.call(layer == LAYER_NATURE and relation == RELATION_FREE and chain.has("ReactionToLoad"), "%s: a nature reaction object is a NATURE FREE ReactionToLoad (%s)" % [stem, chain])
 	if folder == "nature":
 		check.call(relation != RELATION_GIVES, "%s: a nature object never GIVES" % stem)
 		check.call(relation == RELATION_FREE, "%s: a nature object is free (relation %d)" % [stem, relation])
