@@ -4,7 +4,7 @@ extends Node3D
 ## class (a .tres preset per object) and a look as an inherited scene under scenes/kit/{steampunk,energy,nature}. `layer` and
 ## `energy_relation` are plain data the coupling test (test_kit_coupling) reads: turquoise glow means energy, nature is free.
 ## The block joins the groups `mechanism` (FallReset.reset sweep) and `kit_block`, and gets the shared steampunk material pass for the
-## STEAMPUNK and ENERGY layers. Both hooks run on NOTIFICATION_READY, which reaches this base class even when a subclass overrides
+## STEAMPUNK and ENERGY layers and the nature look pass (moss, bark, resin, stone) for NATURE. Both hooks run on NOTIFICATION_READY, which reaches this base class even when a subclass overrides
 ## _ready without calling super. A block has no signal source of its own: switching is the Receiver component's job (D-13).
 ## Kit blocks touch the player only through PlayerController request APIs (D-17).
 
@@ -24,6 +24,8 @@ func _notification(what: int) -> void:
 		add_to_group(&"kit_block")
 		if layer == Layer.STEAMPUNK or layer == Layer.ENERGY:
 			MechanismLook.apply(self)
+		elif layer == Layer.NATURE:
+			NatureLook.apply(self)
 		set_physics_process_internal(true)
 	elif what == NOTIFICATION_INTERNAL_PHYSICS_PROCESS and _income_left > 0.0:
 		# Real time, so the slow world of a Loader hold does not stretch the cooldown (D-12, T-05.1-42).

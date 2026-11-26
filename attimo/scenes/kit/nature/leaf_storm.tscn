@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/kit/force_volume_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://resources/kit/force_volume/leaf_storm.tres" id="2_config"]
+
+[sub_resource type="BoxMesh" id="Mesh_strip"]
+size = Vector3(0.9, 0.04, 0.25)
+
+[sub_resource type="BoxMesh" id="Mesh_branch"]
+size = Vector3(0.3, 3.0, 0.3)
+
+[node name="LeafStorm" instance=ExtResource("1_base")]
+layer = 2
+energy_relation = 0
+config = ExtResource("2_config")
+
+[node name="BranchBark" type="MeshInstance3D" parent="." index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.4, 1.5, 4.2)
+mesh = SubResource("Mesh_branch")
+
+[node name="Strips" type="Node3D" parent="." index="2"]
+
+[node name="StripMoss1" type="MeshInstance3D" parent="Strips"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 1.0, 0)
+mesh = SubResource("Mesh_strip")
+
+[node name="StripBark1" type="MeshInstance3D" parent="Strips"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 1.8, 0)
+mesh = SubResource("Mesh_strip")
+
+[node name="StripMoss2" type="MeshInstance3D" parent="Strips"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 1.3, 0)
+mesh = SubResource("Mesh_strip")
+
+[node name="StripBark2" type="MeshInstance3D" parent="Strips"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 2.2, 0)
+mesh = SubResource("Mesh_strip")
+
+[node name="StripMoss3" type="MeshInstance3D" parent="Strips"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 2.6, 0)
+mesh = SubResource("Mesh_strip")
+
+[node name="StripBark3" type="MeshInstance3D" parent="Strips"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 0.8, 0)
+mesh = SubResource("Mesh_strip")

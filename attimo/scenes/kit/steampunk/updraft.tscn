@@ -1,0 +1,51 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/kit/force_volume_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://resources/kit/force_volume/updraft.tres" id="2_config"]
+[ext_resource type="PackedScene" path="res://scenes/mechanisms/glow_element.tscn" id="9_glowel"]
+[ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="10_glow"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_steam"]
+transparency = 1
+albedo_color = Color(0.85, 0.86, 0.88, 0.35)
+
+[sub_resource type="CylinderMesh" id="Mesh_grate"]
+top_radius = 0.8
+bottom_radius = 0.95
+height = 0.25
+radial_segments = 8
+
+[sub_resource type="TorusMesh" id="Mesh_ring"]
+inner_radius = 0.6
+outer_radius = 0.8
+rings = 12
+ring_segments = 6
+
+[sub_resource type="CylinderMesh" id="Mesh_column"]
+material = SubResource("Mat_steam")
+top_radius = 0.7
+bottom_radius = 0.7
+height = 4.0
+radial_segments = 8
+
+[node name="Updraft" instance=ExtResource("1_base")]
+layer = 0
+energy_relation = 3
+config = ExtResource("2_config")
+
+[node name="GrateBase" type="MeshInstance3D" parent="." index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.125, 0)
+mesh = SubResource("Mesh_grate")
+
+[node name="VentRing" type="MeshInstance3D" parent="." index="2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+mesh = SubResource("Mesh_ring")
+
+[node name="Column" type="MeshInstance3D" parent="." index="3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+mesh = SubResource("Mesh_column")
+
+[node name="IncomeAccent" parent="." index="4" instance=ExtResource("9_glowel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0.85)
+material_override = ExtResource("10_glow")
+size = 0.4

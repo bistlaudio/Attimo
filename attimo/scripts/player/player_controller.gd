@@ -90,6 +90,9 @@ var _push_accels: PackedFloat32Array = PackedFloat32Array()
 ## Smallest gravity factor requested this tick by request_gravity_scale (1.0 = none). Multiplies gravity_scale in _integrate and is
 ## cleared after every move, so leaving a zone needs no restore step.
 var _zone_gravity_scale: float = 1.0
+## Smallest run-scale factor requested this tick by request_move_scale (1.0 = none). Scales the ground and air target speed and the
+## acceleration in accelerate_ground / accelerate_air; cleared after every move like the gravity factor.
+var _zone_move_scale: float = 1.0
 
 ## Flat normal (y = 0, unit) of the last wall the move slid along, or ZERO before the first touch. Written in _post_move (MOVE-12).
 var wall_normal: Vector3 = Vector3.ZERO
@@ -172,8 +175,8 @@ func ground_target_speed(_direction: Vector3) -> float:
 ## velocity points against the wanted one (skid), ground_decel when there is no input or the speed
 ## is above the target, otherwise `accel`.
 func accelerate_ground(direction: Vector3, target_speed: float, accel: float, delta: float) -> void:
-	var desired: Vector3 = Vector3(direction.x, 0.0, direction.z) * target_speed
-	var rate: float = accel
+	var desired: Vector3 = Vector3(direction.x, 0.0, direction.z) * target_speed * _zone_move_scale
+	var rate: float = accel * _zone_move_scale
 	if desired == Vector3.ZERO or horizontal_speed() > desired.length() + 0.0001:
 		rate = config.ground_decel
 	if move_velocity.dot(desired) < 0.0:
@@ -190,8 +193,8 @@ func accelerate_air(direction: Vector3, delta: float) -> void:
 	if direction == Vector3.ZERO:
 		move_velocity = move_velocity.move_toward(Vector3.ZERO, config.air_decel * delta)
 	else:
-		var desired: Vector3 = Vector3(direction.x, 0.0, direction.z) * air_speed_cap
-		move_velocity = move_velocity.move_toward(desired, config.air_accel * delta)
+		var desired: Vector3 = Vector3(direction.x, 0.0, direction.z) * air_speed_cap * _zone_move_scale
+		move_velocity = move_velocity.move_toward(desired, config.air_accel * _zone_move_scale * delta)
 	move_velocity.y = 0.0
 
 
@@ -548,6 +551,16 @@ func request_gravity_scale(scale: float) -> void:
 	_zone_gravity_scale = minf(_zone_gravity_scale, clampf(scale, 0.05, 1.0))
 
 
+## Run-scale request of a drag zone (resin pool, D-17): scales the ground and air target speed and acceleration by `scale` (clamped to
+## 0.2..1.0) for this tick only. Safe to call straight from a kit block's _physics_process every tick; the smallest request of a tick
+## wins and the factor is cleared after every move, so leaving the zone needs no restore call and it can never lock the run. A
+## non-finite scale is ignored.
+func request_move_scale(scale: float) -> void:
+	if not is_finite(scale):
+		return
+	_zone_move_scale = minf(_zone_move_scale, clampf(scale, 0.2, 1.0))
+
+
 ## True while the last wall touched belongs to `group` (a pad group, D-09) and the touch is not older than config.wall_contact_grace.
 func wall_surface(group: StringName) -> bool:
 	if wall_collider == null or not is_instance_valid(wall_collider):
@@ -757,6 +770,7 @@ func _integrate(delta: float) -> void:
 		end_straight_flight()
 	_post_move(delta)
 	_zone_gravity_scale = 1.0
+	_zone_move_scale = 1.0
 
 
 ## Counts the real displacement of one flight tick off the distance and ends the flight on the end conditions (D-50): used up, wall,

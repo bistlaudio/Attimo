@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ForceVolumeConfig" format=3]
+
+[ext_resource type="Script" path="res://scripts/kit/configs/force_volume_config.gd" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+profile = 0
+timing = 0
+size = Vector3(3, 4, 3)
+direction = Vector3(0, 1, 0)
+strength = 6.0
+accel = 60.0
+pulse_on = 1.0
+pulse_off = 1.0
+launch_speed = 0.0
+move_scale = 0.5
+income_steps = 1
+income_cooldown = 3.0
