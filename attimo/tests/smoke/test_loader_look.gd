@@ -204,7 +204,11 @@ func _scenario_cage_tint(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.wait_physics(tree, 2)
 	_player.teleport(Vector3(-4.0, 9.0, 0.0))
 	_player.launch_along(Vector3.RIGHT, 9.0, false)
-	var entered: int = await Fixtures.wait_until(tree, func() -> bool: return _player.loader_active(), 40)
+	# Level flight so the chest crosses the core centre: the cage catches only inside 0.6 m (D-54).
+	var entered: int = await Fixtures.wait_until(tree, func() -> bool:
+		if not _player.loader_active():
+			_player.vertical_speed = 0.0
+		return _player.loader_active(), 40)
 	await _wait_real(tree, 0.1)
 	var vignette: ColorRect = _look.get_node("Vignette") as ColorRect
 	check.call(entered >= 0 and vignette.visible, "(k1) the cage hold shows the vignette (entered %d)" % entered)

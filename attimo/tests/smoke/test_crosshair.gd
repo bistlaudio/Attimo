@@ -139,7 +139,11 @@ func _check_cage_gauge(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.wait_physics(tree, 3)
 	player.teleport(CAGE_CENTRE + Vector3(-4.0, -1.0, 0.0))
 	player.launch_along(Vector3.RIGHT, 9.0, false)
-	var entered: int = await Fixtures.wait_until(tree, func() -> bool: return player.loader_active(), 40)
+	# Level flight (vertical speed zero) so the chest crosses the core centre: the cage catches only inside 0.6 m (D-54).
+	var entered: int = await Fixtures.wait_until(tree, func() -> bool:
+		if not player.loader_active():
+			player.vertical_speed = 0.0
+		return player.loader_active(), 40)
 	await Fixtures.wait_process(tree, 3)
 	check.call(entered >= 0 and ring.loader_ring_visible, "(g1) the cage hold shows the Loader ring (entered %d)" % entered)
 	var state: LoaderState = player.loader_state()
