@@ -52,6 +52,8 @@ signal energy_gained(amount: int, source: StringName)
 ## Emitted by an EnergySource (capsule, broken machine) when its last energy was taken. `position` is where it stands, `amount` the steps it held.
 ## Listeners: juice, audio, the debug event log.
 signal energy_source_emptied(position: Vector3, amount: int)
+## Emitted by KitBlock.grant_step when a steampunk element gave steps (D-43): the element position, the steps and a source id. Listener: EnergyFx (gear spark).
+signal income_granted(position: Vector3, steps: int, source_id: StringName)
 ## Emitted by ArmEnergy.refuse when a move that does not fire (the dash, the air dash, the wall-run start, the wall jump) is refused for lack of
 ## energy. `reason` names the move, `needed` the steps it would have cost. A base move that falls back never emits it (D-12). Listeners: the arm flicker, audio.
 signal energy_refused(reason: StringName, needed: int)

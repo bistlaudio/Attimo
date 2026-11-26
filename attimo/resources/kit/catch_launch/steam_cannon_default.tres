@@ -5,9 +5,11 @@
 [resource]
 script = ExtResource("1_cfg")
 profile = 1
-radius = 1.2
+catch_radius = 1.2
 rearm_time = 1.0
 fixed_hold = 0.2
 fixed_speed = 14.0
 fixed_pitch_deg = 45.0
 muzzle_offset = 1.2
+income_steps = 1
+income_cooldown = 3.0

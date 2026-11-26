@@ -31,6 +31,11 @@ const CHARGE_HUM_DB: float = -26.0
 const PARTICLE_SIZE: float = 0.03
 ## Where on the forearm the sparks start (bone space, the middle of the core row).
 const EMIT_OFFSET: Vector3 = Vector3(0.0, 0.19, 0.05)
+## Steampunk income spark (D-43): a small brass gear flies from the element to the arm core in this many real seconds, then frees itself.
+const SPARK_TIME: float = 0.35
+const SPARK_RADIUS: float = 0.12
+const SPARK_THICKNESS: float = 0.05
+const SPARK_BRASS: StandardMaterial3D = preload("res://resources/mechanisms/look_brass.tres")
 
 @export var player: PlayerController
 @export var presentation: ArmEnergyPresentation
@@ -55,6 +60,7 @@ func _ready() -> void:
 	if player != null:
 		_arm = player.get_node_or_null(^"ArmEnergy") as ArmEnergy
 	EventBus.energy_spent.connect(_on_energy_spent)
+	EventBus.income_granted.connect(_on_income_granted)
 	_spend_tone = PlaceholderTone.new()
 	_spend_tone.name = &"SpendTone"
 	add_child(_spend_tone)
@@ -68,6 +74,8 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	if EventBus.energy_spent.is_connected(_on_energy_spent):
 		EventBus.energy_spent.disconnect(_on_energy_spent)
+	if EventBus.income_granted.is_connected(_on_income_granted):
+		EventBus.income_granted.disconnect(_on_income_granted)
 
 
 ## True while the charge inflow runs (a gain in the last FX_LINGER seconds).
@@ -119,6 +127,34 @@ func _process(delta: float) -> void:
 func _on_energy_spent(_amount: int, reason: StringName) -> void:
 	if reason in NO_BURST_REASONS:
 		_no_burst_until_ms = Time.get_ticks_msec() + NO_BURST_WINDOW_MS
+
+
+## A steampunk element gave steps: a brass gear (greybox mesh, no particles) flies from the element to the arm core and frees itself
+## (T-05.1-44). The tween runs in real time, so the slow world of a Loader hold does not stretch it.
+func _on_income_granted(position: Vector3, _steps: int, _source_id: StringName) -> void:
+	var target_parent: Node3D = presentation.core_parent() as Node3D if presentation != null else null
+	if target_parent == null or not is_inside_tree():
+		return
+	var gear: MeshInstance3D = MeshInstance3D.new()
+	gear.name = &"IncomeSpark"
+	gear.set_meta(FX_META, true)
+	var cylinder: CylinderMesh = CylinderMesh.new()
+	cylinder.top_radius = SPARK_RADIUS
+	cylinder.bottom_radius = SPARK_RADIUS
+	cylinder.height = SPARK_THICKNESS
+	cylinder.radial_segments = 8
+	gear.mesh = cylinder
+	gear.material_override = SPARK_BRASS
+	gear.top_level = true
+	add_child(gear)
+	gear.global_position = position
+	var tween: Tween = gear.create_tween()
+	tween.set_ignore_time_scale(true)
+	tween.tween_method(func(t: float) -> void:
+		if is_instance_valid(gear) and is_instance_valid(target_parent):
+			gear.global_position = position.lerp(target_parent.to_global(EMIT_OFFSET), t)
+			gear.rotation.z = t * TAU * 2.0, 0.0, 1.0, SPARK_TIME)
+	tween.tween_callback(gear.queue_free)
 
 
 ## The charge emitter: sparks appear on a shell around the arm and are pulled inward (negative radial acceleration) in the arm's own

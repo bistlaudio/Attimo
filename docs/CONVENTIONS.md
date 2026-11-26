@@ -176,6 +176,7 @@ Exception 2: placeholder hit puffs in `scripts/debug` + `scenes/debug/hit_puff.t
 | `energy_changed` | `value: int` | `ArmEnergy` after a spend, a gain or a reset, at most once per physics tick; `value` is the new energy in whole steps, 0 to 12 |
 | `energy_spent` | `amount: int, reason: StringName` | `ArmEnergy.try_spend` after a payment of `amount` steps; `reason` is `dash`, `air_dash`, `dash_hop`, `wall_run`, `wall_jump` or `loader` |
 | `energy_gained` | `amount: int, source: StringName` | `ArmEnergy.tick` for each timed step (`passive`, or `charge` while R is held standing still) and the Extractor at the end of a run (`extractor`, total steps) |
+| `income_granted` | `position: Vector3, steps: int, source_id: StringName` | `KitBlock.grant_step` when a steampunk element (slingshot cage, steam cannon) gave steps on a use, at most once per `income_cooldown`; `position` is the element, `source_id` names the block (`catch_launch`). Listener: EnergyFx (gear spark to the arm) |
 | `energy_source_emptied` | `position: Vector3, amount: int` | `EnergySource` (capsule, broken machine) when its last step was taken; once per drain to empty |
 | `moto_changed` | `active: bool` | `ArmEnergy` when Moto Perpetuo turns on (value at or above `moto_threshold`) or off (below `moto_threshold - moto_exit_margin`), only on a flip |
 | `energy_refused` | `reason: StringName, needed: int` | `ArmEnergy.refuse`, only for a move that does not fire: `dash`, `air_dash`, `wall_run` (once per wall contact), `wall_jump` (consumes the buffered press) |

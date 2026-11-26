@@ -9,8 +9,10 @@ extends KitBlock
 ## pitched up by fixed_pitch_deg; the trigger is never pitched (the old nozzle cannon tilted its volume with the barrel), and an
 ## optional `Barrel` child is pitched to match. The overlap callback runs inside the physics flush, so the request goes through
 ## call_deferred; the block never writes the player's velocity. Arming: ARMED -> CAPTURING (while the caught hold runs) -> COOLDOWN
-## (rearm_time, and not while a player is inside the radius) -> ARMED; MAX_WAIT ends a stuck CAPTURING (T-05.1-02, T-05.1-06). A
-## player already in a Loader hold is not caught (T-05.1-04).
+## (rearm_time, and not while a player is inside the trigger) -> ARMED; MAX_WAIT ends a stuck CAPTURING (T-05.1-02, T-05.1-06). A
+## player already in a Loader hold is not caught (T-05.1-04). D-54: the catch test is Rino's chest point (origin + 1 m) within catch_radius of
+## the core centre, checked every physics tick against the overlapping bodies; the trigger sphere is only the broadphase. D-43: a catch gives
+## +1 step through KitBlock.grant_step (once per income_cooldown).
 ## Steam cues (plan 05.1-05, D-01, D-26, look only, no particles): an optional `SteamPuff` mesh shows briefly on every catch, an
 ## optional `SteamBlast` greybox column shows on this block's own throw (the CAGE `loader_released` fact or the FIXED `launched` fact
 ## while this block's hold runs, near the block) and scales out, hidden within BLAST_TIME of real time. The cage turns the blast
@@ -32,6 +34,9 @@ const CUE_SCALE_TO: float = 1.3
 ## Extra metres beyond the trigger radius in which a release fact counts as this block's throw (the cage freezes Rino where his
 ## capsule first touches the sphere, up to about one capsule radius outside it).
 const CUE_REACH_MARGIN: float = 1.0
+## Height in m of Rino's chest point above his origin (the point that has to be inside the core) and his capsule radius.
+const CHEST_HEIGHT: float = 1.0
+const CAPSULE_MARGIN: float = 0.5
 
 ## The block's config; the instance works on its own copy (D-12).
 @export var config: CatchLaunchConfig
@@ -59,9 +64,8 @@ func _ready() -> void:
 	_trigger.collision_mask = PhysicsLayers.PLAYER
 	var shape_node: CollisionShape3D = $Trigger/CollisionShape3D as CollisionShape3D
 	var sphere: SphereShape3D = SphereShape3D.new()
-	sphere.radius = config.radius
+	sphere.radius = trigger_radius()
 	shape_node.shape = sphere
-	_trigger.body_entered.connect(_on_body_entered)
 	var barrel: Node3D = get_node_or_null(^"Barrel") as Node3D
 	if barrel != null and config.profile == CatchLaunchConfig.Profile.FIXED:
 		barrel.rotation = Vector3(deg_to_rad(config.fixed_pitch_deg), 0.0, 0.0)
@@ -135,11 +139,13 @@ func _on_launched(position: Vector3, _direction: Vector3, _speed: float) -> void
 func _own_throw(source: LoaderProfile.Source, position: Vector3, centre: Vector3) -> bool:
 	if _phase != Phase.CAPTURING or _issued != source or not position.is_finite():
 		return false
-	return position.distance_to(centre) <= config.radius + CUE_REACH_MARGIN
+	return position.distance_to(centre) <= trigger_radius() + CUE_REACH_MARGIN
 
 
 func _physics_process(delta: float) -> void:
 	match _phase:
+		Phase.ARMED:
+			_try_catch()
 		Phase.CAPTURING:
 			_timer += delta
 			if (_timer > START_GRACE and not _holding()) or _timer > MAX_WAIT:
@@ -194,16 +200,31 @@ func muzzle_point() -> Vector3:
 	return global_position + barrel_direction() * config.muzzle_offset
 
 
-func _on_body_entered(body: Node3D) -> void:
-	var player: PlayerController = body as PlayerController
-	if player == null or _phase != Phase.ARMED or player.loader_active():
-		return
+## Trigger sphere radius: the catch radius plus a capsule radius, so the overlap callback covers the chest-point test (D-54).
+func trigger_radius() -> float:
+	return config.catch_radius + CAPSULE_MARGIN
+
+
+## D-54: catch only a player whose chest point is inside the core. Touching the outside of the cage never catches and nothing pulls.
+func _try_catch() -> void:
+	for body: Node3D in _trigger.get_overlapping_bodies():
+		var player: PlayerController = body as PlayerController
+		if player == null or player.loader_active():
+			continue
+		var chest: Vector3 = player.global_position + Vector3.UP * CHEST_HEIGHT
+		if chest.distance_to(_trigger.global_position) <= config.catch_radius:
+			_catch(player)
+			return
+
+
+func _catch(player: PlayerController) -> void:
 	var profile: LoaderProfile = profile_for(player)
 	_phase = Phase.CAPTURING
 	_timer = 0.0
 	_captured = player
 	_issued = profile.source
 	player.call_deferred(&"catch_into_loader", profile)
+	grant_step(player, config.income_steps, config.income_cooldown, &"catch_launch")
 	_puff_left = PUFF_TIME * _show_cue(_puff)
 
 

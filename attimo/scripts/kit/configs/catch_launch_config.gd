@@ -11,8 +11,9 @@ enum Profile { FREE_AIM, FIXED }
 @export_group("Catch")
 ## FREE_AIM throws along the view like the Loader; FIXED throws along the barrel at fixed_speed.
 @export var profile: Profile = Profile.FREE_AIM
-## Trigger sphere radius in m; raise it for a cage that catches from further away.
-@export_range(0.5, 6.0, 0.1) var radius: float = 2.5
+## Catch radius in m: Rino is caught only when his chest point is this close to the core centre (D-54); raise it for a roomier cage.
+## The trigger sphere is catch_radius + 0.5 (the capsule radius) so the overlap never misses the chest point.
+@export_range(0.3, 6.0, 0.1) var catch_radius: float = 0.6
 ## Seconds after a throw before the block catches again (it also waits until the player has left the radius); raise it to stop
 ## quick re-catches.
 @export_range(0.1, 5.0, 0.1) var rearm_time: float = 1.0
@@ -26,3 +27,9 @@ enum Profile { FREE_AIM, FIXED }
 @export_range(0.0, 89.0, 1.0) var fixed_pitch_deg: float = 45.0
 ## FIXED: distance in m from the block origin along the barrel to the mouth, where Rino is held and launched from.
 @export_range(0.0, 4.0, 0.1) var muzzle_offset: float = 1.2
+
+@export_group("Income")
+## Steps given to the arm on a catch (D-43); 0 turns the income off.
+@export_range(0, 3, 1) var income_steps: int = 1
+## Real seconds before this element gives a step again; raise it to stop farming.
+@export_range(0.5, 30.0, 0.5) var income_cooldown: float = 3.0
