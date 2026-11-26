@@ -14,10 +14,10 @@ const BLOCKS: Dictionary = {
 		"profiles": ["FREE_AIM", "FIXED"],
 		"preset": "res://resources/kit/catch_launch/slingshot_default.tres",
 		"scene": "res://scenes/kit/steampunk/slingshot_core.tscn",
-		"probe": "radius",
+		"probe": "catch_radius",
 		# Plan 05.1-02: timer and divisor fields of the FIXED profile need a strictly positive minimum (T-05.1-06), and the steam
 		# cannon preset is a FIXED profile.
-		"positive": ["fixed_hold", "fixed_speed", "radius", "rearm_time"],
+		"positive": ["fixed_hold", "fixed_speed", "catch_radius", "rearm_time", "income_cooldown"],
 		"profile_presets": {"res://resources/kit/catch_launch/steam_cannon_default.tres": "FIXED"},
 	},
 	# Plan 05.1-03: the Wall surface block. Its single profile enum is Surface (field `surface`), D-11.

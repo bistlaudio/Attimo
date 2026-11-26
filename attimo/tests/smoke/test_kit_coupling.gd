@@ -12,10 +12,11 @@ const KIT_ROOT: String = "res://scenes/kit"
 const LAYER_FOLDERS: Dictionary = {"steampunk": 0, "energy": 1, "nature": 2}
 const LAYER_ENERGY: int = 1
 const LAYER_NATURE: int = 2
-## KitBlock.EnergyRelation values (FREE 0, COSTS 1, AMPLIFIED 2).
+## KitBlock.EnergyRelation values (FREE 0, COSTS 1, AMPLIFIED 2, GIVES 3; plan 05.1-14 D-43 appended GIVES).
 const RELATION_FREE: int = 0
 const RELATION_COSTS: int = 1
 const RELATION_AMPLIFIED: int = 2
+const RELATION_GIVES: int = 3
 ## The attachable component classes the two-user rule applies to (D-13 component list).
 const COMPONENT_CLASSES: Array[String] = ["Receiver", "DamagePush", "Amplification", "EnergyCost"]
 ## Every kit object scene and the smoke test that covers it (one station and one test per object, KIT-04).
@@ -107,7 +108,16 @@ func _check_scene(path: String, check: Callable, component_users: Dictionary) ->
 	check.call(layer == int(LAYER_FOLDERS[folder]), "%s: layer %d matches the folder %s" % [stem, layer, folder])
 	if relation == RELATION_COSTS or relation == RELATION_AMPLIFIED or layer == LAYER_ENERGY:
 		check.call(classes.has("GlowElement"), "%s: an energy object (relation %d, layer %d) carries a GlowElement" % [stem, relation, layer])
+	# D-43 (05.1-14): GIVES is the 4th relation; every GIVES object carries the turquoise accent, a FREE steampunk object has none.
+	check.call(KitBlock.EnergyRelation.keys().size() == 4 and KitBlock.EnergyRelation.keys()[3] == "GIVES", "KitBlock.EnergyRelation has GIVES as the 4th value")
+	if relation == RELATION_GIVES:
+		check.call(classes.has("GlowElement"), "%s: a GIVES object carries a turquoise GlowElement accent" % stem)
+	if folder == "steampunk" and relation == RELATION_FREE:
+		check.call(not classes.has("GlowElement"), "%s: a FREE steampunk object has no GlowElement" % stem)
+	if path.ends_with("/slingshot_core.tscn") or path.ends_with("/steam_cannon.tscn"):
+		check.call(relation == RELATION_GIVES, "%s: the catch element is GIVES (relation %d)" % [stem, relation])
 	if folder == "nature":
+		check.call(relation != RELATION_GIVES, "%s: a nature object never GIVES" % stem)
 		check.call(relation == RELATION_FREE, "%s: a nature object is free (relation %d)" % [stem, relation])
 		check.call(not chain.has("CatchLaunch") and not chain.has("Impulse"), "%s: a nature object is no CatchLaunch or Impulse (%s)" % [stem, chain])
 		check.call(not classes.has("Amplification") and not classes.has("EnergyCost"), "%s: a nature object has no Amplification or EnergyCost" % stem)

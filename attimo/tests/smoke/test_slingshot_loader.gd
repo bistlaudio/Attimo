@@ -54,6 +54,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_arm_hold_not_caught(tree, check)
 	await _scenario_rearm(tree, check)
 	await _scenario_presentation(tree, check)
+	await _scenario_inside_only(tree, check)
 	Engine.physics_ticks_per_second = SHIPPED_TPS
 
 
@@ -384,3 +385,35 @@ func _scenario_presentation(tree: SceneTree, check: Callable) -> void:
 	check.call(not puff.visible, "(cues) the SteamPuff is hidden again")
 	_bus.disconnect(&"loader_released", on_release_deferred)
 	await _end(tree, check, "cues")
+
+
+# Plan 05.1-14 (D-54): the cage catches only when Rino's chest point is inside the core (catch_radius 0.6 m from the centre). A flight
+# 1.0 m past the centre is never caught and never pulled; a flight whose capsule touches the ring while the chest stays outside 0.6 m is not
+# caught; a flight through the centre is caught. The ring is smaller than before (outer radius at most 0.7 m).
+func _scenario_inside_only(tree: SceneTree, check: Callable) -> void:
+	var player: PlayerController = await _begin(tree)
+	var catch_radius: float = 0.6
+	var config: Resource = _cage.get("config") as Resource
+	check.call(config != null and "catch_radius" in config and absf(float(config.get("catch_radius")) - catch_radius) < 0.001, "(inside) the cage config has catch_radius 0.6")
+	var ring: MeshInstance3D = _cage.get_node_or_null(^"RingA") as MeshInstance3D
+	var torus: TorusMesh = ring.mesh as TorusMesh if ring != null else null
+	check.call(torus != null and torus.outer_radius * ring.scale.x <= 0.7 + 0.001, "(inside) the brass ring is at most 0.7 m wide (outer radius %s)" % [torus.outer_radius * ring.scale.x if torus != null else -1.0])
+	for offset: float in [1.0, 0.8]:
+		player.teleport(CENTRE + START_OFFSET + Vector3(0.0, 0.0, offset))
+		player.launch_along(Vector3.RIGHT, ENTRY_SPEED, false)
+		var caught: bool = false
+		var speed_changed: bool = false
+		for i: int in 60:
+			await tree.physics_frame
+			if _is_loader(player):
+				caught = true
+			if player.move_velocity.length() > 0.5 and absf(player.move_velocity.z) > 0.05:
+				speed_changed = true
+		check.call(not caught, "(inside) a flight %.1f m past the core centre is not caught" % offset)
+		check.call(not speed_changed, "(inside) a flight %.1f m past the core centre is not pulled sideways" % offset)
+		await Fixtures.wait_physics(tree, 2)
+	player.teleport(CENTRE + START_OFFSET)
+	player.launch_along(Vector3.RIGHT, ENTRY_SPEED, false)
+	var through: int = await Fixtures.wait_until(tree, func() -> bool: return _is_loader(player), 40)
+	check.call(through >= 0, "(inside) a flight through the centre is caught")
+	await _end(tree, check, "inside")

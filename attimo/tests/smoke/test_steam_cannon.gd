@@ -31,6 +31,8 @@ var _spent: Array[float] = []
 var _player: PlayerController
 var _on_launched: Callable
 var _on_spent: Callable
+var _on_income: Callable
+var _income_count: int = 0
 
 
 func run(tree: SceneTree, check: Callable) -> void:
@@ -125,6 +127,10 @@ func _spawn(tree: SceneTree) -> Array[Node]:
 			"update_count": state.update_count if state != null else -1,
 		})
 	_on_spent = func(amount: float, _reason: StringName) -> void: _spent.append(amount)
+	_income_count = 0
+	_on_income = func(_p: Vector3, _s: int, _id: StringName) -> void: _income_count += 1
+	if _bus.has_signal(&"income_granted"):
+		_bus.connect(&"income_granted", _on_income)
 	_bus.connect(&"launched", _on_launched)
 	_bus.connect(&"energy_spent", _on_spent)
 	await Fixtures.wait_physics(tree, 3)
@@ -136,6 +142,8 @@ func _despawn(tree: SceneTree, nodes: Array[Node]) -> void:
 		Input.action_release(action)
 	_bus.disconnect(&"launched", _on_launched)
 	_bus.disconnect(&"energy_spent", _on_spent)
+	if _bus.has_signal(&"income_granted") and _bus.is_connected(&"income_granted", _on_income):
+		_bus.disconnect(&"income_granted", _on_income)
 	_on_launched = Callable()
 	_on_spent = Callable()
 	Fixtures.restore_time()
@@ -210,6 +218,7 @@ func _entry_run(tree: SceneTree, check: Callable, direction: Vector3, dash: bool
 	var from_mouth: float = (launch["position"] as Vector3).distance_to(mouth)
 	check.call(from_mouth <= MOUTH_TOLERANCE, "(%s) the launch point is the barrel mouth (%.3f m away)" % [name, from_mouth])
 	check.call(player.loader_available, "(%s) the cannon gives the Loader use back" % name)
+	check.call(_income_count >= 1, "(%s) the catch gave +1 step of income (facts %d)" % [name, _income_count])
 	check.call(launch["dash_available"] == false and player.air_dash_available == false, "(%s) the air dash stays spent (unattended decision 5)" % name)
 	check.call(absf((launch["energy"] as float) - energy_at_catch) < 0.0001 and _spent.is_empty(), "(%s) the arm energy is untouched (%.3f -> %.3f, spent %s)" % [name, energy_at_catch, launch["energy"] as float, _spent])
 	check.call(player.air_control_lock_timer > 0.0, "(%s) air control is locked after the launch" % name)
@@ -227,7 +236,7 @@ func _entry_run(tree: SceneTree, check: Callable, direction: Vector3, dash: bool
 func _scenario_beside(tree: SceneTree, check: Callable) -> void:
 	var nodes: Array[Node] = await _spawn(tree)
 	var cannon: Node3D = nodes[1] as Node3D
-	var radius: float = _config_float(cannon, "radius", 1.2)
+	var radius: float = _config_float(cannon, "catch_radius", 1.2)
 	_player.teleport(cannon.global_position + Vector3(0.0, 0.0, radius + 0.9))
 	_launches.clear()
 	var caught: bool = false
