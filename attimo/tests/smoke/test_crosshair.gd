@@ -1,7 +1,7 @@
 extends RefCounted
 ## CAM-02 / D-01 / D-15 / T-03-09: the reticle is always visible with one small look (no aim hold, no goggle lens overlay, no module
 ## plate), it never takes mouse input, covers the full screen rect and draws below the debug overlays (layers 100-102). It carries the
-## lock state, the Targeting state and the shot charge.
+## Loader ring and the near prompt only: the shot ring, the lock state and the Targeting state are gone (D-45).
 
 const Fixtures := preload("res://tests/fixtures.gd")
 const CROSSHAIR_SCENE: String = "res://scenes/ui/crosshair.tscn"
@@ -39,34 +39,19 @@ func run(tree: SceneTree, check: Callable) -> void:
 	check.call(is_equal_approx(reticle.anchor_right, 1.0) and is_equal_approx(reticle.anchor_bottom, 1.0), "the Reticle covers the full rect")
 	check.call(crosshair.layer >= 1 and crosshair.layer <= MAX_LAYER, "the layer %d is below the debug overlays (100-102)" % crosshair.layer)
 
-	check.call(not crosshair.locked, "the crosshair starts unlocked")
-	crosshair.set_locked(true)
-	check.call(crosshair.locked, "set_locked(true) stores the lock state")
-	crosshair.set_locked(false)
-	check.call(not crosshair.locked, "set_locked(false) restores it")
-
-	# The reticle state, the charge arc and the cooldown dim (Phase 4, D-13).
-	crosshair.set_state(Targeting.State.VALID)
-	check.call(crosshair.state == Targeting.State.VALID and crosshair.locked, "set_state(VALID) switches to the lock colour and keeps locked true")
-	crosshair.set_state(Targeting.State.VALID_BIG)
-	check.call(crosshair.state == Targeting.State.VALID_BIG, "set_state(VALID_BIG) changes the state")
-	crosshair.set_state(Targeting.State.INVALID)
-	check.call(crosshair.state == Targeting.State.INVALID and not crosshair.locked, "set_state(INVALID) changes the state and unlocks")
-	crosshair.set_state(Targeting.State.NONE)
-	check.call(crosshair.state == Targeting.State.NONE and not crosshair.locked, "set_state(NONE) is the white reticle")
-	crosshair.set_charge(0.5)
-	check.call(is_equal_approx(crosshair.charge, 0.5), "set_charge(0.5) stores the charge ratio")
-	crosshair.set_charge(2.0)
-	check.call(is_equal_approx(crosshair.charge, 1.0), "set_charge clamps to 1.0")
-	crosshair.set_charge(0.0)
-	crosshair.set_cooldown_dim(true)
-	crosshair.set_cooldown_dim(false)
+	# D-45: no shot ring, no lock state, no charge arc, no cooldown dim; the source names neither Targeting nor the full-charge fact.
+	var property_names: Array[String] = []
+	for property: Dictionary in crosshair.get_property_list():
+		property_names.append(str(property["name"]))
+	check.call(not property_names.has("shot_ring_visible") and not property_names.has("state") and not property_names.has("charge"), "the crosshair has no shot ring, state or charge property")
+	var source: String = FileAccess.get_file_as_string("res://scripts/ui/crosshair.gd")
+	check.call(not source.contains("Targeting") and not source.contains("shot_fully_charged"), "crosshair.gd names neither Targeting nor shot_fully_charged")
+	check.call(not crosshair.has_method(&"set_state") and not crosshair.has_method(&"set_charge") and not crosshair.has_method(&"set_cooldown_dim"), "the reticle state, charge and cooldown setters are gone")
 	await tree.process_frame
-	check.call(crosshair.visible, "the reticle is still on after every state change")
+	check.call(crosshair.visible, "the reticle is still on")
 
 	crosshair.free()
 	await _check_loader_ring(tree, check)
-	await _check_shot_ring(tree, check)
 	await _check_cage_gauge(tree, check)
 	await _check_cannon_quiet(tree, check)
 
@@ -89,7 +74,7 @@ func _check_loader_ring(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.wait_process(tree, 5)
 	var second: float = ring.loader_ring_angle
 	check.call(second < first, "the ring angle decreases, so it turns counter-clockwise (%.3f -> %.3f)" % [first, second])
-	check.call(ring.loader_ring_speed_deg > 0.0, "the ring speed is positive; the shot arc stays clockwise (start at the top, angle increases)")
+	check.call(ring.loader_ring_speed_deg > 0.0, "the ring speed is positive; the ring turns counter-clockwise")
 	check.call(ring.loader_ring_tint == ring.lock_color, "a full core draws the ring in the turquoise lock colour")
 	check.call(ring.loader_ring_hold > 0.0 and ring.loader_ring_hold <= 1.0, "the inner ring fills with the hold time (%.2f)" % ring.loader_ring_hold)
 	check.call(_ring_style(ring) == &"double", "(05.1-05) the arm Loader keeps the double ring style (got '%s')" % _ring_style(ring))
@@ -114,51 +99,6 @@ func _check_loader_ring(tree: SceneTree, check: Callable) -> void:
 	player.queue_free()
 	await player.tree_exited
 	floor_body.queue_free()
-	await tree.process_frame
-
-
-# Plan 05-04 (D-14, D-17): while a shot charges a single notched ring turns clockwise (the angle increases), filled by the charge, with one
-# flash on the full charge; it is never the same shape as the Loader's counter-clockwise double ring.
-func _check_shot_ring(tree: SceneTree, check: Callable) -> void:
-	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)
-	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(0.0, 0.0, 0.0))
-	var ring: Crosshair = (load(CROSSHAIR_SCENE) as PackedScene).instantiate() as Crosshair
-	tree.root.add_child(ring)
-	var hand: HandController = player.get_node("HandController") as HandController
-	await Fixtures.wait_physics(tree, 10)
-	check.call(not ring.shot_ring_visible, "(s1) the shot ring is hidden before a charge")
-	check.call(Crosshair.shot_ring_style != Crosshair.LOADER_RING_DOUBLE, "(s2) the shot ring and the Loader ring have different styles (%s, %s)" % [Crosshair.shot_ring_style, Crosshair.LOADER_RING_DOUBLE])
-	Fixtures.set_energy(player, 100.0)
-	var flashes: Array = []
-	var on_full: Callable = func(_p: Vector3) -> void: flashes.append(1)
-	tree.root.get_node("EventBus").connect(&"shot_fully_charged", on_full)
-	Input.action_press(&"use_hand")
-	await Fixtures.wait_until(tree, func() -> bool: return hand.charge_ratio > 0.3, 80)
-	await Fixtures.wait_process(tree, 3)
-	check.call(ring.shot_ring_visible, "(s1) the shot ring is visible while a shot charges")
-	check.call(is_equal_approx(ring.charge, hand.charge_ratio) or absf(ring.charge - hand.charge_ratio) < 0.1, "(s1) its fill follows HandController.charge_ratio (%.2f vs %.2f)" % [ring.charge, hand.charge_ratio])
-	var first: float = ring.shot_ring_angle
-	await Fixtures.wait_process(tree, 5)
-	check.call(ring.shot_ring_angle > first, "(s1) the shot ring turns clockwise (the angle increases: %.3f then %.3f)" % [first, ring.shot_ring_angle])
-	check.call(not ring.loader_ring_visible, "(s2) the Loader ring is not drawn during a shot charge")
-	var peak: Array[float] = [0.0]
-	var flash_waited: int = await Fixtures.wait_until(tree, func() -> bool:
-		peak[0] = maxf(peak[0], ring.shot_flash_left)
-		return peak[0] > 0.0, 90)
-	var seen: float = peak[0]
-	check.call(flash_waited >= 0 and flashes.size() == 1, "(s3) the full charge flashes the ring once (waited %d, facts %d)" % [flash_waited, flashes.size()])
-	check.call(seen > 0.0 and seen <= 0.2, "(s3) the flash lasts at most 0.2 s (%.3f)" % seen)
-	Input.action_release(&"use_hand")
-	await Fixtures.wait_physics(tree, 6)
-	await Fixtures.wait_process(tree, 30)
-	check.call(not ring.shot_ring_visible, "(s1) the ring is hidden again after the shot")
-	tree.root.get_node("EventBus").disconnect(&"shot_fully_charged", on_full)
-	for node: Node in tree.get_nodes_in_group(&"shot_projectile"):
-		node.queue_free()
-	ring.queue_free()
-	player.queue_free()
-	floor_body.queue_free()
-	await tree.process_frame
 	await tree.process_frame
 
 

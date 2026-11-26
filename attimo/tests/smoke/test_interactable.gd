@@ -1,6 +1,6 @@
 extends RefCounted
-## HAND-02 / D-03, D-09, D-25: the Interactable contract. accepts_module and can_accept decide, try_trigger and
-## near_begin enforce them, the hit body sits on the Interactable layer and carries the back reference.
+## HAND-02 / D-45, D-46: the Interactable contract after the shot is gone. It is near contact only: accepts_near decides,
+## near_begin / near_hold / near_end run it, the hit body sits on the Interactable layer and carries the back reference.
 
 
 func run(tree: SceneTree, check: Callable) -> void:
@@ -28,51 +28,29 @@ func run(tree: SceneTree, check: Callable) -> void:
 	check.call(Interactable.from_collider(null) == null, "from_collider(null) is null")
 	check.call(target.target_point().is_equal_approx(Vector3(1.0, 2.0, 3.0)), "target_point falls back to the hit body position")
 
-	check.call(target.accepts_module(&"remote_trigger") and not target.accepts_module(&"dummy"), "default accepts remote_trigger only")
-	var received: Array = []
-	target.triggered.connect(func(hit: PulseHit) -> void: received.append(hit))
-	check.call(not target.try_trigger(_hit(PulseHit.Kind.SHOT, PulseHit.Size.SMALL, &"dummy")), "a dummy hit is rejected")
-	check.call(received.is_empty() and triggered_events.is_empty(), "a rejected hit emits nothing")
+	var names: Array[String] = []
+	for property: Dictionary in target.get_property_list():
+		names.append(str(property["name"]))
+	check.call(not names.has("accepts_shot") and not names.has("min_pulse") and not names.has("accepted_modules"), "D-46: no accepts_shot, min_pulse or accepted_modules property")
+	check.call(not target.has_signal(&"triggered") and not target.has_method(&"try_trigger") and not target.has_method(&"can_accept"), "D-46: no triggered signal, try_trigger or can_accept")
+	check.call(target.accepts_near == false, "accepts_near is off by default")
 
-	var good: PulseHit = _hit(PulseHit.Kind.SHOT, PulseHit.Size.BIG, &"remote_trigger")
-	good.point = Vector3(4.0, 5.0, 6.0)
-	good.direction = Vector3(0.0, 0.0, -1.0)
-	good.distance = 7.5
-	good.collider = body
-	check.call(target.try_trigger(good), "an accepted hit returns true")
-	check.call(received.size() == 1 and received[0] == good, "triggered carries the same PulseHit")
-	var kept: PulseHit = received[0] as PulseHit if received.size() == 1 else null
-	check.call(kept != null and kept.size == PulseHit.Size.BIG and kept.point == Vector3(4.0, 5.0, 6.0) and kept.collider == body and is_equal_approx(kept.distance, 7.5), "size, point, collider and distance are intact")
-	check.call(triggered_events == [int(PulseHit.Kind.SHOT)], "EventBus.interactable_triggered fired once with kind SHOT")
-	check.call(is_zero_approx(good.energy), "a hand-built hit leaves the energy payload at 0 and still passes (size is a settable field, D-17)")
-
-	target.accepts_shot = false
-	check.call(not target.can_accept(PulseHit.Kind.SHOT, PulseHit.Size.BIG), "accepts_shot false rejects SHOT")
-	target.accepts_shot = true
-	target.min_pulse = PulseHit.Size.BIG
-	check.call(not target.can_accept(PulseHit.Kind.SHOT, PulseHit.Size.SMALL), "min_pulse BIG rejects a small SHOT")
-	check.call(target.can_accept(PulseHit.Kind.SHOT, PulseHit.Size.BIG), "min_pulse BIG accepts a big SHOT")
-	check.call(not target.can_accept(PulseHit.Kind.NEAR, PulseHit.Size.BIG), "accepts_near false rejects NEAR")
-	target.accepts_near = true
-	check.call(target.can_accept(PulseHit.Kind.NEAR, PulseHit.Size.SMALL), "NEAR ignores the pulse size")
-
-	triggered_events.clear()
 	var near_started: Array = []
+	var near_held: Array = []
+	var near_ended: Array = []
 	target.near_started.connect(func() -> void: near_started.append(1))
+	target.near_held.connect(func(_delta: float) -> void: near_held.append(1))
+	target.near_ended.connect(func() -> void: near_ended.append(1))
+	check.call(not target.near_begin() and triggered_events.is_empty() and near_started.is_empty(), "near_begin on accepts_near false returns false and emits nothing")
+	target.accepts_near = true
 	check.call(target.near_begin(), "near_begin on an accepts_near target returns true")
-	check.call(near_started.size() == 1 and triggered_events == [int(PulseHit.Kind.NEAR)], "near_begin emits near_started and interactable_triggered(NEAR) once")
-	target.accepts_near = false
-	triggered_events.clear()
-	check.call(not target.near_begin() and triggered_events.is_empty(), "near_begin on accepts_near false returns false and emits nothing")
+	# Kind 1 is the near contact (the value PulseHit.Kind.NEAR had).
+	check.call(near_started.size() == 1 and triggered_events == [1], "near_begin emits near_started and interactable_triggered(NEAR) once")
+	target.near_hold(0.016)
+	target.near_end()
+	check.call(near_held.size() == 1 and near_ended.size() == 1, "near_hold and near_end emit near_held and near_ended")
 
 	bus.disconnect(&"interactable_triggered", on_triggered)
 	thing.queue_free()
 	await tree.process_frame
 
-
-func _hit(kind: PulseHit.Kind, size: PulseHit.Size, module_id: StringName) -> PulseHit:
-	var hit: PulseHit = PulseHit.new()
-	hit.kind = kind
-	hit.size = size
-	hit.module_id = module_id
-	return hit
