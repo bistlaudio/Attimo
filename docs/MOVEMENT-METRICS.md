@@ -42,19 +42,20 @@ The long jump is the dash hop: a jump during a ground dash or within dash_jump_g
 
 ## Loader
 
-The right-click Loader (HAND-04, ENRG-09): a press pays step 1, holding pays one more step every loader_step_interval of real time up to loader_max_steps; the release throws along the view at v + push + n * (push_step + k * v), capped at loader_max_speed, and flies a straight gravity-free line of loader_flight_distance[n] plus the overflow (the speed the cap cut, times loader_overflow_gain) before gravity resumes. Measured with the real Player and 12 steps on the clock, debug_loader_direction (no camera): ground rows aim 10 degrees above the horizon, the hop row and the up row are as named, 10 ticks of hold for 1 step and 40 for 3. Distance is the straight flight from the release point to its end, reach the horizontal distance to the landing. The slingshot cage is a free 2-step flight along the same line. The gym room Zone_Loader is re-derived from these numbers in 05.1-12.
+The right-click Loader (HAND-04, ENRG-09): a press pays step 1, holding pays one more step every loader_step_interval of real time up to loader_max_steps; the release throws along the view at v + push + n * (push_step + k * v), capped at loader_max_speed, and flies a straight gravity-free line of loader_flight_distance[n] plus the overflow (the speed the cap cut, times loader_overflow_gain) before gravity resumes. Measured with the real Player and 12 steps on the clock, debug_loader_direction (no camera): ground rows aim 10 degrees above the horizon, the hop row and the up row are as named, 10 ticks of hold for 1 step and 40 for 3. Distance is the straight flight from the release point to its end, reach the horizontal distance to the landing. The slingshot cage is a free 2-step flight along the same line. The gym room Zone_Loader is sized from these numbers (D-59): its gap lies between the 1-step and the 3-step landing reach, its ledge between the 1-step and the 3-step apex, both from a standing start along the station direction.
 
 | Verb | Stored speed (m/s) | Result | Note |
 |---|---|---|---|
 | Loader 1 step (standing) | 0.00 | 6.00 m/s, 6.04 m straight, 7.52 m reach | 1 step from standing; depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_1 |
-| Loader 3 steps (standing) | 0.00 | 10.00 m/s, 14.06 m straight, 17.78 m reach | 3 steps from standing; depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_3 |
+| Loader 3 steps (standing) | 0.00 | 10.00 m/s, 14.07 m straight, 17.79 m reach | 3 steps from standing; depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_3 |
 | Loader 1 step (run) | 9.52 | 16.47 m/s, 6.15 m straight, 11.46 m reach | 1 step from a run at run_speed 8.5; depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_1 |
 | Loader 3 steps (run) | 9.52 | 22.00 m/s, 14.45 m straight, 24.34 m reach | 3 steps from a run at run_speed 8.5; depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_3 |
 | Loader 3 steps (dash hop, overflow) | 14.29 | 22.00 m/s, 20.68 m straight, 24.71 m reach | 3 steps in the air during a dash hop: the speed is capped at loader_max_speed 22.0 and the overflow adds distance (loader_overflow_gain 1.0); depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_3 |
-| Loader 3 steps up (run) | 9.52 | 14.45 m straight rise, 21.56 m apex | straight up from a run: speed 22.00 m/s, then gravity carries it to the apex; depends on loader_flight_distance_3, loader_overflow_gain, rise_gravity |
+| Loader 3 steps up (run) | 9.52 | 14.43 m straight rise, 21.55 m apex | straight up from a run: speed 22.00 m/s, then gravity carries it to the apex; depends on loader_flight_distance_3, loader_overflow_gain, rise_gravity |
 | Slingshot (free 2 steps, standing entry) | 0.00 | 8.00 m/s, 10.05 m straight, 12.53 m reach | free cage throw, no step paid, kit_launch_scale applied before the cap; depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_2 |
 | Loader hold cap | - | 72 ticks (1.20 s) | the hold discharges by itself in REAL time; depends on loader_hold_cap 1.20 |
 | Loader slow motion | - | 0.25 | Engine.time_scale during the hold; depends on loader_slow_factor |
+| Camera pitch up | - | 89.0 degrees | the camera looks up to this angle everywhere, never over the pole (D-52); depends on CameraRig.pitch_max |
 
 ## Energy
 
@@ -109,10 +110,10 @@ Display, compositor and USB latency are outside the software measurement (D-22).
 
 | Action | Accumulated input on: median (ms) | on: max (ms) | off: median (ms) | off: max (ms) | Verdict |
 |---|---|---|---|---|---|
-| Latency jump 60 TPS | 14.83 | 20.70 | 13.62 | 22.59 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency jump 120 TPS | 8.76 | 15.33 | 6.76 | 13.81 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 60 TPS | 14.01 | 20.95 | 17.56 | 20.80 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 120 TPS | 6.01 | 14.26 | 6.73 | 14.06 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 60 TPS | 12.06 | 20.13 | 13.80 | 21.23 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 120 TPS | 8.07 | 13.90 | 6.43 | 16.19 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 60 TPS | 19.06 | 21.39 | 19.10 | 20.23 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 120 TPS | 5.72 | 11.98 | 6.75 | 11.51 | Target met (median <= 66 ms, max <= 100 ms) |
 
 ## Grid cross-check
 
@@ -170,8 +171,6 @@ Every MovementConfig float and int of res://resources/player/movement_default.tr
 | `loader_slow_factor` | 0.250 |
 | `loader_hold_cap` | 1.200 |
 | `loader_skid_time` | 0.100 |
-| `loader_min_push` | 12.000 |
-| `loader_bonus_speed` | 8.000 |
 | `loader_step_interval` | 0.300 |
 | `loader_max_steps` | 3.000 |
 | `loader_push` | 4.000 |
@@ -185,7 +184,6 @@ Every MovementConfig float and int of res://resources/player/movement_default.tr
 | `loader_release_control_lock` | 0.150 |
 | `loader_hitstop_time` | 0.050 |
 | `loader_hitstop_scale` | 0.050 |
-| `loader_pitch_max_deg` | 75.000 |
 | `loader_camera_pullback` | 0.350 |
 | `kit_launch_scale` | 1.000 |
 | `dash_cost` | 1.000 |

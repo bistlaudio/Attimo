@@ -2,8 +2,8 @@ class_name LoaderMath
 extends RefCounted
 ## The pure Loader discharge math (HAND-04, ENRG-09, D-49, D-50). Static functions only, no node access: the release (LoaderState)
 ## and the metrics tool call the same functions. The slingshot cage (Catch & launch, Phase 05.1) throws through the same LoaderState
-## discharge as a free 2-step flight, so it uses them too. step, trajectory, flat_reach and apex_height are the old ballistic helpers
-## that only the Zone_Loader builder reads (deleted in 05.1-12).
+## discharge as a free 2-step flight, so it uses them too. launch_reach and launch_apex size the Zone_Loader room from the straight line
+## plus the ballistic tail after it (D-59).
 
 
 ## Clamps one formula input: a non-finite value counts as 0, a negative one as 0.
@@ -46,13 +46,6 @@ static func straight_reach(stored_speed: float, steps: int, push: float, push_st
 	return flight_distance(steps, overflow(stored_speed, push, steps, push_step, k, cap), bases, gain)
 
 
-## The pre-D-49 discharge speed max(stored, min_push) + bonus capped at `cap`. Zone_Loader builder and its room test only, deleted in 05.1-12.
-static func legacy_speed(stored_speed: float, min_push: float, bonus: float, cap: float) -> float:
-	if not is_finite(cap) or cap <= 0.0:
-		return 0.0
-	return minf(maxf(_pos(stored_speed), _pos(min_push)) + _pos(bonus), cap)
-
-
 ## The discharge velocity: the unit `direction` times `speed`. A zero or non-finite direction or a non-finite speed gives ZERO.
 static func discharge_velocity(direction: Vector3, speed: float) -> Vector3:
 	if not direction.is_finite() or not is_finite(speed) or direction.length_squared() < 0.000001:
@@ -60,71 +53,37 @@ static func discharge_velocity(direction: Vector3, speed: float) -> Vector3:
 	return direction.normalized() * speed
 
 
-## One physics step of a free flight, in the exact gravity order of PlayerController._integrate: gravity is chosen once per step
-## (rise gravity while the vertical speed is >= 0, fall gravity below), a half step is applied before and after the move, and the
-## vertical speed is clamped to the terminal speed. Returns [new_position, new_velocity]. Horizontal velocity stays constant (the
-## controller has no air drag while the stick is neutral: air_decel is 0), so this is the no-input path.
-## Zone_Loader builder only, deleted in 05.1-12.
-static func step(position: Vector3, velocity: Vector3, config: MovementConfig, dt: float) -> PackedVector3Array:
-	var gravity: float = config.rise_gravity
-	if velocity.y < 0.0:
-		gravity = config.fall_gravity()
-	var vertical: float = maxf(velocity.y - gravity * dt * 0.5, -config.terminal_speed)
-	var moved: Vector3 = position + Vector3(velocity.x, vertical, velocity.z) * dt
-	vertical = maxf(vertical - gravity * dt * 0.5, -config.terminal_speed)
-	return PackedVector3Array([moved, Vector3(velocity.x, vertical, velocity.z)])
-
-
-## The no-input flight path as points: points[0] is `origin`, then one point per `dt` step, at most `max_points` in total. With a
-## `space` the path stops at the first World hit (a ray between two points on `mask`): the hit point is the last point. A null
-## space never truncates. A non-finite origin, velocity or step, or max_points < 1, gives an empty array (T-05-04: bounded work).
-## Zone_Loader builder only, deleted in 05.1-12.
-static func trajectory(origin: Vector3, velocity: Vector3, config: MovementConfig, dt: float, max_points: int, space: PhysicsDirectSpaceState3D, mask: int) -> PackedVector3Array:
-	var points: PackedVector3Array = PackedVector3Array()
-	if not origin.is_finite() or not velocity.is_finite() or not is_finite(dt) or dt <= 0.0 or max_points < 1 or config == null:
-		return points
-	points.append(origin)
-	var position: Vector3 = origin
-	var current: Vector3 = velocity
-	while points.size() < max_points:
-		var stepped: PackedVector3Array = step(position, current, config, dt)
-		if space != null:
-			var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(position, stepped[0], mask)
-			var hit: Dictionary = space.intersect_ray(query)
-			if not hit.is_empty():
-				points.append(hit["position"] as Vector3)
-				break
-		position = stepped[0]
-		current = stepped[1]
-		points.append(position)
-	return points
-
-
-## The horizontal distance a free flight with `velocity` covers until it comes back down to `drop` m below its start (the no-input
-## landing of the discharge on a floor `drop` m lower; 0 = same height). Steps with LoaderMath.step at `dt` and interpolates the
-## crossing. The gym room builder sizes its gap from this and the room test recomputes it, so both always agree. Returns 0 for a
-## non-finite input or when the flight never comes back down within a bounded number of steps.
-## Zone_Loader builder only, deleted in 05.1-12.
-static func flat_reach(velocity: Vector3, config: MovementConfig, dt: float = 1.0 / 240.0, drop: float = 0.0) -> float:
-	if not velocity.is_finite() or not is_finite(dt) or dt <= 0.0 or config == null:
+## The height in m above the launch point of the highest point of a discharge: the straight line of `distance` m along `direction`
+## (gravity-free, D-50), then the ballistic tail with the speed `speed` along `direction` under rise gravity. 0 for a non-finite input.
+static func launch_apex(speed: float, direction: Vector3, distance: float, rise_g: float) -> float:
+	if not direction.is_finite() or direction.length_squared() < 0.000001 or not is_finite(speed) or not is_finite(distance) or not is_finite(rise_g) or rise_g <= 0.0:
 		return 0.0
-	var position: Vector3 = Vector3.ZERO
-	var current: Vector3 = velocity
-	for _i: int in 4000:
-		var stepped: PackedVector3Array = step(position, current, config, dt)
-		if position.y + drop > 0.0 and stepped[0].y + drop <= 0.0:
-			var span: float = position.y - stepped[0].y
-			var share: float = 0.0 if span <= 0.0 else clampf((position.y + drop) / span, 0.0, 1.0)
-			var crossing: Vector3 = position.lerp(stepped[0], share)
-			return Vector2(crossing.x, crossing.z).length()
-		position = stepped[0]
-		current = stepped[1]
-	return 0.0
+	var unit: Vector3 = direction.normalized()
+	var height: float = _pos(distance) * unit.y
+	var vertical: float = _pos(speed) * unit.y
+	return maxf(height + (vertical * vertical / (2.0 * rise_g) if vertical > 0.0 else 0.0), 0.0)
 
 
-## The apex height in m of a straight-up discharge at `speed` under rise gravity: v^2 / (2 g).
-## Zone_Loader builder only, deleted in 05.1-12.
-static func apex_height(speed: float, config: MovementConfig) -> float:
-	if not is_finite(speed) or config == null:
+## The horizontal distance in m from the launch point to where a discharge comes back down to the launch height: the straight line of
+## `distance` m (gravity-free), then the ballistic tail (rise gravity going up, fall gravity going down, no air control, no terminal
+## clamp). A launch that never rises above its start returns the horizontal part of the line. 0 for a non-finite input.
+static func launch_reach(speed: float, direction: Vector3, distance: float, rise_g: float, fall_g: float) -> float:
+	if not direction.is_finite() or direction.length_squared() < 0.000001 or not is_finite(speed) or not is_finite(distance):
 		return 0.0
-	return speed * speed / (2.0 * maxf(config.rise_gravity, 0.001))
+	if not is_finite(rise_g) or rise_g <= 0.0 or not is_finite(fall_g) or fall_g <= 0.0:
+		return 0.0
+	var unit: Vector3 = direction.normalized()
+	var line: float = _pos(distance)
+	var flat: float = line * Vector2(unit.x, unit.z).length()
+	var height: float = line * unit.y
+	var vertical: float = _pos(speed) * unit.y
+	var across: float = _pos(speed) * Vector2(unit.x, unit.z).length()
+	var top: float = height + (vertical * vertical / (2.0 * rise_g) if vertical > 0.0 else 0.0)
+	if top <= 0.0:
+		return flat
+	var time_up: float = maxf(vertical, 0.0) / rise_g
+	var time_down: float = sqrt(2.0 * top / fall_g)
+	if vertical < 0.0:
+		# Already falling when the line ends: the time to reach the launch height from `height` at the downward speed.
+		time_down = (vertical + sqrt(vertical * vertical + 2.0 * fall_g * height)) / fall_g
+	return flat + across * (time_up + maxf(time_down, 0.0))

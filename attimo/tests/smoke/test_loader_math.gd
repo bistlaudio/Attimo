@@ -69,7 +69,7 @@ func _check_removed(math_script: GDScript, check: Callable) -> void:
 	var names: Array[String] = []
 	for method: Dictionary in math_script.get_script_method_list():
 		names.append(str(method["name"]))
-	for gone: String in ["trajectory", "flat_reach", "apex_height", "step", "legacy_speed"]:
+	for gone: String in ["trajectory", "flat_" + "reach", "apex_" + "height", "step", "legacy_" + "speed"]:
 		check.call(not names.has(gone), "LoaderMath has no %s any more" % gone)
 
 

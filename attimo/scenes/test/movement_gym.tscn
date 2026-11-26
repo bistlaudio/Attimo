@@ -8819,34 +8819,18 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -113, -1, 24)
 collision_mask = 0
 
 [node name="Island_0_8" type="StaticBody3D" parent="Zone_Loader" instance=ExtResource("1_c2e8x")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -104, -1, 8)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -110, -1, 8)
 collision_mask = 0
 
 [node name="Island_0_12" type="StaticBody3D" parent="Zone_Loader" instance=ExtResource("1_c2e8x")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -104, -1, 12)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -110, -1, 12)
 collision_mask = 0
 
 [node name="Island_1_8" type="StaticBody3D" parent="Zone_Loader" instance=ExtResource("1_c2e8x")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -108, -1, 8)
-collision_mask = 0
-
-[node name="Island_1_12" type="StaticBody3D" parent="Zone_Loader" instance=ExtResource("1_c2e8x")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -108, -1, 12)
-collision_mask = 0
-
-[node name="Island_2_8" type="StaticBody3D" parent="Zone_Loader" instance=ExtResource("1_c2e8x")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -112, -1, 8)
-collision_mask = 0
-
-[node name="Island_2_12" type="StaticBody3D" parent="Zone_Loader" instance=ExtResource("1_c2e8x")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -112, -1, 12)
-collision_mask = 0
-
-[node name="Island_3_8" type="StaticBody3D" parent="Zone_Loader" instance=ExtResource("1_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -113, -1, 8)
 collision_mask = 0
 
-[node name="Island_3_12" type="StaticBody3D" parent="Zone_Loader" instance=ExtResource("1_c2e8x")]
+[node name="Island_1_12" type="StaticBody3D" parent="Zone_Loader" instance=ExtResource("1_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -113, -1, 12)
 collision_mask = 0
 
@@ -9122,40 +9106,40 @@ collision_mask = 0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -70, 2, 12)
 
 [node name="Loader_Gap" type="Node3D" parent="Zone_Loader"]
-metadata/at = Vector3(-98.5, 0, 10)
-metadata/gap_width = 7.0
-metadata/base_reach = 3.448694
-metadata/bonus_reach = 9.568928
+metadata/at = Vector3(-101.5, 0, 10)
+metadata/gap_width = 13.0
+metadata/base_reach = 7.610871619697232
+metadata/bonus_reach = 18.398254794238653
 metadata/launch_direction = Vector3(-0.8660254, 0.5, 0)
 metadata/platform_edge_x = -95.0
-metadata/far_edge_x = -102.0
+metadata/far_edge_x = -108.0
 
 [node name="Label_Loader_Gap" type="Label3D" parent="Zone_Loader/Loader_Gap"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -98.5, 3.2, 10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -101.5, 3.2, 10)
 pixel_size = 0.01
 billboard = 1
-text = "Lücke: nur mit vollem Kern"
+text = "Lücke: 3 Stufen"
 font_size = 64
 
 [node name="Label_Loader_Gap_Expect" type="Label3D" parent="Zone_Loader/Loader_Gap"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -98.5, 2.5, 10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -101.5, 2.5, 10)
 pixel_size = 0.01
 billboard = 1
-text = "Erwartet: Mit Kern landest du drüben, ohne fällst du in die Grube"
+text = "Erwartet: 1 Stufe reicht nicht, 3 Stufen tragen dich hinüber"
 font_size = 40
 
 [node name="Launch" type="Marker3D" parent="Zone_Loader/Loader_Gap"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -94.5, 0, 10)
 
 [node name="Far" type="Marker3D" parent="Zone_Loader/Loader_Gap"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -104, 0, 10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -110, 0, 10)
 
 [node name="Loader_SuperJump" type="Node3D" parent="Zone_Loader"]
 metadata/at = Vector3(-55, 0, -16)
-metadata/ledge_height = 5.0
-metadata/apex_min = 2.1176470588235294
-metadata/apex_bonus = 5.882352941176471
-metadata/launch_direction = Vector3(-0.25881904, 0.9659258, 0)
+metadata/ledge_height = 11.0
+metadata/apex_min = 6.399900302033158
+metadata/apex_bonus = 15.159828236645383
+metadata/launch_direction = Vector3(-0.190809, 0.98162717, 0)
 
 [node name="Label_Loader_SuperJump" type="Label3D" parent="Zone_Loader/Loader_SuperJump"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -55, 3.2, -16)
@@ -9168,29 +9152,53 @@ font_size = 64
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -55, 2.5, -16)
 pixel_size = 0.01
 billboard = 1
-text = "Erwartet: Nach oben schauen, mit Kern erreichst du die Kante"
+text = "Erwartet: Mit 3 Stufen gerade nach oben auf die Kante"
 font_size = 40
 
 [node name="Launch" type="Marker3D" parent="Zone_Loader/Loader_SuperJump"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -55, 0, -16)
 
 [node name="Ledge_0" type="StaticBody3D" parent="Zone_Loader/Loader_SuperJump" instance=ExtResource("1_c2e8x")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 4, -16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 10, -16)
 collision_mask = 0
 
 [node name="Ledge_1" type="StaticBody3D" parent="Zone_Loader/Loader_SuperJump" instance=ExtResource("1_c2e8x")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 3, -16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 9, -16)
 collision_mask = 0
 
 [node name="Ledge_2" type="StaticBody3D" parent="Zone_Loader/Loader_SuperJump" instance=ExtResource("1_c2e8x")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 2, -16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 8, -16)
 collision_mask = 0
 
 [node name="Ledge_3" type="StaticBody3D" parent="Zone_Loader/Loader_SuperJump" instance=ExtResource("1_c2e8x")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 1, -16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 7, -16)
 collision_mask = 0
 
 [node name="Ledge_4" type="StaticBody3D" parent="Zone_Loader/Loader_SuperJump" instance=ExtResource("1_c2e8x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 6, -16)
+collision_mask = 0
+
+[node name="Ledge_5" type="StaticBody3D" parent="Zone_Loader/Loader_SuperJump" instance=ExtResource("1_c2e8x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 5, -16)
+collision_mask = 0
+
+[node name="Ledge_6" type="StaticBody3D" parent="Zone_Loader/Loader_SuperJump" instance=ExtResource("1_c2e8x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 4, -16)
+collision_mask = 0
+
+[node name="Ledge_7" type="StaticBody3D" parent="Zone_Loader/Loader_SuperJump" instance=ExtResource("1_c2e8x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 3, -16)
+collision_mask = 0
+
+[node name="Ledge_8" type="StaticBody3D" parent="Zone_Loader/Loader_SuperJump" instance=ExtResource("1_c2e8x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 2, -16)
+collision_mask = 0
+
+[node name="Ledge_9" type="StaticBody3D" parent="Zone_Loader/Loader_SuperJump" instance=ExtResource("1_c2e8x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 1, -16)
+collision_mask = 0
+
+[node name="Ledge_10" type="StaticBody3D" parent="Zone_Loader/Loader_SuperJump" instance=ExtResource("1_c2e8x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, 0, -16)
 collision_mask = 0
 

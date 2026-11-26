@@ -141,8 +141,8 @@ func _check_ledge_numbers(zone: Node3D, config: MovementConfig, check: Callable)
 	check.call(height > config.jump_3_height + MARGIN, "a plain Jump 3 (%.1f m) cannot reach the ledge %.1f m" % [config.jump_3_height, height])
 
 
-## Puts the player on the station's Launch marker with `energy` and fires a discharge along `direction` after a 10 tick hold.
-func _fire(tree: SceneTree, station: Node3D, direction: Vector3, energy: int, hold_ticks: int = 10) -> void:
+## Puts the player on the station's Launch marker with `energy` and fires a discharge along `direction` after a hold of `hold_ticks` ticks (1 tick = 1/60 s of real time under the slow motion: 40 ticks pay 3 steps, 3 ticks pay the press step only).
+func _fire(tree: SceneTree, station: Node3D, direction: Vector3, energy: int, hold_ticks: int = 40) -> void:
 	var marker: Marker3D = station.get_node("Launch") as Marker3D
 	_player.call(&"respawn", marker.global_position)
 	Fixtures.set_energy(_player, energy)
@@ -193,13 +193,14 @@ func _live_ledge(tree: SceneTree, zone: Node3D, check: Callable, with_core: bool
 		peak = maxf(peak, _player.global_position.y)
 	if with_core:
 		check.call(peak > height, "(%s) the straight 3-step discharge rises above the ledge (peak %.1f, ledge %.1f)" % [label, peak, height])
+		check.call(_player.is_on_floor() and absf(_player.global_position.y - height) < 0.3, "(%s) the player ends on the ledge (y %.2f, ledge %.1f, x %.2f)" % [label, _player.global_position.y, height, _player.global_position.x])
 	else:
 		check.call(peak < 0.5, "(%s) an empty clock does not lift the player (peak %.1f)" % [label, peak])
 	_release_inputs()
 	Fixtures.restore_time()
 
 
-## D-59: one step (a 3 tick hold, about 0.2 s of real time in slow motion) falls short of the gap and does not reach the ledge.
+## D-59: one step (a 3 tick hold: the press pays step 1 and nothing more) falls short of the gap and does not reach the ledge.
 func _live_one_step(tree: SceneTree, zone: Node3D, check: Callable) -> void:
 	var gap: Node3D = zone.get_node("Loader_Gap") as Node3D
 	var far_edge: float = float(gap.get_meta(&"far_edge_x"))

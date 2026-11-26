@@ -1022,7 +1022,7 @@ func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, d
 
 	lines.append("## Loader")
 	lines.append("")
-	lines.append("The right-click Loader (HAND-04, ENRG-09): a press pays step 1, holding pays one more step every loader_step_interval of real time up to loader_max_steps; the release throws along the view at v + push + n * (push_step + k * v), capped at loader_max_speed, and flies a straight gravity-free line of loader_flight_distance[n] plus the overflow (the speed the cap cut, times loader_overflow_gain) before gravity resumes. Measured with the real Player and 12 steps on the clock, debug_loader_direction (no camera): ground rows aim 10 degrees above the horizon, the hop row and the up row are as named, %d ticks of hold for 1 step and %d for 3. Distance is the straight flight from the release point to its end, reach the horizontal distance to the landing. The slingshot cage is a free 2-step flight along the same line. The gym room Zone_Loader is re-derived from these numbers in 05.1-12." % [LOADER_HOLD_TICKS, LOADER_HOLD_TICKS_3])
+	lines.append("The right-click Loader (HAND-04, ENRG-09): a press pays step 1, holding pays one more step every loader_step_interval of real time up to loader_max_steps; the release throws along the view at v + push + n * (push_step + k * v), capped at loader_max_speed, and flies a straight gravity-free line of loader_flight_distance[n] plus the overflow (the speed the cap cut, times loader_overflow_gain) before gravity resumes. Measured with the real Player and 12 steps on the clock, debug_loader_direction (no camera): ground rows aim 10 degrees above the horizon, the hop row and the up row are as named, %d ticks of hold for 1 step and %d for 3. Distance is the straight flight from the release point to its end, reach the horizontal distance to the landing. The slingshot cage is a free 2-step flight along the same line. The gym room Zone_Loader is sized from these numbers (D-59): its gap lies between the 1-step and the 3-step landing reach, its ledge between the 1-step and the 3-step apex, both from a standing start along the station direction." % [LOADER_HOLD_TICKS, LOADER_HOLD_TICKS_3])
 	lines.append("")
 	lines.append("| Verb | Stored speed (m/s) | Result | Note |")
 	lines.append("|---|---|---|---|")
@@ -1041,6 +1041,9 @@ func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, d
 	var hold_cap: Dictionary = loader["hold_cap"]
 	lines.append(_row(["Loader hold cap", "-", "%d ticks (%.2f s)" % [int(hold_cap["ticks"]), float(hold_cap["ticks"]) / float(TPS)], "the hold discharges by itself in REAL time; depends on loader_hold_cap %.2f" % config.loader_hold_cap]))
 	lines.append(_row(["Loader slow motion", "-", "%.2f" % float(hold_cap["slow"]), "Engine.time_scale during the hold; depends on loader_slow_factor"]))
+	var rig: Node = (load("res://scripts/camera/camera_rig.gd") as GDScript).new() as Node
+	lines.append(_row(["Camera pitch up", "-", "%.1f degrees" % rad_to_deg(float(rig.get(&"pitch_max"))), "the camera looks up to this angle everywhere, never over the pole (D-52); depends on CameraRig.pitch_max"]))
+	rig.free()
 	lines.append("")
 
 	_append_energy_rows(lines, config, energy)

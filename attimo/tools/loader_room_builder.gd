@@ -10,8 +10,10 @@ extends RefCounted
 ##   walk lane z -2..2 (x -43..-115, plain floor y 0; it continues through the open west wall cell into Zone_Energy)
 ##   Loader_Redirect  x -55, z 12     open flat floor, hold and throw
 ##   Loader_Air       x -70, z 12     2 m platform with a 1 m step, hold in the air
-##   Loader_Gap       x -95 .. -115, z 6..14   launch platform, pit, far island; gap = mid of base and bonus reach
-##   Loader_SuperJump x -55 .. -60, z -16      solid ledge only a discharge with a full core reaches
+##   Loader_Gap       x -95 .. -115, z 6..14   launch platform, pit, far island; gap = mid of the 1-step and 3-step reach (D-59)
+##   Loader_SuperJump x -55 .. -60, z -16      solid ledge only a 3-step discharge reaches (1 step falls short, D-59)
+## D-59 (user decision, amends D-30): every station position is kept; only the gap width and the ledge height follow the straight
+## Loader of the paid clock (LoaderMath.straight_reach, launch_reach, launch_apex), 1 step against 3 steps from a standing start.
 
 const CONFIG_PATH: String = "res://resources/player/movement_default.tres"
 const BEAM_SCENE: String = "res://scenes/proto/primitive_beam.tscn"
@@ -40,8 +42,10 @@ const GAP_ROWS: Array[int] = [2, 3]
 const GAP_SIGN_Z: float = 10.0
 ## The launch marker stands this far inside the platform edge.
 const GAP_MARKER_INSET: float = 0.5
-## Super jump: the discharge tilts this far from the vertical toward the ledge (the camera pitch limit of D-29 is 75 degrees).
-const LEDGE_TILT_DEG: float = 15.0
+## Super jump: the discharge tilts this far from the vertical toward the ledge (the camera pitch limit is 89 degrees, D-52). 11 degrees
+## keeps the capsule clear of the ledge face on the way up (the marker stands 3 m from it) and the ballistic tail after the 3-step line
+## drops Rino onto the ledge top about 1 m inside its edge.
+const LEDGE_TILT_DEG: float = 11.0
 const LEDGE_MARKER: Vector3 = Vector3(-55.0, 0.0, -16.0)
 ## Capsules next to the gap launch and the super jump marker, so bonus tries do not need the pit (5 s respawn).
 const CAPSULE_SCENE: String = "res://scenes/kit/energy/energy_capsule.tscn"
@@ -80,17 +84,32 @@ func gap_direction() -> Vector3:
 	return Vector3(-cos(pitch), sin(pitch), 0.0)
 
 
-## Base and bonus reach of a discharge from a standing start along the gap direction, and the gap between them (1 m snapped).
+## The straight speed, line distance, landing reach and apex of a standing discharge of `steps` steps along `direction`.
+func _discharge(steps: int, direction: Vector3) -> Dictionary:
+	var bases: Array[float] = [_config.loader_flight_distance_1, _config.loader_flight_distance_2, _config.loader_flight_distance_3]
+	var speed: float = LoaderMath.discharge_speed(0.0, _config.loader_push, steps, _config.loader_push_step, _config.loader_speed_k, _config.loader_max_speed)
+	var line: float = LoaderMath.straight_reach(0.0, steps, _config.loader_push, _config.loader_push_step, _config.loader_speed_k, _config.loader_max_speed, bases, _config.loader_overflow_gain)
+	return {
+		"reach": LoaderMath.launch_reach(speed, direction, line, _config.rise_gravity, _config.fall_gravity()),
+		"apex": LoaderMath.launch_apex(speed, direction, line, _config.rise_gravity),
+	}
+
+
+## 1-step and 3-step reach of the gap station along the gap direction, and the gap between them (1 m snapped, D-59): 1 step falls short
+## by at least 1 m and 3 steps clear it by at least 1 m. If the two reaches are less than 2 m apart, the gap is the 1-step reach + 1 m.
 func _gap_numbers() -> Dictionary:
 	var direction: Vector3 = gap_direction()
-	var base_speed: float = LoaderMath.legacy_speed(0.0, _config.loader_min_push, 0.0, _config.loader_max_speed)
-	var bonus_speed: float = LoaderMath.legacy_speed(0.0, _config.loader_min_push, _config.loader_bonus_speed, _config.loader_max_speed)
-	var base_reach: float = LoaderMath.flat_reach(LoaderMath.discharge_velocity(direction, base_speed), _config)
-	var bonus_reach: float = LoaderMath.flat_reach(LoaderMath.discharge_velocity(direction, bonus_speed), _config)
+	var base_reach: float = float(_discharge(1, direction)["reach"])
+	var bonus_reach: float = float(_discharge(3, direction)["reach"])
+	var width: float = roundf((base_reach + bonus_reach) * 0.5)
+	if bonus_reach - base_reach < 2.0:
+		width = base_reach + 1.0
+	else:
+		width = clampf(width, base_reach + 1.0, bonus_reach - 1.0)
 	return {
 		"base_reach": base_reach,
 		"bonus_reach": bonus_reach,
-		"gap_width": roundf((base_reach + bonus_reach) * 0.5),
+		"gap_width": width,
 		"direction": direction,
 	}
 
@@ -191,7 +210,7 @@ func _build_air(zone: Node3D, builder: RefCounted) -> void:
 
 func _build_gap(zone: Node3D, builder: RefCounted, numbers: Dictionary) -> void:
 	var gap_width: float = float(numbers["gap_width"])
-	var station: Node3D = _station(zone, builder, "Loader_Gap", Vector3(GAP_PLATFORM_EDGE - gap_width * 0.5, 0.0, GAP_SIGN_Z), "Lücke: nur mit vollem Kern", "Erwartet: Mit Kern landest du drüben, ohne fällst du in die Grube")
+	var station: Node3D = _station(zone, builder, "Loader_Gap", Vector3(GAP_PLATFORM_EDGE - gap_width * 0.5, 0.0, GAP_SIGN_Z), "Lücke: 3 Stufen", "Erwartet: 1 Stufe reicht nicht, 3 Stufen tragen dich hinüber")
 	station.set_meta(&"gap_width", gap_width)
 	station.set_meta(&"base_reach", float(numbers["base_reach"]))
 	station.set_meta(&"bonus_reach", float(numbers["bonus_reach"]))
@@ -203,17 +222,20 @@ func _build_gap(zone: Node3D, builder: RefCounted, numbers: Dictionary) -> void:
 
 
 func _build_super_jump(zone: Node3D, builder: RefCounted) -> void:
-	var apex_min: float = LoaderMath.apex_height(_config.loader_min_push, _config)
-	var apex_bonus: float = LoaderMath.apex_height(minf(_config.loader_min_push + _config.loader_bonus_speed, _config.loader_max_speed), _config)
+	var tilt: float = deg_to_rad(LEDGE_TILT_DEG)
+	var direction: Vector3 = Vector3(-sin(tilt), cos(tilt), 0.0)
+	var apex_min: float = float(_discharge(1, direction)["apex"])
+	var apex_bonus: float = float(_discharge(3, direction)["apex"])
+	# The midpoint of the 1-step and 3-step apex (0.5 m snapped), at least 1 m over a plain Jump 3, kept 0.5 m under the 3-step apex.
 	var ledge_height: float = (apex_min + apex_bonus) * 0.5
 	ledge_height = maxf(ledge_height, _config.jump_3_height + 1.0)
 	ledge_height = roundf(ledge_height * 2.0) * 0.5
-	var station: Node3D = _station(zone, builder, "Loader_SuperJump", Vector3(LEDGE_MARKER.x, 0.0, LEDGE_MARKER.z), "Super-Sprung", "Erwartet: Nach oben schauen, mit Kern erreichst du die Kante")
+	ledge_height = clampf(ledge_height, apex_min + 0.5, apex_bonus - 0.5)
+	var station: Node3D = _station(zone, builder, "Loader_SuperJump", Vector3(LEDGE_MARKER.x, 0.0, LEDGE_MARKER.z), "Super-Sprung", "Erwartet: Mit 3 Stufen gerade nach oben auf die Kante")
 	station.set_meta(&"ledge_height", ledge_height)
 	station.set_meta(&"apex_min", apex_min)
 	station.set_meta(&"apex_bonus", apex_bonus)
-	var tilt: float = deg_to_rad(LEDGE_TILT_DEG)
-	station.set_meta(&"launch_direction", Vector3(-sin(tilt), cos(tilt), 0.0))
+	station.set_meta(&"launch_direction", direction)
 	_marker(station, builder, "Launch", LEDGE_MARKER)
 	# A solid block of 1 m slabs up to the ledge height (the top slab is the ledge).
 	var top: float = ledge_height

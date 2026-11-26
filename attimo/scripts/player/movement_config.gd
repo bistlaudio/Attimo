@@ -97,10 +97,6 @@ extends Resource
 @export_range(0.2, 3.0, 0.05) var loader_hold_cap: float = 1.2
 ## Seconds of real time the run brakes to a stop when the Loader is pressed on the ground (D-01); raise it for a softer stop.
 @export_range(0.02, 0.5, 0.01) var loader_skid_time: float = 0.1
-## Smallest discharge speed in m/s on a ZONE_LOADER builder only (read by tools/loader_room_builder.gd until 05.1-12); the paid Loader does not read it.
-@export_range(0.0, 24.0, 0.5) var loader_min_push: float = 12.0
-## Bonus speed in m/s of the removed bonus path (read by tools/loader_room_builder.gd until 05.1-12); the paid Loader does not read it.
-@export_range(0.0, 16.0, 0.5) var loader_bonus_speed: float = 8.0
 ## Seconds of REAL time between two Loader steps while the button is held (D-48); raise it to make the hold slower to fill.
 @export_range(0.05, 2.0, 0.05) var loader_step_interval: float = 0.3
 ## Most steps one Loader hold can pay (D-48); raise it for a bigger charge.
