@@ -39,3 +39,4 @@ snap_max = 0.5
 floor_max_angle_deg = 50.0
 platform_carry = 1.0
 kit_launch_scale = 1.8
+wall_run_feet_offset = 0.35

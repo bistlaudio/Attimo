@@ -2,9 +2,10 @@ extends RefCounted
 ## Phase 05.1 plan 03 (D-06, KIT-01, KIT-02): the Wall surface block and its looks.
 ##   Parity: a plain pad and its steam look give the same wall-run / wall-jump exit velocity (within 0.01 m/s) and the same facing
 ##           (dot > 0.999); the steam look is meshes only and adds no impulse.
-##   Head clearance: during a wall run on the plain pad the head bone stays at least 0.45 m from the wall face, the facing runs along
-##           the wall (facing . wall_tangent() > 0.99) and the body still tilts toward the wall (Mannequin up . wall normal < 0).
-##           The clearance is a pose-only clamp in ProceduralPose; wall_run_lean_deg is unchanged (unattended decision 2).
+##   Lean (05.1-09, D-40, overturns the 05.1-03 head clamp): during a wall run the Mannequin leans wall_run_lean_deg with the head away
+##           from the wall (up . wall normal > 0.1), the head bone is farther from the wall face than the hips, the pivot is offset toward
+##           the wall by wall_run_feet_offset (pose only: the player position is not moved by it) and the facing runs along the wall.
+##           A plain and a steam pad give the same lean.
 ##   Twin catch: two wall-jump pads JUMP_PAD_HEIGHT_MIN tall with TWIN_FACE_GAP_MIN between their faces; a held kick off the near pad
 ##           is caught by the far pad and never passes behind its back face (layout fix, wall_jump_* unchanged, unattended decision 3).
 ## The block class and its constants are read by reflection, so this file compiles before WallSurface exists.
@@ -24,8 +25,11 @@ const START_Z: float = 2.25
 const PARITY_SPEED: float = 0.01
 ## Facing of a plain and a steam-look pad: dot at least this.
 const PARITY_FACING: float = 0.999
-## D-06: the head bone keeps at least this distance (m) from the wall face during a run.
-const HEAD_CLEARANCE: float = 0.45
+## D-40: the up vector tilts away from the wall by at least this much (dot with the wall normal).
+const LEAN_AWAY_DOT: float = 0.1
+## D-40: lean angle tolerance in degrees and pivot offset tolerance in m.
+const LEAN_TOLERANCE_DEG: float = 1.0
+const OFFSET_TOLERANCE: float = 0.03
 ## D-06: the facing runs along the wall.
 const TANGENT_DOT: float = 0.99
 ## Ticks after the WallRun entry before the lean counts as settled (lean_in_time is 0.12 s at the shipped config).
@@ -49,7 +53,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 		check.call(ResourceLoader.exists(path), "the wall surface look %s exists" % path)
 	if ResourceLoader.exists(RUN_PLAIN) and ResourceLoader.exists(RUN_STEAM):
 		await _scenario_run_parity(tree, check)
-		await _scenario_head_clearance(tree, check)
+		await _scenario_lean(tree, check)
 	if ResourceLoader.exists(JUMP_PLAIN) and ResourceLoader.exists(JUMP_STEAM):
 		await _scenario_jump_parity(tree, check)
 	var has_constants: bool = constants.has("TWIN_FACE_GAP_MIN") and constants.has("JUMP_PAD_HEIGHT_MIN")
@@ -164,46 +168,66 @@ func _scenario_jump_parity(tree: SceneTree, check: Callable) -> void:
 	_compare(check, "wall-jump pad", plain, steam)
 
 
-## Every tick of a run on the plain pad after the lean settled: head clearance, facing along the wall and a lean toward the wall.
-func _scenario_head_clearance(tree: SceneTree, check: Callable) -> void:
+## Every tick of a run on `scene_path` after the lean settled: lean away from the wall, head farther than hips, feet offset, facing along the wall.
+## Returns the mean lean angle in degrees (NAN when the run did not start), for the plain/steam parity check.
+func _measure_lean(tree: SceneTree, check: Callable, scene_path: String, label: String) -> float:
 	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)
-	var pad: Node3D = _spawn_pad(tree, RUN_PLAIN, Vector3.ZERO)
+	var pad: Node3D = _spawn_pad(tree, scene_path, Vector3.ZERO)
 	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(-7.0, 2.0, START_Z))
 	var mannequin: Node3D = player.get_node("VisualRoot/Mannequin") as Node3D
 	await Fixtures.wait_physics(tree, 3)
 	Fixtures.set_energy(player, 5)
 	player.launch_along(Vector3(0.6, 0.2, -0.8), 10.0, false)
 	var waited: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"WallRun", 20)
-	check.call(waited >= 0, "head clearance: the run on the plain pad starts (%d)" % waited)
+	check.call(waited >= 0, "%s: the run starts (%d)" % [label, waited])
 	if waited < 0:
 		await _free(tree, [floor_body, pad, player])
-		return
+		return NAN
 	await Fixtures.wait_physics(tree, LEAN_SETTLE_TICKS)
 	var normal: Vector3 = player.wall_normal
 	var face_point: Vector3 = pad.global_position + normal * _half_thickness(pad)
-	var min_distance: float = INF
+	var pivot: Vector3 = Vector3(0.0, player.config.pose_pivot_height, 0.0)
 	var min_tangent: float = INF
-	var max_up_dot: float = -INF
+	var min_up_dot: float = INF
+	var min_head_over_hips: float = INF
+	var lean_sum: float = 0.0
+	var worst_lean_error: float = 0.0
+	var worst_offset_error: float = 0.0
 	var ticks: int = 0
 	var finite: bool = true
 	while player.state_machine.current.name == &"WallRun" and ticks < 120:
-		var distance: float = Fixtures.head_to_wall_distance(player, face_point, normal)
-		if not is_finite(distance):
+		var head: float = Fixtures.bone_to_wall_distance(player, face_point, normal, "head")
+		var hips: float = Fixtures.bone_to_wall_distance(player, face_point, normal, "hips")
+		if not is_finite(head) or not is_finite(hips):
 			finite = false
 		else:
-			min_distance = minf(min_distance, distance)
+			min_head_over_hips = minf(min_head_over_hips, head - hips)
 		min_tangent = minf(min_tangent, _facing(player).dot(player.wall_tangent()))
-		max_up_dot = maxf(max_up_dot, mannequin.global_basis.y.normalized().dot(normal))
+		var up: Vector3 = mannequin.global_basis.y.normalized()
+		min_up_dot = minf(min_up_dot, up.dot(normal))
+		var lean: float = rad_to_deg(acos(clampf(up.dot(Vector3.UP), -1.0, 1.0)))
+		lean_sum += lean
+		worst_lean_error = maxf(worst_lean_error, absf(lean - player.config.wall_run_lean_deg))
+		var shift: Vector3 = mannequin.global_transform * pivot - player.global_position - pivot
+		worst_offset_error = maxf(worst_offset_error, absf(shift.dot(-normal) - player.config.wall_run_feet_offset))
 		ticks += 1
 		await tree.physics_frame
-	check.call(ticks >= 20, "head clearance: at least 20 settled run ticks measured (%d)" % ticks)
-	check.call(finite, "head clearance: the head bone is found on every tick")
-	check.call(min_distance >= HEAD_CLEARANCE, "the head bone stays at least 0.45 m from the wall face (closest %.3f m)" % min_distance)
-	check.call(min_tangent > TANGENT_DOT, "the facing runs along the wall (facing . wall_tangent() at least %.4f > 0.99)" % min_tangent)
-	var pose: Node = player.get_node("ProceduralPose")
-	var limit: float = float(pose.call(&"wall_run_lean_limit_deg", player.config)) if pose.has_method(&"wall_run_lean_limit_deg") else NAN
-	check.call(max_up_dot < 0.0, "the body still leans toward the wall (Mannequin up . wall normal at most %.4f < 0, lean %.2f deg, wall_run_lean_deg %.1f)" % [max_up_dot, limit, player.config.wall_run_lean_deg])
+	check.call(ticks >= 20, "%s: at least 20 settled run ticks measured (%d)" % [label, ticks])
+	check.call(finite, "%s: the head and hips bones are found on every tick" % label)
+	check.call(min_up_dot > LEAN_AWAY_DOT, "%s: the head leans away from the wall (Mannequin up . wall normal at least %.3f > %.2f)" % [label, min_up_dot, LEAN_AWAY_DOT])
+	check.call(worst_lean_error < LEAN_TOLERANCE_DEG, "%s: the lean is wall_run_lean_deg %.1f within 1 degree (worst error %.2f)" % [label, player.config.wall_run_lean_deg, worst_lean_error])
+	check.call(min_head_over_hips > 0.0, "%s: the head is farther from the wall than the hips (smallest margin %.3f m)" % [label, min_head_over_hips])
+	check.call(worst_offset_error < OFFSET_TOLERANCE, "%s: the Mannequin pivot sits wall_run_feet_offset %.2f m toward the wall (worst error %.3f m)" % [label, player.config.wall_run_feet_offset, worst_offset_error])
+	check.call(min_tangent > TANGENT_DOT, "%s: the facing runs along the wall (facing . wall_tangent() at least %.4f > 0.99)" % [label, min_tangent])
+	var mean: float = lean_sum / maxf(float(ticks), 1.0)
 	await _free(tree, [floor_body, pad, player])
+	return mean
+
+
+func _scenario_lean(tree: SceneTree, check: Callable) -> void:
+	var plain: float = await _measure_lean(tree, check, RUN_PLAIN, "lean (plain pad)")
+	var steam: float = await _measure_lean(tree, check, RUN_STEAM, "lean (steam pad)")
+	check.call(is_finite(plain) and is_finite(steam) and absf(plain - steam) < LEAN_TOLERANCE_DEG, "lean: plain and steam pad give the same lean (%.2f vs %.2f degrees)" % [plain, steam])
 
 
 ## A held kick at `kick_y` off the near pad of a twin with `gap` between the faces and `height` tall pads: the far pad catches it.

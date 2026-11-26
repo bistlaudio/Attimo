@@ -181,8 +181,11 @@ extends Resource
 @export_range(0.0, 1.0, 0.05) var wall_jump_keep_along: float = 0.5
 ## Seconds air control is off after a wall-jump so the kick is not eaten; raise it for a harder kick.
 @export_range(0.0, 1.0, 0.01) var wall_jump_control_lock: float = 0.18
-## Roll lean in degrees of the body toward the wall during a wall-run (presentation only); raise it for a stronger tilt.
+## Roll lean in degrees of the body during a wall-run, head away from the wall (D-40, presentation only); raise it for a stronger tilt.
 @export_range(0.0, 45.0, 0.5) var wall_run_lean_deg: float = 18.0
+## Pose-only lateral offset in m of the Mannequin toward the wall during a wall run (D-40): with the lean (head away) the feet read as on
+## the wall. About the capsule radius minus a margin; collision is unchanged.
+@export_range(0.0, 0.6, 0.05) var wall_run_feet_offset: float = 0.35
 
 @export_group("Pose")
 ## Forward lean of the body during a ground dash in degrees (D-01); raise it for a harder lean into the dash.
