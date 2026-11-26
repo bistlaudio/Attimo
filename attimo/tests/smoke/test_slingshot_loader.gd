@@ -2,9 +2,10 @@ extends RefCounted
 ## Plan 05.1-01 (KIT-03, D-01..D-03, D-17): the slingshot core is a Catch & launch block (FREE_AIM) that puts Rino into the Loader
 ## state with a CAGE source, so it plays exactly like the Loader. Entering the brass cage catches and hangs Rino, the world runs at
 ## loader_slow_factor, and the hold ends on the release of a held or later pressed loader button (a same-tick tap fires at once) or at
-## loader_hold_cap of real time with no input (never on tick 1). The throw goes along the view at
-## LoaderMath.discharge_speed(stored, loader_min_push, 0, loader_max_speed): no bonus, no energy spent or gained, no redirect cooldown,
-## loader_available true, the air dash untouched, air control locked. A player in an arm Loader hold is not caught, and the cage does
+## loader_hold_cap of real time with no input (never on tick 1). Plan 05.1-11 (D-60): the throw is a FREE 2-step Loader flight along the
+## view: speed = min((v + push + 2 * (push_step + k * v)) * kit_launch_scale, loader_max_speed), a straight gravity-free flight of
+## loader_flight_distance_2 plus the overflow (straight_flight_steps stays 0, so the Loader field still blocks it, D-53). No energy
+## is spent or gained, loader_available true, the air dash untouched, air control locked. A player in an arm Loader hold is not caught, and the cage does
 ## not catch again before rearm_time has passed and the player has left the radius. Every expectation derives from player.config.
 ## The LoaderProfile source is read through the script's constant map and LoaderState.source() through call(), so this file compiles
 ## before the classes exist (TDD RED of plan 05.1-01).
@@ -23,8 +24,7 @@ const ENTRY_SPEED: float = 9.0
 ## The deterministic throw direction (debug_loader_direction), slightly up and to the north.
 const THROW_DIRECTION: Vector3 = Vector3(0.0, 0.3, -1.0)
 const FAR: Vector3 = Vector3(0.0, 10.0, 60.0)
-## Plan 05.1-05: the steam cues and the brass preview.
-const PREVIEW_SCRIPT: String = "res://scripts/player/loader_preview.gd"
+## Plan 05.1-05: the steam cues.
 const BLAST_HIDE_SECONDS: float = 0.3
 
 var _bus: Node
@@ -49,6 +49,8 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_cap(tree, check, false)
 	await _scenario_press_later(tree, check, true)
 	await _scenario_tap(tree, check, false)
+	await _scenario_fast_entry(tree, check, 1.0)
+	await _scenario_fast_entry(tree, check, 1.5)
 	await _scenario_arm_hold_not_caught(tree, check)
 	await _scenario_rearm(tree, check)
 	await _scenario_presentation(tree, check)
@@ -87,14 +89,14 @@ func _is_loader(player: PlayerController) -> bool:
 func _begin(tree: SceneTree) -> PlayerController:
 	_released = []
 	_spent = []
-	_on_released = func(_position: Vector3, direction: Vector3, speed: float, bonus: bool) -> void:
+	_on_released = func(position: Vector3, direction: Vector3, speed: float, steps: int) -> void:
 		_released.append({
+			"position": position,
 			"direction": direction,
 			"speed": speed,
-			"bonus": bonus,
+			"steps": steps,
 			"velocity": Vector3(_player.move_velocity.x, _player.vertical_speed, _player.move_velocity.z),
 			"energy": _player.arm_energy.value,
-			"cooldown": _player.loader_cooldown_timer,
 			"dash_available": _player.air_dash_available,
 			"update_count": _player.loader_state().update_count,
 		})
@@ -159,13 +161,14 @@ func _check_discharge(check: Callable, player: PlayerController, stored: float, 
 		return
 	var released: Dictionary = _released[0]
 	var velocity: Vector3 = released["velocity"] as Vector3
-	var expected: float = LoaderMath.discharge_speed(stored, config.loader_min_push, 0.0, config.loader_max_speed)
-	check.call(absf(velocity.length() - expected) < 0.01, "(%s) the throw speed is LoaderMath.discharge_speed without bonus %.2f (got %.2f)" % [name, expected, velocity.length()])
+	var raw: float = LoaderMath.discharge_speed_uncapped(stored, config.loader_push, 2, config.loader_push_step, config.loader_speed_k) * config.kit_launch_scale
+	var expected: float = minf(raw, config.loader_max_speed)
+	check.call(absf(velocity.length() - expected) < 0.01, "(%s) the throw speed is the free 2-step formula %.2f (got %.2f)" % [name, expected, velocity.length()])
 	var angle: float = rad_to_deg(velocity.angle_to(THROW_DIRECTION.normalized()))
 	check.call(angle < 1.0, "(%s) the throw goes along the view (off by %.2f deg)" % [name, angle])
-	check.call(released["bonus"] == false, "(%s) the cage adds no bonus" % name)
+	check.call(released["steps"] == 2, "(%s) the fact carries the 2 steps of the cage (got %s)" % [name, released["steps"]])
 	check.call(released["energy"] == 3 and _spent.is_empty(), "(%s) no energy is spent or gained (energy %d, spent %s)" % [name, released["energy"], _spent])
-	check.call(is_zero_approx(released["cooldown"] as float), "(%s) loader_cooldown_timer stays 0 (got %.3f)" % [name, released["cooldown"] as float])
+	check.call(_prop(player, &"straight_flight_steps") == 0.0, "(%s) the cage flight pays no steps (straight_flight_steps %s)" % [name, _prop(player, &"straight_flight_steps")])
 	check.call(player.loader_available, "(%s) the cage gives the Loader use back (loader_available true)" % name)
 	check.call(released["dash_available"] == dash_available and player.air_dash_available == dash_available, "(%s) air_dash_available stays %s" % [name, dash_available])
 	check.call(player.air_control_lock_timer > 0.0, "(%s) air control is locked after the throw (timer %.3f)" % [name, player.air_control_lock_timer])
@@ -191,7 +194,53 @@ func _scenario_held_release(tree: SceneTree, check: Callable, dash_available: bo
 	Input.action_release(&"loader")
 	await Fixtures.wait_until(tree, func() -> bool: return not _released.is_empty(), 4)
 	_check_discharge(check, player, stored, dash_available, "held")
+	await _check_flight(tree, check, player, stored, 1.0, "held")
 	await _end(tree, check, "held")
+
+
+## A numeric player property by reflection, 0.0 while it does not exist.
+func _prop(player: PlayerController, property: StringName) -> float:
+	var value: Variant = player.get(property)
+	return 0.0 if value == null else float(value)
+
+
+## D-60: after the release the flight is straight for loader_flight_distance_2 plus overflow * loader_overflow_gain (+- one tick of travel).
+func _check_flight(tree: SceneTree, check: Callable, player: PlayerController, stored: float, scale: float, name: String) -> void:
+	if _released.is_empty():
+		return
+	var config: MovementConfig = player.config
+	var start: Vector3 = _released[0]["position"] as Vector3
+	var raw: float = LoaderMath.discharge_speed_uncapped(stored, config.loader_push, 2, config.loader_push_step, config.loader_speed_k) * scale
+	var over: float = maxf(raw - config.loader_max_speed, 0.0)
+	var expected: float = config.loader_flight_distance_2 + over * config.loader_overflow_gain
+	var height_gap: float = 0.0
+	var ended: int = await Fixtures.wait_until(tree, func() -> bool: return _prop(player, &"straight_flight_left") <= 0.0, 240)
+	var travelled: float = player.global_position.distance_to(start)
+	check.call(ended >= 0 and absf(travelled - expected) < 0.6, "(%s) the flight is %.2f m straight (got %.2f)" % [name, expected, travelled])
+	height_gap = absf((player.global_position - start).normalized().dot(THROW_DIRECTION.normalized()) - 1.0)
+	check.call(height_gap < 0.01, "(%s) the flight is a straight line along the view (deviation %.4f)" % [name, height_gap])
+
+
+# D-60: a fast entry at kit_launch_scale `scale`: the speed never exceeds loader_max_speed (scale before the cap), the overflow lengthens the flight.
+func _scenario_fast_entry(tree: SceneTree, check: Callable, scale: float) -> void:
+	var player: PlayerController = await _begin(tree)
+	player.config = player.config.duplicate() as MovementConfig
+	player.config.kit_launch_scale = scale
+	var label: String = "fast x%.1f" % scale
+	player.teleport(CENTRE + START_OFFSET)
+	player.launch_along(Vector3.RIGHT, 16.0 / scale, false)
+	var entered: int = await Fixtures.wait_until(tree, func() -> bool: return _is_loader(player), 40)
+	check.call(entered >= 0, "(%s) the cage catches the fast entry" % label)
+	if entered < 0:
+		await _end(tree, check, label)
+		return
+	var stored: float = player.loader_state().stored_velocity.length()
+	await Fixtures.wait_physics(tree, 3)
+	await Fixtures.tap_action(tree, &"loader", 1)
+	await Fixtures.wait_until(tree, func() -> bool: return not _released.is_empty(), 6)
+	check.call(_released.size() == 1 and (_released[0]["speed"] as float) <= player.config.loader_max_speed + 0.001, "(%s) the throw never exceeds %.0f m/s (%s)" % [label, player.config.loader_max_speed, _released])
+	await _check_flight(tree, check, player, stored, scale, label)
+	await _end(tree, check, label)
 
 
 # D-02: no input -> the hold auto-launches at loader_hold_cap of real time, still holding on update 71, out on update 72.
@@ -274,7 +323,7 @@ func _scenario_arm_hold_not_caught(tree: SceneTree, check: Callable) -> void:
 	check.call(_is_loader(player) and _source_of(player) == arm and player.get(&"loader_profile") == null, "(arm) the cage around an arm hold does not catch it (source %d)" % _source_of(player))
 	Input.action_release(&"loader")
 	await Fixtures.wait_until(tree, func() -> bool: return not _released.is_empty(), 4)
-	check.call(_released.size() == 1 and _released[0]["bonus"] == true, "(arm) the arm release keeps its own rules (bonus paid, %s)" % [_released])
+	check.call(_released.size() == 1 and _released[0]["steps"] == 1 and _spent.size() == 1, "(arm) the arm release keeps its own rules (1 step paid, %s)" % [_released])
 	await _end(tree, check, "arm")
 
 
@@ -306,14 +355,7 @@ func _scenario_rearm(tree: SceneTree, check: Callable) -> void:
 	await _end(tree, check, "rearm")
 
 
-## LoaderPreview.BRASS_COLOR by reflection, or an impossible colour while it does not exist.
-func _brass() -> Color:
-	var script: GDScript = load(PREVIEW_SCRIPT) as GDScript
-	return script.get_script_constant_map().get("BRASS_COLOR", Color(-1.0, -1.0, -1.0, -1.0)) as Color
-
-
-# Plan 05.1-05 (D-01, D-26, ROADMAP criterion 3): the cage reads steampunk at every cue. The catch shows the SteamPuff mesh; the hold
-# draws ONE brass arc (no turquoise bonus arc even with a full core); the throw shows the SteamBlast column on the release tick, gone
+# Plan 05.1-05 (D-01, D-26, ROADMAP criterion 3): the cage reads steampunk at every cue. The catch shows the SteamPuff mesh; the throw shows the SteamBlast column on the release tick, gone
 # again within 0.3 s of real time. Both cue meshes are hidden before the catch.
 func _scenario_presentation(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
@@ -325,7 +367,7 @@ func _scenario_presentation(tree: SceneTree, check: Callable) -> void:
 		return
 	check.call(not puff.visible and not blast.visible, "(cues) both cue meshes are hidden before the catch")
 	var blast_on_release: Array[bool] = []
-	var on_release_deferred: Callable = func(_p: Vector3, _d: Vector3, _s: float, _b: bool) -> void: blast_on_release.append(blast.visible)
+	var on_release_deferred: Callable = func(_p: Vector3, _d: Vector3, _s: float, _n: int) -> void: blast_on_release.append(blast.visible)
 	_bus.connect(&"loader_released", on_release_deferred, CONNECT_DEFERRED)
 	var entered: int = await _fly_in(tree, player, true)
 	if not await _check_catch(tree, check, player, entered, "cues"):
@@ -333,15 +375,6 @@ func _scenario_presentation(tree: SceneTree, check: Callable) -> void:
 		await _end(tree, check, "cues")
 		return
 	check.call(puff.visible, "(cues) the catch shows the SteamPuff")
-	await Fixtures.wait_process(tree, 3)
-	var preview: LoaderPreview = player.get_node("LoaderPreview") as LoaderPreview
-	check.call(preview.visible, "(cues) the trajectory preview shows during the cage hold")
-	var arcs: Variant = preview.get(&"arcs_drawn")
-	check.call(arcs != null and int(arcs) == 1, "(cues) the cage preview draws one arc, no bonus arc with a full core (got %s)" % arcs)
-	var brass: Color = _brass()
-	var tints: Array = preview.get(&"arc_tints") as Array if preview.get(&"arc_tints") != null else []
-	check.call(tints.size() == 1 and (tints[0] as Color).is_equal_approx(brass), "(cues) the cage arc is brass (tints %s, %d dashes)" % [tints, preview.multimesh.visible_instance_count])
-	check.call(not tints.has(LoaderPreview.BONUS_COLOR), "(cues) no arc is turquoise")
 	await Fixtures.tap_action(tree, &"loader", 1)
 	await Fixtures.wait_until(tree, func() -> bool: return not _released.is_empty(), 4)
 	await tree.process_frame

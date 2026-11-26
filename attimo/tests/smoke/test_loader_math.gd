@@ -1,25 +1,29 @@
 extends RefCounted
-## Plan 05-01 (HAND-04): LoaderMath is the pure discharge math the release (and later the preview) shares.
-## discharge_speed(stored, min_push, bonus, cap) = min(max(stored, min_push) + bonus, cap); a non-finite stored speed counts
-## as 0 and a negative bonus as 0. discharge_velocity(direction, speed) scales the unit direction; a zero or non-finite
-## direction gives ZERO.
-
-const Fixtures := preload("res://tests/fixtures.gd")
+## Plan 05.1-11 (ENRG-09, D-49, D-50): LoaderMath is the pure discharge math the release shares.
+## discharge_speed(v, push, n, push_step, k, cap) = min(v + push + n * (push_step + k * v), cap); overflow(...) is what the cap cuts
+## off; flight_distance(n, overflow, bases, gain) = bases[n] + overflow * gain. A non-finite input never speeds Rino up.
+## discharge_velocity(direction, speed) scales the unit direction; a zero or non-finite direction gives ZERO. The old ballistic
+## helpers (step, trajectory, flat_reach) stay for the Zone_Loader builder until 05.1-12.
 
 const MATH_PATH: String = "res://scripts/player/loader_math.gd"
 const CONFIG_PATH: String = "res://resources/player/movement_default.tres"
-const LANDING_TOLERANCE: float = 0.5
-## stored, min_push, bonus, cap, expected.
+## v, push, n, push_step, k, cap, expected speed, expected overflow.
 const SPEED_TABLE: Array[Array] = [
-	[0.0, 12.0, 0.0, 22.0, 12.0],
-	[8.5, 12.0, 8.0, 22.0, 20.0],
-	[14.0, 12.0, 8.0, 22.0, 22.0],
-	[18.0, 12.0, 8.0, 22.0, 22.0],
-	[30.0, 12.0, 0.0, 22.0, 22.0],
-	[NAN, 12.0, 0.0, 22.0, 12.0],
-	[INF, 12.0, 8.0, 22.0, 20.0],
-	[8.5, 12.0, -5.0, 22.0, 12.0],
+	[0.0, 4.0, 1, 2.0, 0.1, 22.0, 6.0, 0.0],
+	[0.0, 4.0, 2, 2.0, 0.1, 22.0, 8.0, 0.0],
+	[0.0, 4.0, 3, 2.0, 0.1, 22.0, 10.0, 0.0],
+	[8.5, 4.0, 1, 2.0, 0.1, 22.0, 15.35, 0.0],
+	[8.5, 4.0, 2, 2.0, 0.1, 22.0, 18.2, 0.0],
+	[8.5, 4.0, 3, 2.0, 0.1, 22.0, 21.05, 0.0],
+	[16.0, 4.0, 3, 2.0, 0.1, 22.0, 22.0, 8.8],
+	[30.0, 4.0, 1, 2.0, 0.1, 22.0, 22.0, 17.0],
+	[NAN, 4.0, 1, 2.0, 0.1, 22.0, 6.0, 0.0],
+	[INF, 4.0, 3, 2.0, 0.1, 22.0, 10.0, 0.0],
+	[8.5, -5.0, 1, 2.0, 0.1, 22.0, 11.35, 0.0],
+	[8.5, 4.0, 3, 2.0, 0.1, NAN, 0.0, 0.0],
 ]
+## Flight distance bases of the three steps (D-50).
+const BASES: Array[float] = [6.0, 10.0, 14.0]
 
 
 func run(tree: SceneTree, check: Callable) -> void:
@@ -29,12 +33,25 @@ func run(tree: SceneTree, check: Callable) -> void:
 		return
 	for row: Array in SPEED_TABLE:
 		var stored: float = row[0] as float
-		var min_push: float = row[1] as float
-		var bonus: float = row[2] as float
-		var cap: float = row[3] as float
-		var expected: float = row[4] as float
-		var got: float = math_script.call(&"discharge_speed", stored, min_push, bonus, cap) as float
-		check.call(absf(got - expected) < 1e-4, "discharge_speed(%s, %s, %s, %s) = %s (got %s)" % [stored, min_push, bonus, cap, expected, got])
+		var push: float = row[1] as float
+		var steps: int = row[2] as int
+		var push_step: float = row[3] as float
+		var k: float = row[4] as float
+		var cap: float = row[5] as float
+		var expected: float = row[6] as float
+		var expected_over: float = row[7] as float
+		var got: float = math_script.call(&"discharge_speed", stored, push, steps, push_step, k, cap) as float
+		check.call(is_finite(got) and absf(got - expected) < 1e-3, "discharge_speed(%s, %s, %s, %s, %s, %s) = %s (got %s)" % [stored, push, steps, push_step, k, cap, expected, got])
+		var over: float = math_script.call(&"overflow", stored, push, steps, push_step, k, cap) as float
+		check.call(is_finite(over) and absf(over - expected_over) < 1e-3, "overflow(%s, %s, %s, ...) = %s (got %s)" % [stored, push, steps, expected_over, over])
+	var distance: float = math_script.call(&"flight_distance", 3, 8.8, BASES, 1.0) as float
+	check.call(absf(distance - 22.8) < 1e-3, "flight_distance(3, 8.8, bases, 1.0) = 22.8 (got %s)" % distance)
+	check.call(absf((math_script.call(&"flight_distance", 1, 0.0, BASES, 1.0) as float) - 6.0) < 1e-4, "flight_distance(1, 0) is 6 m")
+	check.call(absf((math_script.call(&"flight_distance", 2, 5.0, BASES, 0.5) as float) - 12.5) < 1e-4, "flight_distance(2, 5, gain 0.5) is 12.5 m")
+	check.call(is_finite(math_script.call(&"flight_distance", 3, NAN, BASES, INF) as float), "flight_distance of non-finite inputs is finite")
+	check.call((math_script.call(&"flight_distance", 3, -4.0, BASES, 1.0) as float) >= 14.0, "a negative overflow never shortens the flight")
+	var uncapped: float = math_script.call(&"discharge_speed_uncapped", 16.0, 4.0, 3, 2.0, 0.1) as float
+	check.call(absf(uncapped - 30.8) < 1e-3, "discharge_speed_uncapped(16, 4, 3) = 30.8 (got %s)" % uncapped)
 	var up: Vector3 = math_script.call(&"discharge_velocity", Vector3.UP * 3.0, 20.0) as Vector3
 	check.call(up.is_equal_approx(Vector3(0.0, 20.0, 0.0)), "discharge_velocity(UP * 3, 20) is (0, 20, 0) (got %s)" % up)
 	var zero: Vector3 = math_script.call(&"discharge_velocity", Vector3.ZERO, 20.0) as Vector3
@@ -46,9 +63,8 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _check_trajectory(tree, check)
 
 
-# Plan 05-02: step() mirrors PlayerController._integrate, trajectory() is bounded and finite-safe, and the predicted landing of a
-# no-input discharge matches the real one.
-func _check_trajectory(tree: SceneTree, check: Callable) -> void:
+# Plan 05-02 (kept for the Zone_Loader builder until 05.1-12): step() mirrors PlayerController._integrate, trajectory() is bounded and finite-safe.
+func _check_trajectory(_tree: SceneTree, check: Callable) -> void:
 	var config: MovementConfig = load(CONFIG_PATH) as MovementConfig
 	var dt: float = 1.0 / 60.0
 	# One rising step: half gravity (rise) before and after, the position moves with the mid-step velocity.
@@ -75,36 +91,3 @@ func _check_trajectory(tree: SceneTree, check: Callable) -> void:
 	var reach: float = LoaderMath.flat_reach(Vector3(10.0, 6.0, 0.0), config)
 	check.call(reach > 3.0 and reach < 3.6, "flat_reach of a (10, 6) discharge is about 3.3 m (got %.2f)" % reach)
 	check.call(LoaderMath.flat_reach(Vector3(NAN, 1.0, 0.0), config) == 0.0, "flat_reach of a non-finite velocity is 0")
-
-	# Live: released at 6 m height, no input; the real landing is within 0.5 m of the predicted floor hit.
-	await tree.process_frame
-	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root, Vector3(80.0, 1.0, 80.0))
-	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(0.0, 6.0, 0.0))
-	await tree.process_frame
-	Fixtures.set_energy(player, 3)
-	player.debug_loader_direction = Vector3(0.8, 0.3, 0.2)
-	await Fixtures.wait_physics(tree, 2)
-	Input.action_press(&"loader")
-	var entered: int = await Fixtures.wait_until(tree, func() -> bool: return player.loader_active(), 6)
-	check.call(entered >= 0, "the air press enters the Loader")
-	await Fixtures.wait_physics(tree, 10)
-	var space: PhysicsDirectSpaceState3D = player.get_world_3d().direct_space_state
-	var predicted: Vector3 = Vector3.ZERO
-	var released_at: Vector3 = Vector3.ZERO
-	Input.action_release(&"loader")
-	# The Loader state writes the velocity on the release tick; predict from that moment's position and velocity.
-	await Fixtures.wait_until(tree, func() -> bool: return not player.loader_active(), 6)
-	released_at = player.global_position
-	var velocity: Vector3 = Vector3(player.move_velocity.x, player.vertical_speed, player.move_velocity.z)
-	var path: PackedVector3Array = LoaderMath.trajectory(released_at, velocity, config, dt, 400, space, PhysicsLayers.WORLD)
-	predicted = path[path.size() - 1] if not path.is_empty() else Vector3.INF
-	await Fixtures.wait_until(tree, func() -> bool: return player.is_on_floor(), 240)
-	var landed: Vector2 = Vector2(player.global_position.x, player.global_position.z)
-	var expected: Vector2 = Vector2(predicted.x, predicted.z)
-	check.call(player.is_on_floor() and landed.distance_to(expected) <= LANDING_TOLERANCE, "the real landing %s is within %.1f m of the predicted %s (off by %.2f)" % [landed, LANDING_TOLERANCE, expected, landed.distance_to(expected)])
-	Input.action_release(&"loader")
-	Fixtures.restore_time()
-	player.queue_free()
-	await player.tree_exited
-	floor_body.queue_free()
-	await tree.process_frame

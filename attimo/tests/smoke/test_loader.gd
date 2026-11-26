@@ -1,10 +1,12 @@
 extends RefCounted
-## Plan 05-01 (HAND-04, D-01..D-03): the Loader. Holding `loader` brakes Rino on the ground (a skid of loader_skid_time) or hangs
-## Rino in the air (gravity off), the world runs at loader_slow_factor while held, and the release discharges along the camera view:
-## LoaderMath.discharge_speed(stored, min_push, bonus, max). The hold auto-discharges at loader_hold_cap of REAL time (72 ticks at
-## 60 TPS, whatever Engine.time_scale is). The bonus costs one full core and is decided at the release; an empty arm gets the
-## redirect cooldown. One use per airborne stretch (D-02), the air dash is never touched (D-03), the jump buffer never fires after
-## the release, and Engine.time_scale is 1.0 after every exit path. Every expectation derives from player.config.
+## Plan 05-01 / 05.1-11 (HAND-04, ENRG-07, ENRG-09, D-48..D-50): the Loader. Holding `loader` brakes Rino on the ground (a skid of
+## loader_skid_time) or hangs Rino in the air (gravity off), the world runs at loader_slow_factor while held, and the release
+## discharges along the camera view: a press pays step 1 (a tap = 1 step), holding pays one more step every loader_step_interval of
+## REAL time up to loader_max_steps, a press at 0 steps does not start (one refusal), an empty clock just stops the ring. The speed is
+## LoaderMath.discharge_speed(v, push, n, push_step, k, cap), the flight is a straight gravity-free line of loader_flight_distance[n]
+## plus the overflow, then gravity resumes. The hold auto-discharges at loader_hold_cap of REAL time (72 ticks at 60 TPS, whatever
+## Engine.time_scale is). One use per airborne stretch (D-02), the air dash is never touched (D-03), the jump buffer never fires
+## after the release, and Engine.time_scale is 1.0 after every exit path. Every expectation derives from player.config.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 const SHIPPED_TPS: int = 60
@@ -20,6 +22,8 @@ var _player: PlayerController
 var _started: Array[Dictionary] = []
 var _released: Array[Dictionary] = []
 var _spent: Array[Dictionary] = []
+var _refused: Array[Dictionary] = []
+var _on_refused: Callable
 var _on_started: Callable
 var _on_released: Callable
 var _on_spent: Callable
@@ -39,7 +43,17 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_ground_hold(tree, check)
 	await _scenario_cap_edge(tree, check)
 	await _scenario_release(tree, check)
-	await _scenario_no_bonus_edge(tree, check)
+	await _scenario_refusal(tree, check)
+	await _scenario_paid_hold(tree, check)
+	await _scenario_empty_clock(tree, check)
+	await _scenario_straight_up(tree, check)
+	await _scenario_straight_horizontal(tree, check)
+	await _scenario_wall_ends_flight(tree, check)
+	await _scenario_air_control_ignored(tree, check)
+	Engine.physics_ticks_per_second = 10
+	await _scenario_tunnelling(tree, check)
+	Engine.physics_ticks_per_second = SHIPPED_TPS
+	await _scenario_tunnelling(tree, check)
 	await _scenario_air_hang(tree, check)
 	await _scenario_ground_throw_over_ledge(tree, check)
 	await _scenario_ground_throw_then_moto_run(tree, check)
@@ -55,14 +69,16 @@ func _begin(tree: SceneTree, position: Vector3, pitch: float = -0.22, floor_size
 	_started = []
 	_released = []
 	_spent = []
+	_refused = []
 	_on_started = func(_position: Vector3, stored_speed: float, in_air: bool) -> void: _started.append({"stored_speed": stored_speed, "in_air": in_air})
-	_on_released = func(_position: Vector3, direction: Vector3, speed: float, bonus: bool) -> void:
+	_on_released = func(position: Vector3, direction: Vector3, speed: float, steps: int) -> void:
 		_released.append({
+			"position": position,
 			"direction": direction,
 			"speed": speed,
-			"bonus": bonus,
+			"steps": steps,
+			"stored": _player.loader_state().stored_velocity.length(),
 			"velocity": Vector3(_player.move_velocity.x, _player.vertical_speed, _player.move_velocity.z),
-			"cooldown": _player.loader_cooldown_timer,
 			"energy": _player.arm_energy.value,
 			"dash_available": _player.air_dash_available,
 			"expected_direction": _player.loader_direction(),
@@ -70,7 +86,9 @@ func _begin(tree: SceneTree, position: Vector3, pitch: float = -0.22, floor_size
 	_on_spent = func(amount: int, reason: StringName) -> void: _spent.append({"amount": amount, "reason": reason})
 	_bus.connect(&"loader_started", _on_started)
 	_bus.connect(&"loader_released", _on_released)
+	_on_refused = func(reason: StringName, needed: int) -> void: _refused.append({"reason": reason, "needed": needed})
 	_bus.connect(&"energy_spent", _on_spent)
+	_bus.connect(&"energy_refused", _on_refused)
 	_floor = Fixtures.spawn_floor(tree.root, floor_size)
 	_player = Fixtures.spawn_player(tree.root, position)
 	_rig = Fixtures.spawn_camera_rig(tree.root, _player)
@@ -91,6 +109,8 @@ func _end(tree: SceneTree, check: Callable, name: String) -> void:
 	_bus.disconnect(&"loader_started", _on_started)
 	_bus.disconnect(&"loader_released", _on_released)
 	_bus.disconnect(&"energy_spent", _on_spent)
+	_bus.disconnect(&"energy_refused", _on_refused)
+	_on_refused = Callable()
 	_on_started = Callable()
 	_on_released = Callable()
 	_on_spent = Callable()
@@ -160,16 +180,15 @@ func _scenario_cap_edge(tree: SceneTree, check: Callable) -> void:
 	await _end(tree, check, "cap edge")
 
 
-# The release: along the camera view, at the LoaderMath speed with the bonus; the bonus costs exactly one core.
+# The release (D-49): along the camera view, at the LoaderMath speed of n = 1 step (a tap-hold of a few ticks); the press paid one step.
 func _scenario_release(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree, Vector3(0.0, 0.0, 25.0))
 	var config: MovementConfig = player.config
+	Fixtures.set_energy(player, 5)
 	await _run_up(tree, player)
 	await _press_loader(tree, player)
-	var state: LoaderState = player.loader_state()
-	var stored: float = state.stored_velocity.length()
-	await Fixtures.wait_physics(tree, 20)
-	check.call(_is_loader(player), "(r1) still holding after 20 ticks")
+	await Fixtures.wait_physics(tree, 10)
+	check.call(_is_loader(player), "(r1) still holding after 10 ticks")
 	Input.action_release(&"loader")
 	await Fixtures.wait_until(tree, func() -> bool: return not _released.is_empty(), 6)
 	check.call(_released.size() == 1, "(r1) the release fired loader_released once (got %d)" % _released.size())
@@ -178,50 +197,210 @@ func _scenario_release(tree: SceneTree, check: Callable) -> void:
 		return
 	var released: Dictionary = _released[0]
 	var velocity: Vector3 = released["velocity"] as Vector3
-	var expected_direction: Vector3 = released["expected_direction"] as Vector3
-	var angle: float = rad_to_deg(velocity.angle_to(expected_direction))
+	var angle: float = rad_to_deg(velocity.angle_to(released["expected_direction"] as Vector3))
 	check.call(angle < 2.0, "(r2) the discharge points along the camera view (off by %.2f deg)" % angle)
-	var expected_speed: float = LoaderMath.discharge_speed(stored, config.loader_min_push, config.loader_bonus_speed, config.loader_max_speed)
-	check.call(absf(velocity.length() - expected_speed) < 0.05, "(r3) the discharge speed is LoaderMath.discharge_speed with the bonus %.2f (got %.2f)" % [expected_speed, velocity.length()])
-	check.call(released["bonus"] == true and absf((released["speed"] as float) - expected_speed) < 0.05, "(r3) the fact carries bonus true and the speed (%s)" % [released])
-	check.call(player.arm_energy.value == 0, "(r4) the bonus took the whole core (3 steps): energy %d" % player.arm_energy.value)
-	check.call(_spent.size() == 1 and _spent[0]["amount"] == config.loader_bonus_cost and _spent[0]["reason"] == &"loader", "(r4) energy_spent(loader_bonus_cost, loader) fired once (%s)" % [_spent])
+	var expected_speed: float = LoaderMath.discharge_speed(released["stored"] as float, config.loader_push, 1, config.loader_push_step, config.loader_speed_k, config.loader_max_speed)
+	check.call(absf(velocity.length() - expected_speed) < 0.05, "(r3) the discharge speed is the 1-step formula %.2f (got %.2f)" % [expected_speed, velocity.length()])
+	check.call(released["steps"] == 1 and absf((released["speed"] as float) - expected_speed) < 0.05, "(r3) the fact carries steps 1 and the speed (%s)" % [released])
+	check.call(player.arm_energy.value == 4, "(r4) the press paid one step: energy %d" % player.arm_energy.value)
+	check.call(_spent.size() == 1 and _spent[0]["amount"] == 1 and _spent[0]["reason"] == &"loader", "(r4) energy_spent(1, loader) fired once (%s)" % [_spent])
 	check.call(not _is_loader(player) and not (TimeFx.active_sources()).has(&"loader"), "(r5) the state is left and the Loader slow-down is released (hitstop scale %.3f)" % Engine.time_scale)
+	check.call(not ("loader_cooldown_timer" in _prop_names(player)), "(r6) the empty-arm cooldown is gone")
 	await _end(tree, check, "release")
 
 
-# Below one core there is no bonus and no spend: the arm counts as empty and the redirect cooldown starts (A7, D-04 carry-over).
-func _scenario_no_bonus_edge(tree: SceneTree, check: Callable) -> void:
-	var player: PlayerController = await _begin(tree, Vector3(0.0, 0.0, 25.0))
-	var config: MovementConfig = player.config
-	Fixtures.set_energy(player, 2)
-	await _run_up(tree, player)
+func _prop_names(player: PlayerController) -> Array[String]:
+	var names: Array[String] = []
+	for info: Dictionary in player.get_property_list():
+		names.append(info["name"] as String)
+	return names
+
+
+## A numeric player property, 0.0 while it does not exist.
+func _prop(player: PlayerController, property: StringName) -> float:
+	var value: Variant = player.get(property)
+	return 0.0 if value == null else float(value)
+
+
+# D-48 / ENRG-07: a press with 0 steps does not start the Loader and is refused exactly once.
+func _scenario_refusal(tree: SceneTree, check: Callable) -> void:
+	var player: PlayerController = await _begin(tree, Vector3(0.0, 0.0, 0.0))
+	Fixtures.set_energy(player, 0)
+	Input.action_press(&"loader")
+	await Fixtures.wait_physics(tree, 8)
+	check.call(not _is_loader(player) and _started.is_empty(), "(z1) a press at 0 steps does not start the Loader (state %s)" % player.state_machine.current.name)
+	check.call(_refused.size() == 1 and _refused[0]["reason"] == &"loader" and _refused[0]["needed"] == 1, "(z1) exactly one energy_refused(loader, 1) (%s)" % [_refused])
+	check.call(Engine.time_scale == 1.0, "(z1) no slow motion without the Loader (got %.3f)" % Engine.time_scale)
+	await _end(tree, check, "refusal")
+
+
+## Holds the Loader for `ticks` physics ticks with `energy` steps on the clock, releases and returns once the discharge fired.
+func _hold(tree: SceneTree, player: PlayerController, energy: int, ticks: int) -> void:
+	Fixtures.set_energy(player, energy)
 	await _press_loader(tree, player)
-	var stored: float = player.loader_state().stored_velocity.length()
-	await Fixtures.wait_physics(tree, 10)
+	await Fixtures.wait_physics(tree, ticks)
+
+
+# D-48: a press pays step 1, then one step per loader_step_interval of REAL time (0.3 s = 18 ticks under the 0.25 slow factor) up to 3.
+func _scenario_paid_hold(tree: SceneTree, check: Callable) -> void:
+	var player: PlayerController = await _begin(tree, Vector3(0.0, 0.0, 0.0))
+	var config: MovementConfig = player.config
+	await _hold(tree, player, 5, int(config.loader_step_interval * SHIPPED_TPS * 0.5))
+	check.call(_is_loader(player) and player.arm_energy.value == 4, "(p1) half an interval in: one step paid (energy %d)" % player.arm_energy.value)
+	await Fixtures.wait_physics(tree, ceili(config.loader_step_interval * SHIPPED_TPS * 0.5) + 2)
+	check.call(player.arm_energy.value == 3, "(p2) after one interval the second step is paid in real time (energy %d)" % player.arm_energy.value)
+	await Fixtures.wait_physics(tree, ceili(config.loader_step_interval * SHIPPED_TPS) + 2)
+	check.call(player.arm_energy.value == 2, "(p3) after two intervals the third step is paid (energy %d)" % player.arm_energy.value)
+	await Fixtures.wait_physics(tree, ceili(config.loader_step_interval * SHIPPED_TPS) + 2)
+	check.call(player.arm_energy.value == 2 and _is_loader(player), "(p4) the Loader holds at most %d steps (energy %d)" % [config.loader_max_steps, player.arm_energy.value])
 	Input.action_release(&"loader")
 	await Fixtures.wait_until(tree, func() -> bool: return not _released.is_empty(), 6)
-	check.call(_released.size() == 1 and _released[0]["bonus"] == false, "(n1) 2 steps give no bonus (%s)" % [_released])
-	check.call(player.arm_energy.value == 2 and _spent.is_empty(), "(n1) the energy stays 2 and nothing is spent (energy %d)" % player.arm_energy.value)
-	if _released.is_empty():
-		await _end(tree, check, "no bonus")
-		return
-	var velocity: Vector3 = _released[0]["velocity"] as Vector3
-	var expected_speed: float = LoaderMath.discharge_speed(stored, config.loader_min_push, 0.0, config.loader_max_speed)
-	check.call(absf(velocity.length() - expected_speed) < 0.05, "(n2) the redirect speed is max(stored, min_push) %.2f (got %.2f)" % [expected_speed, velocity.length()])
-	check.call(is_equal_approx(_released[0]["cooldown"] as float, config.loader_redirect_cooldown), "(n3) the redirect cooldown starts at %.2f (got %.3f)" % [config.loader_redirect_cooldown, _released[0]["cooldown"] as float])
-	await Fixtures.wait_physics(tree, 10)
-	var before: int = _started.size()
-	Input.action_press(&"loader")
-	await Fixtures.wait_physics(tree, 6)
-	check.call(not _is_loader(player) and _started.size() == before, "(n4) a ground press inside the cooldown does not enter the Loader (state %s)" % player.state_machine.current.name)
+	check.call(_released.size() == 1 and _released[0]["steps"] == 3, "(p5) the release carries 3 steps (%s)" % [_released])
+	var paid: int = 0
+	for entry: Dictionary in _spent:
+		paid += entry["amount"] as int
+	check.call(paid == 3 and _refused.is_empty(), "(p5) 3 steps were paid, no refusal (paid %d, refused %s)" % [paid, _refused])
+	await _end(tree, check, "paid hold")
+
+
+# D-48: with 2 steps on the clock the ring stops filling after two steps; no refusal, the release carries n = 2.
+func _scenario_empty_clock(tree: SceneTree, check: Callable) -> void:
+	var player: PlayerController = await _begin(tree, Vector3(0.0, 0.0, 0.0))
+	await _hold(tree, player, 2, 44)
+	check.call(_is_loader(player) and player.arm_energy.value == 0, "(e1) the two steps are paid and the hold goes on (energy %d)" % player.arm_energy.value)
+	check.call(_refused.is_empty(), "(e1) an empty clock does not refuse (%s)" % [_refused])
 	Input.action_release(&"loader")
+	await Fixtures.wait_until(tree, func() -> bool: return not _released.is_empty(), 6)
+	check.call(_released.size() == 1 and _released[0]["steps"] == 2, "(e2) the release carries 2 steps (%s)" % [_released])
+	await _end(tree, check, "empty clock")
+
+
+## Waits for the end of the straight flight (bounded) and returns the sampled facts.
+func _fly(tree: SceneTree, player: PlayerController, max_ticks: int) -> Dictionary:
+	var start: Vector3 = _released[0]["position"] as Vector3
+	var min_vy: float = INF
+	var max_vy: float = -INF
+	var ticks: int = 0
+	while _prop(player, &"straight_flight_left") > 0.0 and ticks < max_ticks:
+		min_vy = minf(min_vy, player.vertical_speed)
+		max_vy = maxf(max_vy, player.vertical_speed)
+		await tree.physics_frame
+		ticks += 1
+	return {"start": start, "end": player.global_position, "min_vy": min_vy, "max_vy": max_vy, "ticks": ticks}
+
+
+## Presses the Loader in the air after a drop, holds `ticks` ticks and releases; true when the discharge fired.
+func _air_throw(tree: SceneTree, check: Callable, player: PlayerController, ticks: int, label: String) -> bool:
+	if not await _air_enter(tree, check, player, label):
+		return false
+	await Fixtures.wait_physics(tree, ticks)
+	Input.action_release(&"loader")
+	await Fixtures.wait_until(tree, func() -> bool: return not _released.is_empty(), 6)
+	return not _released.is_empty()
+
+
+# D-50: n = 1 straight up reaches loader_flight_distance_1 above the release point with the vertical speed unchanged (no gravity), then gravity resumes.
+func _scenario_straight_up(tree: SceneTree, check: Callable) -> void:
+	var player: PlayerController = await _begin(tree, Vector3(0.0, 15.0, 0.0), 0.3, Vector3(200.0, 1.0, 200.0))
+	var config: MovementConfig = player.config
+	player.debug_loader_direction = Vector3.UP
+	if not await _air_throw(tree, check, player, 6, "u1"):
+		await _end(tree, check, "straight up")
+		return
+	var speed: float = _released[0]["speed"] as float
+	var flight: Dictionary = await _fly(tree, player, 200)
+	var climbed: float = (flight["end"] as Vector3).y - (flight["start"] as Vector3).y
+	check.call(_released[0]["steps"] == 1 and absf(climbed - config.loader_flight_distance_1) < 0.3, "(u2) one step flies %.1f m straight up (climbed %.2f)" % [config.loader_flight_distance_1, climbed])
+	check.call(absf((flight["min_vy"] as float) - speed) < 0.01 and absf((flight["max_vy"] as float) - speed) < 0.01, "(u3) the vertical speed stays %.2f during the flight, no gravity (%.3f .. %.3f)" % [speed, flight["min_vy"], flight["max_vy"]])
+	await Fixtures.wait_physics(tree, 6)
+	check.call(player.vertical_speed < speed - 0.5, "(u4) gravity resumes after the flight (vertical %.2f)" % player.vertical_speed)
+	await _end(tree, check, "straight up")
+
+
+# D-49 / D-50: n = 3 horizontal from a 16 m/s hang flies 14 + 8.8 = 22.8 m on a straight line (no height change), then falls.
+func _scenario_straight_horizontal(tree: SceneTree, check: Callable) -> void:
+	var player: PlayerController = await _begin(tree, Vector3(0.0, 60.0, 0.0), 0.0, Vector3(200.0, 1.0, 200.0))
+	var config: MovementConfig = player.config
+	player.debug_loader_direction = Vector3(0.0, 0.0, -1.0)
+	player.launch_along(Vector3(0.0, 0.0, -1.0), 16.0, false)
+	await Fixtures.wait_physics(tree, 1)
+	await _press_loader(tree, player)
+	await Fixtures.wait_physics(tree, 40)
+	Input.action_release(&"loader")
+	await Fixtures.wait_until(tree, func() -> bool: return not _released.is_empty(), 6)
+	check.call(not _released.is_empty() and _released[0]["steps"] == 3, "(h1) the release carries 3 steps (%s)" % [_released])
+	if _released.is_empty():
+		await _end(tree, check, "straight horizontal")
+		return
+	var stored: float = _released[0]["stored"] as float
+	var raw: float = LoaderMath.discharge_speed_uncapped(stored, config.loader_push, 3, config.loader_push_step, config.loader_speed_k)
+	var over: float = maxf(raw - config.loader_max_speed, 0.0)
+	var expected: float = config.loader_flight_distance_3 + over * config.loader_overflow_gain
+	check.call(absf((_released[0]["speed"] as float) - config.loader_max_speed) < 0.01 and over > 8.0, "(h2) the speed is capped at %.0f with an overflow of %.1f (speed %.2f)" % [config.loader_max_speed, over, _released[0]["speed"]])
+	var flight: Dictionary = await _fly(tree, player, 200)
+	var distance: float = (flight["end"] as Vector3).distance_to(flight["start"] as Vector3)
+	var drop: float = absf((flight["end"] as Vector3).y - (flight["start"] as Vector3).y)
+	check.call(absf(distance - expected) < 0.5, "(h3) the flight is %.1f m (got %.2f)" % [expected, distance])
+	check.call(drop < 0.1, "(h3) the line is straight, height change %.3f m" % drop)
+	await Fixtures.wait_physics(tree, 8)
+	check.call(player.vertical_speed < -0.3, "(h4) then it falls (vertical %.2f)" % player.vertical_speed)
+	await _end(tree, check, "straight horizontal")
+
+
+# D-50: a wall in the path ends the flight early.
+func _scenario_wall_ends_flight(tree: SceneTree, check: Callable) -> void:
+	var player: PlayerController = await _begin(tree, Vector3(0.0, 15.0, 0.0), 0.3, Vector3(200.0, 1.0, 200.0))
+	player.debug_loader_direction = Vector3(0.0, 0.0, -1.0)
+	var wall: StaticBody3D = Fixtures.spawn_box(tree.root, Vector3(20.0, 30.0, 1.0), Vector3(0.0, 15.0, -3.5))
+	if not await _air_throw(tree, check, player, 6, "w1"):
+		wall.queue_free()
+		await _end(tree, check, "wall")
+		return
+	var flight: Dictionary = await _fly(tree, player, 120)
+	check.call(_prop(player, &"straight_flight_left") <= 0.0, "(w2) the wall ended the flight (left %.2f)" % _prop(player, &"straight_flight_left"))
+	check.call(player.global_position.z > -3.0 and (flight["start"] as Vector3).distance_to(flight["end"] as Vector3) < 4.0, "(w2) Rino stopped at the wall (z %.2f)" % player.global_position.z)
+	wall.queue_free()
+	await _end(tree, check, "wall")
+
+
+# D-50: air control is suspended during the flight; steering sideways does not bend the line.
+func _scenario_air_control_ignored(tree: SceneTree, check: Callable) -> void:
+	var player: PlayerController = await _begin(tree, Vector3(0.0, 15.0, 0.0), 0.3, Vector3(200.0, 1.0, 200.0))
+	player.debug_loader_direction = Vector3(0.0, 0.0, -1.0)
+	if not await _air_throw(tree, check, player, 6, "a1"):
+		await _end(tree, check, "air control")
+		return
+	Input.action_press(&"move_left")
+	var flight: Dictionary = await _fly(tree, player, 200)
+	Input.action_release(&"move_left")
+	var sideways: float = absf((flight["end"] as Vector3).x - (flight["start"] as Vector3).x)
+	check.call(flight["ticks"] as int > ceili(player.config.loader_release_control_lock * SHIPPED_TPS) + 2, "(a2) the flight outlasts the release lock (%d ticks)" % flight["ticks"])
+	check.call(sideways < 0.05, "(a3) steering during the flight does not bend the line (sideways %.3f m)" % sideways)
+	await _end(tree, check, "air control")
+
+
+# T-05.1-34: a 22 m/s straight flight never passes a 0.2 m wall, at 60 and at 10 TPS.
+func _scenario_tunnelling(tree: SceneTree, check: Callable) -> void:
+	var tps: int = Engine.physics_ticks_per_second
+	var label: String = "%d TPS" % tps
+	var player: PlayerController = await _begin(tree, Vector3(0.0, 0.0, 0.0))
+	player.config = player.config.duplicate() as MovementConfig
+	player.config.loader_push = 30.0
+	player.debug_loader_direction = Vector3(0.0, 0.03, -1.0)
+	var wall: StaticBody3D = Fixtures.spawn_box(tree.root, Vector3(12.0, 10.0, 0.2), Vector3(0.0, 5.0, -8.0))
+	await Fixtures.wait_physics(tree, 3)
+	await _press_loader(tree, player)
 	await Fixtures.wait_physics(tree, 2)
-	var cooled: int = await Fixtures.wait_until(tree, func() -> bool: return player.loader_cooldown_timer <= 0.0, int(config.loader_redirect_cooldown * SHIPPED_TPS) + 30)
-	check.call(cooled >= 0, "(n5) the cooldown runs out")
-	var entered: int = await _press_loader(tree, player)
-	check.call(entered >= 0, "(n5) after the cooldown the press enters the Loader again")
-	await _end(tree, check, "no bonus")
+	Input.action_release(&"loader")
+	var lowest_z: float = player.global_position.z
+	for i: int in int(ceil(2.0 * float(tps))):
+		await tree.physics_frame
+		lowest_z = minf(lowest_z, player.global_position.z)
+	check.call(not _released.is_empty() and absf((_released[0]["speed"] as float) - player.config.loader_max_speed) < 0.01, "(x1) %s: the discharge is at the 22 m/s cap (%s)" % [label, _released])
+	check.call(lowest_z > -8.1, "(x2) %s: the flight never reaches the far face of the wall (lowest z %.3f, far face -8.1)" % [label, lowest_z])
+	check.call(lowest_z < -6.5, "(x2) %s: the flight did reach the wall (lowest z %.3f)" % [label, lowest_z])
+	wall.queue_free()
+	await _end(tree, check, label)
 
 
 ## Drops the player from `height`, presses the Loader while it falls and returns once the Loader is entered (or fails the check).
@@ -346,7 +525,7 @@ func _scenario_ground_throw_over_ledge(tree: SceneTree, check: Callable) -> void
 	var left: int = await Fixtures.wait_until(tree, func() -> bool: return not player.is_grounded(), 60)
 	check.call(left >= 0, "(l2) the throw carries Rino over the ledge")
 	check.call(not player.loader_available, "(l2) leaving the floor with the throw spends the airborne Loader use")
-	await Fixtures.wait_physics(tree, ceili(player.config.loader_redirect_cooldown * SHIPPED_TPS) + 2)
+	await Fixtures.wait_physics(tree, 2)
 	var before: int = _started.size()
 	Input.action_press(&"loader")
 	await Fixtures.wait_physics(tree, 4)
@@ -368,7 +547,7 @@ func _scenario_ground_throw_then_moto_run(tree: SceneTree, check: Callable) -> v
 	await Fixtures.wait_physics(tree, 3)
 	Input.action_release(&"loader")
 	await Fixtures.wait_until(tree, func() -> bool: return not _released.is_empty(), 6)
-	check.call(not _released.is_empty() and _released[0]["bonus"] == true, "(m1) the throw paid the bonus (%s)" % [_released])
+	check.call(not _released.is_empty() and _released[0]["steps"] == 1, "(m1) the throw paid one step (%s)" % [_released])
 	var settled: int = await Fixtures.wait_until(tree, func() -> bool: return not player.loader_ground_throw, 60)
 	check.call(settled >= 0 and player.arm_energy.is_moto(), "(m2) the Moto run settles the throw on the floor (moto %s, speed %.2f)" % [player.arm_energy.is_moto(), player.horizontal_speed()])
 	var left: int = await Fixtures.wait_until(tree, func() -> bool: return not player.is_grounded(), 600)
