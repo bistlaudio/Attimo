@@ -77,7 +77,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [x] **ENRG-08**: Income in whole steps: passive clock tick (+1 every 10 s), charge key R (+1 every 5 s), capsule +3, broken machine +5, +1 per steampunk booster use with a cooldown; moves that cost steps never charge (momentum charge removed)
 - [x] **ENRG-09**: The Loader is paid by holding (1-3 steps, one segment per step on a smaller ring, no trajectory line) and flies a straight line: speed = own speed + push + steps x (push step + k x own speed), capped, overflow lengthens the straight flight; the camera can look up almost vertically everywhere without flipping backward
 - [x] **ENRG-10**: The shot and the gear-disc targets are removed; left click is only the Extractor and the module switch is dormant; the force-field barrier becomes a Loader field that does not break and lets a Loader with >= 2 steps glide through with a brake
-- [ ] **KIT-04**: Cut stations removed, reworked stations replaced, showroom regrouped by layer and role with a station and smoke test per object
+- [x] **KIT-04**: Cut stations removed, reworked stations replaced, showroom regrouped by layer and role with a station and smoke test per object
 
 ### Shooting & Enemies (exact design defined in its phase)
 
@@ -227,7 +227,7 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | KIT-01 | Phase 05.1 | Complete |
 | KIT-02 | Phase 05.1 | Complete |
 | KIT-03 | Phase 05.1 | Complete |
-| KIT-04 | Phase 05.1 | Pending |
+| KIT-04 | Phase 05.1 | Complete |
 | ENRG-06 | Phase 05.1 | Complete |
 | ENRG-07 | Phase 05.1 | Complete |
 | ENRG-08 | Phase 05.1 | Complete |
