@@ -32,6 +32,9 @@ const KIT_OBJECTS: Dictionary = {
 	"res://scenes/kit/steampunk/paternoster.tscn": "res://tests/smoke/test_timed_motion.gd",
 	"res://scenes/kit/steampunk/rail_cart.tscn": "res://tests/smoke/test_timed_motion.gd",
 	"res://scenes/kit/steampunk/piston_steps.tscn": "res://tests/smoke/test_timed_motion.gd",
+	"res://scenes/kit/steampunk/pendulum.tscn": "res://tests/smoke/test_damage_push.gd",
+	"res://scenes/kit/steampunk/piston_wall.tscn": "res://tests/smoke/test_damage_push.gd",
+	"res://scenes/kit/steampunk/steam_hammer.tscn": "res://tests/smoke/test_damage_push.gd",
 	"res://scenes/kit/energy/energy_capsule.tscn": "res://tests/smoke/test_extractor.gd",
 	"res://scenes/kit/energy/broken_machine.tscn": "res://tests/smoke/test_extractor.gd",
 	"res://scenes/kit/energy/loader_field.tscn": "res://tests/smoke/test_loader_field.gd",
@@ -80,6 +83,10 @@ func run(tree: SceneTree, check: Callable) -> void:
 	# Plan 05.1-18 (D-14): the EnergyCost component has exactly its two users, the energy core (pay-in) and the attraction field (fast escape).
 	var cost_users: Array = component_users.get("EnergyCost", []) as Array
 	check.call(cost_users.size() == 2 and cost_users.has("energy/energy_core.tscn") and cost_users.has("energy/attraction_field.tscn"), "EnergyCost is found in exactly 2 scenes: energy_core and attraction_field (%s)" % [cost_users])
+
+	# Plan 05.1-20 (D-14, D-15): DamagePush has its three users so far, the pendulum, the piston wall and the steam hammer (05.1-21 adds more).
+	var push_users: Array = component_users.get("DamagePush", []) as Array
+	check.call(push_users.size() >= 2 and push_users.has("steampunk/pendulum.tscn") and push_users.has("steampunk/piston_wall.tscn") and push_users.has("steampunk/steam_hammer.tscn"), "DamagePush is found in at least the pendulum, piston wall and steam hammer scenes (%s)" % [push_users])
 
 
 func _collect(dir_path: String, into: Array[String]) -> void:

@@ -42,6 +42,8 @@ const CUT_SCENES: Array[String] = [
 	"res://scenes/mechanisms/pressure_plate.tscn",
 	"res://scenes/mechanisms/pneumatic_tube.tscn",
 	"res://scenes/mechanisms/conveyor.tscn",
+	"res://scenes/mechanisms/pendulum.tscn",
+	"res://scenes/mechanisms/piston_wall.tscn",
 	"res://scenes/mechanisms/rotating_platform.tscn",
 	"res://scenes/mechanisms/paternoster.tscn",
 	"res://scenes/mechanisms/slingshot_core.tscn",
@@ -77,6 +79,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	_check_signal_stations(gym, check)
 	_check_energy_stations(gym, check)
 	_check_platform_stations(gym, check)
+	_check_obstacle_stations(gym, check)
 	_check_cut_scenes(gym, check)
 	gym.queue_free()
 	await gym.tree_exited
@@ -155,6 +158,27 @@ func _check_platform_stations(gym: Node, check: Callable) -> void:
 			if _global_name(node) == "TimedMotion":
 				blocks += 1
 		check.call(blocks == 1, "%s holds one Timed motion block (%d)" % [station_name, blocks])
+
+
+## Plan 05.1-20: the three obstacle stations stand once under Role_Obstacles of the steampunk area, each with a Timed motion block and a DamagePush.
+func _check_obstacle_stations(gym: Node, check: Callable) -> void:
+	var zone: Node = gym.get_node_or_null("Zone_KitSteampunk")
+	var role: Node = zone.find_child("Role_Obstacles", true, false) if zone != null else null
+	check.call(role != null, "Zone_KitSteampunk has Role_Obstacles")
+	for station_name: String in ["Station_Pendulum", "Station_PistonWall", "Station_SteamHammer"]:
+		var found: Array[Node] = role.find_children(station_name, "Node3D", true, false) if role != null else []
+		check.call(found.size() == 1, "%s exists once under Role_Obstacles" % station_name)
+		if found.size() != 1:
+			continue
+		var blocks: int = 0
+		var pushes: int = 0
+		for node: Node in found[0].find_children("*", "", true, false):
+			var name_of: String = _global_name(node)
+			if name_of == "TimedMotion":
+				blocks += 1
+			elif name_of == "DamagePush":
+				pushes += 1
+		check.call(blocks == 1 and pushes == 1, "%s holds one Timed motion block and one DamagePush (%d, %d)" % [station_name, blocks, pushes])
 
 
 func _check_cut_scenes(gym: Node, check: Callable) -> void:
