@@ -81,7 +81,7 @@ func _check_trajectory(tree: SceneTree, check: Callable) -> void:
 	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root, Vector3(80.0, 1.0, 80.0))
 	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(0.0, 6.0, 0.0))
 	await tree.process_frame
-	Fixtures.set_energy(player, 25.0)
+	Fixtures.set_energy(player, 3)
 	player.debug_loader_direction = Vector3(0.8, 0.3, 0.2)
 	await Fixtures.wait_physics(tree, 2)
 	Input.action_press(&"loader")

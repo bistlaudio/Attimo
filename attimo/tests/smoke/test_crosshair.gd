@@ -65,7 +65,7 @@ func _check_loader_ring(tree: SceneTree, check: Callable) -> void:
 	tree.root.add_child(ring)
 	await Fixtures.wait_physics(tree, 10)
 	check.call(not ring.loader_ring_visible, "the Loader ring is hidden before a hold")
-	Fixtures.set_energy(player, 25.0)
+	Fixtures.set_energy(player, 3)
 	Input.action_press(&"loader")
 	await Fixtures.wait_until(tree, func() -> bool: return player.loader_active(), 6)
 	await Fixtures.wait_process(tree, 3)
@@ -85,7 +85,7 @@ func _check_loader_ring(tree: SceneTree, check: Callable) -> void:
 	# Without a core the ring is grey.
 	Fixtures.restore_time()
 	await Fixtures.wait_physics(tree, 80)
-	Fixtures.set_energy(player, 0.0)
+	Fixtures.set_energy(player, 0)
 	player.loader_cooldown_timer = 0.0
 	player.loader_available = true
 	Input.action_press(&"loader")
@@ -124,7 +124,7 @@ func _check_cage_gauge(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(0.0, 10.0, 60.0))
 	var ring: Crosshair = (load(CROSSHAIR_SCENE) as PackedScene).instantiate() as Crosshair
 	tree.root.add_child(ring)
-	Fixtures.set_energy(player, 25.0)
+	Fixtures.set_energy(player, 3)
 	await Fixtures.wait_physics(tree, 3)
 	player.teleport(CAGE_CENTRE + Vector3(-4.0, -1.0, 0.0))
 	player.launch_along(Vector3.RIGHT, 9.0, false)
@@ -164,7 +164,7 @@ func _check_cannon_quiet(tree: SceneTree, check: Callable) -> void:
 	var bus: Node = tree.root.get_node("EventBus")
 	var on_launch: Callable = func(_p: Vector3, _d: Vector3, _s: float) -> void: blast_on_launch.append(blast != null and blast.visible)
 	bus.connect(&"launched", on_launch, CONNECT_DEFERRED)
-	Fixtures.set_energy(player, 25.0)
+	Fixtures.set_energy(player, 3)
 	await Fixtures.wait_physics(tree, 3)
 	player.teleport(cannon.global_position - Vector3.RIGHT * 3.2)
 	await tree.physics_frame

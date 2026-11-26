@@ -15,8 +15,8 @@ const ROW_LABELS: Array[String] = [
 	"Coyote time", "Jump buffer", "Landing window", "Dash cooldown", "Dash-jump grace",
 	"Step 0.15 m", "Step 0.20 m",
 	"Loader redirect (standing)", "Loader redirect (run)", "Loader bonus (run)", "Loader bonus (dash)", "Loader super jump (bonus, up)", "Loader hold cap", "Loader slow motion",
-	"Passive charge 10 m/s", "Passive charge 14 m/s", "Passive charge 18 m/s", "Charge button", "Energy capsule", "Broken machine",
-	"Air dash cost", "Dash hop stage 2-3 cost", "Wall run cost", "Loader bonus cost", "Moto Perpetuo run", "Moto Perpetuo Jump 3",
+	"Passive tick", "Charge key R", "Energy capsule", "Broken machine",
+	"Dash cost", "Air dash cost", "Dash hop stage 2-3 cost", "Wall run cost", "Wall jump cost", "Loader bonus cost", "Moto Perpetuo on / off", "Respawn steps", "Moto Perpetuo run", "Moto Perpetuo Jump 3",
 	"Latency jump 60 TPS", "Latency jump 120 TPS", "Latency dash 60 TPS", "Latency dash 120 TPS",
 ]
 
@@ -35,7 +35,7 @@ func run(_tree: SceneTree, check: Callable) -> void:
 	_check_snapshot(doc, check)
 
 
-## Every editor-visible float of the tuned resource must appear as a snapshot row with its current value.
+## Every editor-visible float and int of the tuned resource must appear as a snapshot row with its current value.
 func _check_snapshot(doc: String, check: Callable) -> void:
 	var config: MovementConfig = load(CONFIG_PATH) as MovementConfig
 	check.call(config != null, "%s loads as a MovementConfig" % CONFIG_PATH)
@@ -43,10 +43,11 @@ func _check_snapshot(doc: String, check: Callable) -> void:
 		return
 	var fields: int = 0
 	for info: Dictionary in config.get_property_list():
-		if int(info["type"]) != TYPE_FLOAT or (int(info["usage"]) & PROPERTY_USAGE_EDITOR) == 0:
+		var field_type: int = int(info["type"])
+		if (field_type != TYPE_FLOAT and field_type != TYPE_INT) or (int(info["usage"]) & PROPERTY_USAGE_EDITOR) == 0:
 			continue
 		fields += 1
 		var field: String = str(info["name"])
 		var row: String = "| `%s` | %.3f |" % [field, float(config.get(field))]
 		check.call(doc.contains(row), "config snapshot row %s matches movement_default.tres; %s if it was retuned" % [row, REGENERATE_HINT])
-	check.call(fields >= 30, "the resource exposes at least 30 float fields to snapshot (got %d)" % fields)
+	check.call(fields >= 30, "the resource exposes at least 30 float and int fields to snapshot (got %d)" % fields)

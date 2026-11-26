@@ -10987,103 +10987,6 @@ camera_rig = NodePath("../../CameraRig")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Zone_Energy/FallResetEnergy"]
 shape = SubResource("BoxShape3D_txahj")
 
-[node name="Energy_Track" type="Node3D" parent="Zone_Energy"]
-metadata/at = Vector3(-125, 0, -4)
-metadata/x_from = -121.0
-metadata/x_to = -235.0
-metadata/length = 114.0
-
-[node name="Label_Energy_Track" type="Label3D" parent="Zone_Energy/Energy_Track"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -125, 3.2, -4)
-pixel_size = 0.01
-billboard = 1
-text = "Ladestrecke"
-font_size = 64
-
-[node name="Label_Energy_Track_Expect" type="Label3D" parent="Zone_Energy/Energy_Track"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -125, 2.5, -4)
-pixel_size = 0.01
-billboard = 1
-text = "Erwartet: Ab 10 m/s (Dash, Dash-Hop) lädt der Arm, normales Laufen nicht"
-font_size = 40
-
-[node name="Mark_10" type="Label3D" parent="Zone_Energy/Energy_Track"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -131, 0.6, 2.4)
-pixel_size = 0.01
-billboard = 1
-text = "10 m"
-font_size = 48
-
-[node name="Mark_20" type="Label3D" parent="Zone_Energy/Energy_Track"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -141, 0.6, 2.4)
-pixel_size = 0.01
-billboard = 1
-text = "20 m"
-font_size = 48
-
-[node name="Mark_30" type="Label3D" parent="Zone_Energy/Energy_Track"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -151, 0.6, 2.4)
-pixel_size = 0.01
-billboard = 1
-text = "30 m"
-font_size = 48
-
-[node name="Mark_40" type="Label3D" parent="Zone_Energy/Energy_Track"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -161, 0.6, 2.4)
-pixel_size = 0.01
-billboard = 1
-text = "40 m"
-font_size = 48
-
-[node name="Mark_50" type="Label3D" parent="Zone_Energy/Energy_Track"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -171, 0.6, 2.4)
-pixel_size = 0.01
-billboard = 1
-text = "50 m"
-font_size = 48
-
-[node name="Mark_60" type="Label3D" parent="Zone_Energy/Energy_Track"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -181, 0.6, 2.4)
-pixel_size = 0.01
-billboard = 1
-text = "60 m"
-font_size = 48
-
-[node name="Mark_70" type="Label3D" parent="Zone_Energy/Energy_Track"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -191, 0.6, 2.4)
-pixel_size = 0.01
-billboard = 1
-text = "70 m"
-font_size = 48
-
-[node name="Mark_80" type="Label3D" parent="Zone_Energy/Energy_Track"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -201, 0.6, 2.4)
-pixel_size = 0.01
-billboard = 1
-text = "80 m"
-font_size = 48
-
-[node name="Mark_90" type="Label3D" parent="Zone_Energy/Energy_Track"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -211, 0.6, 2.4)
-pixel_size = 0.01
-billboard = 1
-text = "90 m"
-font_size = 48
-
-[node name="Mark_100" type="Label3D" parent="Zone_Energy/Energy_Track"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -221, 0.6, 2.4)
-pixel_size = 0.01
-billboard = 1
-text = "100 m"
-font_size = 48
-
-[node name="Mark_110" type="Label3D" parent="Zone_Energy/Energy_Track"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -231, 0.6, 2.4)
-pixel_size = 0.01
-billboard = 1
-text = "110 m"
-font_size = 48
-
 [node name="Energy_Capsule" type="Node3D" parent="Zone_Energy"]
 metadata/at = Vector3(-131, 0, 12)
 
@@ -11098,7 +11001,7 @@ font_size = 64
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -131, 2.5, 12)
 pixel_size = 0.01
 billboard = 1
-text = "Erwartet: +40 in einer halben Sekunde, dann dunkel, nach 5 s wieder voll"
+text = "Erwartet: +3 Stufen, schnell, dann dunkel, nach 5 s wieder voll"
 font_size = 40
 
 [node name="Start" type="Marker3D" parent="Zone_Energy/Energy_Capsule"]
@@ -11125,7 +11028,7 @@ font_size = 64
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -143, 2.5, 12)
 pixel_size = 0.01
 billboard = 1
-text = "Erwartet: LMB halten: +60 in 2 s, dann dunkel"
+text = "Erwartet: LMB halten: +5 Stufen in etwa 2 s, dann dunkel"
 font_size = 40
 
 [node name="Start" type="Marker3D" parent="Zone_Energy/Energy_Machine"]
@@ -11134,8 +11037,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -140, 0, 12)
 [node name="Machine" type="Node3D" parent="Zone_Energy/Energy_Machine" node_paths=PackedStringArray("glow_meshes", "core") instance=ExtResource("35_xwlce")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -143, 0, 12)
 script = ExtResource("34_a6qon")
-amount = 60.0
-duration = 2.0
+amount = 5
+step_interval = 0.4
 respawn_time = 8.0
 glow_meshes = [NodePath("Lens")]
 core = NodePath("Core")
@@ -11154,7 +11057,7 @@ font_size = 64
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -155, 2.5, 12)
 pixel_size = 0.01
 billboard = 1
-text = "Erwartet: Still stehen und R halten lädt langsam, Bewegen bricht ab"
+text = "Erwartet: Still stehen und R halten gibt +1 Stufe alle 5 s, Bewegen bricht ab"
 font_size = 40
 
 [node name="Start" type="Marker3D" parent="Zone_Energy/Energy_ChargeSpot"]
@@ -11204,7 +11107,7 @@ font_size = 64
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -123, 2.5, -12)
 pixel_size = 0.01
 billboard = 1
-text = "Erwartet: Die Ringe halten dich schnell, der Arm lädt dabei"
+text = "Erwartet: Die Ringe halten dich schnell, Geschwindigkeit lädt den Arm nicht"
 font_size = 40
 
 [node name="Start" type="Marker3D" parent="Zone_Energy/Energy_BoostLine"]
@@ -11290,14 +11193,14 @@ metadata/far_edge_x = -219.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -209, 3.2, 12)
 pixel_size = 0.01
 billboard = 1
-text = "Luft-Dash kostet 10"
+text = "Luft-Dash kostet 1 Stufe"
 font_size = 64
 
 [node name="Label_Energy_AirDash_Expect" type="Label3D" parent="Zone_Energy/Energy_AirDash"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -209, 2.5, 12)
 pixel_size = 0.01
 billboard = 1
-text = "Erwartet: Leer kein Luft-Dash, mit Energie über die Grube"
+text = "Erwartet: Ohne Stufe kein Luft-Dash, mit Stufe über die Grube"
 font_size = 40
 
 [node name="Start" type="Marker3D" parent="Zone_Energy/Energy_AirDash"]
@@ -11327,14 +11230,14 @@ metadata/reach_3 = 15.548088054711776
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -129, 3.2, -22)
 pixel_size = 0.01
 billboard = 1
-text = "Dash-Hop Stufen 2-3 kosten je 15"
+text = "Dash-Hop Stufen 2-3 kosten je 1 Stufe"
 font_size = 64
 
 [node name="Label_Energy_DashHop_Expect" type="Label3D" parent="Zone_Energy/Energy_DashHop"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -129, 2.5, -22)
 pixel_size = 0.01
 billboard = 1
-text = "Erwartet: Leer nur Stufe 1, mit Energie Stufe 2 und 3"
+text = "Erwartet: Ohne Stufen nur Stufe 1, mit Stufen Stufe 2 und 3"
 font_size = 40
 
 [node name="Start" type="Marker3D" parent="Zone_Energy/Energy_DashHop"]
@@ -11379,14 +11282,14 @@ metadata/at = Vector3(-197, 0, -19)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -197, 3.2, -19)
 pixel_size = 0.01
 billboard = 1
-text = "Wandlauf nach 0,6 s"
+text = "Wandlauf: 2 Stufen beim Start, dann 1 pro Sekunde"
 font_size = 64
 
 [node name="Label_Energy_WallRun_Expect" type="Label3D" parent="Zone_Energy/Energy_WallRun"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -197, 2.5, -19)
 pixel_size = 0.01
 billboard = 1
-text = "Erwartet: Leer endet der Lauf nach 0,6 s, mit Energie hält er länger"
+text = "Erwartet: Unter 2 Stufen startet kein Lauf, ohne Stufe für den nächsten Tick fällst du"
 font_size = 40
 
 [node name="Start" type="Marker3D" parent="Zone_Energy/Energy_WallRun"]

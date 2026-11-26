@@ -105,7 +105,7 @@ func _run_and_kick(tree: SceneTree, path: String) -> Dictionary:
 	var pad: Node3D = _spawn_pad(tree, path, Vector3.ZERO)
 	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(-7.0, 2.0, START_Z))
 	await Fixtures.wait_physics(tree, 3)
-	Fixtures.set_energy(player, 40.0)
+	Fixtures.set_energy(player, 5)
 	player.launch_along(Vector3(0.6, 0.2, -0.8), 10.0, false)
 	var result: Dictionary = {"ok": false, "facing": Vector3.ZERO, "exit": Vector3.ZERO}
 	var waited: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"WallRun", 20)
@@ -171,7 +171,7 @@ func _scenario_head_clearance(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(-7.0, 2.0, START_Z))
 	var mannequin: Node3D = player.get_node("VisualRoot/Mannequin") as Node3D
 	await Fixtures.wait_physics(tree, 3)
-	Fixtures.set_energy(player, 40.0)
+	Fixtures.set_energy(player, 5)
 	player.launch_along(Vector3(0.6, 0.2, -0.8), 10.0, false)
 	var waited: int = await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name == &"WallRun", 20)
 	check.call(waited >= 0, "head clearance: the run on the plain pad starts (%d)" % waited)

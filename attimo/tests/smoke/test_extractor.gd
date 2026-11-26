@@ -31,11 +31,11 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_machine(tree, check)
 
 
-func _on_emptied(_position: Vector3, amount: float) -> void:
+func _on_emptied(_position: Vector3, amount: int) -> void:
 	_emptied.append(amount)
 
 
-func _on_gained(amount: float, source: StringName) -> void:
+func _on_gained(amount: int, source: StringName) -> void:
 	_gained.append({"amount": amount, "source": source})
 
 
@@ -113,30 +113,30 @@ func _scenario_capsule(tree: SceneTree, check: Callable) -> void:
 	var capsule: EnergySource = _place(tree, CAPSULE_SCENE, _line_point(2.5))
 	capsule.respawn_time = 2.0
 	check.call(capsule.is_in_group(&"energy_source") and capsule.is_in_group(&"mechanism"), "(1) the capsule joins the groups energy_source and mechanism")
-	check.call(is_equal_approx(capsule.amount, 40.0) and is_equal_approx(capsule.duration, 0.5), "(1) the capsule holds 40 over 0.5 s")
+	check.call(capsule.amount == 3 and is_equal_approx(capsule.step_interval, 0.15), "(1) the capsule holds 3 steps, one per 0.15 s")
 	check.call(_lens(capsule).material_override == load(GLOW_ON), "(1) a full capsule glows with glow_energy.tres")
-	Fixtures.set_energy(_player, 25.0)
+	Fixtures.set_energy(_player, 3)
 	await _equip_extractor(tree)
 	check.call(_hand.active_def.id == &"extractor", "(1) key 2 equips the Extractor")
-	var before: float = _player.arm_energy.value
+	var before: int = _player.arm_energy.value
 	await Fixtures.hold_action(tree, &"use_hand", 0.6)
 	await Fixtures.wait_physics(tree, 3)
-	var gained: float = _player.arm_energy.value - before
-	check.call(absf(gained - 40.0) <= 1.0, "(1) holding left click 0.6 s gives about +40 (got %.2f)" % gained)
+	var gained: int = _player.arm_energy.value - before
+	check.call(gained == 3, "(1) holding left click 0.6 s gives +3 steps (got %d)" % gained)
 	check.call(not capsule.is_available(), "(1) the capsule reports empty")
 	check.call(_lens(capsule).material_override == load(GLOW_OFF), "(1) the empty capsule is dark (glow_off.tres)")
 	check.call(_emptied.size() == 1, "(1) energy_source_emptied fired once (%d)" % _emptied.size())
-	var total: float = 0.0
+	var total: int = 0
 	var count: int = 0
 	for fact: Dictionary in _gained:
 		if fact["source"] == &"extractor":
-			total += float(fact["amount"])
+			total += int(fact["amount"])
 			count += 1
-	check.call(count == 1 and absf(total - 40.0) <= 1.0, "(1) energy_gained(about 40, extractor) fired once (%d times, %.2f)" % [count, total])
-	var mid: float = _player.arm_energy.value
+	check.call(count == 1 and total == 3, "(1) energy_gained(3, extractor) fired once (%d times, %d)" % [count, total])
+	var mid: int = _player.arm_energy.value
 	await Fixtures.hold_action(tree, &"use_hand", 0.5)
 	await Fixtures.wait_physics(tree, 3)
-	check.call(is_equal_approx(_player.arm_energy.value, mid) or _player.arm_energy.value - mid < 0.5, "(1) an empty capsule gives nothing more")
+	check.call(_player.arm_energy.value == mid, "(1) an empty capsule gives nothing more")
 	await Fixtures.wait_physics(tree, 120 + 3)
 	check.call(capsule.is_available(), "(1) with respawn_time 2 s the capsule is available again")
 	check.call(_lens(capsule).material_override == load(GLOW_ON), "(1) the refilled capsule glows again")
@@ -146,18 +146,18 @@ func _scenario_capsule(tree: SceneTree, check: Callable) -> void:
 func _scenario_limits(tree: SceneTree, check: Callable) -> void:
 	await _begin(tree)
 	var far: EnergySource = _place(tree, CAPSULE_SCENE, _line_point(6.0))
-	Fixtures.set_energy(_player, 25.0)
+	Fixtures.set_energy(_player, 3)
 	await _equip_extractor(tree)
 	await Fixtures.hold_action(tree, &"use_hand", 0.6)
 	await Fixtures.wait_physics(tree, 3)
-	check.call(is_equal_approx(_player.arm_energy.value, 25.0) and far.is_available(), "(2) a capsule 6 m away (range 4 m) gives nothing")
+	check.call(_player.arm_energy.value == 3 and far.is_available(), "(2) a capsule 6 m away (range 4 m) gives nothing")
 	far.queue_free()
 	await Fixtures.wait_physics(tree, 4)
 	var off: EnergySource = _place(tree, CAPSULE_SCENE, _line_point(2.5, 60.0))
 	await Fixtures.wait_physics(tree, 3)
 	await Fixtures.hold_action(tree, &"use_hand", 0.6)
 	await Fixtures.wait_physics(tree, 3)
-	check.call(is_equal_approx(_player.arm_energy.value, 25.0) and off.is_available(), "(2) a capsule 60 degrees off the crosshair gives nothing")
+	check.call(_player.arm_energy.value == 3 and off.is_available(), "(2) a capsule 60 degrees off the crosshair gives nothing")
 	check.call(_gained.is_empty(), "(2) no energy_gained fact without a drain")
 	await _end(tree)
 
@@ -165,13 +165,13 @@ func _scenario_limits(tree: SceneTree, check: Callable) -> void:
 func _scenario_full_arm(tree: SceneTree, check: Callable) -> void:
 	await _begin(tree)
 	var capsule: EnergySource = _place(tree, CAPSULE_SCENE, _line_point(2.5))
-	Fixtures.set_energy(_player, 90.0)
+	Fixtures.set_energy(_player, 11)
 	await _equip_extractor(tree)
 	await Fixtures.hold_action(tree, &"use_hand", 0.6)
 	await Fixtures.wait_physics(tree, 3)
-	check.call(is_equal_approx(_player.arm_energy.value, 100.0), "(3) the arm stops at 100 (got %.2f)" % _player.arm_energy.value)
-	check.call(capsule.is_available() and absf(capsule.remaining - 30.0) <= 0.5, "(3) the capsule keeps the remaining 30, it is not emptied (%.2f)" % capsule.remaining)
-	check.call(_emptied.is_empty(), "(3) no energy_source_emptied for a capsule that kept energy")
+	check.call(_player.arm_energy.value == 12, "(3) the arm stops at 12 (got %d)" % _player.arm_energy.value)
+	check.call(capsule.is_available() and capsule.remaining == 2, "(3) the capsule keeps the remaining 2 steps, it is not emptied (%d)" % capsule.remaining)
+	check.call(_emptied.is_empty(), "(3) no energy_source_emptied for a capsule that kept steps")
 	await _end(tree)
 
 
@@ -179,7 +179,7 @@ func _scenario_respawn(tree: SceneTree, check: Callable) -> void:
 	await _begin(tree)
 	var capsule: EnergySource = _place(tree, CAPSULE_SCENE, _line_point(2.5))
 	capsule.respawn_time = 0.0
-	Fixtures.set_energy(_player, 0.0)
+	Fixtures.set_energy(_player, 0)
 	await _equip_extractor(tree)
 	await Fixtures.hold_action(tree, &"use_hand", 0.6)
 	await Fixtures.wait_physics(tree, 3)
@@ -188,7 +188,10 @@ func _scenario_respawn(tree: SceneTree, check: Callable) -> void:
 	check.call(not capsule.is_available(), "(4) respawn_time 0 never refills within 10 s")
 	capsule.reset()
 	check.call(capsule.is_available() and _lens(capsule).material_override == load(GLOW_ON), "(4) reset() refills at once and the glow returns")
-	check.call(is_zero_approx(capsule.extract(0.0, 10.0)) and is_zero_approx(capsule.extract(NAN, 10.0)) and is_zero_approx(capsule.extract(1.0, INF)), "(4) non-finite or empty input extracts nothing")
+	capsule.remaining = 0
+	capsule.empty = true
+	check.call(capsule.take_step() == 0 and not capsule.is_available(), "(4) an empty source gives no step")
+	capsule.reset()
 	await _end(tree)
 
 
@@ -199,11 +202,11 @@ func _scenario_machine(tree: SceneTree, check: Callable) -> void:
 		await _end(tree)
 		return
 	var machine: EnergySource = _place(tree, MACHINE_SCENE, _line_point(2.5))
-	check.call(is_equal_approx(machine.amount, 60.0) and is_equal_approx(machine.duration, 2.0), "(5) the broken machine holds 60 over 2 s")
-	Fixtures.set_energy(_player, 0.0)
+	check.call(machine.amount == 5 and is_equal_approx(machine.step_interval, 0.4), "(5) the broken machine holds 5 steps, one per 0.4 s")
+	Fixtures.set_energy(_player, 0)
 	await _equip_extractor(tree)
 	await Fixtures.hold_action(tree, &"use_hand", 2.2)
 	await Fixtures.wait_physics(tree, 3)
-	check.call(absf(_player.arm_energy.value - 60.0) <= 1.0, "(5) the machine gives about +60 after 2 s (got %.2f)" % _player.arm_energy.value)
+	check.call(_player.arm_energy.value == 5, "(5) the machine gives +5 steps after 2 s (got %d)" % _player.arm_energy.value)
 	check.call(not machine.is_available() and _lens(machine).material_override == load(GLOW_OFF), "(5) the machine goes dark")
 	await _end(tree)

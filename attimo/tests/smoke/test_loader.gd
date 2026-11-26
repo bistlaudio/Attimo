@@ -67,7 +67,7 @@ func _begin(tree: SceneTree, position: Vector3, pitch: float = -0.22, floor_size
 			"dash_available": _player.air_dash_available,
 			"expected_direction": _player.loader_direction(),
 		})
-	_on_spent = func(amount: float, reason: StringName) -> void: _spent.append({"amount": amount, "reason": reason})
+	_on_spent = func(amount: int, reason: StringName) -> void: _spent.append({"amount": amount, "reason": reason})
 	_bus.connect(&"loader_started", _on_started)
 	_bus.connect(&"loader_released", _on_released)
 	_bus.connect(&"energy_spent", _on_spent)
@@ -75,7 +75,7 @@ func _begin(tree: SceneTree, position: Vector3, pitch: float = -0.22, floor_size
 	_player = Fixtures.spawn_player(tree.root, position)
 	_rig = Fixtures.spawn_camera_rig(tree.root, _player)
 	_rig.pitch = pitch
-	Fixtures.set_energy(_player, 25.0)
+	Fixtures.set_energy(_player, 3)
 	await Fixtures.wait_physics(tree, 10)
 	return _player
 
@@ -184,8 +184,8 @@ func _scenario_release(tree: SceneTree, check: Callable) -> void:
 	var expected_speed: float = LoaderMath.discharge_speed(stored, config.loader_min_push, config.loader_bonus_speed, config.loader_max_speed)
 	check.call(absf(velocity.length() - expected_speed) < 0.05, "(r3) the discharge speed is LoaderMath.discharge_speed with the bonus %.2f (got %.2f)" % [expected_speed, velocity.length()])
 	check.call(released["bonus"] == true and absf((released["speed"] as float) - expected_speed) < 0.05, "(r3) the fact carries bonus true and the speed (%s)" % [released])
-	check.call(absf(player.arm_energy.value) < 0.0001, "(r4) the bonus took the whole core: energy %.2f" % player.arm_energy.value)
-	check.call(_spent.size() == 1 and is_equal_approx(_spent[0]["amount"] as float, 25.0) and _spent[0]["reason"] == &"loader", "(r4) energy_spent(25.0, loader) fired once (%s)" % [_spent])
+	check.call(player.arm_energy.value == 0, "(r4) the bonus took the whole core (3 steps): energy %d" % player.arm_energy.value)
+	check.call(_spent.size() == 1 and _spent[0]["amount"] == config.loader_bonus_cost and _spent[0]["reason"] == &"loader", "(r4) energy_spent(loader_bonus_cost, loader) fired once (%s)" % [_spent])
 	check.call(not _is_loader(player) and not (TimeFx.active_sources()).has(&"loader"), "(r5) the state is left and the Loader slow-down is released (hitstop scale %.3f)" % Engine.time_scale)
 	await _end(tree, check, "release")
 
@@ -194,15 +194,15 @@ func _scenario_release(tree: SceneTree, check: Callable) -> void:
 func _scenario_no_bonus_edge(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree, Vector3(0.0, 0.0, 25.0))
 	var config: MovementConfig = player.config
-	Fixtures.set_energy(player, 24.9)
+	Fixtures.set_energy(player, 2)
 	await _run_up(tree, player)
 	await _press_loader(tree, player)
 	var stored: float = player.loader_state().stored_velocity.length()
 	await Fixtures.wait_physics(tree, 10)
 	Input.action_release(&"loader")
 	await Fixtures.wait_until(tree, func() -> bool: return not _released.is_empty(), 6)
-	check.call(_released.size() == 1 and _released[0]["bonus"] == false, "(n1) 24.9 energy gives no bonus (%s)" % [_released])
-	check.call(absf(player.arm_energy.value - 24.9) < 0.0001 and _spent.is_empty(), "(n1) the energy stays 24.9 and nothing is spent (energy %.3f)" % player.arm_energy.value)
+	check.call(_released.size() == 1 and _released[0]["bonus"] == false, "(n1) 2 steps give no bonus (%s)" % [_released])
+	check.call(player.arm_energy.value == 2 and _spent.is_empty(), "(n1) the energy stays 2 and nothing is spent (energy %d)" % player.arm_energy.value)
 	if _released.is_empty():
 		await _end(tree, check, "no bonus")
 		return
@@ -359,7 +359,7 @@ func _scenario_ground_throw_over_ledge(tree: SceneTree, check: Callable) -> void
 # later is a plain walk-off, and the airborne Loader use is still there.
 func _scenario_ground_throw_then_moto_run(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree, Vector3(0.0, 0.0, 15.0), -0.22, Vector3(4.0, 1.0, 40.0))
-	Fixtures.set_energy(player, 80.0)
+	Fixtures.set_energy(player, 10)
 	player.debug_loader_direction = Vector3(0.0, -0.1, -1.0)
 	Input.action_press(&"move_forward")
 	await Fixtures.wait_physics(tree, 10)

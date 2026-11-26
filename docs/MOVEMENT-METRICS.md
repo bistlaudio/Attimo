@@ -56,23 +56,23 @@ The right-click Loader (HAND-04): hold to store the momentum in slow motion, rel
 
 ## Energy
 
-> **Superseded 2026-11-25 (05.1 playtest discuss, GAME-DESIGN.md section 3):** energy becomes a clock of 12 whole steps; the 0-100 values below are the Phase 5 state and are rewritten in steps when 05.1 builds the energy clock. Do not size new stations from them.
-
-The arm energy (ENRG-01 to ENRG-05, FEEL-10): what charges it and what each move costs. Passive rows run ArmEnergy.tick at an exact horizontal speed for one second; the charge button is held 2 s in Idle; capsule and machine are drained tick by tick through EnergySource.extract; the cost rows are the config values; the Moto rows run the real Player with a full arm. The gym area Zone_Energy sizes its stations from these numbers.
+The arm energy is a clock of 12 whole steps (D-34, ENRG-06 to ENRG-08, FEEL-10): every cost and income is a whole number of steps and time appears only as tick intervals. The tick rows run ArmEnergy.tick until the next step; the capsule and machine rows take their steps through EnergySource.take_step (the Extractor moves one step per interval); the cost rows are the config values; the Moto rows run the real Player with a full arm. Moves that cost steps never add one (D-41). The gym area Zone_Energy sizes its stations from these numbers.
 
 | Verb | Value | Note |
 |---|---|---|
-| Passive charge 10 m/s | 3.000 energy/s | horizontal speed only; depends on energy_passive_start_speed 10.0, energy_passive_full_speed 18.0, energy_passive_rate_min 3.0, energy_passive_rate_max 6.0 |
-| Passive charge 14 m/s | 4.500 energy/s | horizontal speed only; depends on energy_passive_start_speed 10.0, energy_passive_full_speed 18.0, energy_passive_rate_min 3.0, energy_passive_rate_max 6.0 |
-| Passive charge 18 m/s | 6.000 energy/s | horizontal speed only; depends on energy_passive_start_speed 10.0, energy_passive_full_speed 18.0, energy_passive_rate_min 3.0, energy_passive_rate_max 6.0 |
-| Charge button | 5.000 energy/s | held in Idle without move input; depends on energy_charge_rate 5.0 |
-| Energy capsule | +40.0 in 0.50 s | Extractor drain of energy_capsule.tscn; depends on EnergySource amount and duration |
-| Broken machine | +60.0 in 2.00 s | Extractor drain of broken_machine.tscn; depends on EnergySource amount and duration |
-| Air dash cost | 10.0 | the ground dash is free; depends on air_dash_cost |
-| Dash hop stage 2-3 cost | 15.0 each | stage 1 is free, without energy the hop stays stage 1; depends on long_jump_cost |
-| Wall run cost | 15.0 energy/s | after the free 0.60 s, until wall_run_time 1.10 s; depends on wall_run_cost_per_second, wall_run_free_time |
-| Loader bonus cost | 25.0 | one full core; depends on loader_bonus_cost |
-| Moto Perpetuo run | 9.52 m/s | with a full arm (moto_threshold 50); depends on run_speed, moto_run_bonus 0.12 |
+| Passive tick | +1 step per 10.00 s | always, standing, running and in the Loader; depends on energy_passive_interval 10.0 |
+| Charge key R | +1 step per 5.00 s | held in Idle without move input, replaces the passive tick (never stacks); depends on energy_charge_interval 5.0 |
+| Energy capsule | +3 steps in 0.45 s | Extractor drain of energy_capsule.tscn, one step per 0.15 s; depends on EnergySource amount and step_interval |
+| Broken machine | +5 steps in 2.00 s | Extractor drain of broken_machine.tscn, one step per 0.40 s; depends on EnergySource amount and step_interval |
+| Dash cost | 1 step | an unpaid dash does not fire and is refused; depends on dash_cost |
+| Air dash cost | 1 step | an unpaid air dash does not fire and is refused; depends on air_dash_cost |
+| Dash hop stage 2-3 cost | 1 step each | stage 1 is free, without the steps the hop silently stays stage 1; depends on long_jump_cost |
+| Wall run cost | 2 steps, then 1 per 1.00 s | an unpaid start is refused once per wall contact, an unpaid tick drops into Fall silently; until wall_run_time 1.10 s; depends on wall_run_entry_cost, wall_run_tick_cost, wall_run_tick_interval |
+| Wall jump cost | 1 step | an unpaid wall jump is refused and consumes the buffered press; depends on wall_jump_cost |
+| Loader bonus cost | 3 steps | interim, removed with the bonus path in 05.1-11; depends on loader_bonus_cost |
+| Moto Perpetuo on / off | 6 / 4 | on at moto_threshold 6, off below moto_threshold - moto_exit_margin (5) |
+| Respawn steps | 3 | start and respawn value (ArmEnergy.CHECKPOINT_STEPS) |
+| Moto Perpetuo run | 9.52 m/s | with a full arm (moto_threshold 6); depends on run_speed, moto_run_bonus 0.12 |
 | Moto Perpetuo Jump 3 | 5.00 m apex | buffed Jump 3 with a full arm (plain Jump 3: 4.0 m); depends on moto_jump_height 5.0, moto_jump_gravity_scale 1.45 |
 
 ## Timing windows
@@ -106,10 +106,10 @@ Display, compositor and USB latency are outside the software measurement (D-22).
 
 | Action | Accumulated input on: median (ms) | on: max (ms) | off: median (ms) | off: max (ms) | Verdict |
 |---|---|---|---|---|---|
-| Latency jump 60 TPS | 13.79 | 20.84 | 13.85 | 20.14 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency jump 120 TPS | 6.99 | 14.16 | 6.87 | 13.99 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 60 TPS | 18.86 | 20.64 | 19.55 | 20.02 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 120 TPS | 5.78 | 8.09 | 5.99 | 13.32 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 60 TPS | 13.85 | 20.75 | 13.47 | 20.50 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 120 TPS | 6.68 | 13.62 | 7.00 | 13.81 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 60 TPS | 13.37 | 21.05 | 12.69 | 20.31 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 120 TPS | 6.18 | 11.27 | 6.23 | 13.78 | Target met (median <= 66 ms, max <= 100 ms) |
 
 ## Grid cross-check
 
@@ -126,7 +126,7 @@ How the numbers map onto the 1 m grid and the 4 m kit pieces. The widest gap ass
 
 ## Config snapshot
 
-Every MovementConfig float of res://resources/player/movement_default.tres at generation time.
+Every MovementConfig float and int of res://resources/player/movement_default.tres at generation time.
 
 | Field | Value |
 |---|---|
@@ -169,7 +169,6 @@ Every MovementConfig float of res://resources/player/movement_default.tres at ge
 | `loader_skid_time` | 0.100 |
 | `loader_min_push` | 12.000 |
 | `loader_bonus_speed` | 8.000 |
-| `loader_bonus_cost` | 25.000 |
 | `loader_max_speed` | 22.000 |
 | `loader_redirect_cooldown` | 1.000 |
 | `loader_release_control_lock` | 0.150 |
@@ -178,17 +177,18 @@ Every MovementConfig float of res://resources/player/movement_default.tres at ge
 | `loader_pitch_max_deg` | 75.000 |
 | `loader_camera_pullback` | 0.350 |
 | `kit_launch_scale` | 1.000 |
-| `energy_passive_start_speed` | 10.000 |
-| `energy_passive_full_speed` | 18.000 |
-| `energy_passive_rate_min` | 3.000 |
-| `energy_passive_rate_max` | 6.000 |
-| `air_dash_cost` | 10.000 |
-| `long_jump_cost` | 15.000 |
-| `wall_run_free_time` | 0.600 |
-| `wall_run_cost_per_second` | 15.000 |
-| `energy_charge_rate` | 5.000 |
-| `moto_threshold` | 50.000 |
-| `moto_exit_margin` | 2.500 |
+| `dash_cost` | 1.000 |
+| `air_dash_cost` | 1.000 |
+| `long_jump_cost` | 1.000 |
+| `wall_run_entry_cost` | 2.000 |
+| `wall_run_tick_cost` | 1.000 |
+| `wall_run_tick_interval` | 1.000 |
+| `wall_jump_cost` | 1.000 |
+| `energy_passive_interval` | 10.000 |
+| `energy_charge_interval` | 5.000 |
+| `loader_bonus_cost` | 3.000 |
+| `moto_threshold` | 6.000 |
+| `moto_exit_margin` | 1.000 |
 | `moto_run_bonus` | 0.120 |
 | `moto_jump_height` | 5.000 |
 | `moto_jump_gravity_scale` | 1.450 |

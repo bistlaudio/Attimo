@@ -166,7 +166,7 @@ func _bind_kit(block: Node3D) -> void:
 	header.text = "Kit: %s" % block.name
 	_kit_rows.add_child(header)
 	for info: Dictionary in _kit_config.get_property_list():
-		if info.type != TYPE_FLOAT or (info.usage & PROPERTY_USAGE_EDITOR) == 0 or info.hint != PROPERTY_HINT_RANGE:
+		if (info.type != TYPE_FLOAT and info.type != TYPE_INT) or (info.usage & PROPERTY_USAGE_EDITOR) == 0 or info.hint != PROPERTY_HINT_RANGE:
 			continue
 		_add_row(_kit_config, info.name as StringName, info.hint_string as String, _kit_rows, _kit_sliders, _kit_value_labels)
 
@@ -327,7 +327,7 @@ func _build_rows() -> void:
 			header.text = "- %s -" % info.name
 			_rows.add_child(header)
 			continue
-		if info.type != TYPE_FLOAT or (usage & PROPERTY_USAGE_EDITOR) == 0 or info.hint != PROPERTY_HINT_RANGE:
+		if (info.type != TYPE_FLOAT and info.type != TYPE_INT) or (usage & PROPERTY_USAGE_EDITOR) == 0 or info.hint != PROPERTY_HINT_RANGE:
 			continue
 		_add_row(_config, info.name as StringName, info.hint_string as String, _rows, _sliders, _value_labels)
 
@@ -339,7 +339,7 @@ func _build_hand_rows() -> void:
 	_hand_rows.add_child(header)
 	for info: Dictionary in _hand.get_property_list():
 		var property: StringName = info.name as StringName
-		if info.type != TYPE_FLOAT or (info.usage & PROPERTY_USAGE_EDITOR) == 0 or info.hint != PROPERTY_HINT_RANGE:
+		if (info.type != TYPE_FLOAT and info.type != TYPE_INT) or (info.usage & PROPERTY_USAGE_EDITOR) == 0 or info.hint != PROPERTY_HINT_RANGE:
 			continue
 		if not String(property).begins_with("hand_"):
 			continue
@@ -371,7 +371,7 @@ func _add_row(target: Object, property: StringName, hint_string: String, parent:
 	var value_label: Label = Label.new()
 	value_label.custom_minimum_size.x = VALUE_WIDTH
 	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	value_label.text = _format(slider.value)
+	value_label.text = "%d" % roundi(slider.value) if typeof(target.get(property)) == TYPE_INT else _format(slider.value)
 	row.add_child(value_label)
 
 	parent.add_child(row)
@@ -382,6 +382,11 @@ func _add_row(target: Object, property: StringName, hint_string: String, parent:
 ## Writes `value` into the live `target` (D-23: one tunable resource, or the HandController for the hand rows) and
 ## refreshes the value label.
 func _apply(value: float, property: StringName, target: Object, labels: Dictionary[StringName, Label]) -> void:
+	# An int property (the energy step costs) stores a whole number; the slider step is 1 but a script call may pass 2.4.
+	if typeof(target.get(property)) == TYPE_INT:
+		target.set(property, roundi(value))
+		(labels[property] as Label).text = "%d" % roundi(value)
+		return
 	target.set(property, value)
 	(labels[property] as Label).text = _format(value)
 

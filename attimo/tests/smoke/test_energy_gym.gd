@@ -1,18 +1,17 @@
 extends RefCounted
 ## Plan 05-05 (FEEL-10, ENRG-02, ENRG-03, D-22..D-24): Zone_Energy, the energy test area west of the Loader room. Static contract (zone,
-## doorway, stations, signs, fall reset), the walk route hall -> Loader room -> doorway -> Zone_Energy (rays plus a live walk), live charge
-## track and capsule checks, drain plates, the injected-move stations, capsules next to the former shot stations (kept until 05.1-13), and the sign wording.
+## doorway, stations, signs, fall reset), the walk route hall -> Loader room -> doorway -> Zone_Energy (rays plus a live walk), the live
+## capsule check (no charge track: movement no longer charges the arm, D-41), drain plates, the injected-move stations, capsules next to the former shot stations (kept until 05.1-13), and the sign wording.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
 const GYM_SCENE: String = "res://scenes/test/movement_gym.tscn"
 const X_EAST: float = -115.0
 const X_WEST: float = -239.0
-const TRACK_MIN_LENGTH: float = 100.0
 const FLOOR_TOLERANCE: float = 0.1
 ## Stations of Zone_Energy (every one a direct child with a sign and an "Erwartet:" line).
 const STATIONS: Array[String] = [
-	"Energy_Track", "Energy_Capsule", "Energy_BoostLine", "Energy_Machine", "Energy_ChargeSpot", "Energy_Drain",
+	"Energy_Capsule", "Energy_BoostLine", "Energy_Machine", "Energy_ChargeSpot", "Energy_Drain",
 	"Energy_AirDash", "Energy_DashHop", "Energy_WallRun", "Shot_TapVsFull", "Shot_Moving",
 ]
 ## Injected-move stations: a drain plate (the base version) and a capsule (the injected version) next to each.
@@ -46,13 +45,12 @@ func run(tree: SceneTree, check: Callable) -> void:
 		_check_stations(check)
 		_check_route(check)
 		await _live_walk(tree, check)
-		await _live_track(tree, check)
 		await _live_capsule(tree, check)
 		_check_capsules_near_shots(check)
 		_check_signs(check)
 		await _live_drain(tree, check)
-		await _live_air_dash(tree, check, 0.0)
-		await _live_air_dash(tree, check, 100.0)
+		await _live_air_dash(tree, check, 0)
+		await _live_air_dash(tree, check, 5)
 	_release_inputs()
 	Fixtures.restore_time()
 	_gym.queue_free()
@@ -77,31 +75,12 @@ func _check_contract(check: Callable) -> void:
 		check.call(own.y <= other.x + 0.01 or own.x >= other.y - 0.01, "FallResetEnergy and FallResetLoader do not overlap (energy %s, loader %s)" % [own, other])
 		check.call(reset.respawn != null and reset.respawn.global_position.x < X_EAST and reset.respawn.global_position.x > X_WEST, "FallResetEnergy respawns at a marker inside the zone")
 		check.call(reset.camera_rig != null, "FallResetEnergy snaps the camera rig")
-	var track: Node3D = _zone.get_node_or_null("Energy_Track") as Node3D
-	if track != null:
-		check.call(float(track.get_meta(&"length", 0.0)) >= TRACK_MIN_LENGTH, "the charge track is at least %.0f m long (got %.1f)" % [TRACK_MIN_LENGTH, float(track.get_meta(&"length", 0.0))])
-		_check_track_floor(track, check)
 
 
 ## The world x extent (min, max) of the first box shape of a fall reset.
 func _reset_x_extent(area: FallReset) -> Vector2:
 	var shape: BoxShape3D = (area.get_node("CollisionShape3D") as CollisionShape3D).shape as BoxShape3D
 	return Vector2(area.global_position.x - shape.size.x * 0.5, area.global_position.x + shape.size.x * 0.5)
-
-
-## One straight walkable strip: floor at y 0 every metre along z 0 over the whole track.
-func _check_track_floor(track: Node3D, check: Callable) -> void:
-	var space: PhysicsDirectSpaceState3D = _player.get_world_3d().direct_space_state
-	var x_from: float = float(track.get_meta(&"x_from"))
-	var x_to: float = float(track.get_meta(&"x_to"))
-	var bad: PackedFloat32Array = PackedFloat32Array()
-	var x: float = x_from
-	while x >= x_to:
-		var down: Dictionary = space.intersect_ray(PhysicsRayQueryParameters3D.create(Vector3(x, 2.0, 0.0), Vector3(x, -2.0, 0.0), PhysicsLayers.WORLD))
-		if down.is_empty() or absf((down["position"] as Vector3).y) > FLOOR_TOLERANCE:
-			bad.append(x)
-		x -= 1.0
-	check.call(bad.is_empty(), "the track floor is solid at y 0 from x %.0f to %.0f (bad: %s)" % [x_from, x_to, bad])
 
 
 func _check_stations(check: Callable) -> void:
@@ -191,7 +170,7 @@ func _face_west() -> void:
 ## Live walk: from inside the Loader room, only holding forward, through the doorway into Zone_Energy.
 func _live_walk(tree: SceneTree, check: Callable) -> void:
 	_player.call(&"respawn", Vector3(-109.0, 0.0, 0.0))
-	Fixtures.set_energy(_player, 25.0)
+	Fixtures.set_energy(_player, 3)
 	await Fixtures.wait_physics(tree, 20)
 	_face_west()
 	var lowest: float = INF
@@ -204,42 +183,7 @@ func _live_walk(tree: SceneTree, check: Callable) -> void:
 	var pos: Vector3 = _player.global_position
 	check.call(pos.x < -121.0, "walking west from the Loader room ends past x -121 (x %.2f)" % pos.x)
 	check.call(_player.is_grounded() and lowest > -0.5, "the walk never fell (lowest y %.2f)" % lowest)
-	check.call(is_equal_approx(_player.arm_energy.value, 25.0), "plain walking leaves the arm at 25 (got %.2f)" % _player.arm_energy.value)
-
-
-## Charge track: a dash-hop chain raises the arm, plain running does not.
-func _live_track(tree: SceneTree, check: Callable) -> void:
-	var track: Node3D = _zone.get_node("Energy_Track") as Node3D
-	var start: Vector3 = Vector3(float(track.get_meta(&"x_from")), 0.0, 0.0)
-	# Plain running at run_speed (below the passive start speed) for 3 s.
-	_player.call(&"respawn", start)
-	Fixtures.set_energy(_player, 25.0)
-	await Fixtures.wait_physics(tree, 20)
-	_face_west()
-	Input.action_press(&"move_forward")
-	await Fixtures.wait_physics(tree, ceili(3.0 * Engine.physics_ticks_per_second))
-	Input.action_release(&"move_forward")
-	check.call(absf(_player.arm_energy.value - 25.0) < 0.01, "plain running along the track leaves the arm at 25 (got %.3f)" % _player.arm_energy.value)
-	# A dash-hop chain from an empty arm (every hop is the free stage 1) for 3 s.
-	_player.call(&"respawn", start)
-	Fixtures.set_energy(_player, 0.0)
-	await Fixtures.wait_physics(tree, 20)
-	_face_west()
-	Input.action_press(&"move_forward")
-	var ticks: int = ceili(3.0 * Engine.physics_ticks_per_second)
-	for i: int in ticks:
-		if _player.is_grounded():
-			Input.action_press(&"dash")
-			Input.action_press(&"jump")
-			await tree.physics_frame
-			await tree.physics_frame
-			Input.action_release(&"dash")
-			Input.action_release(&"jump")
-		else:
-			await tree.physics_frame
-	Input.action_release(&"move_forward")
-	check.call(_player.arm_energy.value > 1.0, "a dash-hop chain along the track charges the arm (got %.2f)" % _player.arm_energy.value)
-	_release_inputs()
+	check.call(_player.arm_energy.value == 3, "plain walking leaves the arm at 3 steps (got %d)" % _player.arm_energy.value)
 
 
 ## Capsule: hold the Extractor at the capsule next to the entry, the arm fills; the capsule is full again after its respawn time.
@@ -251,7 +195,7 @@ func _live_capsule(tree: SceneTree, check: Callable) -> void:
 	if capsule == null:
 		return
 	_player.call(&"respawn", stand.global_position)
-	Fixtures.set_energy(_player, 25.0)
+	Fixtures.set_energy(_player, 3)
 	await Fixtures.wait_physics(tree, 20)
 	_face_west()
 	await Fixtures.wait_physics(tree, 20)
@@ -259,7 +203,7 @@ func _live_capsule(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.wait_physics(tree, 2)
 	await Fixtures.hold_action(tree, &"use_hand", 0.6)
 	await Fixtures.wait_physics(tree, 3)
-	check.call(_player.arm_energy.value >= 60.0, "draining the capsule with the Extractor gives at least 60 (got %.2f)" % _player.arm_energy.value)
+	check.call(_player.arm_energy.value == 6, "draining the capsule with the Extractor gives +3 steps (got %d)" % _player.arm_energy.value)
 	check.call(not capsule.is_available(), "the drained capsule is empty")
 	await Fixtures.wait_physics(tree, ceili(capsule.respawn_time * Engine.physics_ticks_per_second) + 10)
 	check.call(capsule.is_available(), "the capsule refills after its respawn time %.1f s" % capsule.respawn_time)
@@ -295,10 +239,10 @@ func _check_signs(check: Callable) -> void:
 		if (node as Label3D).text.begins_with("Erwartet:"):
 			expects += 1
 	# 47 since plan 05.1-02 removed the pneumatic tube station (48 before); 46 since plan 05.1-03 cut the nozzle wall and jump
-	# stations and added the steam-look wall-run pad; 45 after plan 05.1-04. 22 since plan 05.1-06 replaced the old mechanism rooms
+	# stations and added the steam-look wall-run pad; 45 after plan 05.1-04. 22 since plan 05.1-06 (21 after 05.1-08 removed Energy_Track) replaced the old mechanism rooms
 	# (30 lines) by the kit layer areas (7 steampunk stations so far; later plans add a station per object): Zone_Energy 11,
 	# Zone_Loader 4, Zone_KitSteampunk 7.
-	check.call(expects >= 22, "the gym has at least 22 'Erwartet:' lines (got %d)" % expects)
+	check.call(expects >= 21, "the gym has at least 21 'Erwartet:' lines (got %d)" % expects)
 	check.call(labels >= 40, "at least 40 labels (%d)" % labels)
 
 
@@ -306,17 +250,17 @@ func _check_signs(check: Callable) -> void:
 func _live_drain(tree: SceneTree, check: Callable) -> void:
 	var plate: Node3D = _zone.get_node("Energy_Drain/Plate") as Node3D
 	_player.call(&"respawn", plate.global_position + Vector3(0.0, 0.0, 4.0))
-	Fixtures.set_energy(_player, 60.0)
+	Fixtures.set_energy(_player, 8)
 	await Fixtures.wait_physics(tree, 20)
-	check.call(is_equal_approx(_player.arm_energy.value, 60.0), "the arm holds 60 before the plate")
+	check.call(_player.arm_energy.value == 8, "the arm holds 8 before the plate")
 	_player.call(&"respawn", plate.global_position)
-	Fixtures.set_energy(_player, 60.0)
+	Fixtures.set_energy(_player, 8)
 	await Fixtures.wait_physics(tree, 10)
-	check.call(_player.arm_energy.value == 0.0, "stepping on the drain plate sets the arm to 0 (got %.2f)" % _player.arm_energy.value)
+	check.call(_player.arm_energy.value == 0, "stepping on the drain plate sets the arm to 0 (got %d)" % _player.arm_energy.value)
 
 
 ## At the air dash pit an empty arm is refused the air dash and falls into the pit; with energy the dash carries over the gap.
-func _live_air_dash(tree: SceneTree, check: Callable, energy: float) -> void:
+func _live_air_dash(tree: SceneTree, check: Callable, energy: int) -> void:
 	var station: Node3D = _zone.get_node("Energy_AirDash") as Node3D
 	var start: Vector3 = (station.get_node("Start") as Marker3D).global_position
 	var edge_x: float = float(station.get_meta(&"platform_edge_x"))
@@ -340,7 +284,7 @@ func _live_air_dash(tree: SceneTree, check: Callable, energy: float) -> void:
 	var landed: int = await Fixtures.wait_until(tree, func() -> bool: return _player.is_on_floor() and _player.global_position.x < far_x + 4.0, 150)
 	await Fixtures.wait_physics(tree, 20)
 	Input.action_release(&"move_forward")
-	if energy <= 0.0:
+	if energy <= 0:
 		check.call(not saw_dash, "with an empty arm the air dash press is refused (no Dash state)")
 		check.call(_player.global_position.x > far_x or _player.global_position.y < -1.0 or landed < 0, "with an empty arm the pit is not crossed (x %.2f)" % _player.global_position.x)
 	else:

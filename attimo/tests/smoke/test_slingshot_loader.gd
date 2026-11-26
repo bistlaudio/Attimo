@@ -98,14 +98,14 @@ func _begin(tree: SceneTree) -> PlayerController:
 			"dash_available": _player.air_dash_available,
 			"update_count": _player.loader_state().update_count,
 		})
-	_on_spent = func(amount: float, reason: StringName) -> void: _spent.append({"amount": amount, "reason": reason})
+	_on_spent = func(amount: int, reason: StringName) -> void: _spent.append({"amount": amount, "reason": reason})
 	_bus.connect(&"loader_released", _on_released)
 	_bus.connect(&"energy_spent", _on_spent)
 	_floor = Fixtures.spawn_floor(tree.root, Vector3(300.0, 1.0, 300.0))
 	_cage = Fixtures.spawn_scene(tree.root, KIT_SCENE, CENTRE)
 	_player = Fixtures.spawn_player(tree.root, FAR)
 	_player.debug_loader_direction = THROW_DIRECTION
-	Fixtures.set_energy(_player, 25.0)
+	Fixtures.set_energy(_player, 3)
 	await Fixtures.wait_physics(tree, 3)
 	return _player
 
@@ -164,7 +164,7 @@ func _check_discharge(check: Callable, player: PlayerController, stored: float, 
 	var angle: float = rad_to_deg(velocity.angle_to(THROW_DIRECTION.normalized()))
 	check.call(angle < 1.0, "(%s) the throw goes along the view (off by %.2f deg)" % [name, angle])
 	check.call(released["bonus"] == false, "(%s) the cage adds no bonus" % name)
-	check.call(absf((released["energy"] as float) - 25.0) < 0.0001 and _spent.is_empty(), "(%s) no energy is spent or gained (energy %.3f, spent %s)" % [name, released["energy"] as float, _spent])
+	check.call(released["energy"] == 3 and _spent.is_empty(), "(%s) no energy is spent or gained (energy %d, spent %s)" % [name, released["energy"], _spent])
 	check.call(is_zero_approx(released["cooldown"] as float), "(%s) loader_cooldown_timer stays 0 (got %.3f)" % [name, released["cooldown"] as float])
 	check.call(player.loader_available, "(%s) the cage gives the Loader use back (loader_available true)" % name)
 	check.call(released["dash_available"] == dash_available and player.air_dash_available == dash_available, "(%s) air_dash_available stays %s" % [name, dash_available])

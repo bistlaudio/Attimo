@@ -43,9 +43,8 @@ const RELEASE_ACTIONS: Array[StringName] = [&"move_forward", &"move_left", &"jum
 const CAPSULE_SCENE: String = "res://scenes/mechanisms/energy_capsule.tscn"
 const MACHINE_SCENE: String = "res://scenes/mechanisms/broken_machine.tscn"
 ## Horizontal speeds the passive charge is measured at (D-05), in m/s.
-const PASSIVE_SPEEDS: Array[float] = [10.0, 14.0, 18.0]
-## Seconds the charge button is held for the charge row.
-const CHARGE_SECONDS: float = 2.0
+## Longest wait in seconds for a timed energy step (passive tick or R) before the measurement gives up.
+const TICK_WAIT_SECONDS: float = 30.0
 
 var _tree: SceneTree
 var _bus: Node
@@ -170,9 +169,17 @@ func _begin(position: Vector3 = START) -> PlayerController:
 	_floor = Fixtures.spawn_floor(_tree.root, FLOOR_SIZE)
 	var player: PlayerController = Fixtures.spawn_player(_tree.root, position)
 	await Fixtures.wait_physics(_tree, 8)
-	# The measurements are of the injected moves, not their cost: enough energy for several, below the Moto Perpetuo threshold (50).
-	player.arm_energy.reset_to(40.0)
+	# The measurements are of the injected moves, not their cost: enough steps for a dash, a hop and a wall run, below the Moto Perpetuo
+	# threshold (6), and no timed step on top (the passive tick is out of reach unless a measurement sets the shipped interval back).
+	player.config = player.config.duplicate() as MovementConfig
+	player.config.energy_passive_interval = 100000.0
+	player.arm_energy.reset_to(5)
 	return player
+
+
+## Gives the arm its measuring energy back before a dash or a hop (each costs steps now): 5, below the Moto threshold 6.
+func _top_up(player: PlayerController) -> void:
+	player.arm_energy.reset_to(5)
 
 
 ## Releases every action, disconnects the recorders and frees the scenario nodes.
@@ -351,6 +358,7 @@ func _measure_dashes() -> Dictionary:
 func _dash(player: PlayerController) -> Dictionary:
 	var result: Dictionary = {"started": false, "distance": 0.0, "duration": 0.0, "exit_speed": 0.0, "altitude": 0.0, "entry_speed": player.horizontal_speed()}
 	var before: int = _count(&"dash_started")
+	_top_up(player)
 	Fixtures.send_action_event(&"dash", true)
 	Fixtures.send_action_event(&"dash", false)
 	var started: int = await Fixtures.wait_until(_tree, func() -> bool: return _count(&"dash_started") > before and _state_is(player, &"Dash"), 12)
@@ -392,6 +400,7 @@ func _measure_long_jumps() -> Dictionary:
 ## Dash and jump pressed on the same tick (the jump stays held), then follows the long jump to its landing.
 func _dash_jump(player: PlayerController) -> Dictionary:
 	var before: int = _count(&"long_jumped")
+	_top_up(player)
 	Fixtures.send_action_event(&"dash", true)
 	Fixtures.send_action_event(&"jump", true)
 	Fixtures.send_action_event(&"dash", false)
@@ -406,6 +415,7 @@ func _dash_jump(player: PlayerController) -> Dictionary:
 ## A ground dash, then the jump in the last tick of the grace window.
 func _grace_jump(player: PlayerController) -> Dictionary:
 	var dt: float = 1.0 / float(TPS)
+	_top_up(player)
 	Fixtures.send_action_event(&"dash", true)
 	Fixtures.send_action_event(&"dash", false)
 	await Fixtures.wait_until(_tree, func() -> bool: return _state_is(player, &"Dash"), 6)
@@ -525,6 +535,7 @@ func _measure_latency(tps: int, accumulate: bool) -> Dictionary:
 	for i: int in LATENCY_PRESSES:
 		var before: int = probe.dash_samples_ms.size()
 		await _tree.create_timer(PHASE_OFFSETS[i]).timeout
+		_top_up(player)
 		Fixtures.send_action_event(&"dash", true)
 		await Fixtures.wait_until(_tree, func() -> bool: return probe.dash_samples_ms.size() > before, tps / 2)
 		Fixtures.send_action_event(&"dash", false)
@@ -542,26 +553,34 @@ func _measure_latency(tps: int, accumulate: bool) -> Dictionary:
 # --- loader (plan 05-02, FEEL-10) ------------------------------------------------------------------------
 
 const LOADER_HOLD_TICKS: int = 10
-## The energy rates of the real player (FEEL-10, D-05, D-07, D-11): passive charge per second at 10, 14 and 18 m/s through ArmEnergy.tick,
-## the charge button, the yield and duration of a capsule and a broken machine through EnergySource.extract, and the Moto Perpetuo run
+## The energy clock of the real player (FEEL-10, D-34, D-42): ticks until the next passive step and the next R step through
+## ArmEnergy.tick, the steps and the time of a capsule and a broken machine through EnergySource.take_step, and the Moto Perpetuo run
 ## speed and Jump 3 apex with a full arm.
 func _measure_energy() -> Dictionary:
 	var out: Dictionary = {}
 	var player: PlayerController = await _begin()
-	var passive: Dictionary = {}
-	for speed: float in PASSIVE_SPEEDS:
-		Fixtures.set_energy(player, 0.0)
-		for i: int in TPS:
-			player.arm_energy.tick(1.0 / float(TPS), speed, &"Run", false)
-		passive[speed] = player.arm_energy.value
-	out["passive"] = passive
-	# The charge button: held in Idle with no move input.
-	Fixtures.set_energy(player, 0.0)
-	await Fixtures.wait_physics(_tree, 4)
+	var shipped: MovementConfig = load("res://resources/player/movement_default.tres") as MovementConfig
+	player.config.energy_passive_interval = shipped.energy_passive_interval
+	var arm: ArmEnergy = player.arm_energy
+	# The player's own physics is paused so the direct ticks are the only time source.
+	player.set_physics_process(false)
+	var limit: int = int(TICK_WAIT_SECONDS * float(TPS))
+	Fixtures.set_energy(player, 0)
+	var ticks: int = 0
+	while arm.value == 0 and ticks < limit:
+		arm.tick(1.0 / float(TPS), &"Run", false)
+		ticks += 1
+	out["passive_seconds"] = float(ticks) / float(TPS)
+	# The charge key: held in Idle with no move input.
+	Fixtures.set_energy(player, 0)
 	Input.action_press(&"charge")
-	await Fixtures.wait_physics(_tree, ceili(CHARGE_SECONDS * float(TPS)))
-	out["charge"] = player.arm_energy.value / CHARGE_SECONDS
+	ticks = 0
+	while arm.value == 0 and ticks < limit:
+		arm.tick(1.0 / float(TPS), &"Idle", true)
+		ticks += 1
+	out["charge_seconds"] = float(ticks) / float(TPS)
 	Input.action_release(&"charge")
+	player.set_physics_process(true)
 	await _end(player)
 
 	out["capsule"] = _drain_source(CAPSULE_SCENE)
@@ -569,7 +588,7 @@ func _measure_energy() -> Dictionary:
 
 	# Moto Perpetuo: a full arm, the run speed and the buffed Jump 3.
 	player = await _begin()
-	Fixtures.set_energy(player, 100.0)
+	Fixtures.set_energy(player, ArmEnergy.MAX_STEPS)
 	await Fixtures.wait_physics(_tree, 4)
 	Input.action_press(&"move_forward")
 	await Fixtures.wait_physics(_tree, TPS)
@@ -579,7 +598,7 @@ func _measure_energy() -> Dictionary:
 	await _end(player)
 
 	player = await _begin()
-	Fixtures.set_energy(player, 100.0)
+	Fixtures.set_energy(player, ArmEnergy.MAX_STEPS)
 	await Fixtures.wait_physics(_tree, 4)
 	await _run_up(player)
 	await _jump_flight(player, false)
@@ -589,33 +608,27 @@ func _measure_energy() -> Dictionary:
 	return out
 
 
-## Drains an energy source scene tick by tick (no player): the yield, and the ticks the full drain takes.
+## Drains an energy source scene step by step (no player): the steps it yields and the seconds the Extractor needs (one step per
+## step_interval).
 func _drain_source(path: String) -> Dictionary:
 	var source: EnergySource = Fixtures.spawn_scene(_tree.root, path, Vector3(500.0, 0.0, 500.0)) as EnergySource
-	var total: float = 0.0
-	var ticks: int = 0
-	while source.is_available() and ticks < 10 * TPS:
-		total += source.extract(1.0 / float(TPS), 1000.0)
-		ticks += 1
-	var result: Dictionary = {"amount": total, "seconds": float(ticks) / float(TPS), "declared": source.amount, "duration": source.duration}
+	var total: int = 0
+	while source.is_available() and total < ArmEnergy.MAX_STEPS * 2:
+		total += source.take_step()
+	var result: Dictionary = {"amount": total, "seconds": float(total) * source.step_interval, "declared": source.amount, "interval": source.step_interval}
 	source.queue_free()
 	return result
 
 
 func _check_energy_invariants(config: MovementConfig, energy: Dictionary) -> void:
-	var passive: Dictionary = energy["passive"]
-	if absf(float(passive[10.0]) - config.energy_passive_rate_min) > 0.05:
-		_fail("passive charge at 10 m/s is %.3f per second, not energy_passive_rate_min %.2f" % [float(passive[10.0]), config.energy_passive_rate_min])
-	if absf(float(passive[18.0]) - config.energy_passive_rate_max) > 0.05:
-		_fail("passive charge at 18 m/s is %.3f per second, not energy_passive_rate_max %.2f" % [float(passive[18.0]), config.energy_passive_rate_max])
-	if float(passive[14.0]) <= float(passive[10.0]) or float(passive[14.0]) >= float(passive[18.0]):
-		_fail("passive charge at 14 m/s (%.3f) is not between the 10 and 18 m/s rows" % float(passive[14.0]))
-	if absf(float(energy["charge"]) - config.energy_charge_rate) > 0.6:
-		_fail("the charge button gives %.2f per second, not energy_charge_rate %.1f" % [float(energy["charge"]), config.energy_charge_rate])
+	if absf(float(energy["passive_seconds"]) - config.energy_passive_interval) > 0.05:
+		_fail("the passive step takes %.3f s, not energy_passive_interval %.2f" % [float(energy["passive_seconds"]), config.energy_passive_interval])
+	if absf(float(energy["charge_seconds"]) - config.energy_charge_interval) > 0.05:
+		_fail("the R step takes %.3f s, not energy_charge_interval %.2f" % [float(energy["charge_seconds"]), config.energy_charge_interval])
 	for key: String in ["capsule", "machine"]:
 		var data: Dictionary = energy[key]
-		if absf(float(data["amount"]) - float(data["declared"])) > 0.01:
-			_fail("%s yields %.2f, not its amount %.1f" % [key, float(data["amount"]), float(data["declared"])])
+		if int(data["amount"]) != int(data["declared"]):
+			_fail("%s yields %d steps, not its amount %d" % [key, int(data["amount"]), int(data["declared"])])
 	if not bool(energy["moto_active"]) or absf(float(energy["moto_run"]) - config.run_speed * (1.0 + config.moto_run_bonus)) > 0.1:
 		_fail("Moto Perpetuo run speed %.2f is not run_speed x (1 + moto_run_bonus) = %.2f" % [float(energy["moto_run"]), config.run_speed * (1.0 + config.moto_run_bonus)])
 	var jump_3: Dictionary = energy["moto_jump_3"]
@@ -624,28 +637,28 @@ func _check_energy_invariants(config: MovementConfig, energy: Dictionary) -> voi
 
 
 func _append_energy_rows(lines: PackedStringArray, config: MovementConfig, energy: Dictionary) -> void:
-	var passive: Dictionary = energy["passive"]
 	var capsule: Dictionary = energy["capsule"]
 	var machine: Dictionary = energy["machine"]
 	var jump_3: Dictionary = energy["moto_jump_3"]
 	lines.append("## Energy")
 	lines.append("")
-	lines.append("> **Superseded 2026-11-25 (05.1 playtest discuss, GAME-DESIGN.md section 3):** energy becomes a clock of 12 whole steps; the 0-100 values below are the Phase 5 state and are rewritten in steps when 05.1 builds the energy clock. Do not size new stations from them.")
-	lines.append("")
-	lines.append("The arm energy (ENRG-01 to ENRG-05, FEEL-10): what charges it and what each move costs. Passive rows run ArmEnergy.tick at an exact horizontal speed for one second; the charge button is held 2 s in Idle; capsule and machine are drained tick by tick through EnergySource.extract; the cost rows are the config values; the Moto rows run the real Player with a full arm. The gym area Zone_Energy sizes its stations from these numbers.")
+	lines.append("The arm energy is a clock of 12 whole steps (D-34, ENRG-06 to ENRG-08, FEEL-10): every cost and income is a whole number of steps and time appears only as tick intervals. The tick rows run ArmEnergy.tick until the next step; the capsule and machine rows take their steps through EnergySource.take_step (the Extractor moves one step per interval); the cost rows are the config values; the Moto rows run the real Player with a full arm. Moves that cost steps never add one (D-41). The gym area Zone_Energy sizes its stations from these numbers.")
 	lines.append("")
 	lines.append("| Verb | Value | Note |")
 	lines.append("|---|---|---|")
-	for speed: float in PASSIVE_SPEEDS:
-		lines.append(_row(["Passive charge %d m/s" % roundi(speed), "%.3f energy/s" % float(passive[speed]), "horizontal speed only; depends on energy_passive_start_speed %.1f, energy_passive_full_speed %.1f, energy_passive_rate_min %.1f, energy_passive_rate_max %.1f" % [config.energy_passive_start_speed, config.energy_passive_full_speed, config.energy_passive_rate_min, config.energy_passive_rate_max]]))
-	lines.append(_row(["Charge button", "%.3f energy/s" % float(energy["charge"]), "held in Idle without move input; depends on energy_charge_rate %.1f" % config.energy_charge_rate]))
-	lines.append(_row(["Energy capsule", "+%.1f in %.2f s" % [float(capsule["amount"]), float(capsule["seconds"])], "Extractor drain of energy_capsule.tscn; depends on EnergySource amount and duration"]))
-	lines.append(_row(["Broken machine", "+%.1f in %.2f s" % [float(machine["amount"]), float(machine["seconds"])], "Extractor drain of broken_machine.tscn; depends on EnergySource amount and duration"]))
-	lines.append(_row(["Air dash cost", "%.1f" % config.air_dash_cost, "the ground dash is free; depends on air_dash_cost"]))
-	lines.append(_row(["Dash hop stage 2-3 cost", "%.1f each" % config.long_jump_cost, "stage 1 is free, without energy the hop stays stage 1; depends on long_jump_cost"]))
-	lines.append(_row(["Wall run cost", "%.1f energy/s" % config.wall_run_cost_per_second, "after the free %.2f s, until wall_run_time %.2f s; depends on wall_run_cost_per_second, wall_run_free_time" % [config.wall_run_free_time, config.wall_run_time]]))
-	lines.append(_row(["Loader bonus cost", "%.1f" % config.loader_bonus_cost, "one full core; depends on loader_bonus_cost"]))
-	lines.append(_row(["Moto Perpetuo run", "%.2f m/s" % float(energy["moto_run"]), "with a full arm (moto_threshold %.0f); depends on run_speed, moto_run_bonus %.2f" % [config.moto_threshold, config.moto_run_bonus]]))
+	lines.append(_row(["Passive tick", "+1 step per %.2f s" % float(energy["passive_seconds"]), "always, standing, running and in the Loader; depends on energy_passive_interval %.1f" % config.energy_passive_interval]))
+	lines.append(_row(["Charge key R", "+1 step per %.2f s" % float(energy["charge_seconds"]), "held in Idle without move input, replaces the passive tick (never stacks); depends on energy_charge_interval %.1f" % config.energy_charge_interval]))
+	lines.append(_row(["Energy capsule", "+%d steps in %.2f s" % [int(capsule["amount"]), float(capsule["seconds"])], "Extractor drain of energy_capsule.tscn, one step per %.2f s; depends on EnergySource amount and step_interval" % float(capsule["interval"])]))
+	lines.append(_row(["Broken machine", "+%d steps in %.2f s" % [int(machine["amount"]), float(machine["seconds"])], "Extractor drain of broken_machine.tscn, one step per %.2f s; depends on EnergySource amount and step_interval" % float(machine["interval"])]))
+	lines.append(_row(["Dash cost", "%d step" % config.dash_cost, "an unpaid dash does not fire and is refused; depends on dash_cost"]))
+	lines.append(_row(["Air dash cost", "%d step" % config.air_dash_cost, "an unpaid air dash does not fire and is refused; depends on air_dash_cost"]))
+	lines.append(_row(["Dash hop stage 2-3 cost", "%d step each" % config.long_jump_cost, "stage 1 is free, without the steps the hop silently stays stage 1; depends on long_jump_cost"]))
+	lines.append(_row(["Wall run cost", "%d steps, then %d per %.2f s" % [config.wall_run_entry_cost, config.wall_run_tick_cost, config.wall_run_tick_interval], "an unpaid start is refused once per wall contact, an unpaid tick drops into Fall silently; until wall_run_time %.2f s; depends on wall_run_entry_cost, wall_run_tick_cost, wall_run_tick_interval" % config.wall_run_time]))
+	lines.append(_row(["Wall jump cost", "%d step" % config.wall_jump_cost, "an unpaid wall jump is refused and consumes the buffered press; depends on wall_jump_cost"]))
+	lines.append(_row(["Loader bonus cost", "%d steps" % config.loader_bonus_cost, "interim, removed with the bonus path in 05.1-11; depends on loader_bonus_cost"]))
+	lines.append(_row(["Moto Perpetuo on / off", "%d / %d" % [config.moto_threshold, config.moto_threshold - config.moto_exit_margin - 1], "on at moto_threshold %d, off below moto_threshold - moto_exit_margin (%d)" % [config.moto_threshold, config.moto_threshold - config.moto_exit_margin]]))
+	lines.append(_row(["Respawn steps", "%d" % ArmEnergy.CHECKPOINT_STEPS, "start and respawn value (ArmEnergy.CHECKPOINT_STEPS)"]))
+	lines.append(_row(["Moto Perpetuo run", "%.2f m/s" % float(energy["moto_run"]), "with a full arm (moto_threshold %d); depends on run_speed, moto_run_bonus %.2f" % [config.moto_threshold, config.moto_run_bonus]]))
 	lines.append(_row(["Moto Perpetuo Jump 3", "%.2f m apex" % float(jump_3["apex"]), "buffed Jump 3 with a full arm (plain Jump 3: %.1f m); depends on moto_jump_height %.1f, moto_jump_gravity_scale %.2f" % [config.jump_3_height, config.moto_jump_height, config.moto_jump_gravity_scale]]))
 	lines.append("")
 
@@ -659,20 +672,20 @@ func _measure_loader() -> Dictionary:
 	var out: Dictionary = {}
 	var player: PlayerController = await _begin()
 	player.debug_loader_direction = Vector3(0.0, 0.0, -1.0)
-	Fixtures.set_energy(player, 0.0)
+	Fixtures.set_energy(player, 0)
 	out["redirect_standing"] = await _loader_discharge(player)
 	await _end(player)
 
 	player = await _begin()
 	player.debug_loader_direction = Vector3(0.0, 0.0, -1.0)
-	Fixtures.set_energy(player, 0.0)
+	Fixtures.set_energy(player, 0)
 	await _run_up(player)
 	out["redirect_run"] = await _loader_discharge(player)
 	await _end(player)
 
 	player = await _begin()
 	player.debug_loader_direction = Vector3(0.0, 0.0, -1.0)
-	Fixtures.set_energy(player, 25.0)
+	Fixtures.set_energy(player, 3)
 	await _run_up(player)
 	out["bonus_run"] = await _loader_discharge(player)
 	await _end(player)
@@ -680,7 +693,7 @@ func _measure_loader() -> Dictionary:
 	# Right after a ground dash: the Loader stores the dash speed, the bonus is capped at loader_max_speed.
 	player = await _begin()
 	player.debug_loader_direction = Vector3(0.0, 0.0, -1.0)
-	Fixtures.set_energy(player, 25.0)
+	Fixtures.set_energy(player, 4)
 	await _run_up(player)
 	Fixtures.send_action_event(&"dash", true)
 	Fixtures.send_action_event(&"dash", false)
@@ -691,7 +704,7 @@ func _measure_loader() -> Dictionary:
 	# Straight up with the bonus: the super jump apex above the take-off point.
 	player = await _begin()
 	player.debug_loader_direction = Vector3.UP
-	Fixtures.set_energy(player, 25.0)
+	Fixtures.set_energy(player, 3)
 	var start_y: float = player.global_position.y
 	var up: Dictionary = await _loader_discharge(player)
 	var max_y: float = player.global_position.y
@@ -707,7 +720,7 @@ func _measure_loader() -> Dictionary:
 	# The hold cap: press and never release; count the Loader updates until it discharges by itself.
 	player = await _begin()
 	player.debug_loader_direction = Vector3(0.0, 0.0, -1.0)
-	Fixtures.set_energy(player, 0.0)
+	Fixtures.set_energy(player, 0)
 	Input.action_press(&"loader")
 	var entered: int = await Fixtures.wait_until(_tree, func() -> bool: return player.loader_active(), 6)
 	var slow: float = Engine.time_scale
@@ -1013,12 +1026,12 @@ func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, d
 
 	lines.append("## Config snapshot")
 	lines.append("")
-	lines.append("Every MovementConfig float of res://resources/player/movement_default.tres at generation time.")
+	lines.append("Every MovementConfig float and int of res://resources/player/movement_default.tres at generation time.")
 	lines.append("")
 	lines.append("| Field | Value |")
 	lines.append("|---|---|")
 	for info: Dictionary in config.get_property_list():
-		if int(info["type"]) != TYPE_FLOAT or (int(info["usage"]) & PROPERTY_USAGE_EDITOR) == 0:
+		if (int(info["type"]) != TYPE_FLOAT and int(info["type"]) != TYPE_INT) or (int(info["usage"]) & PROPERTY_USAGE_EDITOR) == 0:
 			continue
 		var field: String = str(info["name"])
 		lines.append("| `%s` | %.3f |" % [field, float(config.get(field))])

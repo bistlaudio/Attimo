@@ -6,7 +6,7 @@ extends RefCounted
 ## through the Loader room into this zone is plain floor. The zone is z -26..26 like the Loader room (tiles centred on 4 j).
 ##
 ## Plan view (x east, z south, tiles on the 4 m lattice, x -115..-239, z -26..26; every station has a sign and an "Erwartet:" line):
-##   Energy_Track      z 0, x -121..-235   straight 114 m charge track with a mark every 10 m (the lane stays free of stations)
+##   (the former Energy_Track charge strip is gone: movement no longer charges the arm, D-41; the lane z 0 stays free of stations)
 ##   Energy_Capsule    (-131, 12)          capsule, 5 s respawn; Start marker 2.5 m east of it
 ##   Energy_Machine    (-143, 12)          broken machine, 8 s respawn
 ##   Energy_ChargeSpot (-155, 12)          marked plate for the charge button (R)
@@ -39,10 +39,6 @@ const X_WEST_EDGE: float = -239.0
 const Z_HALF: float = 26.0
 const RESPAWN: Vector3 = Vector3(-123.0, 0.0, 0.0)
 const FALL_Y: float = -8.0
-## The track runs along z 0 between these x (a 114 m strip, west of the doorway).
-const TRACK_FROM: float = -121.0
-const TRACK_TO: float = -235.0
-const MARK_EVERY: float = 10.0
 const CAPSULE_RESPAWN: float = 5.0
 const MACHINE_RESPAWN: float = 8.0
 ## Boost ring line: z, first x, spacing, count, ring centre height.
@@ -156,7 +152,6 @@ func _capsule(parent: Node3D, builder: RefCounted, node_name: String, at: Vector
 
 
 func _build_stations(zone: Node3D, builder: RefCounted) -> void:
-	_build_track(zone, builder)
 	_build_capsule_station(zone, builder)
 	_build_machine_station(zone, builder)
 	_build_charge_spot(zone, builder)
@@ -169,23 +164,16 @@ func _build_stations(zone: Node3D, builder: RefCounted) -> void:
 	_build_shot_moving(zone, builder)
 
 
-## The charge track: a straight 114 m strip along z 0 with a distance mark every 10 m (from the doorway side).
-func _build_track(zone: Node3D, builder: RefCounted) -> void:
-	var station: Node3D = _station(zone, builder, "Energy_Track", Vector3(TRACK_FROM - 4.0, 0.0, -4.0), "Ladestrecke", "Erwartet: Ab 10 m/s (Dash, Dash-Hop) lädt der Arm, normales Laufen nicht")
-	station.set_meta(&"x_from", TRACK_FROM)
-	station.set_meta(&"x_to", TRACK_TO)
-	station.set_meta(&"length", TRACK_FROM - TRACK_TO)
-	var distance: float = MARK_EVERY
-	while TRACK_FROM - distance >= TRACK_TO:
-		builder.call(&"_label", station, "Mark_%d" % roundi(distance), "%d m" % roundi(distance), Vector3(TRACK_FROM - distance, 0.6, 2.4), 48)
-		distance += MARK_EVERY
-
-
 func _build_capsule_station(zone: Node3D, builder: RefCounted) -> void:
 	var at: Vector3 = Vector3(-131.0, 0.0, 12.0)
-	var station: Node3D = _station(zone, builder, "Energy_Capsule", at, "Energiekapsel (Extraktor: Taste 2, LMB halten)", "Erwartet: +40 in einer halben Sekunde, dann dunkel, nach 5 s wieder voll")
+	var station: Node3D = _station(zone, builder, "Energy_Capsule", at, "Energiekapsel (Extraktor: Taste 2, LMB halten)", "Erwartet: +3 Stufen, schnell, dann dunkel, nach 5 s wieder voll")
 	_marker(station, builder, "Start", at + Vector3(2.5, 0.0, 0.0))
 	_capsule(station, builder, "Capsule", at, CAPSULE_RESPAWN)
+
+
+## "1 Stufe" or "3 Stufen" for a whole-step cost.
+func _steps(count: int) -> String:
+	return "%d Stufe" % count if count == 1 else "%d Stufen" % count
 
 
 ## "15" for whole numbers, "0,6" (German decimal comma) otherwise.
@@ -212,7 +200,7 @@ func _driven(parent: Node3D, builder: RefCounted, scene: String, node_name: Stri
 
 func _build_machine_station(zone: Node3D, builder: RefCounted) -> void:
 	var at: Vector3 = Vector3(-143.0, 0.0, 12.0)
-	var station: Node3D = _station(zone, builder, "Energy_Machine", at, "Kaputte Maschine", "Erwartet: LMB halten: +60 in 2 s, dann dunkel")
+	var station: Node3D = _station(zone, builder, "Energy_Machine", at, "Kaputte Maschine", "Erwartet: LMB halten: +5 Stufen in etwa 2 s, dann dunkel")
 	_marker(station, builder, "Start", at + Vector3(3.0, 0.0, 0.0))
 	var machine: Node3D = builder.call(&"_instance", station, MACHINE_SCENE, "Machine", at - station.position) as Node3D
 	machine.set("respawn_time", MACHINE_RESPAWN)
@@ -220,7 +208,7 @@ func _build_machine_station(zone: Node3D, builder: RefCounted) -> void:
 
 func _build_charge_spot(zone: Node3D, builder: RefCounted) -> void:
 	var at: Vector3 = Vector3(-155.0, 0.0, 12.0)
-	var station: Node3D = _station(zone, builder, "Energy_ChargeSpot", at, "Ladepunkt (R halten)", "Erwartet: Still stehen und R halten lädt langsam, Bewegen bricht ab")
+	var station: Node3D = _station(zone, builder, "Energy_ChargeSpot", at, "Ladepunkt (R halten)", "Erwartet: Still stehen und R halten gibt +1 Stufe alle 5 s, Bewegen bricht ab")
 	_marker(station, builder, "Start", at)
 	# A flat 4 x 4 m overlay marks the spot (a tinted zone floor, no collision).
 	var mark: MeshInstance3D = builder.call(&"_instance", station, ZONE_FLOOR_SCENE, "SpotMark", at + Vector3(0.0, 0.01, 0.0) - station.position, Basis.IDENTITY.scaled(Vector3(4.0 / 24.0, 1.0, 4.0 / 24.0))) as MeshInstance3D
@@ -240,7 +228,7 @@ func _build_drain_station(zone: Node3D, builder: RefCounted) -> void:
 ## Boost rings every 16 m along z -12 next to the track, always on.
 func _build_boost_line(zone: Node3D, builder: RefCounted) -> void:
 	var at: Vector3 = Vector3(-123.0, 0.0, BOOST_Z)
-	var station: Node3D = _station(zone, builder, "Energy_BoostLine", at, "Boost-Linie", "Erwartet: Die Ringe halten dich schnell, der Arm lädt dabei")
+	var station: Node3D = _station(zone, builder, "Energy_BoostLine", at, "Boost-Linie", "Erwartet: Die Ringe halten dich schnell, Geschwindigkeit lädt den Arm nicht")
 	_marker(station, builder, "Start", at)
 	for k: int in BOOST_COUNT:
 		var x: float = BOOST_X_FIRST - BOOST_SPACING * k
@@ -249,8 +237,8 @@ func _build_boost_line(zone: Node3D, builder: RefCounted) -> void:
 
 func _build_air_dash(zone: Node3D, builder: RefCounted) -> void:
 	var start: Vector3 = Vector3(-209.0, 0.0, 12.0)
-	var text: String = "Luft-Dash kostet %s" % _fmt(_config.air_dash_cost)
-	var station: Node3D = _station(zone, builder, "Energy_AirDash", start, text, "Erwartet: Leer kein Luft-Dash, mit Energie über die Grube")
+	var text: String = "Luft-Dash kostet %s" % _steps(_config.air_dash_cost)
+	var station: Node3D = _station(zone, builder, "Energy_AirDash", start, text, "Erwartet: Ohne Stufe kein Luft-Dash, mit Stufe über die Grube")
 	station.set_meta(&"gap_width", AIR_PIT.size.x)
 	station.set_meta(&"platform_edge_x", AIR_PIT.position.x + AIR_PIT.size.x)
 	station.set_meta(&"far_edge_x", AIR_PIT.position.x)
@@ -270,8 +258,8 @@ func _hop_reach(stage: int) -> float:
 
 func _build_dash_hop(zone: Node3D, builder: RefCounted) -> void:
 	var start: Vector3 = Vector3(-129.0, 0.0, -22.0)
-	var text: String = "Dash-Hop Stufen 2-3 kosten je %s" % _fmt(_config.long_jump_cost)
-	var station: Node3D = _station(zone, builder, "Energy_DashHop", start, text, "Erwartet: Leer nur Stufe 1, mit Energie Stufe 2 und 3")
+	var text: String = "Dash-Hop Stufen 2-3 kosten je %s" % _steps(_config.long_jump_cost)
+	var station: Node3D = _station(zone, builder, "Energy_DashHop", start, text, "Erwartet: Ohne Stufen nur Stufe 1, mit Stufen Stufe 2 und 3")
 	_marker(station, builder, "Start", start)
 	_plate(station, builder, "Plate", start + Vector3(2.0, 0.0, 4.0))
 	_capsule(station, builder, "Capsule", start + Vector3(-2.0, 0.0, 4.0), CAPSULE_RESPAWN)
@@ -286,8 +274,8 @@ func _build_dash_hop(zone: Node3D, builder: RefCounted) -> void:
 
 func _build_wall_run(zone: Node3D, builder: RefCounted) -> void:
 	var start: Vector3 = Vector3(-197.0, 0.0, -19.0)
-	var text: String = "Wandlauf nach %s s" % _fmt(_config.wall_run_free_time)
-	var station: Node3D = _station(zone, builder, "Energy_WallRun", start, text, "Erwartet: Leer endet der Lauf nach %s s, mit Energie hält er länger" % _fmt(_config.wall_run_free_time))
+	var text: String = "Wandlauf: %d Stufen beim Start, dann %d pro Sekunde" % [_config.wall_run_entry_cost, _config.wall_run_tick_cost]
+	var station: Node3D = _station(zone, builder, "Energy_WallRun", start, text, "Erwartet: Unter %d Stufen startet kein Lauf, ohne Stufe für den nächsten Tick fällst du" % _config.wall_run_entry_cost)
 	_marker(station, builder, "Start", start)
 	var pad_at: Vector3 = Vector3(WALL_PIT.position.x + WALL_PIT.size.x * 0.5, 0.0, WALL_PIT.position.y)
 	builder.call(&"_instance", station, PAD_SCENE, "Pad", pad_at - station.position)

@@ -67,7 +67,7 @@ func _free_all(tree: SceneTree, nodes: Array[Node]) -> void:
 func _expected_rows() -> int:
 	var count: int = 0
 	for info: Dictionary in MovementConfig.new().get_property_list():
-		if info.type == TYPE_FLOAT and (info.usage & PROPERTY_USAGE_EDITOR) != 0 and info.hint == PROPERTY_HINT_RANGE:
+		if (info.type == TYPE_FLOAT or info.type == TYPE_INT) and (info.usage & PROPERTY_USAGE_EDITOR) != 0 and info.hint == PROPERTY_HINT_RANGE:
 			count += 1
 	return count
 
@@ -90,7 +90,11 @@ func _scenario_row_count(tree: SceneTree, check: Callable) -> void:
 	var panel: TuningPanel = nodes[3] as TuningPanel
 	var expected: int = _expected_rows()
 	check.call(expected > 20, "(2) MovementConfig has many range floats (%d)" % expected)
-	check.call(panel.row_count() == expected, "(2) row_count %d equals the MovementConfig float properties %d" % [panel.row_count(), expected])
+	check.call(panel.row_count() == expected, "(2) row_count %d equals the MovementConfig float and int properties %d" % [panel.row_count(), expected])
+	# D-34: the energy step costs are int fields; they get a row and the panel stores a whole number.
+	panel.set_value(&"dash_cost", 2.4)
+	var player: PlayerController = nodes[1] as PlayerController
+	check.call(typeof(player.config.dash_cost) == TYPE_INT and player.config.dash_cost == 2, "(2) an int field (dash_cost) shows a row and set_value(2.4) stores the int 2 (got %s)" % [player.config.dash_cost])
 	await _free_all(tree, nodes)
 
 
@@ -258,7 +262,7 @@ func _kit_header(panel: TuningPanel) -> String:
 func _expected_kit_rows() -> int:
 	var count: int = 0
 	for info: Dictionary in CatchLaunchConfig.new().get_property_list():
-		if info.type == TYPE_FLOAT and (info.usage & PROPERTY_USAGE_EDITOR) != 0 and info.hint == PROPERTY_HINT_RANGE:
+		if (info.type == TYPE_FLOAT or info.type == TYPE_INT) and (info.usage & PROPERTY_USAGE_EDITOR) != 0 and info.hint == PROPERTY_HINT_RANGE:
 			count += 1
 	return count
 

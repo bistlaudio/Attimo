@@ -104,7 +104,7 @@ func _check_ledge_numbers(zone: Node3D, config: MovementConfig, check: Callable)
 
 
 ## Puts the player on the station's Launch marker with `energy` and fires a discharge along `direction` after a 10 tick hold.
-func _fire(tree: SceneTree, station: Node3D, direction: Vector3, energy: float) -> void:
+func _fire(tree: SceneTree, station: Node3D, direction: Vector3, energy: int) -> void:
 	var marker: Marker3D = station.get_node("Launch") as Marker3D
 	_player.call(&"respawn", marker.global_position)
 	Fixtures.set_energy(_player, energy)
@@ -128,7 +128,7 @@ func _live_gap(tree: SceneTree, zone: Node3D, check: Callable, with_core: bool) 
 	var gap: Node3D = zone.get_node("Loader_Gap") as Node3D
 	var far_edge: float = float(gap.get_meta(&"far_edge_x"))
 	var label: String = "gap with a core" if with_core else "gap without a core"
-	await _fire(tree, gap, gap.get_meta(&"launch_direction") as Vector3, 25.0 if with_core else 0.0)
+	await _fire(tree, gap, gap.get_meta(&"launch_direction") as Vector3, 3 if with_core else 0)
 	if with_core:
 		await Fixtures.wait_until(tree, func() -> bool: return _player.is_on_floor() and _player.global_position.x < far_edge, 240)
 		var pos: Vector3 = _player.global_position
@@ -138,7 +138,7 @@ func _live_gap(tree: SceneTree, zone: Node3D, check: Callable, with_core: bool) 
 		var respawn: Marker3D = zone.get_node("Respawn_Loader") as Marker3D
 		var reset: int = await Fixtures.wait_until(tree, func() -> bool: return _player.global_position.distance_to(respawn.global_position) < RESPAWN_TOLERANCE, 300)
 		check.call(reset >= 0, "(%s) the pit puts the player back at the respawn marker (at %s)" % [label, _player.global_position])
-		check.call(is_equal_approx(_player.arm_energy.value, 25.0), "(%s) the respawn gives exactly one core (energy %.2f)" % [label, _player.arm_energy.value])
+		check.call(_player.arm_energy.value == 3, "(%s) the respawn gives exactly 3 steps (energy %d)" % [label, _player.arm_energy.value])
 		check.call(Engine.time_scale == 1.0, "(%s) Engine.time_scale is 1.0" % label)
 	_release_inputs()
 	Fixtures.restore_time()
@@ -148,7 +148,7 @@ func _live_ledge(tree: SceneTree, zone: Node3D, check: Callable, with_core: bool
 	var station: Node3D = zone.get_node("Loader_SuperJump") as Node3D
 	var height: float = float(station.get_meta(&"ledge_height"))
 	var label: String = "ledge with a core" if with_core else "ledge without a core"
-	await _fire(tree, station, station.get_meta(&"launch_direction") as Vector3, 25.0 if with_core else 0.0)
+	await _fire(tree, station, station.get_meta(&"launch_direction") as Vector3, 3 if with_core else 0)
 	var on_ledge: Callable = func() -> bool: return _player.is_on_floor() and absf(_player.global_position.y - height) < 0.3
 	var reached: int = await Fixtures.wait_until(tree, on_ledge, 180)
 	if with_core:

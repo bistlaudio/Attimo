@@ -202,6 +202,8 @@ func _jump(tree: SceneTree, player: PlayerController, hold: bool = true, tap: bo
 
 ## Dash plus jump: a long jump. Returns the log, the stage and whether the pose spun on the entry tick.
 func _hop(tree: SceneTree, player: PlayerController, on_tick: Callable = Callable()) -> Dictionary:
+	# A dash and each hop stage cost steps: top the arm up (5, below Moto Perpetuo 6) so the stack reaches stage 3.
+	Fixtures.set_energy(player, 5)
 	Fixtures.send_action_event(&"dash", true)
 	Fixtures.send_action_event(&"jump", true)
 	Fixtures.send_action_event(&"dash", false)

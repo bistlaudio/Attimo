@@ -272,7 +272,7 @@ func _scenario_slope_dash(tree: SceneTree, check: Callable) -> void:
 	# The slope rises toward -X and is 4 m high; the plateau behind it tops out at y 4.
 	var plateau: StaticBody3D = Fixtures.spawn_box(tree.root, Vector3(8, 4, 4), Vector3(-6.0, 2.0, 0.0))
 	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(-2.5, 4.0, 0.0))
-	Fixtures.set_energy(player, 40.0)
+	Fixtures.set_energy(player, 5)
 	await Fixtures.wait_physics(tree, 8)
 	check.call(player.is_grounded() and absf(player.global_position.y - 4.0) < 0.05, "(10) the player stands on the plateau 0.5 m before the slope edge (y %.3f)" % player.global_position.y)
 	Input.action_press(&"move_right")
@@ -370,7 +370,7 @@ func _begin(tree: SceneTree, position: Vector3 = Vector3.ZERO) -> PlayerControll
 	_floor = Fixtures.spawn_floor(tree.root)
 	var player: PlayerController = Fixtures.spawn_player(tree.root, position)
 	# These scenarios measure the injected air dash, not its cost: enough for several, below the Moto Perpetuo threshold (50).
-	Fixtures.set_energy(player, 40.0)
+	Fixtures.set_energy(player, 5)
 	return player
 
 

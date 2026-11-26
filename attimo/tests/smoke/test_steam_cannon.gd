@@ -23,7 +23,7 @@ const VELOCITY_TOLERANCE: float = 0.01
 const APEX_TOLERANCE: float = 0.05
 ## The launch point may sit this far from the barrel mouth (one pull step of float error).
 const MOUTH_TOLERANCE: float = 0.05
-const ENERGY: float = 25.0
+const ENERGY: int = 3
 
 var _bus: Node
 var _launches: Array[Dictionary] = []
@@ -173,7 +173,7 @@ func _entry_run(tree: SceneTree, check: Callable, direction: Vector3, dash: bool
 	check.call(_source_of(player) == _profile_source("FIXED"), "(%s) the Loader source is FIXED (got %d)" % [name, _source_of(player)])
 	var state: LoaderState = player.loader_state()
 	var entry_speed: float = state.stored_velocity.length()
-	var energy_at_catch: float = player.arm_energy.value
+	var energy_at_catch: int = player.arm_energy.value
 	var slow: bool = false
 	var guard: int = 0
 	while _launches.is_empty() and guard < 60:

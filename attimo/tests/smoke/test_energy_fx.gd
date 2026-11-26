@@ -1,6 +1,6 @@
 extends RefCounted
 ## Energy and movement feedback (user request 2026-11-25): EnergyFx hangs three turquoise emitters on the forearm only (spend burst,
-## drain stream, charge inflow) and drives them from ArmEnergy.value; MovementPuffs throws one cream puff per jump and dash-hop stage,
+## charge inflow) and drives them from ArmEnergy.value; MovementPuffs throws one cream puff per jump and dash-hop stage,
 ## never turquoise. Every emitter carries the meta energy_fx.
 
 const Fixtures := preload("res://tests/fixtures.gd")
@@ -16,29 +16,24 @@ func run(tree: SceneTree, check: Callable) -> void:
 	check.call(fx != null and presentation != null, "the Player has EnergyFx and ArmEnergyPresentation")
 	if fx == null or presentation == null:
 		return
-	var emitters: Array[CPUParticles3D] = [fx.burst_particles, fx.stream_particles, fx.charge_particles]
+	var emitters: Array[CPUParticles3D] = [fx.burst_particles, fx.charge_particles]
 	for emitter: CPUParticles3D in emitters:
 		check.call(emitter != null and emitter.get_parent() == presentation.core_parent(), "(e1) every energy emitter hangs on the forearm")
 		if emitter != null:
 			check.call(emitter.has_meta(EnergyFx.FX_META), "(e1) %s carries the energy_fx meta" % emitter.name)
 	# Discrete spend: a big drop bursts.
-	Fixtures.set_energy(player, 75.0)
+	Fixtures.set_energy(player, 9)
 	await tree.process_frame
 	await tree.process_frame
-	Fixtures.set_energy(player, 50.0)
+	Fixtures.set_energy(player, 6)
 	await tree.process_frame
 	await tree.process_frame
-	check.call(fx.burst_particles.emitting, "(e2) a drop of 25 bursts the spend sparks")
-	# Continuous drain: small drops stream.
-	for _i: int in 5:
-		player.arm_energy.drain(0.3, &"wall_run")
-		await tree.process_frame
-	check.call(fx.drain_fx_active() and fx.stream_particles.emitting, "(e3) a continuous drain runs the stream")
-	# Income: small gains run the inflow.
-	for _i: int in 5:
-		player.arm_energy.gain(0.3, &"charge")
-		await tree.process_frame
-	check.call(fx.charge_fx_active() and fx.charge_particles.emitting, "(e4) a gain runs the charge inflow")
+	check.call(fx.burst_particles.emitting, "(e2) a spend of 3 steps bursts the spend sparks")
+	# Income: a gained step runs the inflow.
+	player.arm_energy.gain(1, &"charge")
+	await tree.process_frame
+	await tree.process_frame
+	check.call(fx.charge_fx_active() and fx.charge_particles.emitting, "(e4) a gained step runs the charge inflow")
 	# Movement puff: cream, never turquoise, tagged.
 	var puffs: MovementPuffs = player.get_node_or_null(^"MovementPuffs") as MovementPuffs
 	check.call(puffs != null, "(p1) the Player has MovementPuffs")

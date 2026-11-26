@@ -35,23 +35,23 @@ func _scenario_cores(tree: SceneTree, check: Callable, player: PlayerController,
 	check.call(presentation.core_nodes.size() == 4, "(c1) there are 4 core prisms (got %d)" % presentation.core_nodes.size())
 	for core: MeshInstance3D in presentation.core_nodes:
 		check.call(core.get_parent() == attachment, "(c1) core %s sits under the forearm attachment" % core.name)
-	Fixtures.set_energy(player, 62.5)
+	Fixtures.set_energy(player, 7)
 	await tree.process_frame
 	await tree.process_frame
 	var e0: float = presentation.core_emission(0)
 	var e1: float = presentation.core_emission(1)
 	var e2: float = presentation.core_emission(2)
 	var e3: float = presentation.core_emission(3)
-	check.call(is_equal_approx(e0, e1) and e1 > e2 and e2 > e3, "(c2) at 62.5 the cores read full, full, half, dark (%.2f %.2f %.2f %.2f)" % [e0, e1, e2, e3])
-	var mid: float = (e0 + e3) * 0.5
-	check.call(absf(e2 - mid) <= 0.1 * absf(e0 - e3) + 0.001, "(c2) the half core sits halfway between full and dark (%.3f vs %.3f)" % [e2, mid])
+	check.call(is_equal_approx(e0, e1) and e1 > e2 and e2 > e3, "(c2) at 7 steps the cores read full, full, a third, dark (%.2f %.2f %.2f %.2f)" % [e0, e1, e2, e3])
+	var third: float = e3 + (e0 - e3) / 3.0
+	check.call(absf(e2 - third) <= 0.1 * absf(e0 - e3) + 0.001, "(c2) the third-full core sits a third between dark and full (%.3f vs %.3f)" % [e2, third])
 	check.call(presentation.core_color().is_equal_approx(ENERGY_COLOR) and presentation.ENERGY_COLOR.is_equal_approx(ENERGY_COLOR), "(c3) the cores glow in the energy turquoise like HandPresentation")
 
 
 func _scenario_flash(tree: SceneTree, check: Callable, player: PlayerController, presentation: ArmEnergyPresentation) -> void:
-	Fixtures.set_energy(player, 62.5)
+	Fixtures.set_energy(player, 7)
 	await tree.create_timer(0.35).timeout
-	player.arm_energy.try_spend(25.0, &"test")
+	player.arm_energy.try_spend(3, &"test")
 	await tree.process_frame
 	await tree.process_frame
 	var flashing: float = presentation.core_flash_left(1)
@@ -61,10 +61,10 @@ func _scenario_flash(tree: SceneTree, check: Callable, player: PlayerController,
 
 
 func _scenario_flicker(tree: SceneTree, check: Callable, player: PlayerController, presentation: ArmEnergyPresentation) -> void:
-	Fixtures.set_energy(player, 0.0)
+	Fixtures.set_energy(player, 0)
 	await tree.create_timer(0.3).timeout
 	for i: int in 10:
-		player.arm_energy.refuse(&"air_dash", 10.0)
+		player.arm_energy.refuse(&"air_dash", 1)
 	await tree.process_frame
 	check.call(presentation.flicker_active(), "(g1) a refusal starts the grey flicker")
 	var onsets: int = 0
@@ -83,11 +83,11 @@ func _scenario_flicker(tree: SceneTree, check: Callable, player: PlayerControlle
 
 
 func _scenario_moto(tree: SceneTree, check: Callable, player: PlayerController, presentation: ArmEnergyPresentation) -> void:
-	Fixtures.set_energy(player, 0.0)
+	Fixtures.set_energy(player, 0)
 	await tree.create_timer(0.5).timeout
 	check.call(not presentation.moto_visible(), "(m0) the Moto glow is hidden without Moto")
 	check.call(presentation.moto_points.size() <= 3, "(m1) at most three glow points (feet and back)")
-	Fixtures.set_energy(player, 60.0)
+	Fixtures.set_energy(player, 8)
 	await tree.process_frame
 	await tree.process_frame
 	check.call(presentation.moto_visible(), "(m2) Moto on makes the glow points visible")
@@ -97,7 +97,7 @@ func _scenario_moto(tree: SceneTree, check: Callable, player: PlayerController, 
 		check.call(material != null and material.emission.is_equal_approx(ENERGY_COLOR), "(m3) glow point %s is energy turquoise" % point.name)
 	var arm_boost: float = presentation.arm_boost()
 	check.call(arm_boost > 1.0, "(m4) the arm is brighter in Moto (x%.2f)" % arm_boost)
-	Fixtures.set_energy(player, 0.0)
+	Fixtures.set_energy(player, 0)
 	await tree.create_timer(0.5).timeout
 	check.call(not presentation.moto_visible(), "(m5) the glow points are invisible within 0.5 s of leaving Moto")
 	check.call(is_equal_approx(presentation.arm_boost(), 1.0), "(m5) the arm is back to normal")

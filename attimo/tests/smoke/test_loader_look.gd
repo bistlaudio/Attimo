@@ -62,7 +62,7 @@ func _begin(tree: SceneTree, with_look: bool = true) -> void:
 		_look.world_environment = _environment
 		tree.root.add_child(_look)
 	await Fixtures.wait_physics(tree, 6)
-	Fixtures.set_energy(_player, 25.0)
+	Fixtures.set_energy(_player, 3)
 
 
 func _end(tree: SceneTree) -> void:

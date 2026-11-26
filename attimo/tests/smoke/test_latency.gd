@@ -51,6 +51,8 @@ func _run_rate(tree: SceneTree, check: Callable, tps: int) -> void:
 	for i: int in PRESSES:
 		var before: int = probe.dash_samples_ms.size()
 		await tree.create_timer(PHASE_OFFSETS[i]).timeout
+		# A dash costs 1 step: give the arm its steps back before every press (the test measures latency, not cost).
+		Fixtures.set_energy(player, 3)
 		Fixtures.send_action_event(&"dash", true)
 		await Fixtures.wait_until(tree, func() -> bool: return probe.dash_samples_ms.size() > before, tps / 2)
 		Fixtures.send_action_event(&"dash", false)
