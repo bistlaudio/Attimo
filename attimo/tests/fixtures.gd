@@ -209,9 +209,9 @@ static func restore_time() -> void:
 	time_fx.call(&"clear_all")
 
 
-## A plain SignalSource under `root` that starts `active` (05.1-13): the signal driver for logic-node tests, replacing the cut lever.
-static func spawn_signal_driver(root: Node, active: bool = false) -> SignalSource:
-	var source: SignalSource = SignalSource.new()
+## A plain Trigger under `root` that starts `active` (05.1-13): the signal driver for logic-node tests, replacing the cut lever.
+static func spawn_signal_driver(root: Node, active: bool = false) -> Trigger:
+	var source: Trigger = Trigger.new()
 	source.start_active = active
 	root.add_child(source)
 	return source

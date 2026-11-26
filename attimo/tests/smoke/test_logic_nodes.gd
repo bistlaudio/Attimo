@@ -1,6 +1,6 @@
 extends RefCounted
 ## MECH-02 / D-23: AND, OR and Timer truth tables, chaining, sources already active at load, and the
-## Array[SignalSource] export round trip through PackedScene.pack (A1).
+## Array[Trigger] export round trip through PackedScene.pack (A1).
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
@@ -25,16 +25,16 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_scenes(tree, check)
 
 
-func _source(tree: SceneTree) -> SignalSource:
-	var source: SignalSource = SignalSource.new()
+func _source(tree: SceneTree) -> Trigger:
+	var source: Trigger = Trigger.new()
 	tree.root.add_child(source)
 	return source
 
 
-func _typed(list: Array) -> Array[SignalSource]:
-	var typed: Array[SignalSource] = []
+func _typed(list: Array) -> Array[Trigger]:
+	var typed: Array[Trigger] = []
 	for item: Variant in list:
-		typed.append(item as SignalSource)
+		typed.append(item as Trigger)
 	return typed
 
 
@@ -51,8 +51,8 @@ func _free(tree: SceneTree, nodes: Array) -> void:
 
 
 func _scenario_and(tree: SceneTree, check: Callable) -> void:
-	var a: SignalSource = _source(tree)
-	var b: SignalSource = _source(tree)
+	var a: Trigger = _source(tree)
+	var b: Trigger = _source(tree)
 	var node: LogicAnd = LogicAnd.new()
 	node.sources = _typed([a, b])
 	tree.root.add_child(node)
@@ -73,8 +73,8 @@ func _scenario_and(tree: SceneTree, check: Callable) -> void:
 
 
 func _scenario_or(tree: SceneTree, check: Callable) -> void:
-	var a: SignalSource = _source(tree)
-	var b: SignalSource = _source(tree)
+	var a: Trigger = _source(tree)
+	var b: Trigger = _source(tree)
 	var node: LogicOr = LogicOr.new()
 	node.sources = _typed([a, b])
 	tree.root.add_child(node)
@@ -93,7 +93,7 @@ func _scenario_or(tree: SceneTree, check: Callable) -> void:
 	await _free(tree, [a, b, node])
 
 
-func _timer(tree: SceneTree, source: SignalSource, hold: float, retrigger: bool) -> LogicTimer:
+func _timer(tree: SceneTree, source: Trigger, hold: float, retrigger: bool) -> LogicTimer:
 	var node: LogicTimer = LogicTimer.new()
 	node.source = source
 	node.hold_time = hold
@@ -103,7 +103,7 @@ func _timer(tree: SceneTree, source: SignalSource, hold: float, retrigger: bool)
 
 
 func _scenario_timer(tree: SceneTree, check: Callable) -> void:
-	var source: SignalSource = _source(tree)
+	var source: Trigger = _source(tree)
 	var node: LogicTimer = _timer(tree, source, 0.5, true)
 	await Fixtures.wait_physics(tree, 2)
 	check.call(not node.is_active, "Timer: off before an edge")
@@ -127,7 +127,7 @@ func _scenario_timer(tree: SceneTree, check: Callable) -> void:
 	check.call(not node.is_active, "Timer: off one period after the restart")
 	await _free(tree, [source, node])
 	# Not retriggerable.
-	var source2: SignalSource = _source(tree)
+	var source2: Trigger = _source(tree)
 	var fixed: LogicTimer = _timer(tree, source2, 0.5, false)
 	await Fixtures.wait_physics(tree, 2)
 	source2.set_active(true)
@@ -140,9 +140,9 @@ func _scenario_timer(tree: SceneTree, check: Callable) -> void:
 
 
 func _scenario_chain(tree: SceneTree, check: Callable) -> void:
-	var a: SignalSource = _source(tree)
-	var b: SignalSource = _source(tree)
-	var c: SignalSource = _source(tree)
+	var a: Trigger = _source(tree)
+	var b: Trigger = _source(tree)
+	var c: Trigger = _source(tree)
 	var or_node: LogicOr = LogicOr.new()
 	or_node.sources = _typed([a, b])
 	tree.root.add_child(or_node)
@@ -162,8 +162,8 @@ func _scenario_chain(tree: SceneTree, check: Callable) -> void:
 
 
 func _scenario_initial(tree: SceneTree, check: Callable) -> void:
-	var a: SignalSource = _source(tree)
-	var b: SignalSource = _source(tree)
+	var a: Trigger = _source(tree)
+	var b: Trigger = _source(tree)
 	a.set_active(true)
 	b.set_active(true)
 	var and_node: LogicAnd = LogicAnd.new()
@@ -177,7 +177,7 @@ func _scenario_initial(tree: SceneTree, check: Callable) -> void:
 
 
 func _scenario_null_source(tree: SceneTree, check: Callable) -> void:
-	var a: SignalSource = _source(tree)
+	var a: Trigger = _source(tree)
 	var and_node: LogicAnd = LogicAnd.new()
 	and_node.sources = _typed([null, a])
 	tree.root.add_child(and_node)
@@ -198,9 +198,9 @@ func _scenario_round_trip(tree: SceneTree, check: Callable) -> void:
 		return
 	var root: Node3D = Node3D.new()
 	root.name = "Rooms"
-	var driver_a: SignalSource = SignalSource.new()
+	var driver_a: Trigger = Trigger.new()
 	driver_a.name = "DriverA"
-	var driver_b: SignalSource = SignalSource.new()
+	var driver_b: Trigger = Trigger.new()
 	driver_b.name = "DriverB"
 	var and_node: LogicAnd = (load(AND_SCENE) as PackedScene).instantiate() as LogicAnd
 	and_node.name = "And"
@@ -209,7 +209,7 @@ func _scenario_round_trip(tree: SceneTree, check: Callable) -> void:
 	for node: Node in [driver_a, driver_b, and_node, timer]:
 		root.add_child(node)
 		node.owner = root
-	var wired: Array[SignalSource] = [driver_a, driver_b]
+	var wired: Array[Trigger] = [driver_a, driver_b]
 	and_node.set("sources", wired)
 	timer.source = and_node
 	var packed: PackedScene = PackedScene.new()
@@ -218,8 +218,8 @@ func _scenario_round_trip(tree: SceneTree, check: Callable) -> void:
 	var copy: Node3D = packed.instantiate() as Node3D
 	tree.root.add_child(copy)
 	var new_and: LogicAnd = copy.get_node("And") as LogicAnd
-	var new_a: SignalSource = copy.get_node("DriverA") as SignalSource
-	var new_b: SignalSource = copy.get_node("DriverB") as SignalSource
+	var new_a: Trigger = copy.get_node("DriverA") as Trigger
+	var new_b: Trigger = copy.get_node("DriverB") as Trigger
 	var new_timer: LogicTimer = copy.get_node("Timer") as LogicTimer
 	check.call(new_and.sources.size() == 2, "the AND sources array keeps 2 entries (%d)" % new_and.sources.size())
 	check.call(new_and.sources.size() == 2 and new_and.sources[0] == new_a and new_and.sources[1] == new_b, "the AND sources point at the new driver instances")

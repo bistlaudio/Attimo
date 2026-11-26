@@ -245,7 +245,7 @@ func _deck_takeoff(tree: SceneTree, check: Callable, pivot_y: float, static_spee
 
 ## A jump off a rising paternoster cabin (engine-carried, sync_to_physics): no double count, the take-off equals the static jump.
 func _paternoster_takeoff(tree: SceneTree, check: Callable, static_speed: float) -> void:
-	var source: SignalSource = SignalSource.new()
+	var source: Trigger = Trigger.new()
 	tree.root.add_child(source)
 	var lift: Paternoster = (load(PATERNOSTER_SCENE) as PackedScene).instantiate() as Paternoster
 	lift.source = source

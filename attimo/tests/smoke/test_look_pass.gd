@@ -35,7 +35,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 		var stem: String = file.get_basename()
 		var packed: PackedScene = load(DIR + file) as PackedScene
 		var instance: Node = packed.instantiate()
-		if not (instance is Mechanism or instance is SignalSource):
+		if not (instance is Mechanism or instance is Trigger):
 			instance.free()
 			continue
 		tree.root.add_child(instance)

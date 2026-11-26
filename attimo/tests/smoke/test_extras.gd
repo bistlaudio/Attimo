@@ -1,7 +1,7 @@
 extends RefCounted
 ## MECH-05 (D-11, D-06): the three steampunk extras. The piston punch wall (Kolbenwand) knocks a player in front of it away once
 ## per slam after a telegraph, (the pressure-valve geyser moved to the Force volume block, plan 05.1-15, test_force_volume)
-## and the paternoster carries a rider up on level decks. Each is driven by an active SignalSource stub and moves the player only
+## and the paternoster carries a rider up on level decks. Each is driven by an active Trigger stub and moves the player only
 ## through knock_back, launch_along or the engine's platform carry. Real player, real geometry, 60 Hz.
 
 const Fixtures := preload("res://tests/fixtures.gd")
@@ -47,14 +47,14 @@ func _free(tree: SceneTree, nodes: Array) -> void:
 	await tree.process_frame
 
 
-func _on_source() -> SignalSource:
-	var source: SignalSource = SignalSource.new()
+func _on_source() -> Trigger:
+	var source: Trigger = Trigger.new()
 	source.start_active = true
 	return source
 
 
 func _scenario_piston(tree: SceneTree, check: Callable) -> void:
-	var source: SignalSource = _on_source()
+	var source: Trigger = _on_source()
 	tree.root.add_child(source)
 	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)
 	var piston: PistonWall = (load(PISTON_SCENE) as PackedScene).instantiate() as PistonWall
@@ -103,7 +103,7 @@ func _scenario_piston(tree: SceneTree, check: Callable) -> void:
 
 
 func _scenario_paternoster(tree: SceneTree, check: Callable) -> void:
-	var source: SignalSource = SignalSource.new()
+	var source: Trigger = Trigger.new()
 	tree.root.add_child(source)
 	var lift: Paternoster = (load(PATERNOSTER_SCENE) as PackedScene).instantiate() as Paternoster
 	lift.source = source

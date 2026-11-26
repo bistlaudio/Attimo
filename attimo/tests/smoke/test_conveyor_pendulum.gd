@@ -40,7 +40,7 @@ func _spawn(path: String, check: Callable) -> Node3D:
 
 # The pendulum knocks a player in its path once, then waits rehit_cooldown.
 func _scenario_pendulum(tree: SceneTree, check: Callable) -> void:
-	var source: SignalSource = SignalSource.new()
+	var source: Trigger = Trigger.new()
 	tree.root.add_child(source)
 	source.set_active(true)
 	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)
@@ -66,7 +66,7 @@ func _scenario_pendulum(tree: SceneTree, check: Callable) -> void:
 
 # RUN_WHILE_ON: the signal off lets the swing finish at the bottom and stop there.
 func _scenario_pendulum_stop(tree: SceneTree, check: Callable) -> void:
-	var source: SignalSource = SignalSource.new()
+	var source: Trigger = Trigger.new()
 	tree.root.add_child(source)
 	var pendulum: Pendulum = _spawn(PENDULUM_SCENE, check) as Pendulum
 	if pendulum == null:

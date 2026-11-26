@@ -1,7 +1,7 @@
 extends RefCounted
-## MECH-01 / D-15, D-17, D-26: the Mechanism base follows its SignalSource, runs the signal through _on_signal once per change,
+## MECH-01 / D-15, D-17, D-26: the Mechanism base follows its Trigger, runs the signal through _on_signal once per change,
 ## announces mechanism_changed, re-reads the source on reset without firing, and the exported source ref survives a pack round trip.
-## Since plan 05.1-13 the signal driver is a plain SignalSource fixture (the lever, valve and gear gate are cut, D-46) and the
+## Since plan 05.1-13 the signal driver is a plain Trigger fixture (the lever, valve and gear gate are cut, D-46) and the
 ## observing mechanism is a test-local Sink.
 
 const Fixtures := preload("res://tests/fixtures.gd")
@@ -33,7 +33,7 @@ func _on_changed(_node: Node, on: bool) -> void:
 	_announced.append(on)
 
 
-func _sink(tree: SceneTree, driver: SignalSource) -> Sink:
+func _sink(tree: SceneTree, driver: Trigger) -> Sink:
 	var sink: Sink = Sink.new()
 	sink.source = driver
 	tree.root.add_child(sink)
@@ -50,7 +50,7 @@ func _free_all(tree: SceneTree, nodes: Array[Node]) -> void:
 
 func _scenario_follow(tree: SceneTree, check: Callable) -> void:
 	var bus: Node = tree.root.get_node("EventBus")
-	var driver: SignalSource = Fixtures.spawn_signal_driver(tree.root)
+	var driver: Trigger = Fixtures.spawn_signal_driver(tree.root)
 	var sink: Sink = _sink(tree, driver)
 	_announced.clear()
 	bus.connect(&"mechanism_changed", _on_changed)
@@ -67,14 +67,14 @@ func _scenario_follow(tree: SceneTree, check: Callable) -> void:
 
 
 func _scenario_initial(tree: SceneTree, check: Callable) -> void:
-	var driver: SignalSource = Fixtures.spawn_signal_driver(tree.root, true)
+	var driver: Trigger = Fixtures.spawn_signal_driver(tree.root, true)
 	var sink: Sink = _sink(tree, driver)
 	check.call(driver.is_active and sink.signal_on, "a driver that starts active turns the mechanism on at _ready")
 	await _free_all(tree, [driver, sink])
 
 
 func _scenario_reset(tree: SceneTree, check: Callable) -> void:
-	var driver: SignalSource = Fixtures.spawn_signal_driver(tree.root, true)
+	var driver: Trigger = Fixtures.spawn_signal_driver(tree.root, true)
 	var sink: Sink = _sink(tree, driver)
 	driver.set_active(false)
 	check.call(not sink.signal_on, "the mechanism follows the driver off")
@@ -92,7 +92,7 @@ func _scenario_round_trip(tree: SceneTree, check: Callable) -> void:
 		return
 	var root: Node3D = Node3D.new()
 	root.name = "Rooms"
-	var driver: SignalSource = SignalSource.new()
+	var driver: Trigger = Trigger.new()
 	driver.name = "Driver"
 	root.add_child(driver)
 	driver.owner = root

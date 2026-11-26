@@ -1,6 +1,6 @@
 extends RefCounted
 ## MECH-04 I (D-06): the crumbling platform (the pressure plate was cut in plan 05.1-06, D-09; the bounce pad and boost ring became
-## Impulse kit objects in plan 05.1-16, see test_impulse). Driven by an active SignalSource stub. Real player, real geometry, 60 Hz.
+## Impulse kit objects in plan 05.1-16, see test_impulse). Driven by an active Trigger stub. Real player, real geometry, 60 Hz.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
@@ -23,20 +23,20 @@ func _free(tree: SceneTree, nodes: Array) -> void:
 	await tree.process_frame
 
 
-func _on_source() -> SignalSource:
-	var source: SignalSource = SignalSource.new()
+func _on_source() -> Trigger:
+	var source: Trigger = Trigger.new()
 	source.start_active = true
 	return source
 
 
-func _instance(path: String, source: SignalSource, at: Vector3) -> Node3D:
+func _instance(path: String, source: Trigger, at: Vector3) -> Node3D:
 	var node: Node3D = (load(path) as PackedScene).instantiate() as Node3D
 	node.set("source", source)
 	node.position = at
 	return node
 
 
-func _crumble(tree: SceneTree, source: SignalSource, at: Vector3) -> CrumblingPlatform:
+func _crumble(tree: SceneTree, source: Trigger, at: Vector3) -> CrumblingPlatform:
 	var platform: CrumblingPlatform = _instance(CRUMBLE_SCENE, source, at) as CrumblingPlatform
 	platform.shake_time = 0.3
 	platform.fall_time = 0.3
@@ -46,7 +46,7 @@ func _crumble(tree: SceneTree, source: SignalSource, at: Vector3) -> CrumblingPl
 
 
 func _scenario_crumble(tree: SceneTree, check: Callable) -> void:
-	var source: SignalSource = _on_source()
+	var source: Trigger = _on_source()
 	tree.root.add_child(source)
 	var platform: CrumblingPlatform = _crumble(tree, source, Vector3(0.0, 5.0, 0.0))
 	var shape: CollisionShape3D = platform.get_node("Body/CollisionShape3D") as CollisionShape3D

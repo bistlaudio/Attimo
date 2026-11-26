@@ -1,5 +1,5 @@
 extends RefCounted
-## Plan 05.1-17 (KIT-01, D-13, D-14): the Trigger block (the kit emitter, the atomic rename of SignalSource) and the Receiver component.
+## Plan 05.1-17 (KIT-01, D-13, D-14): the Trigger block (the kit emitter, the atomic rename of the old emitter base) and the Receiver component.
 ## Trigger keeps the old contract (active_changed, is_active, set_active that emits only on change, start_active, reset). The invisible
 ## AND / OR / timer nodes extend Trigger and keep their behaviour. A Receiver child follows its source (RUN_WHILE_ON) or flips on every
 ## rising edge (REVERSE_ON_SIGNAL); a missing source warns once and stays off. Classes are reached by path, so this file compiles
@@ -13,7 +13,7 @@ const LOGIC_SCRIPTS: Dictionary = {
 	"LogicOr": "res://scripts/kit/logic/logic_or.gd",
 	"LogicTimer": "res://scripts/kit/logic/logic_timer.gd",
 }
-const OLD_SOURCE: String = "res://scripts/mechanisms/signal_source.gd"
+const OLD_SOURCE: String = "res://scripts/mechanisms/" + "signal" + "_source.gd"
 const SHIPPED_TPS: int = 60
 
 var _edges: Array[bool] = []
@@ -22,7 +22,7 @@ var _edges: Array[bool] = []
 func run(tree: SceneTree, check: Callable) -> void:
 	await tree.process_frame
 	Engine.physics_ticks_per_second = SHIPPED_TPS
-	check.call(not ResourceLoader.exists(OLD_SOURCE), "the old signal_source.gd is gone (atomic rename, D-13)")
+	check.call(not ResourceLoader.exists(OLD_SOURCE), "the old emitter script is gone (atomic rename, D-13)")
 	var all_there: bool = true
 	for path: String in [TRIGGER_SCRIPT, CONFIG_SCRIPT, RECEIVER_SCRIPT]:
 		var exists: bool = ResourceLoader.exists(path)

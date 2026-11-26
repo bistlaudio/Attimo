@@ -90,7 +90,7 @@ Rules:
 | `player` | now (Phase 1) | The Player root node |
 | `moving_platform` | now (Phase 2) | Moving platforms (`MovingPlatform`); the player carries their horizontal velocity |
 | `interactable` | now (Phase 4) | Every `Interactable` component: anything the hand can target |
-| `mechanism` | now (Phase 4) | Every `SignalSource` and `Mechanism`; the reset sweep walks it |
+| `mechanism` | now (Phase 4) | Every `Trigger` (kit emitter, incl. the AND / OR / timer logic nodes), `Receiver` and old `Mechanism`; the reset sweep walks it |
 | `hand_controller` | now (Phase 4) | The `HandController` under the Player |
 | `energy_source` | now (Phase 5) | Every `EnergySource` (capsule, broken machine): the Extractor's candidates; also in `mechanism` |
 | `carrying_platform` | now (Phase 4) | Timed motion decks (clock hand SWEEP, tilt plate TILT; plan 05.1-04) with reference-frame chord carry; take-off keeps the vertical chord |

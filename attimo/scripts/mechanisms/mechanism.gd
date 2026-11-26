@@ -5,7 +5,7 @@ extends Node3D
 
 enum Behaviour { RUN_WHILE_ON, REVERSE_ON_SIGNAL }
 
-@export var source: SignalSource
+@export var source: Trigger
 @export var behaviour: Behaviour = Behaviour.RUN_WHILE_ON
 
 var signal_on: bool = false

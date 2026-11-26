@@ -56,7 +56,7 @@ func _spawn(path: String, check: Callable) -> Node3D:
 
 # Pendulum: at the first knock the horizontal speed is above 3 m/s.
 func _scenario_pendulum(tree: SceneTree, check: Callable) -> void:
-	var source: SignalSource = SignalSource.new()
+	var source: Trigger = Trigger.new()
 	tree.root.add_child(source)
 	source.set_active(true)
 	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)

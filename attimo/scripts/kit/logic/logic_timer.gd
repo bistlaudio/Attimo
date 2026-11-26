@@ -1,9 +1,9 @@
 class_name LogicTimer
-extends SignalSource
+extends Trigger
 ## Timer node (MECH-02, D-23): a rising edge of its source switches it on for hold_time, then it switches off. Invisible
 ## in game. A missing source keeps it off with one warning (T-04-07).
 
-@export var source: SignalSource
+@export var source: Trigger
 ## Seconds it stays on after a rising edge.
 @export var hold_time: float = 3.0
 ## When true a new edge while on restarts the time; otherwise the running time is kept.

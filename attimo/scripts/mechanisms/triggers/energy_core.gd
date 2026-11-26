@@ -1,5 +1,5 @@
 class_name EnergyCore
-extends SignalSource
+extends Trigger
 ## Energiekern in a lantern (MECH-01, D-15): switches on at a near contact (the shot is gone, D-45; 05.1-18 reworks it into the pay-in Trigger) and off by itself after core_duration. A new contact
 ## restarts the time. A ring of pips around the lantern shows the time left (a visible built-in timer).
 

@@ -42,7 +42,7 @@ func _scenario_gravity_requests(tree: SceneTree, check: Callable) -> void:
 	await _free(tree, [player, floor_body])
 
 
-func _field(tree: SceneTree, check: Callable, mode: ForceField.Mode, source: SignalSource, at: Vector3) -> ForceField:
+func _field(tree: SceneTree, check: Callable, mode: ForceField.Mode, source: Trigger, at: Vector3) -> ForceField:
 	var field: ForceField = (load(FIELD_SCENE) as PackedScene).instantiate() as ForceField
 	field.mode = mode
 	field.source = source
@@ -57,7 +57,7 @@ func _field(tree: SceneTree, check: Callable, mode: ForceField.Mode, source: Sig
 # within 1 s; with the source off it only falls. (A grounded player is held by ground friction, the same as for the steam wall.)
 func _scenario_repulsor(tree: SceneTree, check: Callable) -> void:
 	for on: bool in [true, false]:
-		var source: SignalSource = SignalSource.new()
+		var source: Trigger = Trigger.new()
 		tree.root.add_child(source)
 		var field: ForceField = _field(tree, check, ForceField.Mode.REPEL, source, Vector3(0.0, 3.0, 0.0))
 		var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(1.5, 2.0, 0.0))
@@ -74,7 +74,7 @@ func _scenario_repulsor(tree: SceneTree, check: Callable) -> void:
 # Attractor: with the source on a player released 4 m away is held at the core without oscillating; off, it falls.
 func _scenario_attractor(tree: SceneTree, check: Callable) -> void:
 	for on: bool in [true, false]:
-		var source: SignalSource = SignalSource.new()
+		var source: Trigger = Trigger.new()
 		tree.root.add_child(source)
 		source.set_active(on)
 		var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)

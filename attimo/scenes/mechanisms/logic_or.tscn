@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/mechanisms/logic_or.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/kit/logic/logic_or.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/mechanisms/glow_element.tscn" id="gl_element"]
 [ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="gl_energy"]
 
