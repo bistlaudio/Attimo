@@ -307,6 +307,7 @@ func _check_kit_areas(gym: Node, check: Callable) -> void:
 		check.call(direction.y > 0.6 and direction.x > 0.6, "the steam cannon barrel points up and east, along +X (%s)" % direction)
 	# Plan 05.1-04: the always-on clock hand (SWEEP) and tilt plate (TILT); the LYING gear is cut (KIT-04).
 	# Plan 05.1-17 adds the drawbridge (HINGE), switched by a charge gate.
-	check.call(profiles.size() == 3 and profiles.has(TimedMotionConfig.Profile.SWEEP) and profiles.has(TimedMotionConfig.Profile.TILT) and profiles.has(TimedMotionConfig.Profile.HINGE), "the steampunk area has a Timed motion clock hand (SWEEP), tilt plate (TILT) and drawbridge (HINGE) (%d profiles)" % profiles.size())
+	# Plan 05.1-19 adds the rail cart and paternoster (PATH) and the piston steps (STEPS).
+	check.call(profiles.size() == 5 and profiles.has(TimedMotionConfig.Profile.SWEEP) and profiles.has(TimedMotionConfig.Profile.TILT) and profiles.has(TimedMotionConfig.Profile.HINGE) and profiles.has(TimedMotionConfig.Profile.PATH) and profiles.has(TimedMotionConfig.Profile.STEPS), "the steampunk area has a Timed motion clock hand (SWEEP), tilt plate (TILT), drawbridge (HINGE), paternoster and rail cart (PATH) and piston steps (STEPS) (%d profiles)" % profiles.size())
 	# Plan 05.1-03: the wall pads are Wall surface kit blocks, one per surface at least.
 	check.call(surfaces.size() == 2, "the steampunk area has a Wall surface of both kinds, wall-run and wall-jump (%d)" % surfaces.size())
