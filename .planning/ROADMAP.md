@@ -299,7 +299,7 @@ Plans:
 - [x] 05.1-08-PLAN.md — Energy clock logic: ArmEnergy int 0..12, passive/R accumulator, every ability paid with refusal, Extractor steps, F2/metrics ints, Energy_Track removed
 - [x] 05.1-09-PLAN.md — HUD clock face (hour + second hand), refusal shake/flash/klack, wall run diagonal with the head away from the wall
 - [x] 05.1-10-PLAN.md — Extractor beam; Energy source kit block (capsule +3, machine +5) replacing the old scenes in place
-- [ ] 05.1-11-PLAN.md — Loader paid hold (1-3 steps), speed formula with cap and overflow, straight gravity-free flight, cage on the line, loader_released(steps)
+- [x] 05.1-11-PLAN.md — Loader paid hold (1-3 steps), speed formula with cap and overflow, straight gravity-free flight, cage on the line, loader_released(steps)
 - [ ] 05.1-12-PLAN.md — Loader 3-segment smaller ring, smaller crosshair and gauge, camera 89 degrees, Zone_Loader re-derived from 1 vs 3 steps
 - [ ] 05.1-13-PLAN.md — Reaction to load block: Loader field (>= 2 steps glide through with brake); Zone_Energy shot stations swapped; lever / valve / gear gate cut
 - [ ] 05.1-14-PLAN.md — Slingshot smaller, catches only inside; steampunk income hook (+1 step, cooldown, GIVES + accent) on slingshot and cannon
@@ -503,7 +503,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 04.1 → 5 → 05.1 →
 | 3. Animated Mannequin & Aim Mode | 10/10 | Complete    | 2026-11-20 |
 | 4. Fernauslöser & Mechanism Kit | 5/5 | Complete   | 2026-11-23 |
 | 5. Energy Arm & Loader | 5/5 | Complete   | 2026-11-24 |
-| 05.1. Kit Rework | 10/22 | In Progress|  |
+| 05.1. Kit Rework | 11/22 | In Progress|  |
 | 6. Extractor, Enemies & Recovery | 0/TBD | Not started | - |
 | 7. Level Blockout & Game Flow | 0/TBD | Not started | - |
 | 8. Boss & Ending | 0/TBD | Not started | - |
