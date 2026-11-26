@@ -296,7 +296,7 @@ Plans:
 - [x] 05.1-05-PLAN.md — Slingshot presentation (pressure gauge, brass dashes, steam cues) and F2 Kit section
 - [x] 05.1-06-PLAN.md — Gym cutover: steampunk / energy / nature layer areas; old rooms, lift, crank, plate deleted
 - [x] 05.1-07-PLAN.md — Shot removed (remote_trigger, projectile, targeting, PulseHit, shot signals); module system dormant, Extractor default
-- [ ] 05.1-08-PLAN.md — Energy clock logic: ArmEnergy int 0..12, passive/R accumulator, every ability paid with refusal, Extractor steps, F2/metrics ints, Energy_Track removed
+- [x] 05.1-08-PLAN.md — Energy clock logic: ArmEnergy int 0..12, passive/R accumulator, every ability paid with refusal, Extractor steps, F2/metrics ints, Energy_Track removed
 - [ ] 05.1-09-PLAN.md — HUD clock face (hour + second hand), refusal shake/flash/klack, wall run diagonal with the head away from the wall
 - [ ] 05.1-10-PLAN.md — Extractor beam; Energy source kit block (capsule +3, machine +5) replacing the old scenes in place
 - [ ] 05.1-11-PLAN.md — Loader paid hold (1-3 steps), speed formula with cap and overflow, straight gravity-free flight, cage on the line, loader_released(steps)
@@ -503,7 +503,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 04.1 → 5 → 05.1 →
 | 3. Animated Mannequin & Aim Mode | 10/10 | Complete    | 2026-11-20 |
 | 4. Fernauslöser & Mechanism Kit | 5/5 | Complete   | 2026-11-23 |
 | 5. Energy Arm & Loader | 5/5 | Complete   | 2026-11-24 |
-| 05.1. Kit Rework | 7/22 | In Progress|  |
+| 05.1. Kit Rework | 8/22 | In Progress|  |
 | 6. Extractor, Enemies & Recovery | 0/TBD | Not started | - |
 | 7. Level Blockout & Game Flow | 0/TBD | Not started | - |
 | 8. Boss & Ending | 0/TBD | Not started | - |

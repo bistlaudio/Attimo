@@ -47,7 +47,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [x] **HAND-03**: Module 1 "Fernauslöser": player aims and fires a turquoise pulse (tap = small, hold = big) that triggers mechanisms at range
 - [x] **HAND-04**: Right-click Loader: holding freezes and stores momentum in slow motion with a free camera, charge ring and trajectory preview; releasing discharges in the view direction (bonus costs one core, empty arm only redirects). Replaces aim mode and Pull/Push (docs/GAME-DESIGN.md section 4)
 - [ ] **HAND-05**: Picking up a module is a clear moment (pickup feedback, HUD icon) and unlocks the module permanently
-- [ ] **EXTR-01**: Extractor (hold, cone in front of the hand, the only left-click action) drains energy capsules (+3 steps), broken machines (+5 steps) and enemies for energy, with a visible beam from the hand to the source (capsules and machines built in Phase 5, beam and steps in 05.1, enemies in Phase 6)
+- [x] **EXTR-01**: Extractor (hold, cone in front of the hand, the only left-click action) drains energy capsules (+3 steps), broken machines (+5 steps) and enemies for energy, with a visible beam from the hand to the source (capsules and machines built in Phase 5, beam and steps in 05.1, enemies in Phase 6)
 - [ ] **HAND-06**: Each module has a teaching room: safe first use, then a test, then a twist
 - [x] **HAND-07**: Every interactable's glow element is a steampunk primitive element (brass bezel or gear ring around a faceted turquoise core) shaped to fit its mechanic, built from shared primitives and materials; the glow stages still switch on the core
 
@@ -72,9 +72,9 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [ ] **KIT-01**: The kit runs on 8 logic blocks and 4 attachable components; values in `.tres` configs, looks as inherited scenes
 - [ ] **KIT-02**: All objects of the steampunk, energy and nature layers exist as block + components + look, honouring the coupling rule
 - [x] **KIT-03**: The slingshot core plays like the Loader in a steampunk look (smaller core, catches only when Rino is inside, no trajectory line, gives +1 step); levers, pressure plates, valves and cranks are cut, and energy cores and charge gates are the remaining triggers (gear-disc targets removed 2026-11-25)
-- [ ] **ENRG-06**: The energy is a clock of 12 whole steps (no percentages or fractions): HUD clock with hour hand (and a second hand for timed income), the 4 arm cores = 3 steps each, Moto Perpetuo from 6, respawn with 3; costs and income only in whole steps, time only as tick intervals
-- [ ] **ENRG-07**: Running and the jump chain are free; every ability costs steps (dash and air dash 1, dash hop stages 2/3 +1 each, wall run 2 + 1 every 1 s, wall jump 1, Loader 1-3); an unpaid ability does not fire and always shows the refusal (clock shake and red flash, arm flicker, empty klack sound)
-- [ ] **ENRG-08**: Income in whole steps: passive clock tick (+1 every 10 s), charge key R (+1 every 5 s), capsule +3, broken machine +5, +1 per steampunk booster use with a cooldown; moves that cost steps never charge (momentum charge removed)
+- [x] **ENRG-06**: The energy is a clock of 12 whole steps (no percentages or fractions): HUD clock with hour hand (and a second hand for timed income), the 4 arm cores = 3 steps each, Moto Perpetuo from 6, respawn with 3; costs and income only in whole steps, time only as tick intervals
+- [x] **ENRG-07**: Running and the jump chain are free; every ability costs steps (dash and air dash 1, dash hop stages 2/3 +1 each, wall run 2 + 1 every 1 s, wall jump 1, Loader 1-3); an unpaid ability does not fire and always shows the refusal (clock shake and red flash, arm flicker, empty klack sound)
+- [x] **ENRG-08**: Income in whole steps: passive clock tick (+1 every 10 s), charge key R (+1 every 5 s), capsule +3, broken machine +5, +1 per steampunk booster use with a cooldown; moves that cost steps never charge (momentum charge removed)
 - [ ] **ENRG-09**: The Loader is paid by holding (1-3 steps, one segment per step on a smaller ring, no trajectory line) and flies a straight line: speed = own speed + push + steps x (push step + k x own speed), capped, overflow lengthens the straight flight; the camera can look up almost vertically everywhere without flipping backward
 - [x] **ENRG-10**: The shot and the gear-disc targets are removed; left click is only the Extractor and the module switch is dormant; the force-field barrier becomes a Loader field that does not break and lets a Loader with >= 2 steps glide through with a brake
 - [ ] **KIT-04**: Cut stations removed, reworked stations replaced, showroom regrouped by layer and role with a station and smoke test per object
@@ -228,9 +228,9 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | KIT-02 | Phase 05.1 | Pending |
 | KIT-03 | Phase 05.1 | Complete |
 | KIT-04 | Phase 05.1 | Pending |
-| ENRG-06 | Phase 05.1 | Pending |
-| ENRG-07 | Phase 05.1 | Pending |
-| ENRG-08 | Phase 05.1 | Pending |
+| ENRG-06 | Phase 05.1 | Complete |
+| ENRG-07 | Phase 05.1 | Complete |
+| ENRG-08 | Phase 05.1 | Complete |
 | ENRG-09 | Phase 05.1 | Pending |
 | ENRG-10 | Phase 05.1 | Complete |
 | HAND-07 | Phase 04.1 | Complete |
