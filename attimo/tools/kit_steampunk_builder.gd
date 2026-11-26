@@ -10,6 +10,7 @@ extends RefCounted
 ##   south, Role_Boosters    BoostRing (0, 1)  SpeedPad (1, 1)  BouncePad (2, 1)   (plan 05.1-16, impulse, +1 step per use)
 ##   north, Role_Mechanisms  Drawbridge (6, 1, bridge running east, x -8..16 around the hinge)  SwitchedSpeedPad (4, 0)   (plan 05.1-17,
 ##                           charge gate -> invisible timer -> receiver)
+##   north, Role_Platforms   Station_RailCart (1, 0, ledges out to x +-12.5), Station_Paternoster (6, 0), Station_PistonSteps (7, 0)   (plan 05.1-19)
 ##   north                   Role_Obstacles: empty until its blocks land (plans 18-19)
 ## Each station keeps the offsets, heights and sign spots it had in the old mechanism rooms (plans 01-04), relative to its slot point.
 
@@ -25,6 +26,17 @@ const TILT_PLATE_PRESET: String = "res://resources/kit/timed_motion/tilting_plat
 ## docs/MOVEMENT-METRICS.md), and the top step stays this far under the pivot so it is never coplanar with the deck.
 const DECK_STEP_MAX: float = 1.5
 const DECK_LEDGE_GAP: float = 0.25
+## Always-on platforms (plan 05.1-19): the paternoster and rail cart (PATH) and the piston steps (STEPS).
+const PATERNOSTER_SCENE: String = "res://scenes/kit/steampunk/paternoster.tscn"
+const RAIL_CART_SCENE: String = "res://scenes/kit/steampunk/rail_cart.tscn"
+const PISTON_STEPS_SCENE: String = "res://scenes/kit/steampunk/piston_steps.tscn"
+## The paternoster and the rail cart stand this high over the floor (the cabin run clears the floor, the cart clears its rails); the
+## boarding ledges are one half step (0.5 m) tall, like the deck tops. The piston steps stand 0.05 up so no step top is coplanar with the floor.
+const PLATFORM_BASE: float = 0.5
+const STEPS_BASE: float = 0.05
+## The rail cart's end points are 6 m either side of its centre and its deck is 3 m wide; the landing ledges stand this far (m) past the
+## deck's edge at each end: 3 m, a run jump reaches 5.52 m (docs/MOVEMENT-METRICS.md) minus a 1 m margin.
+const CART_LEDGE_GAP: float = 3.0
 ## Wall surface looks (plan 05.1-03): plain brass and steam look, wall-run 4 x 12 m and wall-jump 8 x 12 m.
 const WALL_PAD_SCENE: String = "res://scenes/kit/steampunk/wall_pad.tscn"
 const WALL_PAD_STEAM_SCENE: String = "res://scenes/kit/steampunk/wall_pad_steam.tscn"
@@ -100,6 +112,31 @@ func _build_platforms(role: Node3D, builder: RefCounted) -> void:
 	builder.call(&"_instance", plate, TILT_PLATE_SCENE, "TiltPlate", Vector3(0.0, plate_y, 0.0))
 	# The plate rocks about its x axis; the midpoint of its west edge stays put, so the ledge stands west of it and steps down southward.
 	_deck_stairs(plate, builder, "TiltPlate", plate_y, Vector3(-6.5, 0.0, 0.0), Vector3(0.0, 0.0, 4.0))
+	_build_path_platforms(role, builder)
+
+
+## Plan 05.1-19 (D-11, D-18): always-on PATH and STEPS platforms in the north far row (row 0). The rail cart runs 12 m along x between two
+## ledges that stand CART_LEDGE_GAP past its deck edges (slots (0, 0) and (2, 0) stay empty for them). The paternoster loops 6 x 8 m in the
+## x-y plane; you board from the south at the bottom and step off at the top onto a 8.5 m ledge west of the loop. The piston steps stand
+## with their wall at the station's north side and reach out southward, each step one metre higher than its western neighbour.
+func _build_path_platforms(role: Node3D, builder: RefCounted) -> void:
+	var cart_at: Vector3 = _slot("N", 1, 0)
+	var cart: Node3D = _station(role, builder, "RailCart", cart_at, "Schienenwagen", "Erwartet: Fährt hin und her; auf ihm stehen bleibt sicher", Vector3(0.0, 4.4, 4.0))
+	builder.call(&"_instance", cart, RAIL_CART_SCENE, "RailCart", Vector3(0.0, PLATFORM_BASE, 0.0))
+	var cart_motion: TimedMotionConfig = load("res://resources/kit/timed_motion/rail_cart.tres") as TimedMotionConfig
+	var cart_end: float = cart_motion.path_points[1].x + cart_motion.plate_size * 0.5 + CART_LEDGE_GAP + 2.0
+	_shell._ledge(cart, builder, "CartLedgeWest", -cart_end, 0.0, PLATFORM_BASE)
+	_shell._ledge(cart, builder, "CartLedgeEast", cart_end, 0.0, PLATFORM_BASE)
+
+	var lift_at: Vector3 = _slot("N", 6, 0)
+	var lift: Node3D = _station(role, builder, "Paternoster", lift_at, "Paternoster", "Erwartet: Kabinen laufen im Kreis; einsteigen, mitfahren, oben aussteigen", Vector3(0.0, 11.5, 4.0))
+	builder.call(&"_instance", lift, PATERNOSTER_SCENE, "Paternoster", Vector3(0.0, PLATFORM_BASE, 0.0))
+	_shell._ledge(lift, builder, "LiftBoard", 0.0, 4.0, PLATFORM_BASE)
+	_shell._ledge(lift, builder, "LiftExit", -8.0, 0.0, PLATFORM_BASE + 8.0)
+
+	var steps_at: Vector3 = _slot("N", 7, 0) + Vector3(-5.0, 0.0, -1.0)
+	var steps: Node3D = _station(role, builder, "PistonSteps", steps_at, "Kolbenstufen", "Erwartet: Stufen fahren im Takt aus der Wand; im Rhythmus hochspringen", Vector3(4.5, 6.6, 3.0))
+	builder.call(&"_instance", steps, PISTON_STEPS_SCENE, "PistonSteps", Vector3(0.0, STEPS_BASE, 0.0))
 
 
 ## The pivot height of a Timed motion station on the area floor (top y 0): TimedMotion.min_pivot_height of its preset (D-07).

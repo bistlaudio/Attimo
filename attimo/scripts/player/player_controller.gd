@@ -859,7 +859,7 @@ func _leave_floor() -> void:
 	move_velocity.x += _last_platform_velocity.x * config.platform_carry
 	move_velocity.z += _last_platform_velocity.z * config.platform_carry
 	# A reference-frame carrier (Timed motion deck, group carrying_platform) also hands over its vertical chord, so a jump off a
-	# rising deck keeps the deck's speed (05.1-04, D-07). Engine-carried floors (lift, paternoster) are left alone: their motion is
+	# rising deck keeps the deck's speed (05.1-04, D-07). Engine-carried floors (lift) are left alone: their motion is
 	# already in the move, adding it again would double count. After the coyote check, so a walk-off keeps its coyote time.
 	if _floor_carrier != null and _carry_active and is_finite(_last_platform_velocity.y):
 		vertical_speed += clampf(_last_platform_velocity.y, -MAX_DECK_TAKEOFF_SPEED, MAX_DECK_TAKEOFF_SPEED)
