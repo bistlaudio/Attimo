@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v0.11.0.4
 milestone_name: milestone
 status: executing
-stopped_at: Phase 05.1 replanned (plans 05.1-07..22 against D-34..D-62); ready to execute 05.1-07
-last_updated: "2026-11-25T20:30:04.630Z"
-last_activity: 2026-11-25 -- Phase 05.1 planning complete
+stopped_at: Phase 05.1 context updated with playtest feedback (D-34..D-58); design docs and replanning pending
+last_updated: "2026-11-26T05:39:18.846Z"
+last_activity: 2026-11-26 -- Phase 05.1 execution started
 progress:
   total_phases: 17
   completed_phases: 6
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-02)
 
 **Core value:** Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprint, Sprung und Dash fühlen sich smooth an, und die Hand verbindet sich nahtlos damit.
-**Current focus:** Phase 05.1 — kit rework
+**Current focus:** Phase 05.1 — kit-rework-inserted
 
 ## Current Position
 
-Phase: 05.1
-Plan: 7 of 22 (05.1-01 to 05.1-06 complete; 07-22 replanned 2026-11-25)
-Status: Ready to execute
-Last activity: 2026-11-25 -- Phase 05.1 planning complete
+Phase: 05.1 (kit-rework-inserted) — EXECUTING
+Plan: 1 of 22
+Status: Executing Phase 05.1
+Last activity: 2026-11-26 -- Phase 05.1 execution started
 
 Progress: [████████░░] 79%
 
