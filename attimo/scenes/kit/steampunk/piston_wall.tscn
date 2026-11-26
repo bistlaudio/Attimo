@@ -1,0 +1,65 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/kit/timed_motion_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://resources/kit/timed_motion/piston_wall.tres" id="2_config"]
+[ext_resource type="Script" path="res://scripts/kit/components/damage_push.gd" id="3_push"]
+[ext_resource type="Material" path="res://resources/mechanisms/look_brass.tres" id="4_brass"]
+[ext_resource type="Material" path="res://resources/mechanisms/look_iron.tres" id="5_iron"]
+[ext_resource type="Material" path="res://resources/mechanisms/look_copper.tres" id="6_copper"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_head"]
+size = Vector3(3, 3, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_head"]
+size = Vector3(3, 3, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hit"]
+size = Vector3(3.2, 3, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_housing"]
+size = Vector3(3.6, 3.4, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_rod"]
+top_radius = 0.3
+bottom_radius = 0.3
+height = 3.0
+
+[node name="PistonWall" instance=ExtResource("1_base")]
+layer = 0
+energy_relation = 0
+config = ExtResource("2_config")
+
+[node name="Housing" type="MeshInstance3D" parent="." index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 1.05)
+mesh = SubResource("BoxMesh_housing")
+material_override = ExtResource("5_iron")
+
+[node name="CollisionShape3D" parent="Body" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, 0)
+shape = SubResource("BoxShape3D_head")
+
+[node name="Mesh" parent="Body" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, 0)
+mesh = SubResource("BoxMesh_head")
+material_override = ExtResource("4_brass")
+
+[node name="Rod" type="MeshInstance3D" parent="Body" index="2"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 1.55, 1.5)
+mesh = SubResource("CylinderMesh_rod")
+material_override = ExtResource("6_copper")
+
+[node name="Hit" type="Area3D" parent="Body" index="3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, -0.9)
+collision_layer = 32
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Body/Hit" index="0"]
+shape = SubResource("BoxShape3D_hit")
+
+[node name="DamagePush" type="Node" parent="." index="2" node_paths=PackedStringArray("hit_area")]
+script = ExtResource("3_push")
+hit_area = NodePath("../Body/Hit")
+amount = 1
+push_speed = 12.0
+push_up = 4.0
+rehit_time = 0.5

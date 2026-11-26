@@ -1,0 +1,61 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/kit/timed_motion_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://resources/kit/timed_motion/pendulum.tres" id="2_config"]
+[ext_resource type="Script" path="res://scripts/kit/components/damage_push.gd" id="3_push"]
+[ext_resource type="Material" path="res://resources/mechanisms/look_brass.tres" id="4_brass"]
+[ext_resource type="Material" path="res://resources/mechanisms/look_iron.tres" id="5_iron"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bob"]
+size = Vector3(1, 1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_bob"]
+size = Vector3(1, 1, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_beam"]
+size = Vector3(0.3, 4, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_beam"]
+size = Vector3(0.3, 4, 0.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hit"]
+size = Vector3(1.5, 1.5, 1.5)
+
+[node name="Pendulum" instance=ExtResource("1_base")]
+layer = 0
+energy_relation = 0
+config = ExtResource("2_config")
+
+[node name="CollisionShape3D" parent="Body" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -4.5, 0)
+shape = SubResource("BoxShape3D_bob")
+
+[node name="Mesh" parent="Body" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -4.5, 0)
+mesh = SubResource("BoxMesh_bob")
+material_override = ExtResource("4_brass")
+
+[node name="BeamShape" type="CollisionShape3D" parent="Body" index="2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 0)
+shape = SubResource("BoxShape3D_beam")
+
+[node name="Beam" type="MeshInstance3D" parent="Body" index="3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 0)
+mesh = SubResource("BoxMesh_beam")
+material_override = ExtResource("5_iron")
+
+[node name="Hit" type="Area3D" parent="Body" index="4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -4.5, 0)
+collision_layer = 32
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Body/Hit" index="0"]
+shape = SubResource("BoxShape3D_hit")
+
+[node name="DamagePush" type="Node" parent="." index="1" node_paths=PackedStringArray("hit_area")]
+script = ExtResource("3_push")
+hit_area = NodePath("../Body/Hit")
+amount = 1
+push_speed = 10.0
+push_up = 4.0
+rehit_time = 0.5

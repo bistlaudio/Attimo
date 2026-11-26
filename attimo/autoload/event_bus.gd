@@ -60,3 +60,7 @@ signal energy_refused(reason: StringName, needed: int)
 ## Emitted by ArmEnergy when Moto Perpetuo turns on (true) or off (false), only on a flip (the off edge has a hysteresis margin). Listeners:
 ## the arm and body glow, the HUD, juice, audio.
 signal moto_changed(active: bool)
+## Emitted by DamagePush when a kit obstacle (pendulum, piston wall, steam hammer) hit the player: `amount` is the damage in whole points
+## (a push only in this phase, Phase 6 health consumes it), `position` the player's position, `source_id` the obstacle's name. Values only,
+## no node reference. Listeners: the debug event log, juice (Phase 11), health (Phase 6).
+signal player_hit(amount: int, position: Vector3, source_id: StringName)

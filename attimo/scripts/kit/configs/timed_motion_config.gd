@@ -5,12 +5,12 @@ extends Resource
 ## tilting platform (a square plate pivoted in its centre that rocks about local X), HINGE the drawbridge (a deck hinged at one end that
 ## folds from raised to flat while its receiver is on, plan 05.1-17), PATH (plan 05.1-19) moves level decks along a polyline in the block's local space:
 ## it loops when the first and last point are equal (the paternoster) and ping-pongs with a pause at each end otherwise (the rail cart); STEPS (plan
-## 05.1-19) are decks that extend from and retract into a wall along local Z in a phase-shifted sine (the piston steps). Later plans append GATE, LOOP, SWING and STAMP. ALWAYS_ON runs from _ready with no receiver (D-07); SWITCHED runs only while a child Receiver is on
+## 05.1-19) are decks that extend from and retract into a wall along local Z in a phase-shifted sine (the piston steps). SWING (plan 05.1-20) is the pendulum, an arm that swings about the block's local Z axis through the pivot (the node origin); STAMP is a body that stamps out along `stamp_axis`, waits, holds, and returns (piston wall horizontally, steam hammer from above); both carry a DamagePush. Later plans append GATE and LOOP. ALWAYS_ON runs from _ready with no receiver (D-07); SWITCHED runs only while a child Receiver is on
 ## (plan 05.1-14). The values are the tuned ones of the old rotating platform, folded unchanged (D-09). Presets live in
 ## resources/kit/timed_motion/. Divisor fields have a strictly positive minimum (T-05.1-13). A loaded preset is never written at
 ## runtime: the block duplicates it in _ready (D-12).
 
-enum Profile { SWEEP, TILT, HINGE, PATH, STEPS }
+enum Profile { SWEEP, TILT, HINGE, PATH, STEPS, SWING, STAMP }
 enum Timing { ALWAYS_ON, SWITCHED }
 
 ## SWEEP swings a hand pivoted at one end; TILT rocks a plate pivoted in its centre; HINGE folds a deck hinged at one end down and up.
@@ -31,6 +31,28 @@ enum Timing { ALWAYS_ON, SWITCHED }
 @export_range(5.0, 120.0, 1.0) var hinge_angle_deg: float = 90.0
 ## HINGE: seconds the deck takes to fold from raised to flat and back (eased). Raise it for a slower bridge.
 @export_range(0.2, 5.0, 0.05) var hinge_time: float = 1.2
+
+@export_group("Swing")
+## SWING: the arm swings within +- this angle in degrees (no floor-angle clamp, the arm is not a deck).
+@export_range(10.0, 80.0, 1.0) var swing_amplitude_deg: float = 60.0
+## SWING: seconds of one full swing there and back.
+@export_range(0.5, 8.0, 0.1) var swing_period: float = 2.4
+
+@export_group("Stamp")
+## STAMP: the local direction the body stamps along (normalised at use): -Z is the piston wall, -Y the hammer from above.
+@export var stamp_axis: Vector3 = Vector3(0.0, 0.0, -1.0)
+## STAMP: how far in m the body travels along the axis.
+@export_range(0.5, 8.0, 0.1) var stamp_distance: float = 3.0
+## STAMP: seconds of one full cycle (wait with telegraph, stamp out, hold, return). The wait is what is left of it.
+@export_range(0.5, 20.0, 0.1) var stamp_period: float = 3.62
+## STAMP: seconds the body holds at full extension.
+@export_range(0.0, 2.0, 0.05) var stamp_hold: float = 0.3
+## STAMP: seconds the fast stamp out takes.
+@export_range(0.05, 1.0, 0.01) var stamp_out_time: float = 0.12
+## STAMP: seconds the slower return takes.
+@export_range(0.1, 3.0, 0.05) var stamp_return_time: float = 0.8
+## STAMP: seconds at the end of the wait in which the body shudders (the telegraph, no collision change).
+@export_range(0.0, 2.0, 0.05) var stamp_telegraph: float = 0.4
 
 @export_group("Path")
 ## PATH: the route in the block's local space (the deck top centre). First point equal to the last: a closed loop; otherwise back and forth.

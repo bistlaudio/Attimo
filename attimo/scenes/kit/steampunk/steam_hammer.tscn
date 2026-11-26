@@ -1,0 +1,82 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/kit/timed_motion_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://resources/kit/timed_motion/steam_hammer.tres" id="2_config"]
+[ext_resource type="Script" path="res://scripts/kit/components/damage_push.gd" id="3_push"]
+[ext_resource type="Material" path="res://resources/mechanisms/look_brass.tres" id="4_brass"]
+[ext_resource type="Material" path="res://resources/mechanisms/look_iron.tres" id="5_iron"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_head"]
+size = Vector3(3, 1.2, 3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_head"]
+size = Vector3(3, 1.2, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hit"]
+size = Vector3(3.6, 1.8, 3.6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_post"]
+size = Vector3(0.5, 6.4, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_beam"]
+size = Vector3(5.7, 0.5, 0.5)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_steam"]
+top_radius = 0.3
+bottom_radius = 0.3
+height = 3.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_steam"]
+transparency = 1
+albedo_color = Color(0.9, 0.92, 0.95, 0.3)
+
+[node name="SteamHammer" instance=ExtResource("1_base")]
+layer = 0
+energy_relation = 0
+config = ExtResource("2_config")
+
+[node name="PostWest" type="MeshInstance3D" parent="." index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.6, 0.15, 0)
+mesh = SubResource("BoxMesh_post")
+material_override = ExtResource("5_iron")
+
+[node name="PostEast" type="MeshInstance3D" parent="." index="2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0.15, 0)
+mesh = SubResource("BoxMesh_post")
+material_override = ExtResource("5_iron")
+
+[node name="Crossbeam" type="MeshInstance3D" parent="." index="3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.6, 0)
+mesh = SubResource("BoxMesh_beam")
+material_override = ExtResource("5_iron")
+
+[node name="SteamColumn" type="MeshInstance3D" parent="." index="4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.55, 0)
+mesh = SubResource("CylinderMesh_steam")
+surface_material_override/0 = SubResource("StandardMaterial3D_steam")
+
+[node name="CollisionShape3D" parent="Body" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+shape = SubResource("BoxShape3D_head")
+
+[node name="Mesh" parent="Body" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+mesh = SubResource("BoxMesh_head")
+material_override = ExtResource("4_brass")
+
+[node name="Hit" type="Area3D" parent="Body" index="2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+collision_layer = 32
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Body/Hit" index="0"]
+shape = SubResource("BoxShape3D_hit")
+
+[node name="DamagePush" type="Node" parent="." index="5" node_paths=PackedStringArray("hit_area")]
+script = ExtResource("3_push")
+hit_area = NodePath("../Body/Hit")
+amount = 1
+push_speed = 9.0
+push_up = 3.0
+rehit_time = 0.5
+direction = 0

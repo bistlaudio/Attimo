@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="TimedMotionConfig" format=3]
+
+[ext_resource type="Script" path="res://scripts/kit/configs/timed_motion_config.gd" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+profile = 5
+timing = 0
+ramp_time = 0.4
+swing_amplitude_deg = 60.0
+swing_period = 2.4

@@ -166,6 +166,7 @@ Exception 2: placeholder hit puffs in `scripts/debug` + `scenes/debug/hit_puff.t
 | `near_contact_changed` | `active: bool, point: Vector3` | The near-contact hand (plan 04-02) when contact starts or ends |
 | `launched` | `position: Vector3, direction: Vector3, speed: float` | Launching mechanisms (plan 04-04) when they throw the player; the `Loader` state on a FIXED discharge (steam cannon, plan 05.1-02) with the barrel direction and `fixed_speed` |
 | `knocked_back` | `position: Vector3, impulse: Vector3` | Hazards and mechanisms that push the player back (plan 04-04) |
+| `player_hit` | `amount: int, position: Vector3, source_id: StringName` | `DamagePush` when an obstacle pushed the player (plan 05.1-20); `amount` is the damage in points (no health yet, Phase 6 consumes it), `source_id` names the obstacle block. Values only, no node |
 | `dash_refilled` | `position: Vector3` | `PlayerController.refill_air_dash` when a mechanism gave the air dash back (boost ring, phase 04.1) |
 | `boosted` | `position: Vector3, direction: Vector3, speed: float` | `PlayerController.boost_along` after a boost; `speed` is the speed along `direction` afterwards (boost ring, bounce pad, phase 04.1) |
 | `wall_run_started` | `position: Vector3, normal: Vector3` | `WallRun` state on enter (MOVE-12, phase 04.1); `normal` is the flat wall normal |

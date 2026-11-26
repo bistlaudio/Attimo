@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="TimedMotionConfig" format=3]
+
+[ext_resource type="Script" path="res://scripts/kit/configs/timed_motion_config.gd" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+profile = 6
+timing = 0
+ramp_time = 0.05
+stamp_axis = Vector3(0, 0, -1)
+stamp_distance = 3.0
+stamp_period = 3.62
+stamp_hold = 0.3
+stamp_out_time = 0.12
+stamp_return_time = 0.8
+stamp_telegraph = 0.4

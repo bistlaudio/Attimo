@@ -16,6 +16,11 @@ extends KitBlock
 ## step_extension(i) = step_extend * (1 - cos(2 pi (t + step_phase * i) / step_period)) / 2. carry_velocity_at() then answers with the
 ## chord of the deck nearest to the point (decks() lists them, body() is deck 0).
 ##
+## SWING and STAMP (plan 05.1-20) are the obstacles. SWING rotates the Body about local Z (the pendulum: `swing_amplitude_deg * sin(phase)`,
+## the arm hangs below the node origin, the pivot); STAMP translates the one Body along `stamp_axis` through a cycle of `stamp_period`
+## (wait with a shudder telegraph, a fast stamp out, `stamp_hold`, a slower return). Both use the scene's own shapes and meshes (no plate is
+## built) and a DamagePush child watching a hit area under the Body; the carry contract below holds unchanged (a rider on a piston wall top is carried).
+##
 ## Carry contract (folded unchanged from the old rotating platform, D-09): the Body is an AnimatableBody3D in the group
 ## carrying_platform with sync_to_physics off, a direct child of this node. PlayerController carries the rider by reference frame
 ## (it re-places the rider at the same local point of the deck every tick), which needs the block to tick AFTER the player: physics
@@ -34,6 +39,8 @@ const FALLBACK_FLOOR_ANGLE_DEG: float = 50.0
 const FLOOR_ANGLE_MARGIN_DEG: float = 10.0
 ## The lowest deck point over a full sweep stays at least this far in m above the surrounding floor top.
 const FLOOR_CLEARANCE: float = 0.3
+## STAMP telegraph: the sideways shudder amplitude in m.
+const STAMP_SHUDDER: float = 0.03
 
 ## The block's config; the instance works on its own copy (D-12).
 @export var config: TimedMotionConfig
@@ -69,6 +76,8 @@ func _ready() -> void:
 	_body.collision_layer = PhysicsLayers.WORLD
 	_body.collision_mask = 0
 	_body.add_to_group(&"carrying_platform")
+	if config.profile == TimedMotionConfig.Profile.SWING:
+		_axis_local = Vector3.BACK
 	_build_shape()
 	_build_decks()
 	_resolve_limit()
@@ -155,9 +164,50 @@ func pivot_position() -> Vector3:
 	return global_position
 
 
-## True for the profiles that only translate their decks (PATH, STEPS).
+## True for the profiles that only translate their decks (PATH, STEPS, STAMP).
 func translates() -> bool:
-	return config != null and (config.profile == TimedMotionConfig.Profile.PATH or config.profile == TimedMotionConfig.Profile.STEPS)
+	return config != null and (config.profile == TimedMotionConfig.Profile.PATH or config.profile == TimedMotionConfig.Profile.STEPS or config.profile == TimedMotionConfig.Profile.STAMP)
+
+
+## True for the profiles whose shapes and meshes the look scene authors (the obstacles SWING and STAMP): no plate is built for them.
+func authored_shape() -> bool:
+	return config != null and (config.profile == TimedMotionConfig.Profile.SWING or config.profile == TimedMotionConfig.Profile.STAMP)
+
+
+## STAMP: how far in m the body is out along its axis right now (0 .. stamp_distance), from the cycle clock.
+func stamp_extension() -> float:
+	return config.stamp_distance * _stamp_fraction()
+
+
+## STAMP: the extension fraction 0..1 at the current clock: rest during the wait, linear out, hold, linear return.
+func _stamp_fraction() -> float:
+	var out_time: float = maxf(config.stamp_out_time, 0.01)
+	var return_time: float = maxf(config.stamp_return_time, 0.01)
+	var wait: float = maxf(config.stamp_period - out_time - config.stamp_hold - return_time, 0.0)
+	var t: float = fposmod(_clock, maxf(config.stamp_period, out_time + config.stamp_hold + return_time))
+	if t < wait:
+		return 0.0
+	t -= wait
+	if t < out_time:
+		return t / out_time
+	t -= out_time
+	if t < config.stamp_hold:
+		return 1.0
+	t -= config.stamp_hold
+	return clampf(1.0 - t / return_time, 0.0, 1.0)
+
+
+## STAMP: a small sideways shudder in the last `stamp_telegraph` seconds of the wait (the warning that the stamp comes).
+func _stamp_shudder() -> Vector3:
+	var out_time: float = maxf(config.stamp_out_time, 0.01)
+	var wait: float = maxf(config.stamp_period - out_time - config.stamp_hold - maxf(config.stamp_return_time, 0.01), 0.0)
+	var t: float = fposmod(_clock, maxf(config.stamp_period, 0.5))
+	if config.stamp_telegraph <= 0.0 or t >= wait or t < wait - config.stamp_telegraph:
+		return Vector3.ZERO
+	var axis: Vector3 = config.stamp_axis.normalized()
+	var side: Vector3 = axis.cross(Vector3.UP)
+	side = side.normalized() if side.length_squared() > 0.0001 else Vector3.RIGHT
+	return side * STAMP_SHUDDER * sin(t * 90.0)
 
 
 ## PATH and STEPS: all deck bodies in order (deck 0 is body()).
@@ -241,7 +291,9 @@ func _place_decks() -> void:
 	var count: int = _decks.size()
 	for index: int in count:
 		var at: Vector3 = Vector3.ZERO
-		if config.profile == TimedMotionConfig.Profile.STEPS:
+		if config.profile == TimedMotionConfig.Profile.STAMP:
+			at = config.stamp_axis.normalized() * stamp_extension() + _stamp_shudder()
+		elif config.profile == TimedMotionConfig.Profile.STEPS:
 			var depth: float = step_extension(index) - config.plate_size * 0.5
 			at = Vector3(config.step_pitch * float(index), config.step_rise * float(index), depth)
 		else:
@@ -255,6 +307,9 @@ func _next_state(delta: float) -> Vector3:
 		var progress: float = move_toward(_speed_factor, _target(), delta / maxf(config.hinge_time, 0.05))
 		return Vector3(progress, _phase, _hinge_angle(progress))
 	var factor: float = move_toward(_speed_factor, _target(), delta / maxf(config.ramp_time, 0.01))
+	if config.profile == TimedMotionConfig.Profile.SWING:
+		var swing_phase: float = wrapf(_phase + TAU / maxf(config.swing_period, 0.1) * factor * delta, -PI, PI)
+		return Vector3(factor, swing_phase, deg_to_rad(config.swing_amplitude_deg) * sin(swing_phase))
 	var phase: float = wrapf(_phase + _phase_rate() * factor * delta, -PI, PI)
 	return Vector3(factor, phase, _limit_rad * sin(phase))
 
@@ -288,6 +343,8 @@ func _resolve_limit() -> void:
 ## Shape and mesh of this instance's profile. Fresh resources, the scene's are shared between instances. The top face passes
 ## through the pivot (the shape sits half its thickness below the body origin).
 func _build_shape() -> void:
+	if authored_shape():
+		return
 	var thickness: float = config.plate_thickness
 	var size: Vector3 = Vector3(config.plate_size, thickness, config.plate_size)
 	_rest_offset = Vector3.ZERO
@@ -310,7 +367,7 @@ func _build_shape() -> void:
 func _tick_translating(delta: float) -> void:
 	var factor: float = move_toward(_speed_factor, _target(), delta / maxf(config.ramp_time, 0.01))
 	_speed_factor = factor
-	if config.profile == TimedMotionConfig.Profile.STEPS:
+	if config.profile == TimedMotionConfig.Profile.STEPS or config.profile == TimedMotionConfig.Profile.STAMP:
 		_clock += delta * factor
 	else:
 		_advance_path(delta, factor)
@@ -367,6 +424,8 @@ func _build_decks() -> void:
 		_deck_velocity = PackedVector3Array([Vector3.ZERO])
 		return
 	var count: int = config.step_count if config.profile == TimedMotionConfig.Profile.STEPS else config.path_deck_count
+	if config.profile == TimedMotionConfig.Profile.STAMP:
+		count = 1
 	for index: int in range(1, maxi(count, 1)):
 		var deck: AnimatableBody3D = _body.duplicate() as AnimatableBody3D
 		deck.name = "Deck%d" % index
