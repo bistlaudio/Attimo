@@ -47,6 +47,18 @@ const BLOCKS: Dictionary = {
 		"positive": ["angular_speed", "ramp_time", "sweep_limit_deg", "tilt_limit_deg", "hand_length", "hand_width", "plate_size", "plate_thickness"],
 		"profile_presets": {"res://resources/kit/timed_motion/clock_hand.tres": "SWEEP", "res://resources/kit/timed_motion/tilting_platform.tres": "TILT"},
 	},
+	# Plan 05.1-10: the Energy source block (capsule +3, broken machine +5). step_interval is a divisor-like timer (T-05.1-29).
+	"EnergySource": {
+		"script": "res://scripts/kit/blocks/energy_source.gd",
+		"config_class": "EnergySourceConfig",
+		"config_script": "res://scripts/kit/configs/energy_source_config.gd",
+		"profiles": ["CAPSULE", "MACHINE"],
+		"preset": "res://resources/kit/energy_source/energy_capsule.tres",
+		"scene": "res://scenes/kit/energy/energy_capsule.tscn",
+		"probe": "step_interval",
+		"positive": ["step_interval", "amount"],
+		"profile_presets": {"res://resources/kit/energy_source/energy_capsule.tres": "CAPSULE", "res://resources/kit/energy_source/broken_machine.tres": "MACHINE"},
+	},
 }
 ## Source fragments a block script must not contain: direct writes of the player's motion (D-17).
 const FORBIDDEN_WRITES: Array[String] = [".move_velocity =", ".vertical_speed =", ".move_velocity +=", ".vertical_speed +=", ".velocity ="]

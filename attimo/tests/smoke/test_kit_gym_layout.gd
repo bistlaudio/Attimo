@@ -44,6 +44,8 @@ const CUT_SCENES: Array[String] = [
 	"res://scenes/mechanisms/slingshot_core.tscn",
 	"res://scenes/mechanisms/wall_pad.tscn",
 	"res://scenes/mechanisms/steam_nozzle.tscn",
+	"res://scenes/mechanisms/energy_capsule.tscn",
+	"res://scenes/mechanisms/broken_machine.tscn",
 ]
 
 

@@ -20,6 +20,7 @@ const SPELL_CLIPS: Dictionary[StringName, StringName] = {
 const HAND_BONE: StringName = &"upperarm.l"
 const SETTLE_FRAMES: int = 30
 const LEVER_SCENE: String = "res://scenes/mechanisms/lever.tscn"
+const CAPSULE_SCENE: String = "res://scenes/kit/energy/energy_capsule.tscn"
 ## A lever 1.2 m ahead: inside hand_near_range (2.2 m), so E starts near contact and the arm goes out.
 const NEAR_POSITION: Vector3 = Vector3(0.0, 0.0, 1.2)
 const MODIFIER_PATH: String = "VisualRoot/Mannequin/Rig_Medium/Skeleton3D/AimPoseModifier"
@@ -56,6 +57,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_near_contact(tree, check)
 	await _scenario_spell_hand(tree, check)
 	await _scenario_loader_hold(tree, check)
+	await _scenario_extractor_point(tree, check)
 	await _scenario_clip_scale(tree, check)
 	await _scenario_dash_scale(tree, check)
 	await _scenario_dash_choice(tree, check)
@@ -209,6 +211,25 @@ func _scenario_loader_hold(tree: SceneTree, check: Callable) -> void:
 	Input.action_release(&"loader")
 	var lowered: int = await Fixtures.wait_until(tree, func() -> bool: return not _hand.arm_out and is_zero_approx(float(_anim_tree.get(MannequinAnimator.P_AIM))), 180)
 	check.call(lowered >= 0, "(l4) releasing the Loader lowers the layer back to 0 (took %d frames)" % lowered)
+	await _end(tree)
+
+
+# D-44: while the Extractor drains, the arm points at the source's target point (the kit capsule scene).
+func _scenario_extractor_point(tree: SceneTree, check: Callable) -> void:
+	await _begin(tree)
+	var chest: Vector3 = _player.global_position + Vector3.UP * 1.3
+	var point: Vector3 = chest + _rig.aim_direction_from(chest) * 2.5
+	var capsule: EnergySource = Fixtures.spawn_scene(tree.root, CAPSULE_SCENE, Vector3(300.0, 0.0, 300.0)) as EnergySource
+	capsule.global_position += point - capsule.core.global_position
+	_player.arm_energy.reset_to(0)
+	await Fixtures.tap_action(tree, &"module_2", 2)
+	Input.action_press(&"use_hand")
+	await Fixtures.wait_physics(tree, 8)
+	check.call(_hand.arm_out, "(x1) the Extractor drain puts the arm out")
+	check.call(_hand.arm_out_point.is_finite() and _hand.arm_out_point.is_equal_approx(capsule.target_point()), "(x2) arm_out_point is the capsule's target point (%s)" % _hand.arm_out_point)
+	Input.action_release(&"use_hand")
+	await Fixtures.wait_physics(tree, 3)
+	capsule.queue_free()
 	await _end(tree)
 
 

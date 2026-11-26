@@ -1,12 +1,12 @@
 extends RefCounted
-## ENRG-02 / D-07, D-08, D-11, D-16: the Extractor drains an energy source (capsule +40 in 0.5 s, broken machine +60 in 2 s) into the
+## ENRG-02 / D-07, D-08, D-11, D-16, D-42, D-44: the Extractor drains an energy source (capsule +3 steps quickly, broken machine +5 in about 2 s) into the
 ## arm. It needs hand_extract_range and hand_extract_angle, never overfills the arm (the source keeps the rest), goes dark when empty
 ## and refills after respawn_time (0 never; reset() at once). Module keys 1 and 2 equip, the wheel skips the debug module.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
-const CAPSULE_SCENE: String = "res://scenes/mechanisms/energy_capsule.tscn"
-const MACHINE_SCENE: String = "res://scenes/mechanisms/broken_machine.tscn"
+const CAPSULE_SCENE: String = "res://scenes/kit/energy/energy_capsule.tscn"
+const MACHINE_SCENE: String = "res://scenes/kit/energy/broken_machine.tscn"
 const GLOW_ON: String = "res://resources/mechanisms/glow_energy.tres"
 const GLOW_OFF: String = "res://resources/mechanisms/glow_off.tres"
 const SHIPPED_TPS: int = 60
@@ -103,6 +103,24 @@ func _equip_extractor(tree: SceneTree) -> void:
 	await Fixtures.wait_physics(tree, 2)
 
 
+## The ExtractorBeam mesh of the hand presentation (D-44), or null.
+func _beam() -> MeshInstance3D:
+	return _player.find_child("ExtractorBeam", true, false) as MeshInstance3D
+
+
+## Beam length in m: the mesh height times the scale along its own y axis.
+func _beam_length(beam: MeshInstance3D) -> float:
+	var cylinder: CylinderMesh = beam.mesh as CylinderMesh
+	if cylinder == null:
+		return -1.0
+	return cylinder.height * beam.global_basis.y.length()
+
+
+func _palm_point() -> Vector3:
+	var palm: Node3D = _player.find_child("Palm", true, false) as Node3D
+	return palm.global_position if palm != null else Vector3.ZERO
+
+
 func _lens(source: EnergySource) -> MeshInstance3D:
 	return source.glow_meshes[0]
 
@@ -119,8 +137,20 @@ func _scenario_capsule(tree: SceneTree, check: Callable) -> void:
 	await _equip_extractor(tree)
 	check.call(_hand.active_def.id == &"extractor", "(1) key 2 equips the Extractor")
 	var before: int = _player.arm_energy.value
-	await Fixtures.hold_action(tree, &"use_hand", 0.6)
+	check.call(_beam() != null and not _beam().visible, "(1) the ExtractorBeam exists and is hidden before the drain (D-44)")
+	Input.action_press(&"use_hand")
+	await Fixtures.wait_physics(tree, 6)
+	await Fixtures.wait_process(tree, 3)
+	var beam: MeshInstance3D = _beam()
+	if beam != null:
+		var error: float = absf(_beam_length(beam) - _palm_point().distance_to(capsule.target_point()))
+		check.call(beam.visible and error < 0.05, "(1) the beam is visible while draining and as long as hand to source (error %.3f m)" % error)
+		check.call(beam.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, "(1) the beam casts no shadow")
+	await Fixtures.wait_physics(tree, ceili(0.6 * SHIPPED_TPS) - 6)
+	Input.action_release(&"use_hand")
 	await Fixtures.wait_physics(tree, 3)
+	await Fixtures.wait_process(tree, 3)
+	check.call(beam != null and not beam.visible, "(1) the beam is hidden after the release and the empty source")
 	var gained: int = _player.arm_energy.value - before
 	check.call(gained == 3, "(1) holding left click 0.6 s gives +3 steps (got %d)" % gained)
 	check.call(not capsule.is_available(), "(1) the capsule reports empty")
@@ -170,6 +200,7 @@ func _scenario_full_arm(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.hold_action(tree, &"use_hand", 0.6)
 	await Fixtures.wait_physics(tree, 3)
 	check.call(_player.arm_energy.value == 12, "(3) the arm stops at 12 (got %d)" % _player.arm_energy.value)
+	check.call(_beam() != null and not _beam().visible, "(3) the beam is hidden while the arm is full")
 	check.call(capsule.is_available() and capsule.remaining == 2, "(3) the capsule keeps the remaining 2 steps, it is not emptied (%d)" % capsule.remaining)
 	check.call(_emptied.is_empty(), "(3) no energy_source_emptied for a capsule that kept steps")
 	await _end(tree)
