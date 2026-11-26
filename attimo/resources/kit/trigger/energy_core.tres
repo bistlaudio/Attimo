@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TriggerConfig" format=3]
+
+[ext_resource type="Script" path="res://scripts/kit/configs/trigger_config.gd" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+profile = 1
+threshold = 6
+size = Vector3(4, 4, 2.5)
+thresholds = PackedInt32Array(3, 6, 9)

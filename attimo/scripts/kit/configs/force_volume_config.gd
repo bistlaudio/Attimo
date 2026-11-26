@@ -2,15 +2,15 @@ class_name ForceVolumeConfig
 extends Resource
 ## Config of the Force volume block (Phase 05.1, KIT-01, D-10, D-11): a box volume that acts on the player through PlayerController request
 ## APIs only. Two enums instead of flags: Profile says what the volume does (DIRECTIONAL pushes or launches along `direction`, DRAG slows the
-## run, GRAVITY scales the gravity down; RADIAL is appended by a later plan), Timing says when (CONTINUOUS is always on, PULSED cycles off / on). Presets live in
+## run, GRAVITY scales the gravity down, RADIAL pulls toward the core point, a sphere of radius size.x / 2 around the point size.y / 2 above the node), Timing says when (CONTINUOUS is always on, PULSED cycles off / on). Presets live in
 ## resources/kit/force_volume/. Timers and divisors have strictly positive minimums (T-05.1-45). A loaded preset is never written at
 ## runtime: the block duplicates it in _ready (D-12).
 
-enum Profile { DIRECTIONAL, DRAG, GRAVITY }
+enum Profile { DIRECTIONAL, DRAG, GRAVITY, RADIAL }
 enum Timing { CONTINUOUS, PULSED }
 
 @export_group("Shape")
-## What the volume does: DIRECTIONAL pushes along `direction`, DRAG slows the run to `move_scale`.
+## What the volume does: DIRECTIONAL pushes along `direction`, DRAG slows the run to `move_scale`, GRAVITY floats, RADIAL pulls toward the core.
 @export var profile: Profile = Profile.DIRECTIONAL
 ## Always on, or a rhythm of `pulse_off` seconds off and `pulse_on` seconds on (the cycle starts off).
 @export var timing: Timing = Timing.CONTINUOUS
@@ -46,3 +46,10 @@ enum Timing { CONTINUOUS, PULSED }
 @export_range(0, 3, 1) var income_steps: int = 0
 ## Real seconds before this block gives a step again; raise it to stop farming.
 @export_range(0.5, 30.0, 0.5) var income_cooldown: float = 3.0
+
+@export_group("Radial")
+## RADIAL: moving away from the core faster than this (m/s) counts as a fast escape (a dash, a Loader flight and any speed above it): it suspends
+## the pull and costs steps through the EnergyCost child. Keep it above the run speed (8.5) so plain walking out stays free (T-05.1-54). Start 9.5.
+@export_range(1.0, 40.0, 0.1) var escape_speed: float = 9.5
+## RADIAL: inside this distance in m from the core the player is damped to a standstill instead of pulled (no swinging through the centre).
+@export_range(0.1, 3.0, 0.05) var core_radius: float = 0.6

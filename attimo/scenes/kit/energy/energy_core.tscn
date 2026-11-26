@@ -1,0 +1,121 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/kit/blocks/trigger.gd" id="1_script"]
+[ext_resource type="Resource" path="res://resources/kit/trigger/energy_core.tres" id="2_config"]
+[ext_resource type="Script" path="res://scripts/mechanisms/interactable.gd" id="3_interactable"]
+[ext_resource type="Script" path="res://scripts/kit/components/energy_cost.gd" id="4_cost"]
+[ext_resource type="PackedScene" path="res://assets/prototype_bits/Primitive_Pillar.gltf" id="5_pillar"]
+[ext_resource type="PackedScene" path="res://scenes/mechanisms/glow_element.tscn" id="6_glowel"]
+[ext_resource type="Material" path="res://resources/mechanisms/glow_idle.tres" id="7_idle"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_frame"]
+albedo_color = Color(0.35, 0.33, 0.3, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_base"]
+size = Vector3(0.6, 0.8, 0.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hit"]
+size = Vector3(0.9, 0.9, 0.9)
+
+[sub_resource type="BoxMesh" id="BoxMesh_plate"]
+size = Vector3(0.7, 0.08, 0.7)
+material = SubResource("Mat_frame")
+
+[sub_resource type="BoxMesh" id="BoxMesh_post"]
+size = Vector3(0.06, 0.8, 0.06)
+material = SubResource("Mat_frame")
+
+[node name="EnergyCoreLook" type="Node3D"]
+script = ExtResource("1_script")
+layer = 1
+energy_relation = 1
+config = ExtResource("2_config")
+
+[node name="Base" type="StaticBody3D" parent="."]
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Base"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+shape = SubResource("BoxShape3D_base")
+
+[node name="Mesh" parent="Base" instance=ExtResource("5_pillar")]
+transform = Transform3D(0.3, 0, 0, 0, 0.2, 0, 0, 0, 0.3, 0, 0, 0)
+
+[node name="Lantern" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+
+[node name="Plate" type="MeshInstance3D" parent="Lantern"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
+mesh = SubResource("BoxMesh_plate")
+
+[node name="Cap" type="MeshInstance3D" parent="Lantern"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+mesh = SubResource("BoxMesh_plate")
+
+[node name="Post0" type="MeshInstance3D" parent="Lantern"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.45, 0.3)
+mesh = SubResource("BoxMesh_post")
+
+[node name="Post1" type="MeshInstance3D" parent="Lantern"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0.45, 0.3)
+mesh = SubResource("BoxMesh_post")
+
+[node name="Post2" type="MeshInstance3D" parent="Lantern"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.45, -0.3)
+mesh = SubResource("BoxMesh_post")
+
+[node name="Post3" type="MeshInstance3D" parent="Lantern"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0.45, -0.3)
+mesh = SubResource("BoxMesh_post")
+
+[node name="GlowLens" parent="Lantern" instance=ExtResource("6_glowel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+style = 3
+size = 1.8
+material_override = ExtResource("7_idle")
+
+[node name="Rings" type="Node3D" parent="Lantern"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
+
+[node name="Ring0" parent="Lantern/Rings" instance=ExtResource("6_glowel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0, 0)
+style = 0
+size = 0.7
+material_override = ExtResource("7_idle")
+
+[node name="Ring1" parent="Lantern/Rings" instance=ExtResource("6_glowel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 0)
+style = 0
+size = 0.7
+material_override = ExtResource("7_idle")
+
+[node name="Ring2" parent="Lantern/Rings" instance=ExtResource("6_glowel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0, 0)
+style = 0
+size = 0.7
+material_override = ExtResource("7_idle")
+
+[node name="AimPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+
+[node name="HitBody" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+collision_layer = 4
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HitBody"]
+shape = SubResource("BoxShape3D_hit")
+
+[node name="Interactable" type="Node" parent="." node_paths=PackedStringArray("hit_body", "aim_point", "glow_meshes")]
+script = ExtResource("3_interactable")
+accepts_near = true
+hit_body = NodePath("../HitBody")
+aim_point = NodePath("../AimPoint")
+glow_meshes = [NodePath("../Lantern/GlowLens")]
+
+[node name="EnergyCost" type="Node" parent="."]
+script = ExtResource("4_cost")
+steps = 1
+interval = 0.4
+pay_on_start = false

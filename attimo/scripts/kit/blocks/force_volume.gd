@@ -9,6 +9,18 @@ extends KitBlock
 ## farms. The block never writes the player's motion itself (D-17). Optional look nodes are driven here: a `Column` (PULSED: visible
 ## during the pulse) and a `Strips` group (the leaf storm: strips scroll and sway, faster during a gust; plain mesh motion, no particles).
 
+## RADIAL (plan 05.1-18, D-23 amended, D-37, D-39): the attraction field. A sphere of radius size.x / 2 around the core point, size.y / 2 above the
+## node. It pulls the player toward the core with push_toward, at a target speed below the run speed and an acceleration below the ground
+## acceleration, so walking out is always possible and free (T-05.1-54). A fast escape (a dash or long jump or Loader flight moving away, or moving
+## away faster than `escape_speed`) suspends the pull and is paid by the child EnergyCost (1 step per started 0.5 s, reason escape). When a step
+## cannot be paid the pull resumes for the rest of the stay and one refusal fires; leaving the field clears that.
+
+## Seconds of calm (not fast any more) that end a fast escape; it bridges the one tick gaps between the states of a dash and a flight.
+const ESCAPE_GRACE: float = 0.2
+## Outward speed in m/s a dash, long jump or flight needs to count as an escape (a dash toward the core is none).
+const ESCAPE_MIN_AWAY: float = 1.0
+## Share of the pull acceleration the approach profile plans to brake with (the rest is margin for gravity and tick quantisation).
+const BRAKE_SHARE: float = 0.35
 ## Smallest volume edge in m (a zero edge would never overlap).
 const MIN_EDGE: float = 0.5
 ## Seconds the burst column takes to grow to full height.
@@ -23,11 +35,16 @@ var _present: Array[PlayerController] = []
 var _launched: Array[PlayerController] = []
 var _clock: float = 0.0
 var _strip_base: Dictionary = {}
+var _escaping: bool = false
+var _escape_failed: bool = false
+var _suspended: bool = false
+var _calm: float = 0.0
 
 @onready var _volume: Area3D = $Volume
 @onready var _column: Node3D = get_node_or_null(^"Column") as Node3D
 @onready var _strips: Node3D = get_node_or_null(^"Strips") as Node3D
 @onready var _amplification: Amplification = get_node_or_null(^"Amplification") as Amplification
+@onready var _cost: EnergyCost = get_node_or_null(^"EnergyCost") as EnergyCost
 
 
 func _ready() -> void:
@@ -37,10 +54,15 @@ func _ready() -> void:
 	_volume.collision_layer = 0
 	_volume.collision_mask = PhysicsLayers.PLAYER
 	var size: Vector3 = volume_size()
-	var box: BoxShape3D = BoxShape3D.new()
-	box.size = size
 	var shape_node: CollisionShape3D = $Volume/CollisionShape3D as CollisionShape3D
-	shape_node.shape = box
+	if config.profile == ForceVolumeConfig.Profile.RADIAL:
+		var sphere: SphereShape3D = SphereShape3D.new()
+		sphere.radius = size.x * 0.5
+		shape_node.shape = sphere
+	else:
+		var box: BoxShape3D = BoxShape3D.new()
+		box.size = size
+		shape_node.shape = box
 	shape_node.position = Vector3(0.0, size.y * 0.5, 0.0)
 	if _strips != null:
 		for strip: Node in _strips.get_children():
@@ -58,6 +80,10 @@ func _physics_process(delta: float) -> void:
 	for player: PlayerController in players:
 		if not _present.has(player):
 			entered.append(player)
+	var left: Array[PlayerController] = []
+	for player: PlayerController in _present:
+		if not players.has(player):
+			left.append(player)
 	_present = players
 	match config.profile:
 		ForceVolumeConfig.Profile.DIRECTIONAL:
@@ -70,6 +96,8 @@ func _physics_process(delta: float) -> void:
 			for player: PlayerController in players:
 				var amp: float = maxf(_amplification.factor(player), 1.0) if _amplification != null else 1.0
 				player.request_gravity_scale(config.gravity_scale / amp)
+		ForceVolumeConfig.Profile.RADIAL:
+			_act_radial(players, left, delta)
 	_apply_look()
 
 
@@ -110,8 +138,20 @@ func world_direction() -> Vector3:
 	return (global_basis * local).normalized()
 
 
+## RADIAL: true while a paid fast escape holds the pull off.
+func is_pull_suspended() -> bool:
+	return _suspended
+
+
+## RADIAL: the world point the field pulls toward.
+func core_point() -> Vector3:
+	return global_position + Vector3(0.0, volume_size().y * 0.5, 0.0)
+
+
 func reset() -> void:
 	super.reset()
+	_end_escape(true)
+	_suspended = false
 	_present.clear()
 	_begin_cycle()
 	_apply_look()
@@ -167,6 +207,68 @@ func _act_directional(players: Array[PlayerController], entered: Array[PlayerCon
 	if not pulsed:
 		for player: PlayerController in entered:
 			_give_income(player)
+
+
+func _act_radial(players: Array[PlayerController], left: Array[PlayerController], delta: float) -> void:
+	if not left.is_empty() and players.is_empty():
+		_end_escape(true)
+		_suspended = false
+	for player: PlayerController in players:
+		var offset: Vector3 = (player.global_position + Vector3.UP) - core_point()
+		var dist: float = offset.length()
+		if dist < 0.05:
+			continue
+		var away: Vector3 = offset / dist
+		var velocity: Vector3 = Vector3(player.move_velocity.x, player.vertical_speed, player.move_velocity.z)
+		var fast: bool = _is_fast_escape(player, velocity.dot(away))
+		if fast and not _escape_failed:
+			_calm = 0.0
+			_escaping = true
+			if _cost != null and not _cost.tick(player, delta, &"escape"):
+				_escape_failed = true
+		elif _escaping:
+			_calm += delta
+			if _calm >= ESCAPE_GRACE:
+				_end_escape(false)
+		_suspended = _escaping and not _escape_failed
+		if _suspended:
+			continue
+		_pull(player, away, dist, velocity)
+
+
+## A dash, long jump or straight flight that goes away from the core, or any speed away from it above escape_speed.
+func _is_fast_escape(player: PlayerController, away_speed: float) -> bool:
+	if away_speed > config.escape_speed:
+		return true
+	if away_speed <= ESCAPE_MIN_AWAY:
+		return false
+	var state_name: StringName = &"" if player.state_machine.current == null else player.state_machine.current.name
+	return state_name == &"Dash" or state_name == &"LongJump" or player.straight_flight_left > 0.0
+
+
+func _end_escape(clear_failed: bool) -> void:
+	_escaping = false
+	_calm = 0.0
+	if _cost != null:
+		_cost.end_episode()
+	if clear_failed:
+		_escape_failed = false
+
+
+## The pull: toward the core at config.strength, the approach speed limited by what the pull can brake (a linear fade overshoots the core at high
+## speed). In the air sideways speed is damped too, or the player orbits the core instead of settling; inside core_radius every axis is damped.
+func _pull(player: PlayerController, away: Vector3, dist: float, velocity: Vector3) -> void:
+	if dist > config.core_radius:
+		var braking: float = sqrt(2.0 * config.accel * BRAKE_SHARE * (dist - config.core_radius))
+		player.push_toward(-away, minf(config.strength, braking), config.accel)
+		if not player.is_grounded():
+			var sideways: Vector3 = velocity - away * velocity.dot(away)
+			if sideways.length_squared() > 0.0001:
+				player.push_toward(sideways.normalized(), 0.0, config.accel)
+	else:
+		player.push_toward(Vector3.UP, 0.0, config.accel)
+		player.push_toward(Vector3.RIGHT, 0.0, config.accel)
+		player.push_toward(Vector3.BACK, 0.0, config.accel)
 
 
 func _give_income(player: PlayerController) -> void:

@@ -96,13 +96,13 @@ func _scenario_cost_ticks(tree: SceneTree, check: Callable) -> void:
 	var delta: float = 1.0 / float(SHIPPED_TPS)
 	for tick_index: int in 72:
 		cost.call(&"tick", player, delta, &"test_end")
-	check.call(player.arm_energy.value == 4, "EnergyCost end-of-interval: 72 ticks of 1/60 s at 0.5 s pay 1 step (%d left)" % player.arm_energy.value)
+	check.call(player.arm_energy.value == 3, "EnergyCost end-of-interval: 72 ticks of 1/60 s (1.2 s) at 0.5 s pay 2 steps, the first after 0.5 s (%d left)" % player.arm_energy.value)
 	cost.call(&"end_episode")
 	cost.set(&"pay_on_start", true)
 	Fixtures.set_energy(player, 5)
 	var first: bool = bool(cost.call(&"tick", player, delta, &"test_start"))
 	check.call(first and player.arm_energy.value == 4, "EnergyCost pay-on-start: the very first tick pays 1 step (%d left)" % player.arm_energy.value)
-	for tick_index: int in 59:
+	for tick_index: int in 28:
 		cost.call(&"tick", player, delta, &"test_start")
 	check.call(player.arm_energy.value == 4, "EnergyCost pay-on-start: no second payment before the interval is over (%d left)" % player.arm_energy.value)
 	for tick_index: int in 3:

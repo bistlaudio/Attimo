@@ -1,0 +1,71 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/kit/force_volume_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://resources/kit/force_volume/attraction_field.tres" id="2_config"]
+[ext_resource type="Script" path="res://scripts/kit/components/energy_cost.gd" id="3_cost"]
+[ext_resource type="Material" path="res://resources/mechanisms/look_brass.tres" id="4_brass"]
+[ext_resource type="PackedScene" path="res://scenes/mechanisms/glow_element.tscn" id="5_glowel"]
+[ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="6_glow"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_shell"]
+radius = 5.0
+height = 10.0
+radial_segments = 16
+rings = 8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_shell"]
+transparency = 1
+cull_mode = 2
+albedo_color = Color(0.25, 0.9, 0.85, 0.08)
+emission_enabled = true
+emission = Color(0.25, 0.9, 0.85, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="TorusMesh" id="TorusMesh_ring"]
+inner_radius = 0.55
+outer_radius = 0.7
+rings = 12
+ring_segments = 6
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_foot"]
+top_radius = 0.35
+bottom_radius = 0.55
+height = 0.3
+radial_segments = 8
+
+[node name="AttractionFieldLook" instance=ExtResource("1_base")]
+layer = 1
+energy_relation = 1
+config = ExtResource("2_config")
+
+[node name="EnergyCost" type="Node" parent="." index="1"]
+script = ExtResource("3_cost")
+steps = 1
+interval = 0.5
+pay_on_start = true
+
+[node name="Shell" type="MeshInstance3D" parent="." index="2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("SphereMesh_shell")
+surface_material_override/0 = SubResource("StandardMaterial3D_shell")
+
+[node name="Foot" type="MeshInstance3D" parent="." index="3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+mesh = SubResource("CylinderMesh_foot")
+material_override = ExtResource("4_brass")
+
+[node name="CageA" type="MeshInstance3D" parent="." index="4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("TorusMesh_ring")
+material_override = ExtResource("4_brass")
+
+[node name="CageB" type="MeshInstance3D" parent="." index="5"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 1, 0)
+mesh = SubResource("TorusMesh_ring")
+material_override = ExtResource("4_brass")
+
+[node name="Core" parent="." index="6" instance=ExtResource("5_glowel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+style = 3
+size = 3.0
+material_override = ExtResource("6_glow")
