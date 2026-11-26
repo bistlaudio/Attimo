@@ -70,7 +70,11 @@ func _is_loader(player: PlayerController) -> bool:
 func _cage_entry(tree: SceneTree, player: PlayerController) -> bool:
 	player.teleport(CENTRE + START_OFFSET)
 	player.launch_along(Vector3.RIGHT, ENTRY_SPEED, false)
-	return await Fixtures.wait_until(tree, func() -> bool: return _is_loader(player), 40) >= 0
+	# The flight is held level (vertical speed zero) so the chest point crosses the core centre (D-54).
+	return await Fixtures.wait_until(tree, func() -> bool:
+		if not _is_loader(player):
+			player.vertical_speed = 0.0
+		return _is_loader(player), 40) >= 0
 
 
 ## Taps the loader to throw Rino out of the cage and waits until he is out.

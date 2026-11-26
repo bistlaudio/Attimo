@@ -5,7 +5,7 @@ extends RefCounted
 ## loader_hold_cap of real time with no input (never on tick 1). Plan 05.1-11 (D-60): the throw is a FREE 2-step Loader flight along the
 ## view: speed = min((v + push + 2 * (push_step + k * v)) * kit_launch_scale, loader_max_speed), a straight gravity-free flight of
 ## loader_flight_distance_2 plus the overflow (straight_flight_steps stays 0, so the Loader field still blocks it, D-53). No energy
-## is spent or gained, loader_available true, the air dash untouched, air control locked. A player in an arm Loader hold is not caught, and the cage does
+## is spent (the catch itself gives +1 step, plan 05.1-14 D-43), loader_available true, the air dash untouched, air control locked. A player in an arm Loader hold is not caught, and the cage does
 ## not catch again before rearm_time has passed and the player has left the radius. Every expectation derives from player.config.
 ## The LoaderProfile source is read through the script's constant map and LoaderState.source() through call(), so this file compiles
 ## before the classes exist (TDD RED of plan 05.1-01).
@@ -138,7 +138,16 @@ func _fly_in(tree: SceneTree, player: PlayerController, dash_available: bool) ->
 	player.teleport(CENTRE + START_OFFSET)
 	player.air_dash_available = dash_available
 	player.launch_along(Vector3.RIGHT, ENTRY_SPEED, false)
-	return await Fixtures.wait_until(tree, func() -> bool: return _is_loader(player), 40)
+	return await _glide_until_loader(tree, player, 40)
+
+
+## Waits for the Loader state while holding the flight level (vertical speed zero every tick), so the chest point crosses the core centre
+## the way the old suction-free test geometry assumed (D-54: the cage now catches only when the chest is inside 0.6 m of the centre).
+func _glide_until_loader(tree: SceneTree, player: PlayerController, max_ticks: int) -> int:
+	return await Fixtures.wait_until(tree, func() -> bool:
+		if not _is_loader(player):
+			player.vertical_speed = 0.0
+		return _is_loader(player), max_ticks)
 
 
 ## The catch checks every scenario shares: Loader with source CAGE, the world at loader_slow_factor, the body hangs.
@@ -168,7 +177,7 @@ func _check_discharge(check: Callable, player: PlayerController, stored: float, 
 	var angle: float = rad_to_deg(velocity.angle_to(THROW_DIRECTION.normalized()))
 	check.call(angle < 1.0, "(%s) the throw goes along the view (off by %.2f deg)" % [name, angle])
 	check.call(released["steps"] == 2, "(%s) the fact carries the 2 steps of the cage (got %s)" % [name, released["steps"]])
-	check.call(released["energy"] == 3 and _spent.is_empty(), "(%s) no energy is spent or gained (energy %d, spent %s)" % [name, released["energy"], _spent])
+	check.call(released["energy"] == 4 and _spent.is_empty(), "(%s) no energy is spent and the catch gave +1 step, 3 -> 4 (D-43; energy %d, spent %s)" % [name, released["energy"], _spent])
 	check.call(_prop(player, &"straight_flight_steps") == 0.0, "(%s) the cage flight pays no steps (straight_flight_steps %s)" % [name, _prop(player, &"straight_flight_steps")])
 	check.call(player.loader_available, "(%s) the cage gives the Loader use back (loader_available true)" % name)
 	check.call(released["dash_available"] == dash_available and player.air_dash_available == dash_available, "(%s) air_dash_available stays %s" % [name, dash_available])
@@ -230,7 +239,7 @@ func _scenario_fast_entry(tree: SceneTree, check: Callable, scale: float) -> voi
 	var label: String = "fast x%.1f" % scale
 	player.teleport(CENTRE + START_OFFSET)
 	player.launch_along(Vector3.RIGHT, 16.0 / scale, false)
-	var entered: int = await Fixtures.wait_until(tree, func() -> bool: return _is_loader(player), 40)
+	var entered: int = await _glide_until_loader(tree, player, 40)
 	check.call(entered >= 0, "(%s) the cage catches the fast entry" % label)
 	if entered < 0:
 		await _end(tree, check, label)
@@ -343,6 +352,7 @@ func _scenario_rearm(tree: SceneTree, check: Callable) -> void:
 	player.launch_along(Vector3.RIGHT, ENTRY_SPEED, false)
 	var again: bool = false
 	for i: int in 30:
+		player.vertical_speed = 0.0
 		await tree.physics_frame
 		if _is_loader(player):
 			again = true
@@ -404,6 +414,7 @@ func _scenario_inside_only(tree: SceneTree, check: Callable) -> void:
 		var caught: bool = false
 		var speed_changed: bool = false
 		for i: int in 60:
+			player.vertical_speed = 0.0
 			await tree.physics_frame
 			if _is_loader(player):
 				caught = true
@@ -414,6 +425,6 @@ func _scenario_inside_only(tree: SceneTree, check: Callable) -> void:
 		await Fixtures.wait_physics(tree, 2)
 	player.teleport(CENTRE + START_OFFSET)
 	player.launch_along(Vector3.RIGHT, ENTRY_SPEED, false)
-	var through: int = await Fixtures.wait_until(tree, func() -> bool: return _is_loader(player), 40)
+	var through: int = await _glide_until_loader(tree, player, 40)
 	check.call(through >= 0, "(inside) a flight through the centre is caught")
 	await _end(tree, check, "inside")

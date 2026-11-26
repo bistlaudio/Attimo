@@ -4,6 +4,8 @@
 [ext_resource type="Resource" path="res://resources/kit/catch_launch/steam_cannon_default.tres" id="2_config"]
 [ext_resource type="Material" path="res://resources/mechanisms/look_brass.tres" id="3_brass"]
 
+[ext_resource type="PackedScene" path="res://scenes/mechanisms/glow_element.tscn" id="9_glowel"]
+[ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="10_glow"]
 [sub_resource type="CylinderMesh" id="CylinderMesh_base"]
 top_radius = 0.4
 bottom_radius = 0.6
@@ -46,7 +48,7 @@ rings = 4
 
 [node name="SteamCannon" instance=ExtResource("1_base")]
 layer = 0
-energy_relation = 0
+energy_relation = 3
 config = ExtResource("2_config")
 
 [node name="Trigger" parent="." index="0"]
@@ -105,3 +107,8 @@ surface_material_override/0 = SubResource("StandardMaterial3D_steam")
 position = Vector3(0, 0.2, 0.6)
 mesh = SubResource("SphereMesh_puff")
 surface_material_override/0 = SubResource("StandardMaterial3D_steam")
+
+[node name="IncomeAccent" parent="Barrel" instance=ExtResource("9_glowel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, -0.9)
+material_override = ExtResource("10_glow")
+size = 0.4

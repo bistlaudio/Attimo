@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/kit/blocks/catch_launch.gd" id="1_script"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_trigger"]
-radius = 2.5
+radius = 1.1
 
 [node name="CatchLaunch" type="Node3D"]
 script = ExtResource("1_script")

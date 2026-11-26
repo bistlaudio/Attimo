@@ -134,7 +134,7 @@ func _build_wall_pads(role: Node3D, builder: RefCounted) -> void:
 ## Catch & launch (plans 05.1-01 / 02). The cannon is yaw only: the barrel pitch lives in its config, never on the node; yaw -90
 ## points the barrel east, along the free row toward the area's east wall. The cage hangs SLINGSHOT_HANG over the floor.
 func _build_catch_launch(role: Node3D, builder: RefCounted) -> void:
-	var cannon: Node3D = _station(role, builder, "SteamCannon", _slot("S", 5, 1), "Dampfkanone", "Erwartet: Fängt dich am Rohr, kurz Halt, dann immer der gleiche Bogen", Vector3(-4.0, 3.2, 4.0))
+	var cannon: Node3D = _station(role, builder, "SteamCannon", _slot("S", 5, 1), "Dampfkanone", "Erwartet: Fängt dich am Rohr, kurz Halt, dann immer der gleiche Bogen; +1 Stufe", Vector3(-4.0, 3.2, 4.0))
 	builder.call(&"_instance", cannon, STEAM_CANNON_SCENE, "SteamCannon", Vector3.ZERO, builder.call(&"_yaw", -90.0))
-	var cage: Node3D = _station(role, builder, "Slingshot", _slot("S", 6, 0), "Schleuderkern (wie der Loader)", "Erwartet: Fängt dich, Zeitlupe; Rechtsklick loslassen oder antippen wirft in Blickrichtung, sonst automatisch nach 1,2 s", Vector3(-4.0, 3.2, 4.0))
+	var cage: Node3D = _station(role, builder, "Slingshot", _slot("S", 6, 0), "Schleuderkern (wie der Loader)", "Erwartet: Fängt dich nur, wenn du mitten durch den Ring fliegst; Zeitlupe, Rechtsklick loslassen wirft dich gerade in Blickrichtung; +1 Stufe", Vector3(-4.0, 3.2, 4.0))
 	builder.call(&"_instance", cage, SLINGSHOT_SCENE, "Slingshot", Vector3(0.0, SLINGSHOT_HANG, 0.0))
