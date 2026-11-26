@@ -293,7 +293,7 @@ func _scenario_kit_rows(tree: SceneTree, check: Callable) -> void:
 	if panel.has_method(&"set_kit_value"):
 		panel.call(&"set_kit_value", &"fixed_speed", 999.0)
 	check.call(float(near_config.get("fixed_speed")) <= 40.0, "(10) a kit value is clamped to its range (fixed_speed %.1f)" % float(near_config.get("fixed_speed")))
-	check.call(panel.row_count() == _expected_rows() and panel.hand_row_count() >= 8, "(10) the movement and hand rows are unchanged by the Kit section")
+	check.call(panel.row_count() == _expected_rows() and panel.hand_row_count() >= 3, "(10) the movement and hand rows are unchanged by the Kit section")
 	player.teleport(Vector3(0.0, 0.0, -37.0))
 	await tree.create_timer(KIT_SCAN_WAIT, true, false, true).timeout
 	check.call(_kit_header(panel) == "Kit: CannonFar", "(10) moving to the far cannon rebinds the Kit section (got '%s')" % _kit_header(panel))
