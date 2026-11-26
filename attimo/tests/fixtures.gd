@@ -197,9 +197,10 @@ static func spawn_scene(root: Node, path: String, position: Vector3) -> Node3D:
 	return node
 
 
-## Sets the arm energy of `player` through its owner, ArmEnergy (the only writer of the value).
-static func set_energy(player: PlayerController, value: float) -> void:
-	player.arm_energy.reset_to(value)
+## Sets the arm energy of `player` in whole steps (0 .. 12) through its owner, ArmEnergy (the only writer of the value). reset_to
+## also zeroes the tick accumulator, so a test never inherits half a passive tick.
+static func set_energy(player: PlayerController, steps: int) -> void:
+	player.arm_energy.reset_to(steps)
 
 
 ## Gives back every TimeFx request, so a test that held the Loader cannot leave the world in slow motion.

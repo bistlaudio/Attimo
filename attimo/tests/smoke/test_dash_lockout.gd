@@ -160,20 +160,24 @@ func _scenario_no_lockout(tree: SceneTree, check: Callable) -> void:
 	await _end(player)
 
 
-# The one lockout (plan 05-03): an air dash the arm cannot pay. Only in the air, with the charge unspent and the cooldown elapsed.
+# The one lockout (D-37, D-39): a dash the arm cannot pay, on the ground and in the air. The air dash needs the charge unspent and
+# the cooldown elapsed; the ground dash needs the cooldown elapsed.
 func _scenario_energy_reason(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
-	var cost: float = player.config.air_dash_cost
-	Fixtures.set_energy(player, 0.0)
-	check.call(player.dash_locked_reason() == &"" and player.can_dash(), "(e1) on the ground an empty arm locks nothing (ground dash is free)")
+	var cost: int = player.config.air_dash_cost
+	Fixtures.set_energy(player, 0)
+	check.call(player.dash_locked_reason() == &"energy" and not player.can_dash(), "(e1) on the ground an empty arm locks the dash (got %s)" % player.dash_locked_reason())
+	Fixtures.set_energy(player, player.config.dash_cost)
+	check.call(player.dash_locked_reason() == &"" and player.can_dash(), "(e1) with exactly dash_cost the ground dash is open")
+	Fixtures.set_energy(player, 5)
 	Fixtures.send_action_event(&"jump", true)
 	await Fixtures.wait_until(tree, func() -> bool: return not player.is_grounded() and player.vertical_speed > 0.0, 10)
 	Fixtures.send_action_event(&"jump", false)
-	Fixtures.set_energy(player, cost - 0.01)
+	Fixtures.set_energy(player, cost - 1)
 	check.call(player.dash_locked_reason() == &"energy" and not player.can_dash(), "(e2) in the air below the cost the reason is energy (got %s)" % player.dash_locked_reason())
 	Fixtures.set_energy(player, cost)
 	check.call(player.dash_locked_reason() == &"" and player.can_dash(), "(e3) with exactly the cost the air dash is open")
-	Fixtures.set_energy(player, 0.0)
+	Fixtures.set_energy(player, 0)
 	player.air_dash_available = false
 	check.call(player.dash_locked_reason() == &"", "(e4) a spent air dash is no energy lockout (silent refusal as before)")
 	player.air_dash_available = true
