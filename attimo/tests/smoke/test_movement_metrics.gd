@@ -6,6 +6,7 @@ extends RefCounted
 ## Fixed read-only path, relative to the project root (attimo/); same idiom as test_conventions.
 const DOC_RELATIVE_PATH: String = "../docs/MOVEMENT-METRICS.md"
 const CONFIG_PATH: String = "res://resources/player/movement_default.tres"
+const KIT_RESOURCES: String = "res://resources/kit"
 const REGENERATE_HINT: String = "re-run `bash attimo/tests/run.sh --tool res://tools/measure_movement.gd`"
 ## Row labels the doc contract requires (the first cell of a table row).
 const ROW_LABELS: Array[String] = [
@@ -33,6 +34,7 @@ func run(_tree: SceneTree, check: Callable) -> void:
 	for label: String in ROW_LABELS:
 		check.call(doc.contains("| %s |" % label), "the doc has the row '%s'" % label)
 	_check_snapshot(doc, check)
+	_check_kit_values(doc, check)
 
 
 ## Every editor-visible float and int of the tuned resource must appear as a snapshot row with its current value.
@@ -51,3 +53,25 @@ func _check_snapshot(doc: String, check: Callable) -> void:
 		var row: String = "| `%s` | %.3f |" % [field, float(config.get(field))]
 		check.call(doc.contains(row), "config snapshot row %s matches movement_default.tres; %s if it was retuned" % [row, REGENERATE_HINT])
 	check.call(fields >= 30, "the resource exposes at least 30 float and int fields to snapshot (got %d)" % fields)
+
+
+## Plan 05.1-22 (D-57): the doc has a "## Kit values" section with one row per preset file under res://resources/kit/.
+func _check_kit_values(doc: String, check: Callable) -> void:
+	check.call(doc.contains("## Kit values"), "the doc has a '## Kit values' section; %s" % REGENERATE_HINT)
+	var section: String = doc.get_slice("## Kit values", 1).get_slice("\n## ", 0)
+	var presets: PackedStringArray = PackedStringArray()
+	_collect_presets(KIT_RESOURCES, "", presets)
+	check.call(presets.size() >= 30, "the kit has at least 30 presets (%d)" % presets.size())
+	for relative: String in presets:
+		check.call(section.contains("| `%s` |" % relative), "Kit values has the row for %s; %s" % [relative, REGENERATE_HINT])
+
+
+func _collect_presets(dir_path: String, prefix: String, into: PackedStringArray) -> void:
+	var dir: DirAccess = DirAccess.open(dir_path)
+	if dir == null:
+		return
+	for sub: String in dir.get_directories():
+		_collect_presets(dir_path.path_join(sub), "%s%s/" % [prefix, sub], into)
+	for file: String in dir.get_files():
+		if file.ends_with(".tres"):
+			into.append("%s%s" % [prefix, file])

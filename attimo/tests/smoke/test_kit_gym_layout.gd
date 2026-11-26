@@ -19,6 +19,7 @@ const AREAS: Dictionary = {
 	"Zone_KitSteampunk": Rect2(43.0, -32.0, 108.0, 64.0),
 	"Zone_KitEnergy": Rect2(155.0, -32.0, 72.0, 64.0),
 	"Zone_KitNature": Rect2(231.0, -32.0, 60.0, 64.0),
+	"Zone_KitCourse": Rect2(295.0, -32.0, 100.0, 64.0),
 }
 ## Folder under res://scenes/kit/ -> the area that shows its objects.
 const LAYER_AREAS: Dictionary = {
@@ -31,6 +32,7 @@ const AREA_ROLES: Dictionary = {
 	"Zone_KitSteampunk": ["Role_Platforms", "Role_Environment", "Role_Obstacles", "Role_Boosters", "Role_Mechanisms"],
 	"Zone_KitEnergy": ["Role_Environment", "Role_Obstacles", "Role_Boosters", "Role_Mechanisms"],
 	"Zone_KitNature": ["Role_Platforms", "Role_Environment", "Role_Obstacles"],
+	"Zone_KitCourse": ["Role_Course"],
 }
 ## Scenes that left the kit (D-09). Compared as full paths: scenes/kit/steampunk/ reuses some file names (slingshot_core, wall_pad).
 const CUT_SCENES: Array[String] = [
@@ -60,6 +62,14 @@ const CUT_SCENES: Array[String] = [
 	"res://scenes/mechanisms/energy_core.tscn",
 	"res://scenes/mechanisms/force_field.tscn",
 ]
+## Scripts that left the kit (D-09, KIT-04, plan 05.1-22): none of them may exist on disk any more. The old Mechanism base went last,
+## once no class extended it.
+const CUT_SCRIPTS: Array[String] = [
+	"lever", "valve", "gear_gate", "remote_trigger", "shot_projectile", "targeting", "pulse_hit", "loader_preview", "steam_nozzle",
+	"geyser", "wind_tunnel", "force_field", "low_gravity_zone", "boost_ring", "bounce_pad", "conveyor", "paternoster", "pendulum",
+	"piston_wall", "crumbling_platform", "signal_source", "energy_core", "mechanism",
+]
+const MECHANISM_SCRIPTS: String = "res://scripts/mechanisms/"
 
 
 func run(tree: SceneTree, check: Callable) -> void:
@@ -83,6 +93,8 @@ func run(tree: SceneTree, check: Callable) -> void:
 	_check_obstacle_stations(gym, check)
 	_check_nature_stations(gym, check)
 	_check_cut_scenes(gym, check)
+	_check_cut_scripts(check)
+	_check_nature_reset(gym, check)
 	gym.queue_free()
 	await gym.tree_exited
 
@@ -207,6 +219,33 @@ func _check_nature_stations(gym: Node, check: Callable) -> void:
 			if _global_name(node) == "ReactionToLoad":
 				blocks += 1
 		check.call(blocks == 1, "%s holds one Reaction to load block (%d)" % [station_name, blocks])
+
+
+## D-09 / KIT-04: no script of a cut object remains under scripts/mechanisms (the check is on disk, not on the gym).
+func _check_cut_scripts(check: Callable) -> void:
+	for stem: String in CUT_SCRIPTS:
+		var path: String = "%s%s.gd" % [MECHANISM_SCRIPTS, stem]
+		check.call(not FileAccess.file_exists(path) and not ResourceLoader.exists(path), "the cut script %s is gone" % path)
+
+
+## Plan 05.1-22: the nature area's fall reset ends at its own east edge; the course has its own reset (x 291.. on).
+func _check_nature_reset(gym: Node, check: Callable) -> void:
+	var zone: Node = gym.get_node_or_null("Zone_KitNature")
+	var reset: Node3D = zone.get_node_or_null("FallReset_Zone_KitNature") as Node3D if zone != null else null
+	check.call(reset != null, "Zone_KitNature has its fall reset")
+	if reset == null:
+		return
+	var shape_node: CollisionShape3D = reset.get_node_or_null("CollisionShape3D") as CollisionShape3D
+	var box: BoxShape3D = shape_node.shape as BoxShape3D if shape_node != null else null
+	check.call(box != null, "the nature fall reset is a box")
+	if box != null:
+		var east: float = reset.global_position.x + box.size.x * 0.5
+		check.call(east <= 295.0 + 0.001, "the nature fall reset no longer reaches into the course (east edge %.1f)" % east)
+		var course: Node3D = gym.get_node_or_null("Zone_KitCourse/FallReset_Zone_KitCourse") as Node3D
+		if course != null:
+			var course_box: BoxShape3D = (course.get_node("CollisionShape3D") as CollisionShape3D).shape as BoxShape3D
+			var course_west: float = course.global_position.x - course_box.size.x * 0.5
+			check.call(course_west >= east - 0.001, "the nature and course fall resets do not overlap (%.1f vs %.1f)" % [east, course_west])
 
 
 func _check_cut_scenes(gym: Node, check: Callable) -> void:
