@@ -11,7 +11,7 @@ extends RefCounted
 ##   north, Role_Mechanisms  Drawbridge (6, 1, bridge running east, x -8..16 around the hinge)  SwitchedSpeedPad (4, 0)   (plan 05.1-17,
 ##                           charge gate -> invisible timer -> receiver)
 ##   north, Role_Platforms   Station_RailCart (1, 0, ledges out to x +-12.5), Station_Paternoster (6, 0), Station_PistonSteps (7, 0)   (plan 05.1-19)
-##   north                   Role_Obstacles: empty until its blocks land (plans 18-19)
+##   north, Role_Obstacles   Station_Pendulum (3, 1), Station_PistonWall (4, 1, head reaching south toward the corridor), Station_SteamHammer (5, 1)   (plan 05.1-20)
 ## Each station keeps the offsets, heights and sign spots it had in the old mechanism rooms (plans 01-04), relative to its slot point.
 
 const KitAreaShell := preload("res://tools/kit_area_shell.gd")
@@ -59,6 +59,14 @@ const SPEED_PAD_SCENE: String = "res://scenes/kit/steampunk/speed_pad.tscn"
 const BOUNCE_PAD_SCENE: String = "res://scenes/kit/steampunk/bounce_pad.tscn"
 ## The ring hangs at this height over the station floor (its radius is 1.6 m, so the lowest point stays 0.2 m up).
 const RING_HEIGHT: float = 1.8
+## Obstacle looks (plan 05.1-20, D-14, D-15): pendulum (SWING), piston wall and steam hammer (STAMP), each with a DamagePush. The pendulum pivot
+## stands 5.05 m up so the bob's lowest point clears the floor by 0.05 m (never coplanar); the hammer's retracted head bottom stands
+## 3.05 m up (3 m stroke, the stamped bottom stays 0.05 m over the floor).
+const PENDULUM_SCENE: String = "res://scenes/kit/steampunk/pendulum.tscn"
+const PISTON_WALL_SCENE: String = "res://scenes/kit/steampunk/piston_wall.tscn"
+const STEAM_HAMMER_SCENE: String = "res://scenes/kit/steampunk/steam_hammer.tscn"
+const PENDULUM_PIVOT: float = 5.05
+const HAMMER_TOP: float = 3.05
 const TINT: Color = Color(0.55, 0.45, 0.30)
 const ROLES: Array[String] = ["Platforms", "Environment", "Obstacles", "Boosters", "Mechanisms"]
 
@@ -80,6 +88,8 @@ func build_into(zone: Node3D, builder: RefCounted) -> void:
 	_build_platforms(groups["Platforms"] as Node3D, builder)
 	_build_boosters(groups["Boosters"] as Node3D, builder)
 	_build_environment(groups["Environment"] as Node3D, builder)
+	if groups.has("Obstacles"):
+		_build_obstacles(groups["Obstacles"] as Node3D, builder)
 	if groups.has("Mechanisms"):
 		_build_mechanisms(groups["Mechanisms"] as Node3D, builder)
 
@@ -219,6 +229,21 @@ func _build_environment(role: Node3D, builder: RefCounted) -> void:
 	builder.call(&"_instance", geyser, GEYSER_SCENE, "Geyser", Vector3.ZERO)
 	var stream: Node3D = _station(role, builder, "SteamStream", _slot("N", 2, 1), "Dampfstrom", "Erwartet: Schiebt dich seitlich mit; +1 Stufe", Vector3(-4.0, 3.2, 0.0))
 	builder.call(&"_instance", stream, STEAM_STREAM_SCENE, "SteamStream", Vector3.ZERO)
+
+
+# --- Role_Obstacles ------------------------------------------------------------------------------------------------------------------
+
+
+## Obstacles (plan 05.1-20, D-14, D-15, GAME-DESIGN 6.5): three timing challenges that push and report a hit, never hurt in this phase. They
+## stand in the north near row (row 1, slots 3 to 5) between the force volumes and the drawbridge.
+func _build_obstacles(role: Node3D, builder: RefCounted) -> void:
+	var pendulum: Node3D = _station(role, builder, "Pendulum", _slot("N", 3, 1), "Pendel", "Erwartet: Im Takt durchlaufen; ein Treffer stößt dich weg, tut aber noch nicht weh", Vector3(0.0, 8.0, 4.0))
+	builder.call(&"_instance", pendulum, PENDULUM_SCENE, "Pendulum", Vector3(0.0, PENDULUM_PIVOT, 0.0))
+	# The head points -z in its own frame; turned half a circle it reaches south toward the corridor, at the player who walks up.
+	var wall: Node3D = _station(role, builder, "PistonWall", _slot("N", 4, 1), "Kolbenwand", "Erwartet: Fährt im Takt aus und schiebt dich zurück", Vector3(0.0, 5.5, 3.0))
+	builder.call(&"_instance", wall, PISTON_WALL_SCENE, "PistonWall", Vector3(0.0, 0.0, -2.0), builder.call(&"_yaw", 180.0) as Basis)
+	var hammer: Node3D = _station(role, builder, "SteamHammer", _slot("N", 5, 1), "Dampfhammer", "Erwartet: Stampft von oben im Takt; drunter stehen schiebt dich zur Seite", Vector3(0.0, 8.0, 4.0))
+	builder.call(&"_instance", hammer, STEAM_HAMMER_SCENE, "SteamHammer", Vector3(0.0, HAMMER_TOP, 0.0))
 
 
 # --- Role_Mechanisms -----------------------------------------------------------------------------------------------------------------

@@ -308,6 +308,7 @@ func _check_kit_areas(gym: Node, check: Callable) -> void:
 	# Plan 05.1-04: the always-on clock hand (SWEEP) and tilt plate (TILT); the LYING gear is cut (KIT-04).
 	# Plan 05.1-17 adds the drawbridge (HINGE), switched by a charge gate.
 	# Plan 05.1-19 adds the rail cart and paternoster (PATH) and the piston steps (STEPS).
-	check.call(profiles.size() == 5 and profiles.has(TimedMotionConfig.Profile.SWEEP) and profiles.has(TimedMotionConfig.Profile.TILT) and profiles.has(TimedMotionConfig.Profile.HINGE) and profiles.has(TimedMotionConfig.Profile.PATH) and profiles.has(TimedMotionConfig.Profile.STEPS), "the steampunk area has a Timed motion clock hand (SWEEP), tilt plate (TILT), drawbridge (HINGE), paternoster and rail cart (PATH) and piston steps (STEPS) (%d profiles)" % profiles.size())
+	# Plan 05.1-20 adds the pendulum (SWING), the piston wall and the steam hammer (STAMP).
+	check.call(profiles.size() == 7 and profiles.has(TimedMotionConfig.Profile.SWING) and profiles.has(TimedMotionConfig.Profile.STAMP) and profiles.has(TimedMotionConfig.Profile.SWEEP) and profiles.has(TimedMotionConfig.Profile.TILT) and profiles.has(TimedMotionConfig.Profile.HINGE) and profiles.has(TimedMotionConfig.Profile.PATH) and profiles.has(TimedMotionConfig.Profile.STEPS), "the steampunk area has a Timed motion clock hand (SWEEP), tilt plate (TILT), drawbridge (HINGE), paternoster and rail cart (PATH) and piston steps (STEPS), pendulum (SWING), piston wall and steam hammer (STAMP) (%d profiles)" % profiles.size())
 	# Plan 05.1-03: the wall pads are Wall surface kit blocks, one per surface at least.
 	check.call(surfaces.size() == 2, "the steampunk area has a Wall surface of both kinds, wall-run and wall-jump (%d)" % surfaces.size())

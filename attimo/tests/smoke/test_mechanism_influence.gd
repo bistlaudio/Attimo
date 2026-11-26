@@ -1,13 +1,12 @@
 extends RefCounted
 ## D-06 audit: every mechanism that moves the player does so, measurably, and only through the PlayerController request API.
-## One scenario per existing mover (pendulum; the nozzle updraft is the Force volume block since plan 05.1-15, covered by test_force_volume; the nozzle launch and push-back modes were cut in plan 05.1-03, the lift
+## No mover scenario is left here (the pendulum and piston wall are Timed motion SWING and STAMP with DamagePush since plan 05.1-20, covered by test_damage_push; the nozzle updraft is the Force volume block since plan 05.1-15, covered by test_force_volume; the nozzle launch and push-back modes were cut in plan 05.1-03, the lift
 ## in plan 05.1-06), each with a real player on real geometry.
 ## The rotating platform carry has its own test (test_mechanism_carry); the belt was replaced by the speed pad (test_impulse). Later plans add
 ## their movers to this file. The source guard keeps mechanism scripts from writing the player's velocity fields at all.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
-const PENDULUM_SCENE: String = "res://scenes/mechanisms/pendulum.tscn"
 const MECHANISM_DIR: String = "res://scripts/mechanisms"
 const SHIPPED_TPS: int = 60
 
@@ -20,23 +19,12 @@ const MOVE_PATTERN: String = "(\\b(player|_captured|body)\\s*\\.\\s*(global_)?(p
 ## The same fields written through set / set_deferred with the name as a string.
 const SET_PATTERN: String = "\\.\\s*set(_deferred)?\\(\\s*[&]?[\"'](move_velocity|vertical_speed|velocity|gravity_scale|air_dash_available|dash_cooldown_timer|air_speed_cap|coyote_timer|jump_buffer_timer|air_control_lock_timer|capture_\\w+|wall_\\w+)[\"']"
 
-var _knock_speeds: Array[float] = []
-var _knocked_player: PlayerController = null
-
 
 func run(tree: SceneTree, check: Callable) -> void:
 	await tree.process_frame
 	Engine.physics_ticks_per_second = SHIPPED_TPS
-	EventBus.knocked_back.connect(_on_knocked)
-	await _scenario_pendulum(tree, check)
-	EventBus.knocked_back.disconnect(_on_knocked)
 	_source_guard(check)
 	Engine.physics_ticks_per_second = SHIPPED_TPS
-
-
-func _on_knocked(_position: Vector3, _impulse: Vector3) -> void:
-	if _knocked_player != null:
-		_knock_speeds.append(_knocked_player.horizontal_speed())
 
 
 func _free(tree: SceneTree, nodes: Array) -> void:
@@ -45,35 +33,6 @@ func _free(tree: SceneTree, nodes: Array) -> void:
 			(node as Node).queue_free()
 	await tree.process_frame
 	await tree.process_frame
-
-
-func _spawn(path: String, check: Callable) -> Node3D:
-	if not ResourceLoader.exists(path):
-		check.call(false, "scene %s exists" % path)
-		return null
-	return (load(path) as PackedScene).instantiate() as Node3D
-
-
-# Pendulum: at the first knock the horizontal speed is above 3 m/s.
-func _scenario_pendulum(tree: SceneTree, check: Callable) -> void:
-	var source: Trigger = Trigger.new()
-	tree.root.add_child(source)
-	source.set_active(true)
-	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)
-	var pendulum: Pendulum = _spawn(PENDULUM_SCENE, check) as Pendulum
-	if pendulum == null:
-		await _free(tree, [source, floor_body])
-		return
-	pendulum.source = source
-	tree.root.add_child(pendulum)
-	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(2.5, 0.0, 0.0))
-	_knock_speeds.clear()
-	_knocked_player = player
-	await Fixtures.wait_until(tree, func() -> bool: return _knock_speeds.size() >= 1, 2 * SHIPPED_TPS)
-	_knocked_player = null
-	var speed: float = _knock_speeds[0] if _knock_speeds.size() > 0 else 0.0
-	check.call(speed > 3.0, "pendulum: the first knock gives %.2f m/s horizontal (above 3)" % speed)
-	await _free(tree, [pendulum, player, floor_body, source])
 
 
 ## Lists the .gd files under `path`, recursing into sub folders.
@@ -117,11 +76,14 @@ func _source_guard(check: Callable) -> void:
 	check.call(_offending_lines(synthetic, write, setter, mover).size() == 10, "the guard flags writes (also per component), timer, capture and wall fields, set(), position writes, FSM transitions and move_and_slide in a synthetic offending string")
 	check.call(_offending_lines(clean, write, setter, mover).is_empty(), "the guard ignores comments, comparisons, constant_linear_velocity, request calls and a mechanism's own node positions")
 	var files: Array[String] = _script_files(MECHANISM_DIR)
-	# 8 files since plan 05.1-18 deleted the old energy core and force field scripts (10 before).
-	check.call(files.size() >= 6, "the guard sees the mechanism scripts (%d files)" % files.size())
+	# 5 files since plan 05.1-20 deleted the old pendulum and piston wall scripts (7 before, 10 before plan 05.1-18).
+	check.call(files.size() >= 4, "the guard sees the mechanism scripts (%d files)" % files.size())
 	var report: Array[String] = []
 	for path: String in files:
 		var text: String = FileAccess.get_file_as_string(path)
 		for line: int in _offending_lines(text, write, setter, mover):
 			report.append("%s:%d" % [path, line])
+	# Plan 05.1-20 (D-17): the DamagePush component only asks for a knock-back, it never writes the player's motion.
+	var push_text: String = FileAccess.get_file_as_string("res://scripts/kit/components/damage_push.gd")
+	check.call(push_text != "" and _offending_lines(push_text, write, setter, mover).is_empty(), "damage_push.gd never writes the player's velocity fields or calls move_and_slide")
 	check.call(report.is_empty(), "no mechanism script writes the player's velocity fields or calls move_and_slide (%s)" % ", ".join(report))
