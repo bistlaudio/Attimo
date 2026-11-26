@@ -71,12 +71,12 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 
 - [ ] **KIT-01**: The kit runs on 8 logic blocks and 4 attachable components; values in `.tres` configs, looks as inherited scenes
 - [ ] **KIT-02**: All objects of the steampunk, energy and nature layers exist as block + components + look, honouring the coupling rule
-- [ ] **KIT-03**: The slingshot core plays like the Loader in a steampunk look (smaller core, catches only when Rino is inside, no trajectory line, gives +1 step); levers, pressure plates, valves and cranks are cut, and energy cores and charge gates are the remaining triggers (gear-disc targets removed 2026-11-25)
+- [x] **KIT-03**: The slingshot core plays like the Loader in a steampunk look (smaller core, catches only when Rino is inside, no trajectory line, gives +1 step); levers, pressure plates, valves and cranks are cut, and energy cores and charge gates are the remaining triggers (gear-disc targets removed 2026-11-25)
 - [ ] **ENRG-06**: The energy is a clock of 12 whole steps (no percentages or fractions): HUD clock with hour hand (and a second hand for timed income), the 4 arm cores = 3 steps each, Moto Perpetuo from 6, respawn with 3; costs and income only in whole steps, time only as tick intervals
 - [ ] **ENRG-07**: Running and the jump chain are free; every ability costs steps (dash and air dash 1, dash hop stages 2/3 +1 each, wall run 2 + 1 every 1 s, wall jump 1, Loader 1-3); an unpaid ability does not fire and always shows the refusal (clock shake and red flash, arm flicker, empty klack sound)
 - [ ] **ENRG-08**: Income in whole steps: passive clock tick (+1 every 10 s), charge key R (+1 every 5 s), capsule +3, broken machine +5, +1 per steampunk booster use with a cooldown; moves that cost steps never charge (momentum charge removed)
 - [ ] **ENRG-09**: The Loader is paid by holding (1-3 steps, one segment per step on a smaller ring, no trajectory line) and flies a straight line: speed = own speed + push + steps x (push step + k x own speed), capped, overflow lengthens the straight flight; the camera can look up almost vertically everywhere without flipping backward
-- [ ] **ENRG-10**: The shot and the gear-disc targets are removed; left click is only the Extractor and the module switch is dormant; the force-field barrier becomes a Loader field that does not break and lets a Loader with >= 2 steps glide through with a brake
+- [x] **ENRG-10**: The shot and the gear-disc targets are removed; left click is only the Extractor and the module switch is dormant; the force-field barrier becomes a Loader field that does not break and lets a Loader with >= 2 steps glide through with a brake
 - [ ] **KIT-04**: Cut stations removed, reworked stations replaced, showroom regrouped by layer and role with a station and smoke test per object
 
 ### Shooting & Enemies (exact design defined in its phase)
@@ -226,13 +226,13 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | ENRG-05 | Phase 5 | Complete |
 | KIT-01 | Phase 05.1 | Pending |
 | KIT-02 | Phase 05.1 | Pending |
-| KIT-03 | Phase 05.1 | Pending |
+| KIT-03 | Phase 05.1 | Complete |
 | KIT-04 | Phase 05.1 | Pending |
 | ENRG-06 | Phase 05.1 | Pending |
 | ENRG-07 | Phase 05.1 | Pending |
 | ENRG-08 | Phase 05.1 | Pending |
 | ENRG-09 | Phase 05.1 | Pending |
-| ENRG-10 | Phase 05.1 | Pending |
+| ENRG-10 | Phase 05.1 | Complete |
 | HAND-07 | Phase 04.1 | Complete |
 | MECH-01 | Phase 4 | Complete |
 | MECH-02 | Phase 4 | Complete |
