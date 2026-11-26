@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ReactionToLoadConfig" format=3]
+
+[ext_resource type="Script" path="res://scripts/kit/configs/reaction_to_load_config.gd" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+profile = 4
+trigger_radius = 3.0
+drop_height = 6.0
+respawn_time = 4.0

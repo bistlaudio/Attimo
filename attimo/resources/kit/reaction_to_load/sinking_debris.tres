@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ReactionToLoadConfig" format=3]
+
+[ext_resource type="Script" path="res://scripts/kit/configs/reaction_to_load_config.gd" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+profile = 2
+deck_size = Vector3(4, 0.4, 4)
+sink_depth = 1.2
+sink_speed = 0.6
+rise_speed = 0.4

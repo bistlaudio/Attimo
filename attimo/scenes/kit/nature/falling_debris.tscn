@@ -1,0 +1,46 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/kit/reaction_to_load_nature_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://resources/kit/reaction_to_load/falling_debris.tres" id="2_config"]
+[ext_resource type="Script" path="res://scripts/kit/components/damage_push.gd" id="3_push"]
+
+[sub_resource type="BoxMesh" id="Mesh_rock_a"]
+size = Vector3(1.3, 1.0, 1.1)
+
+[sub_resource type="BoxMesh" id="Mesh_rock_b"]
+size = Vector3(0.8, 0.7, 0.8)
+
+[sub_resource type="BoxShape3D" id="Shape_hit"]
+size = Vector3(2.4, 1.2, 2.4)
+
+[node name="FallingDebris" instance=ExtResource("1_base")]
+layer = 2
+energy_relation = 0
+config = ExtResource("2_config")
+
+[node name="Debris" type="Node3D" parent="." index="0"]
+
+[node name="RockBig" type="MeshInstance3D" parent="Debris" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("Mesh_rock_a")
+
+[node name="RockSmall" type="MeshInstance3D" parent="Debris" index="1"]
+transform = Transform3D(0.8, 0, 0.6, 0, 1, 0, -0.6, 0, 0.8, 0.8, 0.35, 0.5)
+mesh = SubResource("Mesh_rock_b")
+
+[node name="Hit" type="Area3D" parent="Debris" index="2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+collision_layer = 32
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Debris/Hit" index="0"]
+shape = SubResource("Shape_hit")
+
+[node name="DamagePush" type="Node" parent="." index="1" node_paths=PackedStringArray("hit_area")]
+script = ExtResource("3_push")
+hit_area = NodePath("../Debris/Hit")
+amount = 1
+push_speed = 8.0
+push_up = 4.0
+rehit_time = 0.5
+direction = 0

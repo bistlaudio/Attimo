@@ -83,7 +83,7 @@ func _check_profiles(check: Callable) -> void:
 			names = String(prop["hint_string"]).split(",")
 	var keys: Array[String] = []
 	for entry: Variant in names:
-		keys.append(String(entry).get_slice(":", 0))
+		keys.append(String(entry).get_slice(":", 0).replace(" ", "_").to_upper())
 	check.call(keys == ["LOADER_FIELD", "CRUMBLE", "SINK", "TIP", "DROP", "BITE"], "Profile is { LOADER_FIELD, CRUMBLE, SINK, TIP, DROP, BITE }, new values appended (%s)" % [keys])
 
 
@@ -193,10 +193,10 @@ func _scenario_sink(tree: SceneTree, check: Callable) -> void:
 	var deck: Node3D = (block.call("decks") as Array)[0] as Node3D
 	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(0.0, DECK_Y + 0.4, 0.0))
 	await Fixtures.wait_physics(tree, 30)
-	var one_second_at: float = deck.position.y
+	var half_second_at: float = deck.position.y
 	await Fixtures.wait_physics(tree, 30)
-	check.call(one_second_at < -0.1 and deck.position.y < one_second_at, "sink: the deck sinks under the rider (y %.2f then %.2f)" % [one_second_at, deck.position.y])
-	check.call(absf((deck.position.y - one_second_at) + speed) < 0.2, "sink: it sinks at sink_speed %.2f m/s (%.2f m in 1 s)" % [speed, one_second_at - deck.position.y])
+	check.call(half_second_at < -0.1 and deck.position.y < half_second_at, "sink: the deck sinks under the rider (y %.2f then %.2f)" % [half_second_at, deck.position.y])
+	check.call(absf((half_second_at - deck.position.y) - speed * 0.5) < 0.1, "sink: it sinks at sink_speed %.2f m/s (%.2f m in 0.5 s)" % [speed, half_second_at - deck.position.y])
 	await Fixtures.wait_physics(tree, ceili(depth / speed * SHIPPED_TPS) + 30)
 	check.call(absf(deck.position.y + depth) < 0.06, "sink: it stops at sink_depth %.2f (%.2f)" % [depth, deck.position.y])
 	check.call(player.global_position.y > DECK_Y - depth - 0.2 and player.is_on_floor(), "sink: the rider stays carried on the deck (y %.2f)" % player.global_position.y)

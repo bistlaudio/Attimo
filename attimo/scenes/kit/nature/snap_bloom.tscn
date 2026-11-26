@@ -1,0 +1,58 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/kit/reaction_to_load_nature_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://resources/kit/reaction_to_load/snap_bloom.tres" id="2_config"]
+[ext_resource type="Script" path="res://scripts/kit/components/damage_push.gd" id="3_push"]
+
+[sub_resource type="CylinderMesh" id="Mesh_stem"]
+top_radius = 0.2
+bottom_radius = 0.3
+height = 1.0
+
+[sub_resource type="BoxMesh" id="Mesh_jaw_lower"]
+size = Vector3(1.2, 0.15, 0.9)
+
+[sub_resource type="BoxMesh" id="Mesh_jaw_upper"]
+size = Vector3(1.2, 0.15, 0.9)
+
+[sub_resource type="BoxShape3D" id="Shape_mouth"]
+size = Vector3(2.4, 1.6, 2.4)
+
+[node name="SnapBloom" instance=ExtResource("1_base")]
+layer = 2
+energy_relation = 0
+config = ExtResource("2_config")
+
+[node name="GrassStem" type="MeshInstance3D" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("Mesh_stem")
+
+[node name="Jaws" type="Node3D" parent="." index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0)
+
+[node name="LeafJawLower" type="MeshInstance3D" parent="Jaws" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.45)
+mesh = SubResource("Mesh_jaw_lower")
+
+[node name="Upper" type="Node3D" parent="Jaws" index="1"]
+
+[node name="LeafJawUpper" type="MeshInstance3D" parent="Jaws/Upper" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0.45)
+mesh = SubResource("Mesh_jaw_upper")
+
+[node name="Mouth" type="Area3D" parent="." index="2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+collision_layer = 32
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Mouth" index="0"]
+shape = SubResource("Shape_mouth")
+
+[node name="DamagePush" type="Node" parent="." index="3" node_paths=PackedStringArray("hit_area")]
+script = ExtResource("3_push")
+hit_area = NodePath("../Mouth")
+amount = 1
+push_speed = 8.0
+push_up = 4.0
+rehit_time = 0.5
+direction = 0
