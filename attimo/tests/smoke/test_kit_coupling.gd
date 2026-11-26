@@ -29,6 +29,9 @@ const KIT_OBJECTS: Dictionary = {
 	"res://scenes/kit/steampunk/wall_jump_pad_steam.tscn": "res://tests/smoke/test_wall_surface.gd",
 	"res://scenes/kit/steampunk/clock_hand_platform.tscn": "res://tests/smoke/test_timed_motion.gd",
 	"res://scenes/kit/steampunk/tilting_platform.tscn": "res://tests/smoke/test_timed_motion.gd",
+	"res://scenes/kit/steampunk/paternoster.tscn": "res://tests/smoke/test_timed_motion.gd",
+	"res://scenes/kit/steampunk/rail_cart.tscn": "res://tests/smoke/test_timed_motion.gd",
+	"res://scenes/kit/steampunk/piston_steps.tscn": "res://tests/smoke/test_timed_motion.gd",
 	"res://scenes/kit/energy/energy_capsule.tscn": "res://tests/smoke/test_extractor.gd",
 	"res://scenes/kit/energy/broken_machine.tscn": "res://tests/smoke/test_extractor.gd",
 	"res://scenes/kit/energy/loader_field.tscn": "res://tests/smoke/test_loader_field.gd",
@@ -160,6 +163,9 @@ func _check_scene(path: String, check: Callable, component_users: Dictionary) ->
 		check.call(chain.has("Trigger"), "%s: the root is a Trigger (%s)" % [stem, chain])
 	if path.ends_with("/drawbridge.tscn"):
 		check.call(layer == 0 and relation == RELATION_FREE and classes.has("Receiver") and chain.has("TimedMotion"), "%s: the drawbridge is a FREE steampunk TimedMotion with a Receiver (relation %d, %s)" % [stem, relation, chain])
+	# Plan 05.1-19 (D-11, D-26): the paternoster, rail cart and piston steps are FREE steampunk Timed motion blocks with no Receiver and no glow.
+	if path.ends_with("/paternoster.tscn") or path.ends_with("/rail_cart.tscn") or path.ends_with("/piston_steps.tscn"):
+		check.call(layer == 0 and relation == RELATION_FREE and chain.has("TimedMotion") and not classes.has("GlowElement") and not classes.has("Receiver"), "%s: an always-on platform is a FREE steampunk TimedMotion with no GlowElement or Receiver (relation %d, %s)" % [stem, relation, chain])
 	if path.ends_with("/speed_pad_switched.tscn"):
 		check.call(layer == 0 and relation == RELATION_GIVES and classes.has("Receiver") and classes.has("GlowElement") and chain.has("Impulse"), "%s: the switched speed pad is a steampunk GIVES Impulse with an accent and a Receiver (relation %d, %s)" % [stem, relation, chain])
 	# Plan 05.1-18 (D-14, D-16): the energy core and the attraction field are ENERGY objects that COST steps and carry a turquoise GlowElement and

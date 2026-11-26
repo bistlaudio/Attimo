@@ -43,6 +43,7 @@ const CUT_SCENES: Array[String] = [
 	"res://scenes/mechanisms/pneumatic_tube.tscn",
 	"res://scenes/mechanisms/conveyor.tscn",
 	"res://scenes/mechanisms/rotating_platform.tscn",
+	"res://scenes/mechanisms/paternoster.tscn",
 	"res://scenes/mechanisms/slingshot_core.tscn",
 	"res://scenes/mechanisms/wall_pad.tscn",
 	"res://scenes/mechanisms/steam_nozzle.tscn",
@@ -75,6 +76,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	_check_registry(gym, check)
 	_check_signal_stations(gym, check)
 	_check_energy_stations(gym, check)
+	_check_platform_stations(gym, check)
 	_check_cut_scenes(gym, check)
 	gym.queue_free()
 	await gym.tree_exited
@@ -138,6 +140,21 @@ func _check_registry(gym: Node, check: Callable) -> void:
 				if found:
 					break
 		check.call(found, "%s is instanced under a station of %s" % [scene, LAYER_AREAS[folder]])
+
+
+## Plan 05.1-19: the three always-on platform stations stand once in the steampunk area, each with a Timed motion instance.
+func _check_platform_stations(gym: Node, check: Callable) -> void:
+	var zone: Node = gym.get_node_or_null("Zone_KitSteampunk")
+	for station_name: String in ["Station_Paternoster", "Station_RailCart", "Station_PistonSteps"]:
+		var found: Array[Node] = zone.find_children(station_name, "Node3D", true, false) if zone != null else []
+		check.call(found.size() == 1, "%s exists once under Zone_KitSteampunk" % station_name)
+		if found.size() != 1:
+			continue
+		var blocks: int = 0
+		for node: Node in found[0].find_children("*", "", true, false):
+			if _global_name(node) == "TimedMotion":
+				blocks += 1
+		check.call(blocks == 1, "%s holds one Timed motion block (%d)" % [station_name, blocks])
 
 
 func _check_cut_scenes(gym: Node, check: Callable) -> void:

@@ -40,12 +40,12 @@ const BLOCKS: Dictionary = {
 		"script": "res://scripts/kit/blocks/timed_motion.gd",
 		"config_class": "TimedMotionConfig",
 		"config_script": "res://scripts/kit/configs/timed_motion_config.gd",
-		"profiles": ["SWEEP", "TILT", "HINGE"],
+		"profiles": ["SWEEP", "TILT", "HINGE", "PATH", "STEPS"],
 		"preset": "res://resources/kit/timed_motion/clock_hand.tres",
 		"scene": "res://scenes/kit/steampunk/clock_hand_platform.tscn",
 		"probe": "angular_speed",
-		"positive": ["angular_speed", "ramp_time", "sweep_limit_deg", "tilt_limit_deg", "hand_length", "hand_width", "plate_size", "plate_thickness", "hinge_angle_deg", "hinge_time"],
-		"profile_presets": {"res://resources/kit/timed_motion/clock_hand.tres": "SWEEP", "res://resources/kit/timed_motion/tilting_platform.tres": "TILT", "res://resources/kit/timed_motion/drawbridge.tres": "HINGE"},
+		"positive": ["angular_speed", "ramp_time", "sweep_limit_deg", "tilt_limit_deg", "hand_length", "hand_width", "plate_size", "plate_thickness", "hinge_angle_deg", "hinge_time", "path_speed", "step_period", "step_extend"],
+		"profile_presets": {"res://resources/kit/timed_motion/clock_hand.tres": "SWEEP", "res://resources/kit/timed_motion/tilting_platform.tres": "TILT", "res://resources/kit/timed_motion/drawbridge.tres": "HINGE", "res://resources/kit/timed_motion/paternoster.tres": "PATH", "res://resources/kit/timed_motion/rail_cart.tres": "PATH", "res://resources/kit/timed_motion/piston_steps.tres": "STEPS"},
 	},
 	# Plan 05.1-10: the Energy source block (capsule +3, broken machine +5). step_interval is a divisor-like timer (T-05.1-29).
 	"EnergySource": {

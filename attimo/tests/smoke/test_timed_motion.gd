@@ -21,7 +21,12 @@ const HAND_PRESET: String = "res://resources/kit/timed_motion/clock_hand.tres"
 const TILT_PRESET: String = "res://resources/kit/timed_motion/tilting_platform.tres"
 const BRIDGE_SCENE: String = "res://scenes/kit/steampunk/drawbridge.tscn"
 const BRIDGE_PRESET: String = "res://resources/kit/timed_motion/drawbridge.tres"
-const PATERNOSTER_SCENE: String = "res://scenes/mechanisms/paternoster.tscn"
+const PATERNOSTER_SCENE: String = "res://scenes/kit/steampunk/paternoster.tscn"
+const PATERNOSTER_PRESET: String = "res://resources/kit/timed_motion/paternoster.tres"
+const CART_SCENE: String = "res://scenes/kit/steampunk/rail_cart.tscn"
+const CART_PRESET: String = "res://resources/kit/timed_motion/rail_cart.tres"
+const STEPS_SCENE: String = "res://scenes/kit/steampunk/piston_steps.tscn"
+const STEPS_PRESET: String = "res://resources/kit/timed_motion/piston_steps.tres"
 const SHIPPED_TPS: int = 60
 ## Ticks to let the rider land and the always-on ramp start before sampling.
 const SETTLE_TICKS: int = 30
@@ -63,8 +68,10 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _rider(tree, check, TILT_SCENE, TILT_PRESET, TILT_RIDER, OLD_RAISED, false, "tilt plate")
 	var static_speed: float = await _static_takeoff(tree, check)
 	await _deck_takeoff(tree, check, hand_pivot, static_speed)
-	await _paternoster_takeoff(tree, check, static_speed)
 	await _hinge(tree, check)
+	await _paternoster(tree, check, static_speed)
+	await _rail_cart(tree, check, static_speed)
+	await _piston_steps(tree, check)
 	Engine.physics_ticks_per_second = SHIPPED_TPS
 
 
@@ -195,7 +202,7 @@ func _jump(tree: SceneTree, player: PlayerController, carrier: Node3D) -> Dictio
 		if grounded and carrier != null:
 			state["chord"] = carrier.call(&"carry_velocity_at", player.global_position, dt) as Vector3
 		if bool(state["armed"]) and bool(state["grounded"]) and not grounded and (state["result"] as Dictionary).is_empty():
-			state["result"] = {"speed": player.vertical_speed, "chord": state["chord"]}
+			state["result"] = {"speed": player.vertical_speed, "chord": state["chord"], "velocity": player.move_velocity}
 		state["grounded"] = grounded
 	var probe: Node = Fixtures.spawn_physics_probe(tree.root, 50, sample)
 	await Fixtures.wait_physics(tree, 1)
@@ -241,29 +248,6 @@ func _deck_takeoff(tree: SceneTree, check: Callable, pivot_y: float, static_spee
 		check.call(chord_y > 1.0, "clock hand: the deck rose at take-off (chord y %.3f m/s)" % chord_y)
 		check.call(absf(speed - expected) <= DECK_TAKEOFF_TOLERANCE, "clock hand: take-off vertical speed %.3f = static %.3f + deck chord %.3f (expected %.3f, tolerance %.2f)" % [speed, static_speed, chord_y, expected, DECK_TAKEOFF_TOLERANCE])
 	await _free(tree, [player, block, floor_body])
-
-
-## A jump off a rising paternoster cabin (engine-carried, sync_to_physics): no double count, the take-off equals the static jump.
-func _paternoster_takeoff(tree: SceneTree, check: Callable, static_speed: float) -> void:
-	var source: Trigger = Trigger.new()
-	tree.root.add_child(source)
-	var lift: Paternoster = (load(PATERNOSTER_SCENE) as PackedScene).instantiate() as Paternoster
-	lift.source = source
-	tree.root.add_child(lift)
-	await Fixtures.wait_physics(tree, 2)
-	var deck: AnimatableBody3D = lift.decks()[0]
-	var player: PlayerController = Fixtures.spawn_player(tree.root, deck.global_position + Vector3(0.0, 0.1, 0.0))
-	await Fixtures.wait_physics(tree, 20)
-	source.set_active(true)
-	await Fixtures.wait_physics(tree, 40)
-	var before: float = deck.global_position.y
-	await Fixtures.wait_physics(tree, 2)
-	check.call(deck.global_position.y > before + 0.01 and player.is_on_floor(), "paternoster: the rider stands on a rising cabin (%.3f -> %.3f)" % [before, deck.global_position.y])
-	var result: Dictionary = await _jump(tree, player, null)
-	check.call(not result.is_empty(), "paternoster: the jump takes off the cabin")
-	var speed: float = float(result.get("speed", NAN))
-	check.call(absf(speed - static_speed) <= STATIC_TAKEOFF_TOLERANCE, "paternoster: take-off vertical speed %.4f equals the static jump %.4f (no double count, tolerance %.2f)" % [speed, static_speed, STATIC_TAKEOFF_TOLERANCE])
-	await _free(tree, [player, lift, source])
 
 
 ## Plan 05.1-17 (D-18, GAME-DESIGN 6.5): the HINGE profile, the drawbridge. It folds from raised (hinge_angle_deg) to flat while its child
@@ -316,3 +300,185 @@ func _hinge(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.wait_physics(tree, 80)
 	check.call(int(stats["missing"]) == 0 and float(stats["worst"]) <= MAX_DECK_OFFSET, "hinge: a rider stands on the lowered deck on every tick, floor snap works (missing %d, worst offset %.3f m)" % [int(stats["missing"]), float(stats["worst"])])
 	await _free(tree, [probe, player, bridge, driver])
+
+
+## Plan 05.1-19 (D-09, D-11): the PATH and STEPS profiles. Presets and the profile enum are read by path and constant map (RED compiles).
+func _profile_ids(check: Callable) -> Dictionary:
+	var profiles: Dictionary = (load(CONFIG_SCRIPT) as GDScript).get_script_constant_map().get("Profile", {}) as Dictionary
+	check.call(profiles.has("PATH") and profiles.has("STEPS"), "TimedMotionConfig.Profile has PATH and STEPS (%s)" % [profiles])
+	return profiles
+
+
+## Rides `deck` from `start` for `ticks` ticks and checks the rider keeps his footing on that deck on every tick after the settle time.
+## Returns the stats {missing, worst, rise}.
+func _ride(tree: SceneTree, check: Callable, deck: AnimatableBody3D, start: Vector3, ticks: int, label: String) -> Dictionary:
+	var player: PlayerController = Fixtures.spawn_player(tree.root, start)
+	var stats: Dictionary = {"tick": 0, "missing": 0, "worst": 0.0, "rise": 0.0}
+	var sample: Callable = func() -> void:
+		stats["tick"] = int(stats["tick"]) + 1
+		if int(stats["tick"]) <= 20:
+			return
+		var on_deck: bool = false
+		for index: int in player.get_slide_collision_count():
+			var hit: KinematicCollision3D = player.get_slide_collision(index)
+			if hit.get_collider() == deck and hit.get_normal().y > 0.5:
+				on_deck = true
+		if not (on_deck and player.is_on_floor()):
+			stats["missing"] = int(stats["missing"]) + 1
+		stats["worst"] = maxf(float(stats["worst"]), absf(Fixtures.deck_offset(player, deck)))
+		stats["rise"] = maxf(float(stats["rise"]), player.global_position.y - start.y)
+	var probe: Node = Fixtures.spawn_physics_probe(tree.root, 50, sample)
+	await Fixtures.wait_physics(tree, ticks)
+	check.call(int(stats["missing"]) == 0, "%s: the deck is the rider's floor on every tick (missing on %d of %d)" % [label, int(stats["missing"]), ticks - 20])
+	check.call(float(stats["worst"]) <= MAX_DECK_OFFSET, "%s: worst feet offset from the deck top %.3f m (<= %.1f)" % [label, float(stats["worst"]), MAX_DECK_OFFSET])
+	await _free(tree, [probe, player])
+	return stats
+
+
+## The paternoster (PATH loop): the old cabin loop at the old speed (1.5 m/s, 4 cabins, 6 x 8 m), a rider keeps still relative to the cabin
+## for 6.5 s (through the turn at the top), the take-off keeps the deck chord.
+func _paternoster(tree: SceneTree, check: Callable, static_speed: float) -> void:
+	var exists: bool = ResourceLoader.exists(PATERNOSTER_SCENE) and ResourceLoader.exists(PATERNOSTER_PRESET)
+	check.call(exists, "the paternoster scene and preset exist")
+	if not exists:
+		return
+	var profiles: Dictionary = _profile_ids(check)
+	var preset: Resource = load(PATERNOSTER_PRESET) as Resource
+	var points: PackedVector3Array = preset.get("path_points") as PackedVector3Array
+	check.call(int(preset.get("profile")) == int(profiles.get("PATH", -1)) and int(preset.get("timing")) == 0, "paternoster.tres is PATH, ALWAYS_ON (D-18)")
+	check.call(points.size() >= 3 and points[0].is_equal_approx(points[points.size() - 1]), "paternoster: first and last path point are equal, so the path loops (%d points)" % points.size())
+	check.call(is_equal_approx(float(preset.get("path_speed")), 1.5) and int(preset.get("path_deck_count")) == 4, "paternoster: the folded old numbers, speed 1.5 m/s and 4 cabins (D-09)")
+	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)
+	var block: Node3D = _spawn_block(tree, PATERNOSTER_SCENE, PATERNOSTER_PRESET, Vector3(0.0, 1.0, 0.0))
+	await Fixtures.wait_physics(tree, 2)
+	var decks: Array = block.call(&"decks") as Array
+	check.call(decks.size() == 4, "paternoster: 4 cabins are built (%d)" % decks.size())
+	var deck: AnimatableBody3D = decks[0] as AnimatableBody3D
+	check.call(deck.is_in_group(&"carrying_platform") and not deck.sync_to_physics and deck.collision_layer == PhysicsLayers.WORLD, "paternoster: a cabin is an AnimatableBody3D in carrying_platform, sync_to_physics off, World layer")
+	check.call(block.process_physics_priority == 100, "paternoster: the block ticks after the player (priority %d)" % block.process_physics_priority)
+	await Fixtures.wait_physics(tree, 40)
+	var y_before: float = deck.global_position.y
+	await Fixtures.wait_physics(tree, 30)
+	var speed: float = (deck.global_position.y - y_before) / 0.5
+	check.call(absf(speed - 1.5) <= 0.1, "paternoster: the cabin rises at the old speed, %.3f m/s (1.5)" % speed)
+	block.call(&"reset")
+	await Fixtures.wait_physics(tree, 2)
+	check.call(absf(deck.global_position.y - 1.05) < 0.05, "paternoster: reset() puts cabin 0 back at the bottom (y %.3f)" % deck.global_position.y)
+	var stats: Dictionary = await _ride(tree, check, deck, deck.global_position + Vector3(0.0, 0.1, 0.0), 390, "paternoster rider through the top turn")
+	check.call(float(stats["rise"]) >= 3.0, "paternoster: the rider rises %.2f m (at least 3)" % float(stats["rise"]))
+	block.call(&"reset")
+	var player: PlayerController = Fixtures.spawn_player(tree.root, deck.global_position + Vector3(0.0, 0.1, 0.0))
+	await Fixtures.wait_physics(tree, 100)
+	var result: Dictionary = await _jump(tree, player, block)
+	check.call(not result.is_empty(), "paternoster: the jump takes off the rising cabin")
+	if not result.is_empty():
+		var chord_y: float = (result["chord"] as Vector3).y
+		var expected: float = static_speed + clampf(chord_y, -6.0, 6.0)
+		check.call(chord_y > 1.0 and absf(float(result["speed"]) - expected) <= DECK_TAKEOFF_TOLERANCE, "paternoster: take-off keeps the deck chord, speed %.3f = static %.3f + chord %.3f" % [float(result["speed"]), static_speed, chord_y])
+	await _free(tree, [player, block, floor_body])
+
+
+## The rail cart (PATH ping-pong): between its two end points, a pause at each end, a rider keeps his footing through the reversal.
+func _rail_cart(tree: SceneTree, check: Callable, static_speed: float) -> void:
+	var exists: bool = ResourceLoader.exists(CART_SCENE) and ResourceLoader.exists(CART_PRESET)
+	check.call(exists, "the rail cart scene and preset exist")
+	if not exists:
+		return
+	var profiles: Dictionary = _profile_ids(check)
+	var preset: Resource = load(CART_PRESET) as Resource
+	var points: PackedVector3Array = preset.get("path_points") as PackedVector3Array
+	check.call(int(preset.get("profile")) == int(profiles.get("PATH", -1)) and int(preset.get("timing")) == 0, "rail_cart.tres is PATH, ALWAYS_ON")
+	check.call(points.size() == 2 and not points[0].is_equal_approx(points[1]) and absf(points[0].distance_to(points[1]) - 12.0) < 0.01, "rail cart: two end points 12 m apart, so it ping-pongs")
+	check.call(float(preset.get("path_pause")) > 0.0 and float(preset.get("path_speed")) > 0.0, "rail cart: positive speed and pause (T-05.1-58)")
+	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)
+	var block: Node3D = _spawn_block(tree, CART_SCENE, CART_PRESET, Vector3(0.0, 0.5, 0.0))
+	await Fixtures.wait_physics(tree, 2)
+	var deck: AnimatableBody3D = (block.call(&"decks") as Array)[0] as AnimatableBody3D
+	var stats: Dictionary = {"min": INF, "max": -INF, "last": deck.position.x, "still": 0}
+	var sample: Callable = func() -> void:
+		var x: float = deck.position.x
+		stats["min"] = minf(float(stats["min"]), x)
+		stats["max"] = maxf(float(stats["max"]), x)
+		if absf(x - float(stats["last"])) < 0.00001 and absf(x) > 5.9:
+			stats["still"] = int(stats["still"]) + 1
+		stats["last"] = x
+	var probe: Node = Fixtures.spawn_physics_probe(tree.root, 50, sample)
+	await Fixtures.wait_physics(tree, 12 * SHIPPED_TPS)
+	check.call(float(stats["min"]) < -5.95 and float(stats["max"]) > 5.95 and float(stats["min"]) >= -6.05 and float(stats["max"]) <= 6.05, "rail cart: runs end point to end point (x %.2f .. %.2f)" % [float(stats["min"]), float(stats["max"])])
+	check.call(int(stats["still"]) >= 80, "rail cart: pauses at both ends (%d still ticks at the ends, 0.8 s is 48 each)" % int(stats["still"]))
+	await _free(tree, [probe])
+	block.call(&"reset")
+	await Fixtures.wait_physics(tree, 2)
+	await _ride(tree, check, deck, deck.global_position + Vector3(0.0, 0.1, 0.0), 600, "rail cart rider through two reversals")
+	block.call(&"reset")
+	var player: PlayerController = Fixtures.spawn_player(tree.root, deck.global_position + Vector3(0.0, 0.1, 0.0))
+	await Fixtures.wait_physics(tree, 20)
+	var dt: float = 1.0 / float(SHIPPED_TPS)
+	var moving: Callable = func() -> bool:
+		return player.is_on_floor() and absf((block.call(&"carry_velocity_at", player.global_position, dt) as Vector3).x) > 2.0
+	var found: int = await Fixtures.wait_until(tree, moving, 200)
+	check.call(found >= 0, "rail cart: the deck moves at more than 2 m/s along x at some tick")
+	var result: Dictionary = await _jump(tree, player, block)
+	check.call(not result.is_empty(), "rail cart: the jump takes off the moving deck")
+	if not result.is_empty():
+		var chord: Vector3 = result["chord"] as Vector3
+		var velocity: Vector3 = result["velocity"] as Vector3
+		check.call(absf(velocity.x - chord.x) <= 0.5 and absf(float(result["speed"]) - static_speed) <= DECK_TAKEOFF_TOLERANCE, "rail cart: take-off keeps the deck chord (velocity x %.2f, chord x %.2f, vertical %.3f vs static %.3f)" % [velocity.x, chord.x, float(result["speed"]), static_speed])
+	await _free(tree, [player, block, floor_body])
+
+
+## The piston steps (STEPS): every step extends step_extend and retracts in step_period, phase-shifted; a rider on an extended step is
+## carried back toward the wall and never pushed through it (T-05.1-57), and falls off only once the step is retracted.
+func _piston_steps(tree: SceneTree, check: Callable) -> void:
+	var exists: bool = ResourceLoader.exists(STEPS_SCENE) and ResourceLoader.exists(STEPS_PRESET)
+	check.call(exists, "the piston steps scene and preset exist")
+	if not exists:
+		return
+	var profiles: Dictionary = _profile_ids(check)
+	var preset: Resource = load(STEPS_PRESET) as Resource
+	check.call(int(preset.get("profile")) == int(profiles.get("STEPS", -1)) and int(preset.get("timing")) == 0, "piston_steps.tres is STEPS, ALWAYS_ON")
+	check.call(int(preset.get("step_count")) == 4 and float(preset.get("step_period")) > 0.0 and float(preset.get("step_extend")) > 0.0, "piston steps: 4 steps, positive period and extend (T-05.1-58)")
+	var block: Node3D = _spawn_block(tree, STEPS_SCENE, STEPS_PRESET, Vector3(0.0, 0.0, 0.0))
+	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root, Vector3(60, 1, 60), Vector3(0.0, -8.0, 0.0))
+	await Fixtures.wait_physics(tree, 2)
+	var extend: float = float(preset.get("step_extend"))
+	var decks: Array = block.call(&"decks") as Array
+	check.call(decks.size() == 4, "piston steps: 4 step decks are built (%d)" % decks.size())
+	var stats: Dictionary = {"max": 0.0, "min": INF, "shift": 0.0}
+	var sample: Callable = func() -> void:
+		var first: float = float(block.call(&"step_extension", 0))
+		var second: float = float(block.call(&"step_extension", 1))
+		stats["max"] = maxf(float(stats["max"]), first)
+		stats["min"] = minf(float(stats["min"]), first)
+		stats["shift"] = maxf(float(stats["shift"]), absf(first - second))
+	var probe: Node = Fixtures.spawn_physics_probe(tree.root, 50, sample)
+	await Fixtures.wait_physics(tree, 4 * SHIPPED_TPS)
+	check.call(float(stats["max"]) >= extend - 0.05 and float(stats["max"]) <= extend + 0.001 and float(stats["min"]) <= 0.05, "piston steps: a step extends %.2f m and retracts fully (%.2f .. %.2f)" % [extend, float(stats["min"]), float(stats["max"])])
+	check.call(float(stats["shift"]) > 0.5, "piston steps: neighbouring steps are phase shifted (largest difference %.2f m)" % float(stats["shift"]))
+	check.call(absf(float((decks[0] as Node3D).position.z - (float(block.call(&"step_extension", 0)) - float(preset.get("plate_size")) * 0.5))) < 0.02, "piston steps: deck 0 sits at its extension, the front edge at z = extension")
+	await _free(tree, [probe])
+	var extended: Callable = func() -> bool: return float(block.call(&"step_extension", 0)) >= extend - 0.1
+	var waited: int = await Fixtures.wait_until(tree, extended, 400)
+	check.call(waited >= 0, "piston steps: step 0 reaches full extension")
+	var deck: AnimatableBody3D = decks[0] as AnimatableBody3D
+	var start: Vector3 = deck.global_position + Vector3(0.0, 0.1, 0.65)
+	var player: PlayerController = Fixtures.spawn_player(tree.root, start)
+	var rider: Dictionary = {"tick": 0, "missing": 0, "deepest": INF}
+	var watch: Callable = func() -> void:
+		rider["tick"] = int(rider["tick"]) + 1
+		rider["deepest"] = minf(float(rider["deepest"]), player.global_position.z - block.global_position.z)
+		if int(rider["tick"]) <= 3 or float(block.call(&"step_extension", 0)) < 1.1:
+			return
+		var on_deck: bool = false
+		for index: int in player.get_slide_collision_count():
+			var hit: KinematicCollision3D = player.get_slide_collision(index)
+			if hit.get_collider() == deck and hit.get_normal().y > 0.5:
+				on_deck = true
+		if not (on_deck and player.is_on_floor()):
+			rider["missing"] = int(rider["missing"]) + 1
+	var watcher: Node = Fixtures.spawn_physics_probe(tree.root, 50, watch)
+	await Fixtures.wait_physics(tree, 4 * SHIPPED_TPS)
+	check.call(int(rider["missing"]) == 0, "piston steps: the rider stays on the step while it is extended more than 1.1 m (missing %d)" % int(rider["missing"]))
+	check.call(float(rider["deepest"]) > -0.75, "piston steps: the rider is never pushed into the wall (deepest z %.2f)" % float(rider["deepest"]))
+	check.call(player.global_position.y < start.y - 0.5, "piston steps: the rider falls off only after the step retracted (y %.2f from %.2f)" % [player.global_position.y, start.y])
+	await _free(tree, [watcher, player, block, floor_body])
