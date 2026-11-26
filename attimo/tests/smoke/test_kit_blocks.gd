@@ -77,7 +77,7 @@ const BLOCKS: Dictionary = {
 		"script": "res://scripts/kit/blocks/force_volume.gd",
 		"config_class": "ForceVolumeConfig",
 		"config_script": "res://scripts/kit/configs/force_volume_config.gd",
-		"profiles": ["DIRECTIONAL", "DRAG", "GRAVITY"],
+		"profiles": ["DIRECTIONAL", "DRAG", "GRAVITY", "RADIAL"],
 		"preset": "res://resources/kit/force_volume/updraft.tres",
 		"scene": "res://scenes/kit/steampunk/updraft.tscn",
 		"probe": "accel",
@@ -89,6 +89,7 @@ const BLOCKS: Dictionary = {
 			"res://resources/kit/force_volume/leaf_storm.tres": "DIRECTIONAL",
 			"res://resources/kit/force_volume/resin_pool.tres": "DRAG",
 			"res://resources/kit/force_volume/gravity_zone.tres": "GRAVITY",
+			"res://resources/kit/force_volume/attraction_field.tres": "RADIAL",
 		},
 	},
 	# Plan 05.1-16: the Impulse block (D-10, D-11): Profile { BOOST, PAD, BOUNCE }; timers have strictly positive minimums (T-05.1-48).
@@ -113,12 +114,12 @@ const BLOCKS: Dictionary = {
 		"script": "res://scripts/kit/blocks/trigger.gd",
 		"config_class": "TriggerConfig",
 		"config_script": "res://scripts/kit/configs/trigger_config.gd",
-		"profiles": ["CHARGE_GATE"],
+		"profiles": ["CHARGE_GATE", "ENERGY_CORE"],
 		"preset": "res://resources/kit/trigger/charge_gate.tres",
 		"scene": "res://scenes/kit/energy/charge_gate.tscn",
 		"probe": "threshold",
 		"positive": ["threshold"],
-		"profile_presets": {"res://resources/kit/trigger/charge_gate.tres": "CHARGE_GATE"},
+		"profile_presets": {"res://resources/kit/trigger/charge_gate.tres": "CHARGE_GATE", "res://resources/kit/trigger/energy_core.tres": "ENERGY_CORE"},
 	},
 }
 ## Source fragments a block script must not contain: direct writes of the player's motion (D-17).

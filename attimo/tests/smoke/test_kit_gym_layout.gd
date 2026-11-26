@@ -53,6 +53,8 @@ const CUT_SCENES: Array[String] = [
 	"res://scenes/mechanisms/boost_ring.tscn",
 	"res://scenes/mechanisms/bounce_pad.tscn",
 	"res://scenes/mechanisms/low_gravity_zone.tscn",
+	"res://scenes/mechanisms/energy_core.tscn",
+	"res://scenes/mechanisms/force_field.tscn",
 ]
 
 
@@ -72,6 +74,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 			_check_stations(zone, AREAS[area] as Rect2, check)
 	_check_registry(gym, check)
 	_check_signal_stations(gym, check)
+	_check_energy_stations(gym, check)
 	_check_cut_scenes(gym, check)
 	gym.queue_free()
 	await gym.tree_exited
@@ -171,3 +174,64 @@ func _check_signal_stations(gym: Node, check: Callable) -> void:
 			if script != null and String(script.get_global_name()) == "Trigger":
 				gates += 1
 		check.call(gates >= 1, "%s holds a charge gate (Trigger)" % station_name)
+
+
+## Plan 05.1-18: the paid energy stations. The core station holds one core and three LogicThreshold outputs (levels 1, 2, 3), the AND station two cores
+## and a LogicAnd with two wired sources, the OR station a charge gate and a core behind a LogicOr, the field station an attraction field. Every
+## Receiver is wired and no output is a door (D-47).
+const ENERGY_STATIONS: Array[String] = ["Station_EnergyCore", "Station_LogicAnd", "Station_LogicOr", "Station_AttractionField"]
+
+
+func _global_name(node: Node) -> String:
+	var script: Script = node.get_script() as Script
+	return "" if script == null else String(script.get_global_name())
+
+
+func _check_energy_stations(gym: Node, check: Callable) -> void:
+	var zone: Node = gym.get_node_or_null("Zone_KitEnergy")
+	var by_name: Dictionary = {}
+	for station_name: String in ENERGY_STATIONS:
+		var found: Array[Node] = zone.find_children(station_name, "Node3D", true, false) if zone != null else []
+		check.call(found.size() == 1, "%s exists once under Zone_KitEnergy" % station_name)
+		if found.size() == 1:
+			by_name[station_name] = found[0]
+	for station_name: String in by_name:
+		var cores: int = 0
+		var thresholds: Array[int] = []
+		var ands: int = 0
+		var ors: int = 0
+		var gates: int = 0
+		var fields: int = 0
+		for node: Node in (by_name[station_name] as Node).find_children("*", "", true, false):
+			var kind: String = _global_name(node)
+			if kind == "Receiver":
+				check.call(node.get("source") != null, "%s: the Receiver %s has a wired source" % [station_name, node.name])
+			elif kind == "LogicThreshold":
+				thresholds.append(int(node.get("min_level")))
+				check.call(node.get("source") != null, "%s: the LogicThreshold %s has a source" % [station_name, node.name])
+			elif kind == "LogicAnd":
+				ands += 1
+				var sources: Array = node.get("sources") as Array
+				check.call(sources.size() == 2 and not sources.has(null), "%s: the LogicAnd has two wired sources" % station_name)
+			elif kind == "LogicOr":
+				ors += 1
+				var or_sources: Array = node.get("sources") as Array
+				check.call(or_sources.size() >= 2 and not or_sources.has(null), "%s: the LogicOr has wired sources" % station_name)
+			elif kind == "Trigger":
+				var config: Resource = node.get("config") as Resource
+				if config != null and int(config.get("profile")) == 1:
+					cores += 1
+				elif config != null:
+					gates += 1
+			elif kind == "ForceVolume":
+				fields += 1
+		match station_name:
+			"Station_EnergyCore":
+				thresholds.sort()
+				check.call(cores == 1 and thresholds == [1, 2, 3], "Station_EnergyCore: one core and LogicThreshold outputs at levels 1, 2, 3 (%d cores, %s)" % [cores, thresholds])
+			"Station_LogicAnd":
+				check.call(cores == 2 and ands == 1, "Station_LogicAnd: two cores and one LogicAnd (%d cores, %d AND)" % [cores, ands])
+			"Station_LogicOr":
+				check.call(cores == 1 and gates == 1 and ors == 1, "Station_LogicOr: a charge gate and a core behind one LogicOr (%d cores, %d gates, %d OR)" % [cores, gates, ors])
+			"Station_AttractionField":
+				check.call(fields == 1, "Station_AttractionField: one attraction field (%d)" % fields)

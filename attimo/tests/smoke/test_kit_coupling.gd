@@ -45,6 +45,8 @@ const KIT_OBJECTS: Dictionary = {
 	"res://scenes/kit/energy/charge_gate.tscn": "res://tests/smoke/test_charge_gate.gd",
 	"res://scenes/kit/steampunk/drawbridge.tscn": "res://tests/smoke/test_charge_gate.gd",
 	"res://scenes/kit/steampunk/speed_pad_switched.tscn": "res://tests/smoke/test_charge_gate.gd",
+	"res://scenes/kit/energy/energy_core.tscn": "res://tests/smoke/test_energy_core.gd",
+	"res://scenes/kit/energy/attraction_field.tscn": "res://tests/smoke/test_attraction_field.gd",
 }
 
 
@@ -71,6 +73,10 @@ func run(tree: SceneTree, check: Callable) -> void:
 	# Plan 05.1-17 (D-13): the Receiver component has exactly its two users, the drawbridge and the switched speed pad.
 	var receiver_users: Array = component_users.get("Receiver", []) as Array
 	check.call(receiver_users.size() == 2 and receiver_users.has("steampunk/drawbridge.tscn") and receiver_users.has("steampunk/speed_pad_switched.tscn"), "Receiver is found in exactly 2 scenes: drawbridge and speed_pad_switched (%s)" % [receiver_users])
+
+	# Plan 05.1-18 (D-14): the EnergyCost component has exactly its two users, the energy core (pay-in) and the attraction field (fast escape).
+	var cost_users: Array = component_users.get("EnergyCost", []) as Array
+	check.call(cost_users.size() == 2 and cost_users.has("energy/energy_core.tscn") and cost_users.has("energy/attraction_field.tscn"), "EnergyCost is found in exactly 2 scenes: energy_core and attraction_field (%s)" % [cost_users])
 
 
 func _collect(dir_path: String, into: Array[String]) -> void:
@@ -156,6 +162,14 @@ func _check_scene(path: String, check: Callable, component_users: Dictionary) ->
 		check.call(layer == 0 and relation == RELATION_FREE and classes.has("Receiver") and chain.has("TimedMotion"), "%s: the drawbridge is a FREE steampunk TimedMotion with a Receiver (relation %d, %s)" % [stem, relation, chain])
 	if path.ends_with("/speed_pad_switched.tscn"):
 		check.call(layer == 0 and relation == RELATION_GIVES and classes.has("Receiver") and classes.has("GlowElement") and chain.has("Impulse"), "%s: the switched speed pad is a steampunk GIVES Impulse with an accent and a Receiver (relation %d, %s)" % [stem, relation, chain])
+	# Plan 05.1-18 (D-14, D-16): the energy core and the attraction field are ENERGY objects that COST steps and carry a turquoise GlowElement and
+	# an EnergyCost; the core is a Trigger, the field a ForceVolume.
+	if path.ends_with("/energy_core.tscn") or path.ends_with("/attraction_field.tscn"):
+		check.call(layer == LAYER_ENERGY and relation == RELATION_COSTS and classes.has("GlowElement") and classes.has("EnergyCost"), "%s: a paid energy object is ENERGY COSTS with a GlowElement and an EnergyCost (relation %d)" % [stem, relation])
+	if path.ends_with("/energy_core.tscn"):
+		check.call(chain.has("Trigger"), "%s: the energy core root is a Trigger (%s)" % [stem, chain])
+	if path.ends_with("/attraction_field.tscn"):
+		check.call(chain.has("ForceVolume"), "%s: the attraction field root is a ForceVolume (%s)" % [stem, chain])
 	if path.ends_with("/slingshot_core.tscn") or path.ends_with("/steam_cannon.tscn"):
 		check.call(relation == RELATION_GIVES, "%s: the catch element is GIVES (relation %d)" % [stem, relation])
 	if folder == "nature":
