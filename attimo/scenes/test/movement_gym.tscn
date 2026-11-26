@@ -5074,13 +5074,14 @@ font_size = 64
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 2.5, 4)
 pixel_size = 0.01
 billboard = 1
-text = "Erwartet: Fängt dich am Rohr, kurz Halt, dann immer der gleiche Bogen"
+text = "Erwartet: Fängt dich am Rohr, kurz Halt, dann immer der gleiche Bogen; +1 Stufe"
 font_size = 40
 
 [node name="SteamCannon" type="Node3D" parent="Zone_KitSteampunk/Role_Boosters/Station_SteamCannon" instance=ExtResource("28_3qnjh")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 0)
 script = ExtResource("29_n1bki")
 config = ExtResource("30_h51nw")
+energy_relation = 3
 
 [node name="Station_Slingshot" type="Node3D" parent="Zone_KitSteampunk/Role_Boosters"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 125, 0, 10)
@@ -5096,13 +5097,14 @@ font_size = 64
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 2.5, 4)
 pixel_size = 0.01
 billboard = 1
-text = "Erwartet: Fängt dich, Zeitlupe; Rechtsklick loslassen oder antippen wirft in Blickrichtung, sonst automatisch nach 1,2 s"
+text = "Erwartet: Fängt dich nur, wenn du mitten durch den Ring fliegst; Zeitlupe, Rechtsklick loslassen wirft dich gerade in Blickrichtung; +1 Stufe"
 font_size = 40
 
 [node name="Slingshot" type="Node3D" parent="Zone_KitSteampunk/Role_Boosters/Station_Slingshot" instance=ExtResource("31_ykvr3")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
 script = ExtResource("29_n1bki")
 config = ExtResource("32_g6ni1")
+energy_relation = 3
 
 [node name="Role_Mechanisms" type="Node3D" parent="Zone_KitSteampunk"]
 
