@@ -309,7 +309,7 @@ Plans:
 - [x] 05.1-18-PLAN.md — EnergyCost component: energy core pay-in (3/6/9) and attraction-field fast escape; AND / OR stations
 - [x] 05.1-19-PLAN.md — Timed motion platforms: paternoster, rail cart, piston steps
 - [x] 05.1-20-PLAN.md — DamagePush + player_hit: pendulum, piston wall, steam hammer
-- [ ] 05.1-21-PLAN.md — Reaction to load nature objects: crumbling platform, collapse, sinking debris, tipping trunk, falling debris, snap bloom
+- [x] 05.1-21-PLAN.md — Reaction to load nature objects: crumbling platform, collapse, sinking debris, tipping trunk, falling debris, snap bloom
 - [ ] 05.1-22-PLAN.md — Mixed course, cut-file gate, Kit values in MOVEMENT-METRICS, design-doc sync, human walkthrough
 **UI hint**: yes
 **Notes**: Design source of truth: `docs/GAME-DESIGN.md` sections 2-6 (since 2026-11-25 also the energy clock, governing rule, Loader and Extractor sections) and `05.1-CONTEXT.md` D-34..D-58. Known fixes: the steam wall jump must feel like the normal wall jump (currently it flings Rino away), the wall run on it runs with the head to the wall, clock-hand platform floor bugs. Final looks are designed in Group B; greybox looks per layer are enough here.
@@ -503,7 +503,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 04.1 → 5 → 05.1 →
 | 3. Animated Mannequin & Aim Mode | 10/10 | Complete    | 2026-11-20 |
 | 4. Fernauslöser & Mechanism Kit | 5/5 | Complete   | 2026-11-23 |
 | 5. Energy Arm & Loader | 5/5 | Complete   | 2026-11-24 |
-| 05.1. Kit Rework | 20/22 | In Progress|  |
+| 05.1. Kit Rework | 21/22 | In Progress|  |
 | 6. Extractor, Enemies & Recovery | 0/TBD | Not started | - |
 | 7. Level Blockout & Game Flow | 0/TBD | Not started | - |
 | 8. Boss & Ending | 0/TBD | Not started | - |
