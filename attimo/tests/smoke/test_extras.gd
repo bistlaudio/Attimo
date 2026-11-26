@@ -1,13 +1,12 @@
 extends RefCounted
 ## MECH-05 (D-11, D-06): the three steampunk extras. The piston punch wall (Kolbenwand) knocks a player in front of it away once
-## per slam after a telegraph, the pressure-valve geyser charges and then launches every player in its column once per eruption,
+## per slam after a telegraph, (the pressure-valve geyser moved to the Force volume block, plan 05.1-15, test_force_volume)
 ## and the paternoster carries a rider up on level decks. Each is driven by an active SignalSource stub and moves the player only
 ## through knock_back, launch_along or the engine's platform carry. Real player, real geometry, 60 Hz.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
 const PISTON_SCENE: String = "res://scenes/mechanisms/piston_wall.tscn"
-const GEYSER_SCENE: String = "res://scenes/mechanisms/geyser.tscn"
 const PATERNOSTER_SCENE: String = "res://scenes/mechanisms/paternoster.tscn"
 const SHIPPED_TPS: int = 60
 
@@ -24,7 +23,6 @@ func run(tree: SceneTree, check: Callable) -> void:
 	EventBus.knocked_back.connect(_on_knocked)
 	EventBus.launched.connect(_on_launched)
 	await _scenario_piston(tree, check)
-	await _scenario_geyser(tree, check)
 	await _scenario_paternoster(tree, check)
 	EventBus.knocked_back.disconnect(_on_knocked)
 	EventBus.launched.disconnect(_on_launched)
@@ -102,53 +100,6 @@ func _scenario_piston(tree: SceneTree, check: Callable) -> void:
 	piston.reset()
 	check.call(piston.phase == PistonWall.Phase.IDLE, "piston: reset() returns to IDLE")
 	await _free(tree, [piston, player, floor_body, source])
-
-
-func _scenario_geyser(tree: SceneTree, check: Callable) -> void:
-	var source: SignalSource = _on_source()
-	tree.root.add_child(source)
-	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)
-	var geyser: Geyser = (load(GEYSER_SCENE) as PackedScene).instantiate() as Geyser
-	geyser.source = source
-	geyser.charge_time = 1.0
-	tree.root.add_child(geyser)
-	var column: Area3D = geyser.get_node("Column") as Area3D
-	check.call(column.collision_layer == 0 and column.collision_mask == PhysicsLayers.PLAYER, "geyser: the column is an Area3D on no layer that masks the Player")
-	var inside: PlayerController = Fixtures.spawn_player(tree.root, Vector3(0.0, 0.0, 0.0))
-	var outside: PlayerController = Fixtures.spawn_player(tree.root, Vector3(6.0, 0.0, 0.0))
-	await Fixtures.wait_physics(tree, 1)
-	_launches = 0
-	var early: float = geyser.charge_ratio()
-	await Fixtures.wait_physics(tree, SHIPPED_TPS / 2)
-	var middle: float = geyser.charge_ratio()
-	check.call(early < 0.2 and middle > 0.35 and middle < 0.65, "geyser: the charge rises (%.2f early, %.2f at half time)" % [early, middle])
-	var peak: float = 0.0
-	var last: float = middle
-	var monotonic: bool = true
-	var erupted: bool = false
-	var apex: float = 0.0
-	for i: int in 4 * SHIPPED_TPS:
-		await Fixtures.wait_physics(tree, 1)
-		if geyser.is_erupting():
-			erupted = true
-		elif not erupted:
-			var ratio: float = geyser.charge_ratio()
-			monotonic = monotonic and ratio >= last - 0.001
-			last = ratio
-			peak = maxf(peak, ratio)
-		apex = maxf(apex, inside.global_position.y)
-		if i > 2 * SHIPPED_TPS:
-			break
-	check.call(monotonic and peak > 0.9, "geyser: the charge rises monotonically to %.2f before the eruption" % peak)
-	check.call(erupted, "geyser: it erupts after charge_time")
-	check.call(_launches == 1, "geyser: one launch per eruption for the player in the column (%d)" % _launches)
-	check.call(apex > 6.0, "geyser: the launched player reaches %.2f m (above 6)" % apex)
-	check.call(outside.global_position.y < 0.5, "geyser: a player outside the column is not launched (y %.2f)" % outside.global_position.y)
-	# Source off holds the charge at 0.
-	source.set_active(false)
-	await Fixtures.wait_physics(tree, SHIPPED_TPS)
-	check.call(geyser.charge_ratio() == 0.0 and not geyser.is_erupting(), "geyser: with the source off the charge is held at 0 (%.2f)" % geyser.charge_ratio())
-	await _free(tree, [geyser, inside, outside, floor_body, source])
 
 
 func _scenario_paternoster(tree: SceneTree, check: Callable) -> void:

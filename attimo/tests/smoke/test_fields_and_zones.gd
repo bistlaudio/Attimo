@@ -1,13 +1,12 @@
 extends RefCounted
 ## MECH-04 K (D-06): the low-gravity zone. Inside the volume a held full jump rises at least twice as high, switching the
 ## source off restores the normal apex (no restore step), and the zone only uses PlayerController.request_gravity_scale (the
-## Dash-owned gravity_scale stays untouched). MECH-04 A, B, J: the repulsor and attractor (ForceField) and the wind tunnel.
+## Dash-owned gravity_scale stays untouched). MECH-04 A, B: the repulsor and attractor (ForceField); the wind tunnel became the steam stream force volume (plan 05.1-15, test_force_volume).
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
 const ZONE_SCENE: String = "res://scenes/mechanisms/low_gravity_zone.tscn"
 const FIELD_SCENE: String = "res://scenes/mechanisms/force_field.tscn"
-const WIND_SCENE: String = "res://scenes/mechanisms/wind_tunnel.tscn"
 const SHIPPED_TPS: int = 60
 
 
@@ -17,7 +16,6 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_low_gravity(tree, check)
 	await _scenario_repulsor(tree, check)
 	await _scenario_attractor(tree, check)
-	await _scenario_wind(tree, check)
 	Engine.physics_ticks_per_second = SHIPPED_TPS
 
 
@@ -148,42 +146,3 @@ func _scenario_attractor(tree: SceneTree, check: Callable) -> void:
 		else:
 			check.call(dist > 3.0 and player.global_position.y < 2.0, "attractor off: the player falls normally (%.2f m away, y %.2f)" % [dist, player.global_position.y])
 		await _free(tree, [field, player, floor_body, source])
-
-
-## Runs along -Z, starts a held jump at z = 5 and returns how far (along -Z) the jump carried. tunnel_mode: 0 none, 1 tailwind, 2 headwind.
-func _wind_jump(tree: SceneTree, check: Callable, tunnel_mode: int) -> float:
-	var source: SignalSource = SignalSource.new()
-	tree.root.add_child(source)
-	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root, Vector3(60, 1, 80))
-	var tunnel: WindTunnel = null
-	if tunnel_mode > 0:
-		tunnel = (load(WIND_SCENE) as PackedScene).instantiate() as WindTunnel
-		tunnel.source = source
-		tree.root.add_child(tunnel)
-		var volume: Area3D = tunnel.get_node("Volume") as Area3D
-		check.call(volume.collision_layer == 0 and volume.collision_mask == PhysicsLayers.PLAYER, "the wind volume is an Area3D on no layer that masks the Player")
-		source.set_active(tunnel_mode == 2)
-	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(0.0, 0.0, 14.0))
-	await Fixtures.wait_physics(tree, 15)
-	Input.action_press(&"move_forward")
-	await Fixtures.wait_until(tree, func() -> bool: return player.global_position.z <= 5.0, 400)
-	var start_z: float = player.global_position.z
-	Input.action_press(&"jump")
-	for i: int in 400:
-		await Fixtures.wait_physics(tree, 1)
-		if i > 3 and player.is_grounded():
-			break
-	var distance: float = start_z - player.global_position.z
-	Input.action_release(&"jump")
-	Input.action_release(&"move_forward")
-	await _free(tree, [tunnel, player, floor_body, source])
-	return distance
-
-
-func _scenario_wind(tree: SceneTree, check: Callable) -> void:
-	var plain: float = await _wind_jump(tree, check, 0)
-	var tail: float = await _wind_jump(tree, check, 1)
-	var head: float = await _wind_jump(tree, check, 2)
-	check.call(plain > 2.0, "without wind the run-jump covers %.2f m" % plain)
-	check.call(tail >= plain + 2.0, "tailwind: the jump covers %.2f m, at least 2 m more than %.2f m" % [tail, plain])
-	check.call(head <= plain - 1.0, "headwind (lever flipped): the jump covers %.2f m, at least 1 m less than %.2f m" % [head, plain])

@@ -6,7 +6,8 @@ extends RefCounted
 ## Plan view (slot (column, row), see kit_area_shell.gd; every station a Station_<object> with an "Erwartet:" sign):
 ##   south, Role_Platforms   ClockHand (1, 0)  TiltPlate (2, 0)   (slot (0, 0) holds the clock hand's stepped ledge)
 ##   south, Role_Boosters    WallJump twin (3..4, 0)  WallRun (3, 1)  WallRunSteam (4, 1)  SteamCannon (5, 1)  Slingshot (6, 0, out of the cannon line)
-##   north                   Role_Environment, Role_Obstacles, Role_Mechanisms: empty until their blocks land (plans 09-19)
+##   north, Role_Environment Updraft (0, 1)  Geyser (1, 1)  SteamStream (2, 1)   (plan 05.1-15, force volumes, +1 step per use)
+##   north                   Role_Obstacles, Role_Mechanisms: empty until their blocks land (plans 16-19)
 ## Each station keeps the offsets, heights and sign spots it had in the old mechanism rooms (plans 01-04), relative to its slot point.
 
 const KitAreaShell := preload("res://tools/kit_area_shell.gd")
@@ -32,6 +33,10 @@ const WALL_TWIN_PITCH: float = WallSurface.TWIN_FACE_GAP_MIN + WallSurface.PANEL
 const SLINGSHOT_SCENE: String = "res://scenes/kit/steampunk/slingshot_core.tscn"
 const STEAM_CANNON_SCENE: String = "res://scenes/kit/steampunk/steam_cannon.tscn"
 const SLINGSHOT_HANG: float = 3.0
+## Force volume looks (plan 05.1-15, D-09, D-43, D-61): updraft, geyser and steam stream, each GIVES +1 step per use.
+const UPDRAFT_SCENE: String = "res://scenes/kit/steampunk/updraft.tscn"
+const GEYSER_SCENE: String = "res://scenes/kit/steampunk/geyser.tscn"
+const STEAM_STREAM_SCENE: String = "res://scenes/kit/steampunk/steam_stream.tscn"
 const TINT: Color = Color(0.55, 0.45, 0.30)
 const ROLES: Array[String] = ["Platforms", "Environment", "Obstacles", "Boosters", "Mechanisms"]
 
@@ -48,10 +53,11 @@ func build_into(zone: Node3D, builder: RefCounted) -> void:
 		"Mechanisms": _slot("N", 6, 1) + Vector3(0.0, 0.0, 5.0),
 	}
 	var groups: Dictionary = _shell.build_shell(zone, builder, "Steampunk: frei und mechanisch", x0, KitAreaShell.STEAMPUNK_X.y, ROLES, TINT, signs)
-	if not groups.has("Platforms") or not groups.has("Boosters"):
+	if not groups.has("Platforms") or not groups.has("Boosters") or not groups.has("Environment"):
 		return
 	_build_platforms(groups["Platforms"] as Node3D, builder)
 	_build_boosters(groups["Boosters"] as Node3D, builder)
+	_build_environment(groups["Environment"] as Node3D, builder)
 
 
 ## Slot (column, row) on `side` of this area.
@@ -138,3 +144,17 @@ func _build_catch_launch(role: Node3D, builder: RefCounted) -> void:
 	builder.call(&"_instance", cannon, STEAM_CANNON_SCENE, "SteamCannon", Vector3.ZERO, builder.call(&"_yaw", -90.0))
 	var cage: Node3D = _station(role, builder, "Slingshot", _slot("S", 6, 0), "Schleuderkern (wie der Loader)", "Erwartet: Fängt dich nur, wenn du mitten durch den Ring fliegst; Zeitlupe, Rechtsklick loslassen wirft dich gerade in Blickrichtung; +1 Stufe", Vector3(-4.0, 3.2, 4.0))
 	builder.call(&"_instance", cage, SLINGSHOT_SCENE, "Slingshot", Vector3(0.0, SLINGSHOT_HANG, 0.0))
+
+
+# --- Role_Environment ----------------------------------------------------------------------------------------------------------------
+
+
+## Force volumes (plan 05.1-15): updraft, geyser and steam stream stand in the north row next to the corridor. The stream blows along
+## the station's local -z, away from its vent at +z; the stations are 12 m apart (one slot each).
+func _build_environment(role: Node3D, builder: RefCounted) -> void:
+	var updraft: Node3D = _station(role, builder, "Updraft", _slot("N", 0, 1), "Aufwind", "Erwartet: Dampf trägt dich nach oben; +1 Stufe beim Hineinfliegen", Vector3(0.0, 5.4, 0.0))
+	builder.call(&"_instance", updraft, UPDRAFT_SCENE, "Updraft", Vector3.ZERO)
+	var geyser: Node3D = _station(role, builder, "Geyser", _slot("N", 1, 1), "Geysir", "Erwartet: Stößt im Takt; wer im Stoß steht, fliegt hoch; +1 Stufe", Vector3(0.0, 4.4, 0.0))
+	builder.call(&"_instance", geyser, GEYSER_SCENE, "Geyser", Vector3.ZERO)
+	var stream: Node3D = _station(role, builder, "SteamStream", _slot("N", 2, 1), "Dampfstrom", "Erwartet: Schiebt dich seitlich mit; +1 Stufe", Vector3(-4.0, 3.2, 0.0))
+	builder.call(&"_instance", stream, STEAM_STREAM_SCENE, "SteamStream", Vector3.ZERO)

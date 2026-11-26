@@ -1,13 +1,12 @@
 extends RefCounted
 ## D-06 audit: every mechanism that moves the player does so, measurably, and only through the PlayerController request API.
-## One scenario per existing mover (nozzle UPDRAFT, pendulum; the nozzle launch and push-back modes were cut in plan 05.1-03, the lift
+## One scenario per existing mover (pendulum; the nozzle updraft is the Force volume block since plan 05.1-15, covered by test_force_volume; the nozzle launch and push-back modes were cut in plan 05.1-03, the lift
 ## in plan 05.1-06), each with a real player on real geometry.
 ## The rotating platform carry has its own test (test_mechanism_carry); the belt carry is test_conveyor_pendulum. Later plans add
 ## their movers to this file. The source guard keeps mechanism scripts from writing the player's velocity fields at all.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
-const NOZZLE_SCENE: String = "res://scenes/mechanisms/steam_nozzle.tscn"
 const PENDULUM_SCENE: String = "res://scenes/mechanisms/pendulum.tscn"
 const MECHANISM_DIR: String = "res://scripts/mechanisms"
 const SHIPPED_TPS: int = 60
@@ -29,7 +28,6 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await tree.process_frame
 	Engine.physics_ticks_per_second = SHIPPED_TPS
 	EventBus.knocked_back.connect(_on_knocked)
-	await _scenario_nozzle_updraft(tree, check)
 	await _scenario_pendulum(tree, check)
 	EventBus.knocked_back.disconnect(_on_knocked)
 	_source_guard(check)
@@ -54,34 +52,6 @@ func _spawn(path: String, check: Callable) -> Node3D:
 		check.call(false, "scene %s exists" % path)
 		return null
 	return (load(path) as PackedScene).instantiate() as Node3D
-
-
-func _nozzle(check: Callable, mode: SteamNozzle.Mode, source: SignalSource) -> SteamNozzle:
-	var nozzle: SteamNozzle = _spawn(NOZZLE_SCENE, check) as SteamNozzle
-	if nozzle != null:
-		nozzle.mode = mode
-		nozzle.source = source
-	return nozzle
-
-
-# Nozzle UPDRAFT: the column holds the player up, a rise of at least 1.5 m.
-func _scenario_nozzle_updraft(tree: SceneTree, check: Callable) -> void:
-	var source: SignalSource = SignalSource.new()
-	tree.root.add_child(source)
-	source.set_active(true)
-	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)
-	var nozzle: SteamNozzle = _nozzle(check, SteamNozzle.Mode.UPDRAFT, source)
-	if nozzle == null:
-		await _free(tree, [source, floor_body])
-		return
-	tree.root.add_child(nozzle)
-	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3.ZERO)
-	var peak: float = 0.0
-	for i: int in 60:
-		await Fixtures.wait_physics(tree, 1)
-		peak = maxf(peak, player.global_position.y)
-	check.call(peak >= 1.5, "nozzle UPDRAFT: the player rises %.2f m (at least 1.5)" % peak)
-	await _free(tree, [nozzle, player, floor_body, source])
 
 
 # Pendulum: at the first knock the horizontal speed is above 3 m/s.
