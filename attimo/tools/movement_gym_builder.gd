@@ -8,7 +8,7 @@ extends RefCounted
 ## Plan view (x east, z south, forward = -z, hall x -42..42, z -50..34, tiles on a 4 m lattice):
 ##   lane (x 0, z 0..-40), height references (z -6, x 8..20), ramps/stairs/ledges (x 6..40, z -48..-10),
 ##   gap course (x -38 column z 34..-22, then z -20 row x -38..-4), passage (z -2, x -26..-10),
-##   conveyors (z 12 and 20, x -26..-10), pillar forest (x -6..10, z 10..31), moving platforms (x 14..38, z 10..34).
+##   pillar forest (x -6..10, z 10..31), moving platforms (x 14..38, z 10..34).
 ##   west door (z -2..2, no WallWest_0) into the west wing: Zone_Loader (x -43..-115, z -26..26, tools/loader_room_builder.gd), whose
 ##   west wall has an open doorway (z -2..2) into Zone_Energy (x -115..-239, z -26..26, tools/energy_area_builder.gd).
 ##   east door (z -2..2, no WallEast_0, a plain doorway) into the kit showroom (Phase 05.1, D-28): a corridor z -4..4 through the layer
@@ -43,7 +43,7 @@ const MARKER_PIXEL_SIZE: float = 0.01
 
 var _root: Node3D
 var _scenes: Dictionary[String, PackedScene] = {}
-## Lattice cells that a zone fills itself (conveyors, the lift hole). Key: Vector2i cell.
+## Lattice cells that a zone fills itself (the lift hole). Key: Vector2i cell.
 var _taken_cells: Dictionary[Vector2i, bool] = {}
 ## Pit rectangles in xz (Rect2: position x, z; size width, depth). Lattice cells that overlap one stay empty.
 var _pits: Array[Rect2] = []
@@ -69,7 +69,6 @@ func build() -> Node3D:
 	_build_ramps_stairs(_group(_root, "Zone_RampsStairs"))
 	_build_gaps(_group(_root, "Zone_Gaps"), spawn, rig)
 	_build_moving_platforms(_group(_root, "Zone_MovingPlatforms"))
-	_build_conveyors(_group(_root, "Zone_Conveyors"))
 	_build_camera_tests(_group(_root, "Zone_CameraTests"))
 	_build_kit_areas()
 	_build_loader_room(_group(_root, "Zone_Loader"))
@@ -407,24 +406,6 @@ func _build_moving_platforms(zone: Node3D) -> void:
 	_floor_tile(zone, "LiftLedge", 36.0, 6.0, 20.0)
 	_label(zone, "Label_Lift", "lift 6 m, 2 m/s", Vector3(36.0, 3.0, 16.0))
 	_label(zone, "Label_LiftLedge", "ledge 6 m", Vector3(36.0, 8.0, 20.0))
-
-
-# --- Zone_Conveyors -----------------------------------------------------------------------------------------
-
-
-func _build_conveyors(zone: Node3D) -> void:
-	_conveyor_strip(zone, "Conveyor_3ms", 12.0, Vector3(3.0, 0.0, 0.0))
-	_conveyor_strip(zone, "Conveyor_5ms", 20.0, Vector3(-5.0, 0.0, 0.0))
-	_label(zone, "Label_Conveyor_3ms", "conveyor +3 m/s", Vector3(-18.0, 2.0, 12.0))
-	_label(zone, "Label_Conveyor_5ms", "conveyor -5 m/s", Vector3(-18.0, 2.0, 20.0))
-
-
-func _conveyor_strip(zone: Node3D, prefix: String, z: float, velocity: Vector3) -> void:
-	for index: int in 4:
-		var x: float = -24.0 + 4.0 * index
-		_take_cell(x, z)
-		var tile: StaticBody3D = _floor_tile(zone, "%s_%d" % [prefix, index], x, 0.0, z) as StaticBody3D
-		tile.constant_linear_velocity = velocity
 
 
 # --- Kit layer areas (Phase 05.1) -------------------------------------------------------------------------------------------------

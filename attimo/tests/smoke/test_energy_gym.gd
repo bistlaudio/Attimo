@@ -47,6 +47,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 		_check_contract(check)
 		_check_stations(check)
 		_check_route(check)
+		_check_boost_line(check)
 		await _live_walk(tree, check)
 		await _live_capsule(tree, check)
 		_check_capsules_near_shots(check)
@@ -239,6 +240,19 @@ func _check_capsules_near_shots(check: Callable) -> void:
 
 
 ## D-20: no sign names the aiming mode or the old pulse sizes by hold time; no sign names the shot (D-45).
+## Plan 05.1-16 (D-30): the boost line keeps its seven rings at the same positions, now the kit boost ring (a GIVES Impulse, no driver).
+func _check_boost_line(check: Callable) -> void:
+	var rings: int = 0
+	for index: int in 7:
+		var ring: Node3D = _zone.find_child("Ring_%d" % index, true, false) as Node3D
+		if ring == null:
+			continue
+		var wanted: Vector3 = Vector3(-131.0 - 16.0 * float(index), 1.2, -12.0)
+		if ring.scene_file_path == "res://scenes/kit/steampunk/boost_ring.tscn" and ring.global_position.distance_to(wanted) < 0.01 and ring.get_script() != null:
+			rings += 1
+	check.call(rings == 7, "the boost line has seven kit boost rings at the old positions (%d)" % rings)
+
+
 func _check_signs(check: Callable) -> void:
 	var stale: PackedStringArray = PackedStringArray()
 	var labels: int = 0

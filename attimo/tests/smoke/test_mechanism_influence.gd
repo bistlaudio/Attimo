@@ -2,7 +2,7 @@ extends RefCounted
 ## D-06 audit: every mechanism that moves the player does so, measurably, and only through the PlayerController request API.
 ## One scenario per existing mover (pendulum; the nozzle updraft is the Force volume block since plan 05.1-15, covered by test_force_volume; the nozzle launch and push-back modes were cut in plan 05.1-03, the lift
 ## in plan 05.1-06), each with a real player on real geometry.
-## The rotating platform carry has its own test (test_mechanism_carry); the belt carry is test_conveyor_pendulum. Later plans add
+## The rotating platform carry has its own test (test_mechanism_carry); the belt was replaced by the speed pad (test_impulse). Later plans add
 ## their movers to this file. The source guard keeps mechanism scripts from writing the player's velocity fields at all.
 
 const Fixtures := preload("res://tests/fixtures.gd")

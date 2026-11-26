@@ -1,11 +1,8 @@
 extends RefCounted
-## MECH-04 K (D-06): the low-gravity zone. Inside the volume a held full jump rises at least twice as high, switching the
-## source off restores the normal apex (no restore step), and the zone only uses PlayerController.request_gravity_scale (the
-## Dash-owned gravity_scale stays untouched). MECH-04 A, B: the repulsor and attractor (ForceField); the wind tunnel became the steam stream force volume (plan 05.1-15, test_force_volume).
+## MECH-04 K (D-06): the gravity request API (the zone is a Force volume now). MECH-04 A, B: the repulsor and attractor (ForceField); the wind tunnel became the steam stream force volume (plan 05.1-15, test_force_volume).
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
-const ZONE_SCENE: String = "res://scenes/mechanisms/low_gravity_zone.tscn"
 const FIELD_SCENE: String = "res://scenes/mechanisms/force_field.tscn"
 const SHIPPED_TPS: int = 60
 
@@ -13,7 +10,7 @@ const SHIPPED_TPS: int = 60
 func run(tree: SceneTree, check: Callable) -> void:
 	await tree.process_frame
 	Engine.physics_ticks_per_second = SHIPPED_TPS
-	await _scenario_low_gravity(tree, check)
+	await _scenario_gravity_requests(tree, check)
 	await _scenario_repulsor(tree, check)
 	await _scenario_attractor(tree, check)
 	Engine.physics_ticks_per_second = SHIPPED_TPS
@@ -27,50 +24,12 @@ func _free(tree: SceneTree, nodes: Array) -> void:
 	await tree.process_frame
 
 
-## Holds the jump button through a full jump and returns [apex height, airborne ticks]. The player ends back on the floor.
-func _held_jump(tree: SceneTree, player: PlayerController) -> Array[float]:
-	var start_y: float = player.global_position.y
-	var apex: float = 0.0
-	var air_ticks: float = 0.0
-	Input.action_press(&"jump")
-	for i: int in 400:
-		await Fixtures.wait_physics(tree, 1)
-		if i > 3 and player.is_grounded():
-			break
-		apex = maxf(apex, player.global_position.y - start_y)
-		air_ticks += 1.0
-	Input.action_release(&"jump")
-	await Fixtures.wait_physics(tree, 30)
-	return [apex, air_ticks]
-
-
-func _scenario_low_gravity(tree: SceneTree, check: Callable) -> void:
-	var source: SignalSource = SignalSource.new()
-	tree.root.add_child(source)
+## The player-side gravity request contract (T-04.1-01): bad and out-of-range requests, cleared after the move. The gravity zone
+## itself became the Force volume GRAVITY profile (plan 05.1-16, test_amplification).
+func _scenario_gravity_requests(tree: SceneTree, check: Callable) -> void:
 	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root)
-	var zone: LowGravityZone = (load(ZONE_SCENE) as PackedScene).instantiate() as LowGravityZone
-	zone.source = source
-	tree.root.add_child(zone)
-	var volume: Area3D = zone.get_node("Volume") as Area3D
-	check.call(volume.collision_layer == 0 and volume.collision_mask == PhysicsLayers.PLAYER, "the zone volume is an Area3D on no layer that masks the Player")
 	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3.ZERO)
 	await Fixtures.wait_physics(tree, 20)
-
-	var out: Array[float] = await _held_jump(tree, player)
-	check.call(out[0] > 1.5, "a held jump outside rises %.2f m (zone off)" % out[0])
-
-	source.set_active(true)
-	await Fixtures.wait_physics(tree, 5)
-	var inside: Array[float] = await _held_jump(tree, player)
-	check.call(inside[0] >= 2.0 * out[0], "inside the zone the same held jump rises %.2f m, at least 2x %.2f m" % [inside[0], out[0]])
-	check.call(inside[1] > out[1], "and stays airborne longer (%d vs %d ticks)" % [int(inside[1]), int(out[1])])
-
-	source.set_active(false)
-	await Fixtures.wait_physics(tree, 5)
-	var again: Array[float] = await _held_jump(tree, player)
-	check.call(absf(again[0] - out[0]) <= 0.1 * out[0], "switched off again, the apex is back to %.2f m (was %.2f m)" % [again[0], out[0]])
-
-	# Bad and out-of-range requests (T-04.1-01).
 	player.request_gravity_scale(NAN)
 	player.request_gravity_scale(INF)
 	check.call(player._zone_gravity_scale == 1.0, "a non-finite gravity request changes nothing")
@@ -80,19 +39,7 @@ func _scenario_low_gravity(tree: SceneTree, check: Callable) -> void:
 	check.call(player._zone_gravity_scale == 1.0, "the request is cleared after the move, no restore step needed")
 	player.request_gravity_scale(5.0)
 	check.call(player._zone_gravity_scale == 1.0, "a request above 1.0 is clamped to 1.0")
-
-	# An air dash inside the zone: the zone leaves the state-owned gravity_scale alone.
-	source.set_active(true)
-	await Fixtures.wait_physics(tree, 5)
-	await Fixtures.tap_action(tree, &"jump", 3)
-	await Fixtures.wait_physics(tree, 6)
-	await Fixtures.tap_action(tree, &"dash", 3)
-	check.call(player.state_machine.current.name == &"Dash", "an air dash starts inside the zone (%s)" % player.state_machine.current.name)
-	check.call(is_equal_approx(player.gravity_scale, player.config.air_dash_gravity_scale), "during the dash gravity_scale is the dash value (%.2f), not the zone factor" % player.gravity_scale)
-	await Fixtures.wait_until(tree, func() -> bool: return player.state_machine.current.name != &"Dash", 40)
-	check.call(player.gravity_scale == 1.0, "after the air dash gravity_scale is 1.0 (%.2f)" % player.gravity_scale)
-
-	await _free(tree, [zone, player, floor_body, source])
+	await _free(tree, [player, floor_body])
 
 
 func _field(tree: SceneTree, check: Callable, mode: ForceField.Mode, source: SignalSource, at: Vector3) -> ForceField:

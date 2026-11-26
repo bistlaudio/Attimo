@@ -7,6 +7,7 @@ extends RefCounted
 ##   south, Role_Platforms   ClockHand (1, 0)  TiltPlate (2, 0)   (slot (0, 0) holds the clock hand's stepped ledge)
 ##   south, Role_Boosters    WallJump twin (3..4, 0)  WallRun (3, 1)  WallRunSteam (4, 1)  SteamCannon (5, 1)  Slingshot (6, 0, out of the cannon line)
 ##   north, Role_Environment Updraft (0, 1)  Geyser (1, 1)  SteamStream (2, 1)   (plan 05.1-15, force volumes, +1 step per use)
+##   south, Role_Boosters    BoostRing (0, 1)  SpeedPad (1, 1)  BouncePad (2, 1)   (plan 05.1-16, impulse, +1 step per use)
 ##   north                   Role_Obstacles, Role_Mechanisms: empty until their blocks land (plans 16-19)
 ## Each station keeps the offsets, heights and sign spots it had in the old mechanism rooms (plans 01-04), relative to its slot point.
 
@@ -37,6 +38,13 @@ const SLINGSHOT_HANG: float = 3.0
 const UPDRAFT_SCENE: String = "res://scenes/kit/steampunk/updraft.tscn"
 const GEYSER_SCENE: String = "res://scenes/kit/steampunk/geyser.tscn"
 const STEAM_STREAM_SCENE: String = "res://scenes/kit/steampunk/steam_stream.tscn"
+## Impulse looks (plan 05.1-16, D-10, D-25, D-43): boost ring (air-dash counterpart), speed pad (dash-hop counterpart, replaces the
+## conveyors) and bounce pad, each GIVES +1 step per use.
+const BOOST_RING_SCENE: String = "res://scenes/kit/steampunk/boost_ring.tscn"
+const SPEED_PAD_SCENE: String = "res://scenes/kit/steampunk/speed_pad.tscn"
+const BOUNCE_PAD_SCENE: String = "res://scenes/kit/steampunk/bounce_pad.tscn"
+## The ring hangs at this height over the station floor (its radius is 1.6 m, so the lowest point stays 0.2 m up).
+const RING_HEIGHT: float = 1.8
 const TINT: Color = Color(0.55, 0.45, 0.30)
 const ROLES: Array[String] = ["Platforms", "Environment", "Obstacles", "Boosters", "Mechanisms"]
 
@@ -117,6 +125,7 @@ func _deck_stairs(station: Node3D, builder: RefCounted, tag: String, pivot_y: fl
 func _build_boosters(role: Node3D, builder: RefCounted) -> void:
 	_build_wall_pads(role, builder)
 	_build_catch_launch(role, builder)
+	_build_impulses(role, builder)
 
 
 ## Wall surface (plan 05.1-03, D-06). The plain pad and its steam look stand side by side, parallel, 6 m apart, over the same x span
@@ -144,6 +153,17 @@ func _build_catch_launch(role: Node3D, builder: RefCounted) -> void:
 	builder.call(&"_instance", cannon, STEAM_CANNON_SCENE, "SteamCannon", Vector3.ZERO, builder.call(&"_yaw", -90.0))
 	var cage: Node3D = _station(role, builder, "Slingshot", _slot("S", 6, 0), "Schleuderkern (wie der Loader)", "Erwartet: Fängt dich nur, wenn du mitten durch den Ring fliegst; Zeitlupe, Rechtsklick loslassen wirft dich gerade in Blickrichtung; +1 Stufe", Vector3(-4.0, 3.2, 4.0))
 	builder.call(&"_instance", cage, SLINGSHOT_SCENE, "Slingshot", Vector3(0.0, SLINGSHOT_HANG, 0.0))
+
+
+## Impulse (plan 05.1-16, D-10, D-25). Ring: axis +x, hangs RING_HEIGHT up, fly through it along x. Pad: forward is -z, run over it from
+## the south. Bounce pad: land on it; the higher the drop the higher the bounce.
+func _build_impulses(role: Node3D, builder: RefCounted) -> void:
+	var ring: Node3D = _station(role, builder, "BoostRing", _slot("S", 0, 1), "Boost-Ring", "Erwartet: Im Flug durchfliegen: Schub und der Luft-Dash ist wieder da; +1 Stufe", Vector3(0.0, 4.4, 0.0))
+	builder.call(&"_instance", ring, BOOST_RING_SCENE, "Ring", Vector3(0.0, RING_HEIGHT, 0.0))
+	var pad: Node3D = _station(role, builder, "SpeedPad", _slot("S", 1, 1), "Speed-Pad", "Erwartet: Drüberlaufen gibt einen kurzen Schub wie ein Dash-Hop, gratis; +1 Stufe", Vector3(0.0, 3.2, -3.0))
+	builder.call(&"_instance", pad, SPEED_PAD_SCENE, "Pad", Vector3(0.0, 0.0, 0.0))
+	var bounce: Node3D = _station(role, builder, "BouncePad", _slot("S", 2, 1), "Sprungplatte", "Erwartet: Wirft dich hoch; +1 Stufe", Vector3(0.0, 3.2, -3.0))
+	builder.call(&"_instance", bounce, BOUNCE_PAD_SCENE, "Pad", Vector3(0.0, 0.0, 0.0))
 
 
 # --- Role_Environment ----------------------------------------------------------------------------------------------------------------

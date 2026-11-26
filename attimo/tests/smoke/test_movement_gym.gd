@@ -13,7 +13,7 @@ const KIT_PREFIX: String = "res://scenes/kit/"
 const MANNEQUIN_SCENE: String = "res://scenes/player/mannequin.tscn"
 const CONTRACT_NODES: Array[String] = [
 	"WorldEnvironment", "Sun", "Hall", "Spawn", "Player", "CameraRig",
-	"Zone_MeasurementStrip", "Zone_RampsStairs", "Zone_Gaps", "Zone_MovingPlatforms", "Zone_Conveyors",
+	"Zone_MeasurementStrip", "Zone_RampsStairs", "Zone_Gaps", "Zone_MovingPlatforms",
 	"Zone_CameraTests", "Zone_Loader", "Zone_Energy", "Zone_KitSteampunk", "Zone_KitEnergy", "Zone_KitNature", "FallResetHall", "EventLog", "MetricsOverlay", "TuningPanel", "Crosshair", "EnergyHud", "LoaderLook",
 ]
 const RISER_COUNT: int = 6
@@ -108,7 +108,7 @@ func _check_composition(gym: Node, check: Callable) -> PlayerController:
 		_check_camera_rig(cameras[0], player, check)
 
 	_check_kit_areas(gym, check)
-	_check_platforms_and_conveyors(gym, check)
+	_check_platforms(gym, check)
 	_check_fall_resets(gym, check)
 	_check_risers(gym, check)
 	_check_overlays(gym, check)
@@ -130,7 +130,7 @@ func _check_camera_rig(camera: Camera3D, player: PlayerController, check: Callab
 	check.call(rig.target == player, "the CameraRig targets the Player")
 
 
-func _check_platforms_and_conveyors(gym: Node, check: Callable) -> void:
+func _check_platforms(gym: Node, check: Callable) -> void:
 	var platforms: Array[Node] = gym.get_tree().get_nodes_in_group(&"moving_platform")
 	check.call(platforms.size() == 3, "three MovingPlatform nodes in group moving_platform (got %d)" % platforms.size())
 	var linear: int = 0
@@ -147,13 +147,6 @@ func _check_platforms_and_conveyors(gym: Node, check: Callable) -> void:
 		else:
 			linear += 1
 	check.call(linear == 1 and circle == 1 and vertical == 1, "one linear, one circular and one vertical platform (got %d, %d, %d)" % [linear, circle, vertical])
-
-	var conveyors: int = 0
-	for node: Node in _all_nodes(gym):
-		var body: StaticBody3D = node as StaticBody3D
-		if body != null and body.name.begins_with("Conveyor_") and not body.constant_linear_velocity.is_zero_approx():
-			conveyors += 1
-	check.call(conveyors >= 2, "at least two conveyor bodies move (got %d)" % conveyors)
 
 
 func _check_fall_resets(gym: Node, check: Callable) -> void:

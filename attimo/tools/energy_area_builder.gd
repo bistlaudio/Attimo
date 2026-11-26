@@ -22,7 +22,7 @@ const CONFIG_PATH: String = "res://resources/player/movement_default.tres"
 const CAPSULE_SCENE: String = "res://scenes/kit/energy/energy_capsule.tscn"
 const MACHINE_SCENE: String = "res://scenes/kit/energy/broken_machine.tscn"
 const PLATE_SCENE: String = "res://scenes/mechanisms/energy_drain_plate.tscn"
-const BOOST_SCENE: String = "res://scenes/mechanisms/boost_ring.tscn"
+const BOOST_SCENE: String = "res://scenes/kit/steampunk/boost_ring.tscn"
 const PAD_SCENE: String = "res://scenes/kit/steampunk/wall_pad.tscn"
 const FIELD_SCENE: String = "res://scenes/kit/energy/loader_field.tscn"
 const ZONE_FLOOR_SCENE: String = "res://scenes/mechanisms/zone_floor.tscn"
@@ -187,15 +187,6 @@ func _plate(parent: Node3D, builder: RefCounted, node_name: String, at: Vector3)
 
 
 ## A driven mechanism: an always-on source added BEFORE the mechanism so it is ready first (puzzle-room pattern).
-func _driven(parent: Node3D, builder: RefCounted, scene: String, node_name: String, at: Vector3, basis: Basis = Basis.IDENTITY) -> Node3D:
-	var driver: SignalSource = SignalSource.new()
-	driver.start_active = true
-	builder.call(&"_adopt", parent, driver, "Driver%s" % node_name, at - parent.position)
-	var mechanism: Node3D = builder.call(&"_instance", parent, scene, node_name, at - parent.position, basis) as Node3D
-	mechanism.set("source", driver)
-	return mechanism
-
-
 func _build_machine_station(zone: Node3D, builder: RefCounted) -> void:
 	var at: Vector3 = Vector3(-143.0, 0.0, 12.0)
 	var station: Node3D = _station(zone, builder, "Energy_Machine", at, "Kaputte Maschine", "Erwartet: LMB halten: +5 Stufen in etwa 2 s, dann dunkel")
@@ -226,11 +217,11 @@ func _build_drain_station(zone: Node3D, builder: RefCounted) -> void:
 ## Boost rings every 16 m along z -12 next to the track, always on.
 func _build_boost_line(zone: Node3D, builder: RefCounted) -> void:
 	var at: Vector3 = Vector3(-123.0, 0.0, BOOST_Z)
-	var station: Node3D = _station(zone, builder, "Energy_BoostLine", at, "Boost-Linie", "Erwartet: Die Ringe halten dich schnell, Geschwindigkeit lädt den Arm nicht")
+	var station: Node3D = _station(zone, builder, "Energy_BoostLine", at, "Boost-Linie", "Erwartet: +1 Stufe pro Ring (mit Abklingzeit)")
 	_marker(station, builder, "Start", at)
 	for k: int in BOOST_COUNT:
 		var x: float = BOOST_X_FIRST - BOOST_SPACING * k
-		_driven(station, builder, BOOST_SCENE, "Ring_%d" % k, Vector3(x, BOOST_HEIGHT, BOOST_Z))
+		builder.call(&"_instance", station, BOOST_SCENE, "Ring_%d" % k, Vector3(x, BOOST_HEIGHT, BOOST_Z) - station.position)
 
 
 func _build_air_dash(zone: Node3D, builder: RefCounted) -> void:

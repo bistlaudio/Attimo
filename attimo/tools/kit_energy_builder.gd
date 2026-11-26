@@ -14,6 +14,8 @@ const KitAreaShell := preload("res://tools/kit_area_shell.gd")
 const CAPSULE_SCENE: String = "res://scenes/kit/energy/energy_capsule.tscn"
 const MACHINE_SCENE: String = "res://scenes/kit/energy/broken_machine.tscn"
 const FIELD_SCENE: String = "res://scenes/kit/energy/loader_field.tscn"
+const BOUNCE_CORE_SCENE: String = "res://scenes/kit/energy/bounce_pad_core.tscn"
+const GRAVITY_ZONE_SCENE: String = "res://scenes/kit/energy/gravity_zone.tscn"
 const TINT: Color = Color(0.16, 0.40, 0.42)
 const ROLES: Array[String] = ["Environment", "Obstacles", "Boosters", "Mechanisms"]
 
@@ -32,6 +34,10 @@ func build_into(zone: Node3D, builder: RefCounted) -> void:
 		_build_energy_sources(groups["Mechanisms"] as Node3D, builder)
 	if groups.has("Obstacles"):
 		_build_loader_field(groups["Obstacles"] as Node3D, builder)
+	if groups.has("Boosters"):
+		_build_bounce_core(groups["Boosters"] as Node3D, builder)
+	if groups.has("Environment"):
+		_build_gravity_zone(groups["Environment"] as Node3D, builder)
 
 
 ## Energy source (plan 05.1-10, D-42): the capsule (+3, dark, refills) and the broken machine (+5 in about 2 s), each on its own
@@ -53,6 +59,22 @@ func _build_loader_field(role: Node3D, builder: RefCounted) -> void:
 	var station: Node3D = _shell.station(role, builder, "LoaderField", at, "Loader-Feld", "Erwartet: Nur ein Loader mit mindestens 2 Stufen gleitet hindurch und wird langsamer; alles andere prallt sanft ab")
 	builder.call(&"_instance", station, FIELD_SCENE, "LoaderField", Vector3.ZERO)
 	_shell.capsule_beside(station, builder, at + Vector3(0.0, 0.0, 4.0))
+
+
+## Amplification (plan 05.1-16, D-24): the bounce pad with core (Role_Boosters) and the gravity zone (Role_Environment). Neither spends
+## energy; the fuller the clock, the higher the bounce and the longer the float. A capsule stands beside each.
+func _build_bounce_core(role: Node3D, builder: RefCounted) -> void:
+	var at: Vector3 = _slot("S", 0, 0)
+	var station: Node3D = _shell.station(role, builder, "BouncePadCore", at, "Sprungplatte mit Kern", "Erwartet: Je voller die Uhr, desto höher; verbraucht nichts", Vector3(0.0, 3.2, -3.0))
+	builder.call(&"_instance", station, BOUNCE_CORE_SCENE, "Pad", Vector3.ZERO)
+	_shell.capsule_beside(station, builder, at + Vector3(4.5, 0.0, 0.0))
+
+
+func _build_gravity_zone(role: Node3D, builder: RefCounted) -> void:
+	var at: Vector3 = _slot("N", 0, 1)
+	var station: Node3D = _shell.station(role, builder, "GravityZone", at, "Schwerezone", "Erwartet: Je voller die Uhr, desto länger schwebst du; verbraucht nichts", Vector3(0.0, 5.2, 0.0))
+	builder.call(&"_instance", station, GRAVITY_ZONE_SCENE, "Zone", Vector3.ZERO)
+	_shell.capsule_beside(station, builder, at + Vector3(0.0, 0.0, 5.5))
 
 
 ## Slot (column, row) on `side` of this area.
