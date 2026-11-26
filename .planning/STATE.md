@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v0.11.0.4
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05.1-18-PLAN.md
-last_updated: "2026-11-26T13:16:47.261Z"
+stopped_at: Completed 05.1-19-PLAN.md
+last_updated: "2026-11-26T14:06:23.411Z"
 last_activity: 2026-11-26
 progress:
   total_phases: 17
   completed_phases: 6
   total_plans: 68
-  completed_plans: 64
+  completed_plans: 65
   percent: 35
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 ## Current Position
 
 Phase: 05.1 (kit-rework-inserted) — EXECUTING
-Plan: 13 of 22
+Plan: 14 of 22
 Status: Ready to execute
 Last activity: 2026-11-26
 
-Progress: [█████████░] 94%
+Progress: [██████████] 96%
 
 ## Performance Metrics
 
@@ -101,6 +101,7 @@ Progress: [█████████░] 94%
 | Phase 05.1 P09 | 1h | 3 tasks | 10 files |
 | Phase 05.1 P15 | 2h | 3 tasks | 40 files |
 | Phase 05.1 P18 | 70min | 3 tasks | 30 files |
+| Phase 05.1 P19 | 60min | 3 tasks | 30 files |
 
 ## Accumulated Context
 
@@ -182,6 +183,7 @@ Recent decisions that affect current work:
 - [Phase 05]: 05-04: shot bends toward the locked target instead of a snapped ray; pulse_fired fires at projectile impact, shot_fired at launch
 - [Phase 05.1]: Clock HUD with hour/second hand and refusal cue (D-35, D-39); wall-run lean head away from wall plus pose-only wall_run_feet_offset 0.35 m (D-40)
 - [Phase 05.1]: 05.1-18: EnergyCost pays at interval end for the core and at episode start for the attraction field escape; fast escape = away speed above 9.5 m/s or a dash, long jump or flight away; attraction pull target 6.0 below run speed (T-05.1-54)
+- [Phase 05.1]: 05.1-19: PATH loops on equal first and last point, else ping-pongs; STEPS decks reach out of a wall body; all three platforms always on
 
 ### Pending Todos
 
@@ -227,6 +229,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-26T13:16:47.250Z
-Stopped at: Completed 05.1-18-PLAN.md
+Last session: 2026-11-26T14:06:23.400Z
+Stopped at: Completed 05.1-19-PLAN.md
 Resume file: None
