@@ -1122,6 +1122,8 @@ func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, d
 		lines.append("| `%s` | %.3f |" % [field, float(config.get(field))])
 	lines.append("")
 
+	lines.append_array(_kit_values_lines())
+
 	var path: String = ProjectSettings.globalize_path("res://").path_join(DOC_RELATIVE_PATH).simplify_path()
 	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
@@ -1130,3 +1132,87 @@ func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, d
 	file.store_string("\n".join(lines))
 	file.close()
 	print("MEASURE: wrote %s" % path)
+
+
+# --- Kit values (plan 05.1-22, D-57) --------------------------------------------------------------------------------
+
+const KIT_RESOURCES: String = "res://resources/kit"
+## Field name fragments -> unit of a float. First match wins; a field without a match prints the bare number.
+const KIT_UNITS: Array[Array] = [
+	["_deg", "deg"], ["accel", "m/s2"], ["speed", "m/s"], ["velocity", "m/s"],
+	["time", "s"], ["delay", "s"], ["interval", "s"], ["period", "s"], ["cooldown", "s"], ["windup", "s"], ["pause", "s"], ["hold", "s"],
+	["radius", "m"], ["height", "m"], ["depth", "m"], ["length", "m"], ["width", "m"], ["thickness", "m"], ["extend", "m"],
+	["distance", "m"], ["amplitude", "m"], ["size", "m"], ["travel", "m"], ["reach", "m"],
+]
+
+
+## The "## Kit values" section: one row per preset file under res://resources/kit/ with the tunable numbers that differ from the
+## script default (ints named *steps as steps, floats with a unit from the field name).
+func _kit_values_lines() -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray()
+	lines.append("## Kit values")
+	lines.append("")
+	lines.append("Every preset `.tres` under res://resources/kit/ with its tunable numbers. Only values that differ from the config script default are listed (the other fields keep the default); an int named `...steps` is a count of energy steps, a float carries the unit its field name implies (s, m, m/s, m/s2, deg), a bare number has none (a ratio, a count or an enum index).")
+	lines.append("")
+	lines.append("| Preset | Config | Values |")
+	lines.append("|---|---|---|")
+	var presets: PackedStringArray = PackedStringArray()
+	_collect_kit_presets(KIT_RESOURCES, "", presets)
+	presets.sort()
+	for relative: String in presets:
+		var resource: Resource = load("%s/%s" % [KIT_RESOURCES, relative]) as Resource
+		var script: Script = resource.get_script() as Script if resource != null else null
+		var kind: String = String(script.get_global_name()) if script != null else (resource.get_class() if resource != null else "unreadable")
+		var values: String = _kit_value_text(resource, script)
+		lines.append("| `%s` | %s | %s |" % [relative, kind, values])
+	lines.append("")
+	return lines
+
+
+func _collect_kit_presets(dir_path: String, prefix: String, into: PackedStringArray) -> void:
+	var dir: DirAccess = DirAccess.open(dir_path)
+	if dir == null:
+		return
+	for sub: String in dir.get_directories():
+		_collect_kit_presets(dir_path.path_join(sub), "%s%s/" % [prefix, sub], into)
+	for file: String in dir.get_files():
+		if file.ends_with(".tres"):
+			into.append("%s%s" % [prefix, file])
+
+
+func _kit_value_text(resource: Resource, script: Script) -> String:
+	if resource == null or script == null or not (script as GDScript).can_instantiate():
+		return "no tunable numbers"
+	var defaults: Resource = (script as GDScript).new() as Resource
+	var parts: PackedStringArray = PackedStringArray()
+	for info: Dictionary in resource.get_property_list():
+		if (int(info["usage"]) & PROPERTY_USAGE_SCRIPT_VARIABLE) == 0 or (int(info["usage"]) & PROPERTY_USAGE_EDITOR) == 0:
+			continue
+		var field: String = str(info["name"])
+		var value: Variant = resource.get(field)
+		if defaults != null and value == defaults.get(field):
+			continue
+		match int(info["type"]):
+			TYPE_INT:
+				parts.append("%s %d%s" % [field, int(value), " steps" if field.ends_with("steps") else ""])
+			TYPE_FLOAT:
+				parts.append("%s %s" % [field, _kit_float(field, float(value))])
+			TYPE_VECTOR3:
+				var vector: Vector3 = value as Vector3
+				parts.append("%s (%s, %s, %s)%s" % [field, _trim(vector.x), _trim(vector.y), _trim(vector.z), " m" if field.ends_with("size") else ""])
+	return "; ".join(parts) if not parts.is_empty() else "all defaults"
+
+
+func _kit_float(field: String, value: float) -> String:
+	for entry: Array in KIT_UNITS:
+		if field.contains(String(entry[0])):
+			return "%s %s" % [_trim(value), String(entry[1])]
+	return _trim(value)
+
+
+## A float without trailing zeros.
+func _trim(value: float) -> String:
+	var text: String = "%.3f" % value
+	while text.ends_with("0") and text.contains("."):
+		text = text.trim_suffix("0")
+	return text.trim_suffix(".")

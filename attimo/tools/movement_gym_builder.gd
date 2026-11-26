@@ -12,8 +12,9 @@ extends RefCounted
 ##   west door (z -2..2, no WallWest_0) into the west wing: Zone_Loader (x -43..-115, z -26..26, tools/loader_room_builder.gd), whose
 ##   west wall has an open doorway (z -2..2) into Zone_Energy (x -115..-239, z -26..26, tools/energy_area_builder.gd).
 ##   east door (z -2..2, no WallEast_0, a plain doorway) into the kit showroom (Phase 05.1, D-28): a corridor z -4..4 through the layer
-##   areas Zone_KitSteampunk (x 43..151), Zone_KitEnergy (x 155..227) and Zone_KitNature (x 231..291), z -32..32 each, shell in
-##   tools/kit_area_shell.gd, stations in tools/kit_<layer>_builder.gd; the mixed course Zone_KitCourse (x 295..395) follows in plan 20.
+##   areas Zone_KitSteampunk (x 43..151), Zone_KitEnergy (x 155..227), Zone_KitNature (x 231..291) and the mixed course Zone_KitCourse
+##   (x 295..395), z -32..32 each, shell in tools/kit_area_shell.gd, stations in tools/kit_<layer>_builder.gd, the course in
+##   tools/kit_course_builder.gd.
 
 const PROTO: String = "res://scenes/proto/"
 const FLOOR: String = PROTO + "primitive_floor.tscn"
@@ -416,6 +417,7 @@ const KIT_AREAS: Array[Array] = [
 	["Zone_KitSteampunk", "res://tools/kit_steampunk_builder.gd"],
 	["Zone_KitEnergy", "res://tools/kit_energy_builder.gd"],
 	["Zone_KitNature", "res://tools/kit_nature_builder.gd"],
+	["Zone_KitCourse", "res://tools/kit_course_builder.gd"],
 ]
 
 

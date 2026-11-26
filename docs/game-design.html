@@ -505,7 +505,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
     <li><b>Clock hand:</b> a bounded back-and-forth sweep, always on, never steeper than the floor angle (no full turn; confirm in playtest).</li>
     <li><b>Energy core:</b> hold E to pay in, one step per tick; the amount stays, and each threshold (3 / 6 / 9 steps) switches one more output, never a door.</li>
     <li><b>Loader field and attraction field:</b> the field never breaks, a Loader with ≥ 2 steps glides through with a brake; walking out of the attraction field is free, a fast escape costs 1 step every 0.5 s.</li>
-    <li><b>Showroom = gym:</b> one area per layer, grouped by role, plus a mixed course; the Phase 5 Loader room and energy area keep their layout, the shot stations become Loader-field obstacles.</li>
+    <li><b>Showroom = gym:</b> one area per layer, grouped by role, plus a mixed course; the Phase 5 Loader room and energy area keep their layout, the shot stations become Loader-field obstacles. The mixed course (<code>Zone_KitCourse</code>) is one route through all three layers: clock hand, slingshot flight, resin pool, energy core that folds a drawbridge down, collapse strip, goal; every gap is computed from the metrics doc.</li>
   </ul>
 </section>
 

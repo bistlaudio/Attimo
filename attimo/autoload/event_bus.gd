@@ -16,8 +16,6 @@ signal chain_stage_changed(stage: int)
 signal dash_blocked(position: Vector3, reason: StringName)
 ## Emitted by Interactable when a near contact began. `node` is the owner of the Interactable, `kind` is Interactable.KIND_NEAR. Listeners: juice, audio.
 signal interactable_triggered(node: Node, kind: int)
-## Emitted by Mechanism when its signal changed. `active` is the new signal state. Listeners: juice, audio, the debug event log.
-signal mechanism_changed(node: Node, active: bool)
 ## Emitted by HandController after a module was equipped. Listeners: the HUD (plan 04-02).
 signal hand_module_changed(id: StringName)
 ## Emitted by the near-contact hand (plan 04-02) when contact with a target starts (true) or ends (false). `point` is the contact point.

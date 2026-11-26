@@ -90,7 +90,7 @@ Rules:
 | `player` | now (Phase 1) | The Player root node |
 | `moving_platform` | now (Phase 2) | Moving platforms (`MovingPlatform`); the player carries their horizontal velocity |
 | `interactable` | now (Phase 4) | Every `Interactable` component: anything the hand can target |
-| `mechanism` | now (Phase 4) | Every `Trigger` (kit emitter, incl. the AND / OR / timer logic nodes), `Receiver` and old `Mechanism`; the reset sweep walks it |
+| `mechanism` | now (Phase 4) | Every `Trigger` (kit emitter, incl. the AND / OR / timer logic nodes), and `Receiver`; the reset sweep walks it |
 | `hand_controller` | now (Phase 4) | The `HandController` under the Player |
 | `energy_source` | now (Phase 5) | Every `EnergySource` (capsule, broken machine): the Extractor's candidates; also in `mechanism` |
 | `carrying_platform` | now (Phase 4) | Timed motion decks (clock hand SWEEP, tilt plate TILT; plan 05.1-04) with reference-frame chord carry; take-off keeps the vertical chord |
@@ -161,7 +161,6 @@ Exception 2: placeholder hit puffs in `scripts/debug` + `scenes/debug/hit_puff.t
 | `dash_blocked` | `position: Vector3, reason: StringName` | `PlayerController._block_dash` when a dash press is refused for a lockout reason (`energy`: a dash the arm cannot pay, ground or air; there is no other lockout). Once per press, no cooldown or air dash spent, no buffering. A refusal by the cooldown or the spent air dash emits nothing. |
 | `movement_state_changed` | `from_state: StringName, to_state: StringName` | `StateMachine` on every transition |
 | `interactable_triggered` | `node: Node, kind: int` | `Interactable` when a near contact began; `node` is its parent, `kind` is `Interactable.KIND_NEAR` |
-| `mechanism_changed` | `node: Node, active: bool` | `Mechanism.set_signal` when its signal state changed |
 | `hand_module_changed` | `id: StringName` | `HandController.equip` after a module was equipped |
 | `near_contact_changed` | `active: bool, point: Vector3` | The near-contact hand (plan 04-02) when contact starts or ends |
 | `launched` | `position: Vector3, direction: Vector3, speed: float` | Launching mechanisms (plan 04-04) when they throw the player; the `Loader` state on a FIXED discharge (steam cannon, plan 05.1-02) with the barrel direction and `fixed_speed` |

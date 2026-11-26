@@ -2,7 +2,7 @@ class_name Receiver
 extends Node
 ## Receiver component (Phase 05.1, KIT-01, D-13, D-14): lets a kit block be switched by a Trigger. A child node of the block; the block
 ## asks `is_on()` (Timed motion SWITCHED, Impulse pad) and may listen to `switched`. RUN_WHILE_ON follows the source (on while it is on),
-## REVERSE_ON_SIGNAL flips on every rising edge (D-18 of Phase 4). It replaces Mechanism.source for kit blocks. Exactly two users: the
+## REVERSE_ON_SIGNAL flips on every rising edge (D-18 of Phase 4). It replaced the old Mechanism.source (deleted in plan 05.1-22). Exactly two users: the
 ## drawbridge and the switched speed pad. The component only reads the source; a missing source warns once and stays off.
 
 enum Behaviour { RUN_WHILE_ON, REVERSE_ON_SIGNAL }
