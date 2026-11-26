@@ -32,6 +32,11 @@ const KIT_OBJECTS: Dictionary = {
 	"res://scenes/kit/energy/energy_capsule.tscn": "res://tests/smoke/test_extractor.gd",
 	"res://scenes/kit/energy/broken_machine.tscn": "res://tests/smoke/test_extractor.gd",
 	"res://scenes/kit/energy/loader_field.tscn": "res://tests/smoke/test_loader_field.gd",
+	"res://scenes/kit/steampunk/updraft.tscn": "res://tests/smoke/test_force_volume.gd",
+	"res://scenes/kit/steampunk/geyser.tscn": "res://tests/smoke/test_force_volume.gd",
+	"res://scenes/kit/steampunk/steam_stream.tscn": "res://tests/smoke/test_force_volume.gd",
+	"res://scenes/kit/nature/leaf_storm.tscn": "res://tests/smoke/test_force_volume.gd",
+	"res://scenes/kit/nature/resin_pool.tscn": "res://tests/smoke/test_force_volume.gd",
 }
 
 
@@ -114,6 +119,11 @@ func _check_scene(path: String, check: Callable, component_users: Dictionary) ->
 		check.call(classes.has("GlowElement"), "%s: a GIVES object carries a turquoise GlowElement accent" % stem)
 	if folder == "steampunk" and relation == RELATION_FREE:
 		check.call(not classes.has("GlowElement"), "%s: a FREE steampunk object has no GlowElement" % stem)
+	# Plan 05.1-15 (D-43, D-61): the steam force volumes give a step per use (GIVES + accent); the nature ones are FREE.
+	if path.ends_with("/updraft.tscn") or path.ends_with("/geyser.tscn") or path.ends_with("/steam_stream.tscn"):
+		check.call(relation == RELATION_GIVES and classes.has("GlowElement"), "%s: a steam force volume is GIVES with an accent (relation %d)" % [stem, relation])
+	if path.ends_with("/leaf_storm.tscn") or path.ends_with("/resin_pool.tscn"):
+		check.call(layer == LAYER_NATURE and relation == RELATION_FREE, "%s: nature force volume is NATURE and FREE (layer %d, relation %d)" % [stem, layer, relation])
 	if path.ends_with("/slingshot_core.tscn") or path.ends_with("/steam_cannon.tscn"):
 		check.call(relation == RELATION_GIVES, "%s: the catch element is GIVES (relation %d)" % [stem, relation])
 	if folder == "nature":

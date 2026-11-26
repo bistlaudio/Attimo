@@ -71,6 +71,25 @@ const BLOCKS: Dictionary = {
 		"positive": ["brake", "ripple_time", "push_back_speed"],
 		"profile_presets": {"res://resources/kit/reaction_to_load/loader_field.tres": "LOADER_FIELD"},
 	},
+	# Plan 05.1-15: the Force volume block (D-10, D-11): Profile { DIRECTIONAL, DRAG } and Timing { CONTINUOUS, PULSED }; sizes and timers
+	# are strictly positive (T-05.1-45).
+	"ForceVolume": {
+		"script": "res://scripts/kit/blocks/force_volume.gd",
+		"config_class": "ForceVolumeConfig",
+		"config_script": "res://scripts/kit/configs/force_volume_config.gd",
+		"profiles": ["DIRECTIONAL", "DRAG"],
+		"preset": "res://resources/kit/force_volume/updraft.tres",
+		"scene": "res://scenes/kit/steampunk/updraft.tscn",
+		"probe": "accel",
+		"positive": ["accel", "pulse_on", "pulse_off", "income_cooldown"],
+		"profile_presets": {
+			"res://resources/kit/force_volume/updraft.tres": "DIRECTIONAL",
+			"res://resources/kit/force_volume/geyser.tres": "DIRECTIONAL",
+			"res://resources/kit/force_volume/steam_stream.tres": "DIRECTIONAL",
+			"res://resources/kit/force_volume/leaf_storm.tres": "DIRECTIONAL",
+			"res://resources/kit/force_volume/resin_pool.tres": "DRAG",
+		},
+	},
 }
 ## Source fragments a block script must not contain: direct writes of the player's motion (D-17).
 const FORBIDDEN_WRITES: Array[String] = [".move_velocity =", ".vertical_speed =", ".move_velocity +=", ".vertical_speed +=", ".velocity ="]
