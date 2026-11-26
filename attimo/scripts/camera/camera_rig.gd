@@ -64,8 +64,8 @@ extends Node3D
 @export var base_sensitivity: float = 0.0022
 ## Lowest pitch in rad (negative looks down from above).
 @export var pitch_min: float = -1.2
-## Highest pitch in rad (looking up at high platforms).
-@export var pitch_max: float = 0.75
+## Highest pitch in rad (D-52): 89 degrees, almost straight up and never over the pole (the yaw sits on this node, not on the pitch).
+@export var pitch_max: float = 1.5533430
 ## Field of view in degrees with no FOV source registered.
 @export var base_fov: float = 78.0
 ## Rate in 1/s at which the arm lengthens again after a wall pull-in. Pulling in is instant.
@@ -76,9 +76,10 @@ var settings: CameraSettings
 
 ## Process priority of the rig: lower runs first, so every _process reader of the camera (arm solver) sees this frame's view.
 const PROCESS_PRIORITY: int = -100
-## Degrees per second the upper pitch limit rises to the Loader limit and falls back to pitch_max (real time, never a cut).
-const PITCH_LIMIT_RISE_DEG: float = 240.0
-const PITCH_LIMIT_FALL_DEG: float = 120.0
+## Looking up the lens ends up under the player; it is pushed back out of the player capsule footprint (radius + margin).
+const CAPSULE_CLEAR_RADIUS: float = 0.7
+## The player capsule spans this height above the player origin (D-52 guard).
+const CAPSULE_HEIGHT: float = 2.0
 ## Seconds the Loader pull-back needs to travel its whole way (real time).
 const LOADER_PULL_EASE: float = 0.15
 
@@ -146,8 +147,6 @@ var _last_target_origin: Vector3 = Vector3.ZERO
 
 ## FOV contributions in degrees by source name.
 var _fov_sources: Dictionary[StringName, float] = {}
-## The current upper pitch limit in rad: pitch_max normally, raised to loader_pitch_max_deg while the Loader holds (D-29), eased in real time.
-var _pitch_limit: float = 0.0
 ## Eased Loader pull-back in m (D-04), fed into the &"loader" offset source; 0 outside the hold.
 var _loader_pull: float = 0.0
 ## Arm origin contributions in Pitch-local space by source name.
@@ -216,7 +215,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if settings.invert_y:
 			vertical = -vertical
 		yaw -= motion.relative.x * scale
-		pitch = clampf(pitch - vertical, pitch_min, _current_pitch_limit())
+		pitch = clampf(pitch - vertical, pitch_min, pitch_max)
 		return
 	if event.is_action_pressed(&"camera_recenter") and (not require_mouse_capture or Input.mouse_mode == Input.MOUSE_MODE_CAPTURED):
 		recenter()
@@ -258,7 +257,7 @@ func _process(delta: float) -> void:
 		current.z = anchor.z + lag.y
 	current.y = clampf(current.y, anchor.y - max_vertical_lag, anchor.y + max_vertical_lag)
 	global_position = current
-	pitch = clampf(pitch, pitch_min, _ease_pitch_limit(real, loader))
+	pitch = clampf(pitch, pitch_min, pitch_max)
 	rotation.y = yaw
 	pitch_node.rotation.x = pitch
 	_max_arm_length = lerpf(_max_arm_length, zoom_distance, 1.0 - exp(-zoom_rate * real))
@@ -273,23 +272,6 @@ func _holding_loader() -> LoaderState:
 	if player == null or not player.loader_active():
 		return null
 	return player.loader_state()
-
-
-## The upper pitch limit right now (pitch_max until the first frame has run).
-func _current_pitch_limit() -> float:
-	return maxf(_pitch_limit, pitch_max)
-
-
-## Eases the upper pitch limit toward deg_to_rad(loader_pitch_max_deg) while the Loader holds and back to pitch_max after (D-29):
-## the player can aim a discharge almost straight up, and the view comes back without a jump (Nesky item 14).
-func _ease_pitch_limit(real: float, loader: LoaderState) -> float:
-	var goal: float = pitch_max
-	var player: PlayerController = target as PlayerController
-	if loader != null and player != null and player.config != null:
-		goal = maxf(pitch_max, deg_to_rad(player.config.loader_pitch_max_deg))
-	var rate: float = PITCH_LIMIT_RISE_DEG if goal > _pitch_limit else PITCH_LIMIT_FALL_DEG
-	_pitch_limit = move_toward(_current_pitch_limit(), goal, deg_to_rad(rate) * real)
-	return _current_pitch_limit()
 
 
 ## Eases the camera pull-back with the hold ratio in real time (D-04, a pull and never a cut or a shake) through the additive
@@ -393,7 +375,30 @@ func _update_arm(delta: float) -> void:
 	else:
 		_arm_length = lerpf(_arm_length, goal, 1.0 - exp(-arm_extend_rate * delta))
 	spring_arm.spring_length = _arm_length
-	camera.position = Vector3(0.0, 0.0, _arm_length)
+	camera.position = Vector3(0.0, 0.0, _arm_length + 0.0)
+	_clear_player_capsule()
+
+
+## D-52: at the pitch limit the lens hangs under the player (the floor shortens the arm). If it would sit inside the player capsule it
+## slides back along the local up axis, which is the horizontal backward direction at that pitch, so the view direction is unchanged
+## and the camera never ends inside the body.
+func _clear_player_capsule() -> void:
+	if target == null:
+		return
+	var origin: Vector3 = target.get_global_transform_interpolated().origin
+	var offset: Vector3 = camera.global_position - origin
+	if offset.y < -0.1 or offset.y > CAPSULE_HEIGHT + 0.1:
+		return
+	var horizontal: float = Vector2(offset.x, offset.z).length()
+	if horizontal >= CAPSULE_CLEAR_RADIUS:
+		return
+	var back: Vector3 = pitch_node.global_basis.y
+	var back_flat: Vector2 = Vector2(back.x, back.z)
+	if back_flat.length() < 0.001:
+		return
+	# Slide along the local y axis until the horizontal distance reaches the clear radius.
+	var gain: float = back_flat.length()
+	camera.position.y += (CAPSULE_CLEAR_RADIUS - horizontal) / gain
 
 
 ## Replaces the camera settings (the F2 panel and tests call this). null falls back to defaults.

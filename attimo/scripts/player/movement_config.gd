@@ -127,8 +127,6 @@ extends Resource
 @export_range(0.0, 0.2, 0.01) var loader_hitstop_time: float = 0.05
 ## Time scale during that hitstop (1.0 = no hitstop); lower it for a harder freeze.
 @export_range(0.05, 1.0, 0.01) var loader_hitstop_scale: float = 0.05
-## Highest camera pitch in degrees while the Loader holds, so a discharge can go almost straight up (D-29); the normal limit is CameraRig.pitch_max (43). Raise it for a steeper super jump.
-@export_range(43.0, 85.0, 1.0) var loader_pitch_max_deg: float = 75.0
 ## "Geladen" cue (D-04): how far in m the camera pulls back at a full hold, eased with the hold (never a cut); raise it for more tension.
 @export_range(0.0, 1.5, 0.05) var loader_camera_pullback: float = 0.35
 

@@ -76,10 +76,10 @@ func _check_loader_ring(tree: SceneTree, check: Callable) -> void:
 	check.call(ring.loader_ring_speed_deg > 0.0, "the ring speed is positive; the ring turns counter-clockwise")
 	check.call(ring.loader_ring_tint == ring.lock_color, "a full core draws the ring in the turquoise lock colour")
 	check.call(_ring_style(ring) == &"segmented", "(D-51) the arm Loader draws the segmented ring style (got '%s')" % _ring_style(ring))
-	check.call(ring.get(&"LOADER_SEGMENTS") == 3, "(D-51) the ring has LOADER_SEGMENTS == 3")
+	check.call(_const(ring, "LOADER_SEGMENTS") == 3, "(D-51) the ring has LOADER_SEGMENTS == 3")
 	check.call(ring.has_method(&"lit_segments") and int(ring.call(&"lit_segments")) == 1, "(D-51) one segment is lit after the press (steps_loaded 1, got %s)" % [ring.call(&"lit_segments") if ring.has_method(&"lit_segments") else "no method"])
 	check.call(ring.has_method(&"crosshair_scale") and is_equal_approx(float(ring.call(&"crosshair_scale")), 0.6), "(D-55) crosshair_scale is 0.6 during the arm hold")
-	var idle_ring: float = ring.ring_radius + ring.get(&"LOADER_OUTER_GAP") if ring.get(&"LOADER_OUTER_GAP") != null else 99.0
+	var idle_ring: float = ring.ring_radius + float(_const(ring, "LOADER_OUTER_GAP"))
 	var segment_radius: Variant = ring.call(&"loader_ring_radius") if ring.has_method(&"loader_ring_radius") else null
 	check.call(segment_radius != null and float(segment_radius) <= 0.6 * idle_ring + 0.01, "(D-51) the segment ring radius %s is at most 0.6 x the old outer ring %.1f" % [segment_radius, 0.6 * idle_ring])
 	await tree.create_timer(0.7, true, false, true).timeout
@@ -107,6 +107,11 @@ func _check_loader_ring(tree: SceneTree, check: Callable) -> void:
 	await player.tree_exited
 	floor_body.queue_free()
 	await tree.process_frame
+
+
+## A script constant of the crosshair by name (null when missing).
+func _const(ring: Crosshair, constant: String) -> Variant:
+	return (ring.get_script() as GDScript).get_script_constant_map().get(constant)
 
 
 ## Crosshair.loader_ring_style() by reflection (plan 05.1-05), or &"" while the method does not exist.
