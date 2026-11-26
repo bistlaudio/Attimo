@@ -504,6 +504,28 @@ func push_toward(direction: Vector3, target_speed: float, accel: float) -> void:
 	_push_accels.append(accel)
 
 
+## Brake request of the Loader field (D-53, D-17): scales the whole velocity by `factor`, so a pass through the field costs a share of the
+## speed once. A non-finite factor is ignored; the factor is clamped to 0.1..1.0 (it never speeds Rino up and never stops him dead).
+## Kit blocks call this with call_deferred.
+func scale_speed(factor: float) -> void:
+	if not is_finite(factor):
+		return
+	factor = clampf(factor, 0.1, 1.0)
+	move_velocity *= factor
+	vertical_speed *= factor
+
+
+## Pass request of the Loader field (D-53, D-17): lets Rino move through `body` (allow true, a collision exception) or blocks him again
+## (allow false). A null or freed body is ignored. The field calls it while a paid Loader flight crosses it and again when he has left.
+func allow_pass_through(body: PhysicsBody3D, allow: bool) -> void:
+	if body == null or not is_instance_valid(body):
+		return
+	if allow:
+		add_collision_exception_with(body)
+	else:
+		remove_collision_exception_with(body)
+
+
 ## Knock-back (pendulum, D-21): adds `impulse` to the velocity (the caller supplies the upward part), interrupts a dash and
 ## leaves the floor states for Fall. No damage. Mechanisms call this with call_deferred.
 func knock_back(impulse: Vector3) -> void:

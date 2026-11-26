@@ -1,0 +1,52 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/kit/reaction_to_load_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://resources/kit/reaction_to_load/loader_field.tres" id="2_config"]
+[ext_resource type="PackedScene" path="res://scenes/mechanisms/glow_element.tscn" id="3_glowel"]
+[ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="4_glow"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_panel"]
+size = Vector3(5.8, 3.8, 0.1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_panel"]
+transparency = 1
+albedo_color = Color(0.25, 0.9, 0.85, 0.3)
+emission_enabled = true
+emission = Color(0.25, 0.9, 0.85, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_rim_h"]
+size = Vector3(6.2, 0.2, 0.4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rim_v"]
+size = Vector3(0.2, 4.0, 0.4)
+
+[node name="LoaderField" instance=ExtResource("1_base")]
+layer = 1
+energy_relation = 1
+config = ExtResource("2_config")
+
+[node name="Panel" type="MeshInstance3D" parent="Field" index="1"]
+mesh = SubResource("BoxMesh_panel")
+material_override = SubResource("StandardMaterial3D_panel")
+
+[node name="RimTop" type="MeshInstance3D" parent="Field" index="2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+mesh = SubResource("BoxMesh_rim_h")
+
+[node name="RimBottom" type="MeshInstance3D" parent="Field" index="3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 0)
+mesh = SubResource("BoxMesh_rim_h")
+
+[node name="RimLeft" type="MeshInstance3D" parent="Field" index="4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, 0)
+mesh = SubResource("BoxMesh_rim_v")
+
+[node name="RimRight" type="MeshInstance3D" parent="Field" index="5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 0)
+mesh = SubResource("BoxMesh_rim_v")
+
+[node name="Lens" parent="Field" index="6" instance=ExtResource("3_glowel")]
+transform = Transform3D(1.6, 0, 0, 0, 1.6, 0, 0, 0, 1.6, 0, 2.3, 0)
+style = 4
+material_override = ExtResource("4_glow")

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ReactionToLoadConfig" format=3]
+
+[ext_resource type="Script" path="res://scripts/kit/configs/reaction_to_load_config.gd" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+profile = 0
+min_steps = 2
+brake = 0.3
+push_back_speed = 4.0
+ripple_time = 0.3
+field_size = Vector3(6, 4, 0.5)
