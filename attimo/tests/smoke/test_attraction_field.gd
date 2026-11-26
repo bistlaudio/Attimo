@@ -2,7 +2,7 @@ extends RefCounted
 ## Plan 05.1-18 (KIT-01, KIT-02, ENRG-07, D-14, D-17, D-23 amended, D-37, D-39): the attraction field is the Force volume RADIAL profile. It pulls
 ## toward its core; walking out against the pull is always possible and free (T-05.1-54). A fast escape (a dash, a Loader flight, or moving away
 ## faster than escape_speed) suspends the pull and costs 1 step per started 0.5 s through the EnergyCost component; when the next step cannot be
-## paid the pull resumes and one refusal fires. REPEL is cut. Classes are reached by path and get()/call(), so this file compiles before they
+## paid the pull resumes and one refusal fires. The repulsor profile is cut. Classes are reached by path and get()/call(), so this file compiles before they
 ## exist (TDD RED).
 
 const Fixtures := preload("res://tests/fixtures.gd")
@@ -102,7 +102,7 @@ func _scenario_look(check: Callable) -> void:
 	var config_script: GDScript = load(CONFIG_SCRIPT) as GDScript
 	var profiles: Dictionary = config_script.get_script_constant_map().get("Profile", {}) as Dictionary
 	check.call(profiles.has("RADIAL") and int(profiles.get("RADIAL", -1)) == PROFILE_RADIAL, "ForceVolumeConfig.Profile has RADIAL (%s)" % [profiles])
-	check.call(not profiles.has("REPEL"), "no REPEL profile exists (cut, D-09)")
+	check.call(profiles.keys() == ["DIRECTIONAL", "DRAG", "GRAVITY", "RADIAL"], "the profiles are exactly DIRECTIONAL, DRAG, GRAVITY, RADIAL: no repulsor profile exists (cut, D-09) (%s)" % [profiles.keys()])
 	var preset: Resource = load(FIELD_PRESET) as Resource
 	check.call(int(preset.get("profile")) == PROFILE_RADIAL, "attraction_field.tres: profile RADIAL")
 	check.call(float(preset.get("strength")) < 8.5, "attraction_field.tres: the pull target %.1f m/s is below the run speed 8.5 (T-05.1-54)" % float(preset.get("strength")))

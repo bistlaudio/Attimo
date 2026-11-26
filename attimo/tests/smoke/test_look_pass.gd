@@ -1,5 +1,5 @@
 extends RefCounted
-## HAND-07 / D-07, D-07b: every mechanism and trigger scene carries a faceted GlowElement and shared brass, copper or iron
+## HAND-07 / D-07, D-07b: every mechanism and trigger scene (energy core lens: scenes/kit/energy since 05.1-18) carries a faceted GlowElement and shared brass, copper or iron
 ## materials. The interactable lenses (the energy core; the crank was cut in plan 05.1-06, lever and valve in 05.1-13) are GlowElements named
 ## GlowLens, the glow stages still switch their material_override, and nothing uses a sphere lens any more.
 
@@ -9,9 +9,9 @@ const COPPER: String = "res://resources/mechanisms/look_copper.tres"
 const IRON: String = "res://resources/mechanisms/look_iron.tres"
 const ENERGY: String = "res://resources/mechanisms/glow_energy.tres"
 const GLOW_TARGET: String = "res://resources/mechanisms/glow_target.tres"
-const LENS_STYLES: Dictionary = {
-	"energy_core": GlowElement.Style.CAGE,
-}
+## The energy core is a kit object since plan 05.1-18 (scenes/kit/energy); its lens checks below read that scene.
+const CORE_SCENE: String = "res://scenes/kit/energy/energy_core.tscn"
+const LENS_STYLES: Dictionary = {}
 
 
 func run(tree: SceneTree, check: Callable) -> void:
@@ -29,8 +29,8 @@ func run(tree: SceneTree, check: Callable) -> void:
 	# 23 since plan 05.1-06 deleted the lift, crank and pressure plate scenes (26 before); 21 since plan 05.1-10 moved the energy
 	# capsule and the broken machine to scenes/kit/energy; 18 since plan 05.1-13 deleted the lever, valve and gear gate scenes; 15 since plan 05.1-15 turned the steam nozzle, geyser
 	# and wind tunnel into force volume presets (scenes/kit); 11 since plan 05.1-16 turned the boost ring, bounce pad and low-gravity zone into
-	# kit objects and cut the conveyor.
-	check.call(names.size() >= 11, "at least 11 mechanism and trigger scenes (%d)" % names.size())
+	# kit objects and cut the conveyor; 9 since plan 05.1-18 turned the energy core and the force field into kit objects.
+	check.call(names.size() >= 9, "at least 9 mechanism and trigger scenes (%d)" % names.size())
 	for file: String in names:
 		var stem: String = file.get_basename()
 		var packed: PackedScene = load(DIR + file) as PackedScene
@@ -65,8 +65,8 @@ func run(tree: SceneTree, check: Callable) -> void:
 		instance.queue_free()
 		await tree.process_frame
 
-	var first: Node = (load(DIR + "energy_core.tscn") as PackedScene).instantiate()
-	var second: Node = (load(DIR + "energy_core.tscn") as PackedScene).instantiate()
+	var first: Node = (load(CORE_SCENE) as PackedScene).instantiate()
+	var second: Node = (load(CORE_SCENE) as PackedScene).instantiate()
 	tree.root.add_child(first)
 	tree.root.add_child(second)
 	await tree.process_frame
