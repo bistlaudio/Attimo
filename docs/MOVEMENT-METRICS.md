@@ -106,10 +106,10 @@ Display, compositor and USB latency are outside the software measurement (D-22).
 
 | Action | Accumulated input on: median (ms) | on: max (ms) | off: median (ms) | off: max (ms) | Verdict |
 |---|---|---|---|---|---|
-| Latency jump 60 TPS | 13.85 | 20.75 | 13.47 | 20.50 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency jump 120 TPS | 6.68 | 13.62 | 7.00 | 13.81 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 60 TPS | 13.37 | 21.05 | 12.69 | 20.31 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 120 TPS | 6.18 | 11.27 | 6.23 | 13.78 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 60 TPS | 14.49 | 22.07 | 13.53 | 20.38 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 120 TPS | 6.50 | 7.13 | 7.50 | 24.43 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 60 TPS | 13.17 | 20.93 | 12.98 | 19.88 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 120 TPS | 7.48 | 13.56 | 6.78 | 13.21 | Target met (median <= 66 ms, max <= 100 ms) |
 
 ## Grid cross-check
 
@@ -205,6 +205,7 @@ Every MovementConfig float and int of res://resources/player/movement_default.tr
 | `wall_jump_keep_along` | 0.500 |
 | `wall_jump_control_lock` | 0.180 |
 | `wall_run_lean_deg` | 18.000 |
+| `wall_run_feet_offset` | 0.350 |
 | `dash_lean_deg` | 10.000 |
 | `lean_in_time` | 0.050 |
 | `lean_out_time` | 0.120 |
