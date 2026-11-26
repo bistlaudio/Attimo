@@ -30,6 +30,7 @@ const KIT_OBJECTS: Dictionary = {
 	"res://scenes/kit/steampunk/tilting_platform.tscn": "res://tests/smoke/test_timed_motion.gd",
 	"res://scenes/kit/energy/energy_capsule.tscn": "res://tests/smoke/test_extractor.gd",
 	"res://scenes/kit/energy/broken_machine.tscn": "res://tests/smoke/test_extractor.gd",
+	"res://scenes/kit/energy/loader_field.tscn": "res://tests/smoke/test_loader_field.gd",
 }
 
 

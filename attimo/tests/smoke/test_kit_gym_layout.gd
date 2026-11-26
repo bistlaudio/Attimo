@@ -33,8 +33,10 @@ const AREA_ROLES: Dictionary = {
 	"Zone_KitNature": ["Role_Platforms", "Role_Environment", "Role_Obstacles"],
 }
 ## Scenes that left the kit (D-09). Compared as full paths: scenes/kit/steampunk/ reuses some file names (slingshot_core, wall_pad).
-## Lever and valve are not listed yet: Zone_Energy uses them until plan 13 swaps them in place.
 const CUT_SCENES: Array[String] = [
+	"res://scenes/mechanisms/lever.tscn",
+	"res://scenes/mechanisms/valve.tscn",
+	"res://scenes/mechanisms/gear_gate.tscn",
 	"res://scenes/mechanisms/lift_platform.tscn",
 	"res://scenes/mechanisms/crank.tscn",
 	"res://scenes/mechanisms/pressure_plate.tscn",

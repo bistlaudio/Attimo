@@ -18,6 +18,9 @@ const STATIONS: Array[String] = [
 const INJECTED: Array[String] = ["Energy_AirDash", "Energy_DashHop", "Energy_WallRun"]
 ## The former shot stations of Zone_Energy (the shot is gone, D-45; 05.1-13 swaps them for Loader-field obstacles).
 const SHOT_STATIONS: Array[String] = ["Shot_TapVsFull", "Shot_Moving"]
+## Where the two former shot stations stay (D-47, D-30 amended): Loader-field obstacle stations at the same positions (05.1-13).
+const SHOT_POSITIONS: Dictionary = {"Shot_TapVsFull": Vector2(-171.0, 16.0), "Shot_Moving": Vector2(-171.0, -14.0)}
+const LOADER_FIELD_SCENE: String = "res://scenes/kit/energy/loader_field.tscn"
 const CAPSULE_REACH: float = 8.0
 ## Words no sign may contain (D-20): the aiming mode and the old big/small pulse by hold time.
 const STALE_WORDS: Array[String] = ["RMB", "Rechtsklick halten und", "Zielen", "großer Puls", "Großer Puls", "kleiner Puls"]
@@ -117,6 +120,19 @@ func _check_stations(check: Callable) -> void:
 		if marker != null:
 			var capsule: EnergySource = _nearest_capsule(marker.global_position)
 			check.call(capsule != null and capsule.respawn_time > 0.0 and capsule.global_position.distance_to(marker.global_position) <= CAPSULE_REACH, "%s has a respawning capsule within %.0f m" % [tag, CAPSULE_REACH])
+		var wanted: Vector2 = SHOT_POSITIONS[tag] as Vector2
+		check.call(absf(station.position.x - wanted.x) < 0.01 and absf(station.position.z - wanted.y) < 0.01, "%s stays at (%.0f, %.0f) (got %s)" % [tag, wanted.x, wanted.y, station.position])
+		var fields: int = 0
+		for node: Node in station.find_children("*", "Node3D", true, false):
+			if node.scene_file_path == LOADER_FIELD_SCENE:
+				fields += 1
+		check.call(fields == 1, "%s holds one Loader field instance (got %d)" % [tag, fields])
+	var stale: PackedStringArray = PackedStringArray()
+	for node: Node in _zone.find_children("*", "Node", true, false):
+		var script: Script = node.get_script() as Script
+		if script != null and ["Lever", "Valve", "GearGate"].has(String(script.get_global_name())):
+			stale.append(String(node.name))
+	check.call(stale.is_empty(), "no Lever, Valve or GearGate in Zone_Energy (%s)" % [stale])
 
 
 func _nearest_plate(station: Node3D) -> EnergyDrainPlate:

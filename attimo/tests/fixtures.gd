@@ -207,3 +207,33 @@ static func set_energy(player: PlayerController, steps: int) -> void:
 static func restore_time() -> void:
 	var time_fx: Node = Engine.get_main_loop().root.get_node("TimeFx")
 	time_fx.call(&"clear_all")
+
+
+## A plain SignalSource under `root` that starts `active` (05.1-13): the signal driver for logic-node tests, replacing the cut Lever.
+static func spawn_signal_driver(root: Node, active: bool = false) -> SignalSource:
+	var source: SignalSource = SignalSource.new()
+	source.start_active = active
+	root.add_child(source)
+	return source
+
+
+## A bare Interactable that accepts near contact (05.1-13): the near-contact target, replacing the cut Lever. It sits on a holder
+## Node3D at `at` (the holder is the Interactable's parent, free it to remove the target) with a 0.6 m hit body on the Interactable layer.
+static func spawn_near_target(root: Node, at: Vector3) -> Interactable:
+	var holder: Node3D = Node3D.new()
+	holder.position = at
+	var body: StaticBody3D = StaticBody3D.new()
+	var shape: CollisionShape3D = CollisionShape3D.new()
+	var box: BoxShape3D = BoxShape3D.new()
+	box.size = Vector3(0.6, 0.6, 0.6)
+	shape.shape = box
+	body.add_child(shape)
+	body.position = Vector3(0.0, 1.1, 0.0)
+	holder.add_child(body)
+	var target: Interactable = Interactable.new()
+	target.accepts_near = true
+	target.hit_body = body
+	target.aim_point = body
+	holder.add_child(target)
+	root.add_child(holder)
+	return target

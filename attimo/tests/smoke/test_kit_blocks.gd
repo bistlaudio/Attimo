@@ -59,6 +59,18 @@ const BLOCKS: Dictionary = {
 		"positive": ["step_interval", "amount"],
 		"profile_presets": {"res://resources/kit/energy_source/energy_capsule.tres": "CAPSULE", "res://resources/kit/energy_source/broken_machine.tres": "MACHINE"},
 	},
+	# Plan 05.1-13: the Reaction to load block, first profile LOADER_FIELD (D-53). brake, ripple_time and push_back_speed are strictly positive.
+	"ReactionToLoad": {
+		"script": "res://scripts/kit/blocks/reaction_to_load.gd",
+		"config_class": "ReactionToLoadConfig",
+		"config_script": "res://scripts/kit/configs/reaction_to_load_config.gd",
+		"profiles": ["LOADER_FIELD"],
+		"preset": "res://resources/kit/reaction_to_load/loader_field.tres",
+		"scene": "res://scenes/kit/energy/loader_field.tscn",
+		"probe": "brake",
+		"positive": ["brake", "ripple_time", "push_back_speed"],
+		"profile_presets": {"res://resources/kit/reaction_to_load/loader_field.tres": "LOADER_FIELD"},
+	},
 }
 ## Source fragments a block script must not contain: direct writes of the player's motion (D-17).
 const FORBIDDEN_WRITES: Array[String] = [".move_velocity =", ".vertical_speed =", ".move_velocity +=", ".vertical_speed +=", ".velocity ="]
