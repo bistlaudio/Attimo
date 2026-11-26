@@ -77,7 +77,7 @@ const BLOCKS: Dictionary = {
 		"script": "res://scripts/kit/blocks/force_volume.gd",
 		"config_class": "ForceVolumeConfig",
 		"config_script": "res://scripts/kit/configs/force_volume_config.gd",
-		"profiles": ["DIRECTIONAL", "DRAG"],
+		"profiles": ["DIRECTIONAL", "DRAG", "GRAVITY"],
 		"preset": "res://resources/kit/force_volume/updraft.tres",
 		"scene": "res://scenes/kit/steampunk/updraft.tscn",
 		"probe": "accel",
@@ -88,6 +88,24 @@ const BLOCKS: Dictionary = {
 			"res://resources/kit/force_volume/steam_stream.tres": "DIRECTIONAL",
 			"res://resources/kit/force_volume/leaf_storm.tres": "DIRECTIONAL",
 			"res://resources/kit/force_volume/resin_pool.tres": "DRAG",
+			"res://resources/kit/force_volume/gravity_zone.tres": "GRAVITY",
+		},
+	},
+	# Plan 05.1-16: the Impulse block (D-10, D-11): Profile { BOOST, PAD, BOUNCE }; timers have strictly positive minimums (T-05.1-48).
+	"Impulse": {
+		"script": "res://scripts/kit/blocks/impulse.gd",
+		"config_class": "ImpulseConfig",
+		"config_script": "res://scripts/kit/configs/impulse_config.gd",
+		"profiles": ["BOOST", "PAD", "BOUNCE"],
+		"preset": "res://resources/kit/impulse/boost_ring.tres",
+		"scene": "res://scenes/kit/steampunk/boost_ring.tscn",
+		"probe": "speed",
+		"positive": ["rearm_time", "income_cooldown"],
+		"profile_presets": {
+			"res://resources/kit/impulse/boost_ring.tres": "BOOST",
+			"res://resources/kit/impulse/speed_pad.tres": "PAD",
+			"res://resources/kit/impulse/bounce_pad.tres": "BOUNCE",
+			"res://resources/kit/impulse/bounce_pad_core.tres": "BOUNCE",
 		},
 	},
 }

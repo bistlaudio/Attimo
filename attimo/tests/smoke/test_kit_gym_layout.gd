@@ -50,6 +50,9 @@ const CUT_SCENES: Array[String] = [
 	"res://scenes/mechanisms/wind_tunnel.tscn",
 	"res://scenes/mechanisms/energy_capsule.tscn",
 	"res://scenes/mechanisms/broken_machine.tscn",
+	"res://scenes/mechanisms/boost_ring.tscn",
+	"res://scenes/mechanisms/bounce_pad.tscn",
+	"res://scenes/mechanisms/low_gravity_zone.tscn",
 ]
 
 
