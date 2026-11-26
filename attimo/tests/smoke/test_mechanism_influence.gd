@@ -76,8 +76,9 @@ func _source_guard(check: Callable) -> void:
 	check.call(_offending_lines(synthetic, write, setter, mover).size() == 10, "the guard flags writes (also per component), timer, capture and wall fields, set(), position writes, FSM transitions and move_and_slide in a synthetic offending string")
 	check.call(_offending_lines(clean, write, setter, mover).is_empty(), "the guard ignores comments, comparisons, constant_linear_velocity, request calls and a mechanism's own node positions")
 	var files: Array[String] = _script_files(MECHANISM_DIR)
-	# 5 files since plan 05.1-20 deleted the old pendulum and piston wall scripts (7 before, 10 before plan 05.1-18).
-	check.call(files.size() >= 4, "the guard sees the mechanism scripts (%d files)" % files.size())
+	# 5 files since plan 05.1-20 deleted the old pendulum and piston wall scripts (7 before, 10 before plan 05.1-18); 3 since plan 05.1-22
+	# deleted the old Mechanism base (glow element, interactable, mechanism look remain).
+	check.call(files.size() >= 3, "the guard sees the mechanism scripts (%d files)" % files.size())
 	var report: Array[String] = []
 	for path: String in files:
 		var text: String = FileAccess.get_file_as_string(path)
