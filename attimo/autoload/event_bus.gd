@@ -40,8 +40,8 @@ signal wall_jumped(position: Vector3, direction: Vector3)
 ## in the air. Listeners: the Loader presentation (plan 05-02), juice, audio.
 signal loader_started(position: Vector3, stored_speed: float, in_air: bool)
 ## Emitted by the Loader state on the discharge (release or the hold cap). `direction` is the unit discharge direction, `speed` the
-## discharge speed in m/s, `bonus` is true when the arm paid a core for the bonus. Listeners: the Loader presentation, juice, audio.
-signal loader_released(position: Vector3, direction: Vector3, speed: float, bonus: bool)
+## discharge speed in m/s, `steps` the number of loaded steps 1..3 (the slingshot cage reports its 2 free steps). Listeners: the Loader presentation, juice, audio.
+signal loader_released(position: Vector3, direction: Vector3, speed: float, steps: int)
 ## Emitted by ArmEnergy whenever the energy value changed through a spend, a gain or a reset. `value` is the new energy in whole steps, 0 .. 12. Listeners: the HUD.
 signal energy_changed(value: int)
 ## Emitted by ArmEnergy when `amount` whole steps were paid. `reason` names the cost (&"dash", &"air_dash", &"dash_hop", &"wall_run", &"wall_jump", &"loader"). Listeners: the arm cores, juice, audio.

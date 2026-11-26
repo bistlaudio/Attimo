@@ -112,7 +112,7 @@ func _hide_cues() -> void:
 
 
 ## The CAGE throw fact: shows the SteamBlast when the throw is this block's own hold (D-01 steam blast on release).
-func _on_loader_released(position: Vector3, direction: Vector3, _speed: float, _bonus: bool) -> void:
+func _on_loader_released(position: Vector3, direction: Vector3, _speed: float, _steps: int) -> void:
 	if not _own_throw(LoaderProfile.Source.CAGE, position, global_position):
 		return
 	if _blast != null and direction.is_finite() and direction.length_squared() > 0.0001:
@@ -165,11 +165,11 @@ func reset() -> void:
 	_hide_cues()
 
 
-## The profile handed to the player for this block's catch: FREE_AIM a CAGE hold with the player's loader_min_push, FIXED a hold at
+## The profile handed to the player for this block's catch: FREE_AIM a CAGE hold (a free 2-step Loader flight, D-60), FIXED a hold at
 ## the barrel mouth that launches along the barrel at fixed_speed after fixed_hold.
 func profile_for(player: PlayerController) -> LoaderProfile:
 	if config.profile != CatchLaunchConfig.Profile.FIXED:
-		return LoaderProfile.cage(player.config.loader_min_push)
+		return LoaderProfile.cage()
 	var profile: LoaderProfile = LoaderProfile.new()
 	profile.source = LoaderProfile.Source.FIXED
 	profile.direction = barrel_direction()

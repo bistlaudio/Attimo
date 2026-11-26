@@ -46,13 +46,25 @@ var loader_available: bool = true
 ## in that state spends loader_available (the airborne stretch belongs to the throw, D-02); landing, a jump take-off or the speed
 ## falling back to the ground target speed on the floor (run_speed, or the Moto run speed) clear it (WR-02).
 var loader_ground_throw: bool = false
-## Seconds left before the next Loader press may start. A discharge without the bonus (empty arm) starts it at loader_redirect_cooldown.
-var loader_cooldown_timer: float = 0.0
+## Metres of straight gravity-free flight still to fly (D-50). A Loader discharge starts it through begin_straight_flight; while it is
+## above 0 and the FSM is in Fall, _integrate applies no gravity and accelerate_air does nothing. It counts down by the real displacement.
+var straight_flight_left: float = 0.0
+## Steps the running straight flight paid: 1..3 for an arm discharge, 0 for a free one (slingshot cage). The Loader field (05.1-13) reads it.
+var straight_flight_steps: int = 0
+## Simulated seconds the straight flight has run (the 2.0 s safety end, T-05.1-32).
+var _straight_flight_time: float = 0.0
+## True from begin_straight_flight to the end of the first _integrate: the FSM is still handing over from Loader to Fall on that tick.
+var _straight_flight_fresh: bool = false
+## Longest straight flight in m, whatever the config says (T-05.1-32).
+const STRAIGHT_FLIGHT_MAX: float = 60.0
+## Longest straight flight in simulated seconds (T-05.1-32).
+const STRAIGHT_FLIGHT_MAX_TIME: float = 2.0
 ## The source of the current Loader hold (Phase 05.1, D-04): null means the arm (ARM). catch_into_loader sets it for a kit block
 ## (slingshot cage); LoaderState.exit clears it, so the next right-click press is an arm hold again.
 var loader_profile: LoaderProfile = null
 
 var _was_on_floor: bool = true
+var _loader_refuse_frame: int = -1
 var _dash_block_frame: int = -1
 ## True after a wall-run start was refused for missing steps; cleared when the wall-run surface contact ends (once per contact, D-39).
 var _wall_refused: bool = false
@@ -171,9 +183,9 @@ func accelerate_ground(direction: Vector3, target_speed: float, accel: float, de
 
 
 ## Air control (D-02): toward direction * air_speed_cap with air_accel, toward zero with air_decel without input. Does nothing while
-## air_control_lock_timer runs (lock_air_control).
+## air_control_lock_timer runs (lock_air_control) or a straight Loader flight runs (D-50).
 func accelerate_air(direction: Vector3, delta: float) -> void:
-	if air_control_lock_timer > 0.0:
+	if air_control_lock_timer > 0.0 or straight_flight_left > 0.0:
 		return
 	if direction == Vector3.ZERO:
 		move_velocity = move_velocity.move_toward(Vector3.ZERO, config.air_decel * delta)
@@ -308,15 +320,50 @@ func _block_dash(reason: StringName) -> void:
 			arm_energy.refuse(&"air_dash", config.air_dash_cost)
 
 
-## The Loader press check of the ground and the air states, Dash and WallRun (D-01). True when a loader press this tick may start
-## the Loader: the cooldown of an empty-arm redirect has elapsed, and Rino stands on the floor or the airborne use is still available
-## (D-02). Like the dash press it polls just_pressed, so the press is not buffered.
+## The Loader press check of the ground and the air states, Dash and WallRun (D-01, D-48). True when a loader press this tick may start
+## the Loader: Rino stands on the floor or the airborne use is still available (D-02), and the clock has the first step. A press
+## without the step is refused once per press (EventBus.energy_refused(&"loader", 1)) and does not start. Like the dash press it polls
+## just_pressed, so the press is not buffered.
 func loader_press_starts_loader() -> bool:
 	if not Input.is_action_just_pressed(&"loader"):
 		return false
-	if loader_cooldown_timer > 0.0:
+	if not (is_grounded() or loader_available):
 		return false
-	return is_grounded() or loader_available
+	if not arm_energy.can_afford(1):
+		var frame: int = Engine.get_physics_frames()
+		if frame != _loader_refuse_frame:
+			_loader_refuse_frame = frame
+			arm_energy.refuse(&"loader", 1)
+		return false
+	return true
+
+
+## Starts a straight gravity-free flight of `distance` m (D-50) for a Loader discharge that paid `steps` steps (0 = free, the cage).
+## A non-finite or negative distance is ignored; the distance is clamped to STRAIGHT_FLIGHT_MAX. The flight ends by itself: distance
+## used up, wall, ceiling or downward floor contact, the FSM leaving Fall, a blocked move, or the safety time.
+func begin_straight_flight(distance: float, steps: int) -> void:
+	if not is_finite(distance) or distance < 0.0:
+		return
+	straight_flight_left = minf(distance, STRAIGHT_FLIGHT_MAX)
+	straight_flight_steps = maxi(steps, 0)
+	_straight_flight_time = 0.0
+	_straight_flight_fresh = straight_flight_left > 0.0
+
+
+## Ends a running straight flight at once (gravity and air control come back).
+func end_straight_flight() -> void:
+	straight_flight_left = 0.0
+	straight_flight_steps = 0
+	_straight_flight_time = 0.0
+	_straight_flight_fresh = false
+
+
+## True while the straight flight owns the body: it has distance left and the FSM is in Fall (or still hands over from Loader on its first tick).
+func _straight_flight_active() -> bool:
+	if straight_flight_left <= 0.0 or state_machine.current == null:
+		return false
+	var state_name: StringName = state_machine.current.name
+	return state_name == &"Fall" or (_straight_flight_fresh and state_name == &"Loader")
 
 
 ## The unit direction a Loader discharge (and its preview) goes: the forward of the current camera, up included (A8). Without a
@@ -541,6 +588,7 @@ func wall_jump_paid() -> bool:
 
 
 func _enter_fall() -> void:
+	end_straight_flight()
 	if state_machine.current.name != &"Fall":
 		state_machine.transition_to(&"Fall")
 
@@ -630,7 +678,6 @@ func _tick_timers(delta: float) -> void:
 	dash_cooldown_timer = maxf(dash_cooldown_timer - delta, 0.0)
 	dash_jump_grace_timer = maxf(dash_jump_grace_timer - delta, 0.0)
 	dash_twitch_timer = maxf(dash_twitch_timer - delta, 0.0)
-	loader_cooldown_timer = maxf(loader_cooldown_timer - delta, 0.0)
 	air_control_lock_timer = maxf(air_control_lock_timer - delta, 0.0)
 	wall_run_cooldown_timer = maxf(wall_run_cooldown_timer - delta, 0.0)
 	# The Moto run is faster than run_speed, so the throw counts as spent once the run is back at its own target speed.
@@ -665,6 +712,10 @@ func _integrate(delta: float) -> void:
 	if vertical_speed < 0.0:
 		g = config.fall_gravity()
 	g *= gravity_scale * _zone_gravity_scale
+	var flying: bool = _straight_flight_active()
+	if flying:
+		g = 0.0
+	var before: Vector3 = global_position
 	# Half-step gravity around the move keeps the jump height tick-rate independent.
 	vertical_speed = maxf(vertical_speed - g * delta * 0.5, -config.terminal_speed)
 	_attach_to_carrier(delta)
@@ -675,10 +726,31 @@ func _integrate(delta: float) -> void:
 	if loader_active() and loader_profile != null and loader_profile.source == LoaderProfile.Source.FIXED:
 		# A body pulled to the steam cannon mouth is carried along a path: the floor snap must not pull it back down.
 		floor_snap_length = 0.0
+	var commanded: float = velocity.length() * delta
 	move_and_slide()
 	vertical_speed = maxf(vertical_speed - g * delta * 0.5, -config.terminal_speed)
+	if flying:
+		_step_straight_flight(delta, global_position.distance_to(before), commanded)
+	elif straight_flight_left > 0.0:
+		end_straight_flight()
 	_post_move(delta)
 	_zone_gravity_scale = 1.0
+
+
+## Counts the real displacement of one flight tick off the distance and ends the flight on the end conditions (D-50): used up, wall,
+## ceiling, downward floor contact, a move that got under half of what was commanded, or the safety time. The start tick skips the
+## contact checks (the discharge happens on the floor or beside the geometry it just left).
+func _step_straight_flight(delta: float, moved: float, commanded: float) -> void:
+	var fresh: bool = _straight_flight_fresh
+	_straight_flight_fresh = false
+	_straight_flight_time += delta
+	straight_flight_left -= moved
+	var done: bool = straight_flight_left <= 0.0 or _straight_flight_time >= STRAIGHT_FLIGHT_MAX_TIME
+	if not fresh:
+		done = done or is_on_wall() or is_on_ceiling() or (is_on_floor() and vertical_speed <= 0.0)
+		done = done or (commanded > 0.0001 and moved < commanded * 0.5)
+	if done:
+		end_straight_flight()
 
 
 func _post_move(delta: float) -> void:

@@ -1,24 +1,25 @@
 class_name LoaderState
 extends State
-## Loader (HAND-04, D-01..D-04): the right-click hold that stores momentum and throws it along the camera view. GroundState, AirState,
-## Dash and WallRun enter it through PlayerController.loader_press_starts_loader. The state owns the whole body for
-## its duration: enter() stores the velocity, asks TimeFx for the slow world (loader_slow_factor) and, in the air, hangs
-## Rino with gravity off. On the ground the run brakes to a stop within loader_skid_time (real time). The hold ends on the release
-## of the loader button or at loader_hold_cap of REAL time (tick accounting through TimeFx.unscaled, never a wall clock, so tests are
-## deterministic). The discharge goes along PlayerController.loader_direction() at LoaderMath.discharge_speed(...); the bonus costs one
-## full core and is decided HERE at the release (A7: below a core the arm counts as empty, the redirect cooldown starts). It locks air
-## control for loader_release_control_lock and hands over to Fall. It never touches air_dash_available and never calls
-## refill_air_dash (D-03: the Loader is independent of the air dash). One use per airborne stretch (D-02): an air press spends
-## loader_available, and so does a ground discharge that lifts off, ends off the floor or carries Rino over a ledge
+## Loader (HAND-04, ENRG-09, D-01..D-04, D-48..D-50): the right-click hold that stores momentum, pays steps and throws it along the camera
+## view. GroundState, AirState, Dash and WallRun enter it through PlayerController.loader_press_starts_loader (which refuses a press at 0
+## steps). The state owns the whole body for its duration: enter() stores the velocity, pays step 1, asks TimeFx for the slow world
+## (loader_slow_factor) and, in the air, hangs Rino with gravity off. On the ground the run brakes to a stop within loader_skid_time
+## (real time). While held, one more step is paid every loader_step_interval of REAL time up to loader_max_steps (an empty clock just
+## stops the ring, no refusal). The hold ends on the release of the loader button or at loader_hold_cap of REAL time (tick accounting
+## through TimeFx.unscaled, never a wall clock, so tests are deterministic). The discharge goes along PlayerController.loader_direction()
+## at LoaderMath.discharge_speed(v, push, n, push_step, k, cap) and then flies a straight gravity-free line (PlayerController.
+## begin_straight_flight) of loader_flight_distance[n] plus the overflow; it locks air control for loader_release_control_lock and hands
+## over to Fall. It never touches air_dash_available and never calls refill_air_dash (D-03). One use per airborne stretch (D-02): an air
+## press spends loader_available, and so does a ground discharge that lifts off, ends off the floor or carries Rino over a ledge
 ## (loader_ground_throw); landing, a boost ring or the slingshot cage give it back.
-## Phase 05.1 (D-01..D-04): one state serves every source through PlayerController.loader_profile (LoaderProfile, null = ARM). A CAGE
+## Phase 05.1 (D-01..D-04, D-60): one state serves every source through PlayerController.loader_profile (LoaderProfile, null = ARM). A CAGE
 ## hold (slingshot core, PlayerController.catch_into_loader) always hangs Rino (even near the floor) and spends no use; it ends on the
 ## release after the loader button was held at the catch or pressed later (a same-tick tap counts), or at the cap, never on "not
-## pressed" alone; its throw has no bonus, spends no energy, starts no redirect cooldown, skips the ground-throw rules and gives the
+## pressed" alone; its throw is a free 2-step Loader flight (CAGE_STEPS), pays nothing, skips the ground-throw rules and gives the
 ## Loader use back through refill_loader (never refill_air_dash). Slow factor, cap, control lock, hitstop and the camera stay shared.
 ## A FIXED hold (steam cannon, D-05) hangs Rino too but has no slow world, no loader_started fact and ignores all input: it pulls him
 ## to the profile's anchor (the barrel mouth) at FIXED_PULL_SPEED, and at the profile's hold of real time writes exactly
-## direction * speed (no entry speed, no sideways part, no bonus, no energy, no cooldown, no hitstop), emits EventBus.launched,
+## direction * speed (no entry speed, no sideways part, no energy, no hitstop), emits EventBus.launched,
 ## locks air control and gives the Loader use back (refill_loader, never the air dash).
 ## exit() restores gravity_scale, spends the jump buffer and coyote window (the buffer would outlive the slow motion) and releases
 ## the time scale, so every exit path ends the slow world: release, cap, teleport() and a freed player (_exit_tree).
@@ -27,6 +28,8 @@ extends State
 const HOLD_EPSILON: float = 0.000001
 ## FIXED: the pull speed in m/s toward the barrel mouth; fast enough to arrive from anywhere in the trigger within the hold.
 const FIXED_PULL_SPEED: float = 30.0
+## The slingshot cage throws as a free Loader flight of this many steps (D-60); read, never copied into a config.
+const CAGE_STEPS: int = 2
 
 ## The velocity stored on enter (horizontal move_velocity plus vertical_speed).
 var stored_velocity: Vector3 = Vector3.ZERO
@@ -38,6 +41,10 @@ var grounded_entry: bool = false
 var update_count: int = 0
 ## CAGE: true once the loader button was seen held or pressed during the hold (D-02 latch); its release then fires the throw.
 var _press_seen: bool = false
+## ARM: steps paid so far in this hold, 1..loader_max_steps (the ring of 05.1-12 and the discharge read it).
+var steps_loaded: int = 0
+## ARM: seconds of real time since the last step was paid (counts toward loader_step_interval).
+var _step_timer: float = 0.0
 
 
 ## The source of the current hold: ARM without a profile, else the profile's source.
@@ -57,6 +64,10 @@ func enter(_previous: StringName) -> void:
 	hold_real = 0.0
 	update_count = 0
 	_press_seen = cage and _loader_pressed()
+	steps_loaded = 0
+	_step_timer = 0.0
+	if source() == LoaderProfile.Source.ARM and actor.arm_energy.try_spend(1, &"loader"):
+		steps_loaded = 1
 	actor.consume_jump()
 	if not grounded_entry:
 		if not kit:
@@ -97,6 +108,8 @@ func physics_update(delta: float) -> StringName:
 		actor.move_velocity.y = 0.0
 		if actor.is_grounded():
 			actor.vertical_speed = 0.0
+	if source() == LoaderProfile.Source.ARM:
+		_pay_steps(real)
 	if hold_real >= config.loader_hold_cap - HOLD_EPSILON:
 		return _discharge()
 	if source() == LoaderProfile.Source.CAGE:
@@ -139,28 +152,28 @@ func stored_ratio() -> float:
 	return clampf(stored_velocity.length() / maxf(actor.config.loader_max_speed, 0.01), 0.0, 1.0)
 
 
-## True when the arm can pay the bonus right now (a full core). The release decides again with the energy of that moment.
-func bonus_ready() -> bool:
-	if source() != LoaderProfile.Source.ARM:
-		return false
-	return actor.arm_energy.can_afford(actor.config.loader_bonus_cost)
-
-
-## The velocity a release right now would give (the same math as the discharge, with the bonus when it is affordable).
-func preview_velocity() -> Vector3:
-	return preview_velocity_for(bonus_ready())
-
-
-## The velocity a release right now would give with or without the bonus (the trajectory preview draws both arcs).
-func preview_velocity_for(with_bonus: bool) -> Vector3:
+## Pays one more step per loader_step_interval of real time until loader_max_steps (D-48). An unaffordable step stops the ring without a
+## refusal; the timer waits at the interval, so a step gained during the hold is paid at once.
+func _pay_steps(real: float) -> void:
 	var config: MovementConfig = actor.config
-	if source() == LoaderProfile.Source.FIXED:
-		return actor.loader_profile.direction.normalized() * _fixed_speed()
-	var bonus: float = config.loader_bonus_speed if with_bonus and source() == LoaderProfile.Source.ARM else 0.0
-	var speed: float = LoaderMath.discharge_speed(stored_velocity.length(), _min_push(), bonus, config.loader_max_speed)
-	if source() == LoaderProfile.Source.CAGE:
-		speed *= actor.kit_launch_scale()
-	return LoaderMath.discharge_velocity(actor.loader_direction(), speed)
+	if steps_loaded >= config.loader_max_steps:
+		return
+	var interval: float = maxf(config.loader_step_interval, 0.01)
+	_step_timer += real
+	while steps_loaded < config.loader_max_steps and _step_timer >= interval - HOLD_EPSILON:
+		if not actor.arm_energy.try_spend(1, &"loader"):
+			_step_timer = minf(_step_timer, interval)
+			return
+		steps_loaded += 1
+		_step_timer = maxf(_step_timer - interval, 0.0)
+
+
+## 0..1 progress toward the next step (1 once the hold is full or the clock is empty at the interval); the ring of 05.1-12 reads it.
+func step_progress() -> float:
+	var config: MovementConfig = actor.config
+	if steps_loaded >= config.loader_max_steps:
+		return 1.0
+	return clampf(_step_timer / maxf(config.loader_step_interval, 0.01), 0.0, 1.0)
 
 
 ## FIXED: the profile speed, never faster than the Loader's own ceiling (T-05.1-05), times the feel-test kit_launch_scale.
@@ -168,42 +181,39 @@ func _fixed_speed() -> float:
 	return minf(actor.loader_profile.speed, actor.config.loader_max_speed) * actor.kit_launch_scale()
 
 
-## The smallest throw speed: the profile's for a kit source, else MovementConfig.loader_min_push.
-func _min_push() -> float:
-	return actor.config.loader_min_push if actor.loader_profile == null else actor.loader_profile.min_push
-
-
-## Throws Rino along the view: the bonus is paid here, the velocity is written, air control is locked, then Fall takes over.
+## Throws Rino along the view (D-49, D-50): the speed is written, the straight flight starts, air control is locked, then Fall takes over.
+## ARM: n = steps_loaded paid steps. CAGE: a free CAGE_STEPS flight, kit_launch_scale applied BEFORE the cap so the 22 m/s envelope holds.
 func _discharge() -> StringName:
 	var config: MovementConfig = actor.config
 	if source() == LoaderProfile.Source.FIXED:
 		return _discharge_fixed()
 	var direction: Vector3 = actor.loader_direction()
 	var cage: bool = source() == LoaderProfile.Source.CAGE
-	# D-03: the cage throw has no bonus and never touches the energy.
-	var bonus: bool = false if cage else actor.arm_energy.try_spend(config.loader_bonus_cost, &"loader")
-	var speed: float = LoaderMath.discharge_speed(stored_velocity.length(), _min_push(), config.loader_bonus_speed if bonus else 0.0, config.loader_max_speed)
+	var steps: int = CAGE_STEPS if cage else maxi(steps_loaded, 1)
+	var stored: float = stored_velocity.length()
+	var raw: float = LoaderMath.discharge_speed_uncapped(stored, config.loader_push, steps, config.loader_push_step, config.loader_speed_k)
 	if cage:
-		# Feel test: the cage throw scales with MovementConfig.kit_launch_scale (the preview uses the same factor).
-		speed *= actor.kit_launch_scale()
+		raw *= actor.kit_launch_scale()
+	var speed: float = minf(raw, maxf(config.loader_max_speed, 0.0))
+	var over: float = maxf(raw - config.loader_max_speed, 0.0)
+	var distance: float = LoaderMath.flight_distance(steps, over, [config.loader_flight_distance_1, config.loader_flight_distance_2, config.loader_flight_distance_3], config.loader_overflow_gain)
 	var velocity: Vector3 = LoaderMath.discharge_velocity(direction, speed)
 	actor.move_velocity = Vector3(velocity.x, 0.0, velocity.z)
 	actor.vertical_speed = clampf(velocity.y, -config.terminal_speed, config.terminal_speed)
 	actor.air_speed_cap = maxf(config.run_speed, actor.horizontal_speed())
 	actor.lock_air_control(config.loader_release_control_lock)
+	actor.begin_straight_flight(distance, 0 if cage else steps)
 	if cage:
-		# D-03: no redirect cooldown, no ground-throw rules; the cage gives the use back and leaves the air dash alone.
+		# The cage gives the use back and leaves the air dash alone; it skips the ground-throw rules.
 		actor.refill_loader()
-	elif not bonus:
-		actor.loader_cooldown_timer = config.loader_redirect_cooldown
-	if grounded_entry:
+	elif grounded_entry:
 		# D-02: a ground discharge that lifts off, or one released after the skid left the floor, spends the airborne use. A throw
 		# that stays on the floor marks loader_ground_throw, so walking off a ledge with it spends the use too (WR-02).
 		if velocity.y > 0.0 or not actor.is_grounded():
 			actor.loader_available = false
 		else:
 			actor.loader_ground_throw = true
-	EventBus.loader_released.emit(actor.global_position, direction, speed, bonus)
+	EventBus.loader_released.emit(actor.global_position, direction, speed, steps)
 	# D-04 "geladen": the velocity is already written, the world holds for a blink so the release lands sharp. The hitstop is its
 	# own TimeFx source; exit() still releases only &"loader".
 	TimeFx.pulse(&"loader_hitstop", config.loader_hitstop_scale, config.loader_hitstop_time)

@@ -97,14 +97,30 @@ extends Resource
 @export_range(0.2, 3.0, 0.05) var loader_hold_cap: float = 1.2
 ## Seconds of real time the run brakes to a stop when the Loader is pressed on the ground (D-01); raise it for a softer stop.
 @export_range(0.02, 0.5, 0.01) var loader_skid_time: float = 0.1
-## Smallest discharge speed in m/s, so a redirect is never slower than this; raise it for a stronger plain push.
+## Smallest discharge speed in m/s on a ZONE_LOADER builder only (read by tools/loader_room_builder.gd until 05.1-12); the paid Loader does not read it.
 @export_range(0.0, 24.0, 0.5) var loader_min_push: float = 12.0
-## Speed in m/s the bonus adds on top of max(stored speed, loader_min_push); raise it for a bigger paid discharge.
+## Bonus speed in m/s of the removed bonus path (read by tools/loader_room_builder.gd until 05.1-12); the paid Loader does not read it.
 @export_range(0.0, 16.0, 0.5) var loader_bonus_speed: float = 8.0
+## Seconds of REAL time between two Loader steps while the button is held (D-48); raise it to make the hold slower to fill.
+@export_range(0.05, 2.0, 0.05) var loader_step_interval: float = 0.3
+## Most steps one Loader hold can pay (D-48); raise it for a bigger charge.
+@export_range(1, 3, 1) var loader_max_steps: int = 3
+## Base speed in m/s every discharge adds (D-49: v + push + n * (push_step + k * v)); raise it for a stronger plain push.
+@export_range(0.0, 12.0, 0.5) var loader_push: float = 4.0
+## Speed in m/s each loaded step adds (D-49); raise it for a bigger gap between 1 and 3 steps.
+@export_range(0.0, 8.0, 0.5) var loader_push_step: float = 2.0
+## Share of the stored speed each loaded step adds on top (D-49), so momentum counts; raise it to reward a fast approach.
+@export_range(0.0, 0.5, 0.01) var loader_speed_k: float = 0.1
+## Straight gravity-free flight in m after a 1-step discharge (D-50); raise it for a longer short Loader.
+@export_range(1.0, 40.0, 0.5) var loader_flight_distance_1: float = 6.0
+## Straight gravity-free flight in m after a 2-step discharge (D-50, also the slingshot cage, D-60); raise it for a longer middle Loader.
+@export_range(1.0, 40.0, 0.5) var loader_flight_distance_2: float = 10.0
+## Straight gravity-free flight in m after a 3-step discharge (D-50); raise it for a longer full Loader.
+@export_range(1.0, 40.0, 0.5) var loader_flight_distance_3: float = 14.0
+## Extra flight metres per m/s of speed the loader_max_speed cap cuts off (D-49, D-50); raise it so a fast approach flies further.
+@export_range(0.0, 3.0, 0.1) var loader_overflow_gain: float = 1.0
 ## Fastest discharge in m/s; 22 is the tunnelling and camera envelope (long_jump_speed_3), do not raise it without re-running those tests.
 @export_range(8.0, 24.0, 0.5) var loader_max_speed: float = 22.0
-## Seconds before the next ground Loader may start after a discharge without the bonus (empty arm); raise it to punish an empty arm more.
-@export_range(0.0, 3.0, 0.05) var loader_redirect_cooldown: float = 1.0
 ## Seconds air control is off after the discharge so steering does not eat the throw (D-03); raise it for a harder throw.
 @export_range(0.0, 0.5, 0.01) var loader_release_control_lock: float = 0.15
 ## "Geladen" cue (D-04): real seconds of the short hitstop right after the release, so the discharge lands sharp; raise it for a heavier release.
@@ -141,8 +157,6 @@ extends Resource
 @export_range(0.5, 60.0, 0.5) var energy_passive_interval: float = 10.0
 ## Seconds for +1 step while the charge key (R) is held standing still in Idle (D-42); it replaces the passive tick, never stacks. Raise it for a slower charge.
 @export_range(0.5, 60.0, 0.5) var energy_charge_interval: float = 5.0
-## Steps the Loader bonus costs (interim, removed with the bonus path in 05.1-11); raise it to make the bonus rarer.
-@export_range(0, 12, 1) var loader_bonus_cost: int = 3
 
 @export_group("Moto Perpetuo")
 ## Steps from which Moto Perpetuo turns on (D-36, two cores); raise it to demand a fuller arm.

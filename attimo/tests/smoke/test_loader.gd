@@ -513,11 +513,14 @@ func _scenario_free(tree: SceneTree, check: Callable) -> void:
 # D-02 / WR-02: a ground discharge aimed slightly down stays on the floor; when the throw carries Rino over a ledge, that airborne
 # stretch already used the Loader, so a second press in the air does not enter it. Landing gives it back.
 func _scenario_ground_throw_over_ledge(tree: SceneTree, check: Callable) -> void:
-	var player: PlayerController = await _begin(tree, Vector3(0.0, 0.0, -1.5), -0.22, Vector3(6.0, 1.0, 6.0))
+	var player: PlayerController = await _begin(tree, Vector3(0.0, 0.0, 1.8), -0.22, Vector3(6.0, 1.0, 4.0))
 	player.debug_loader_direction = Vector3(0.0, -0.1, -1.0)
+	# A 3-step throw from a run: the stored speed (run_speed) lifts the discharge well above the ground target speed.
+	await _run_up(tree, player)
 	var entered: int = await _press_loader(tree, player)
+	Input.action_release(&"move_forward")
 	check.call(entered >= 0 and _started.size() == 1 and _started[0]["in_air"] == false, "(l1) a standing ground press enters the Loader (%s)" % [_started])
-	await Fixtures.wait_physics(tree, 3)
+	await Fixtures.wait_physics(tree, 40)
 	Input.action_release(&"loader")
 	await Fixtures.wait_until(tree, func() -> bool: return not _released.is_empty(), 6)
 	var released_velocity: Vector3 = Vector3.ZERO if _released.is_empty() else _released[0]["velocity"] as Vector3

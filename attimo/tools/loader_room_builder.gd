@@ -83,8 +83,8 @@ func gap_direction() -> Vector3:
 ## Base and bonus reach of a discharge from a standing start along the gap direction, and the gap between them (1 m snapped).
 func _gap_numbers() -> Dictionary:
 	var direction: Vector3 = gap_direction()
-	var base_speed: float = LoaderMath.discharge_speed(0.0, _config.loader_min_push, 0.0, _config.loader_max_speed)
-	var bonus_speed: float = LoaderMath.discharge_speed(0.0, _config.loader_min_push, _config.loader_bonus_speed, _config.loader_max_speed)
+	var base_speed: float = LoaderMath.legacy_speed(0.0, _config.loader_min_push, 0.0, _config.loader_max_speed)
+	var bonus_speed: float = LoaderMath.legacy_speed(0.0, _config.loader_min_push, _config.loader_bonus_speed, _config.loader_max_speed)
 	var base_reach: float = LoaderMath.flat_reach(LoaderMath.discharge_velocity(direction, base_speed), _config)
 	var bonus_reach: float = LoaderMath.flat_reach(LoaderMath.discharge_velocity(direction, bonus_speed), _config)
 	return {

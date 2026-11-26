@@ -86,8 +86,8 @@ func _check_gap_numbers(zone: Node3D, config: MovementConfig, check: Callable) -
 	var gap: Node3D = zone.get_node("Loader_Gap") as Node3D
 	var width: float = float(gap.get_meta(&"gap_width"))
 	var direction: Vector3 = gap.get_meta(&"launch_direction") as Vector3
-	var base_speed: float = LoaderMath.discharge_speed(0.0, config.loader_min_push, 0.0, config.loader_max_speed)
-	var bonus_speed: float = LoaderMath.discharge_speed(0.0, config.loader_min_push, config.loader_bonus_speed, config.loader_max_speed)
+	var base_speed: float = LoaderMath.legacy_speed(0.0, config.loader_min_push, 0.0, config.loader_max_speed)
+	var bonus_speed: float = LoaderMath.legacy_speed(0.0, config.loader_min_push, config.loader_bonus_speed, config.loader_max_speed)
 	var base_reach: float = LoaderMath.flat_reach(LoaderMath.discharge_velocity(direction, base_speed), config)
 	var bonus_reach: float = LoaderMath.flat_reach(LoaderMath.discharge_velocity(direction, bonus_speed), config)
 	check.call(absf(float(gap.get_meta(&"base_reach")) - base_reach) < 0.05 and absf(float(gap.get_meta(&"bonus_reach")) - bonus_reach) < 0.05, "the gym's stored reaches match the current config (rebuild the gym after a retune): %.2f/%.2f vs %.2f/%.2f" % [float(gap.get_meta(&"base_reach")), float(gap.get_meta(&"bonus_reach")), base_reach, bonus_reach])
@@ -108,7 +108,6 @@ func _fire(tree: SceneTree, station: Node3D, direction: Vector3, energy: int) ->
 	var marker: Marker3D = station.get_node("Launch") as Marker3D
 	_player.call(&"respawn", marker.global_position)
 	Fixtures.set_energy(_player, energy)
-	_player.loader_cooldown_timer = 0.0
 	_player.debug_loader_direction = direction
 	await Fixtures.wait_until(tree, func() -> bool: return _player.is_on_floor(), 60)
 	await Fixtures.wait_physics(tree, 3)
@@ -124,6 +123,9 @@ func _release_inputs() -> void:
 		_player.debug_loader_direction = Vector3.ZERO
 
 
+## Plan 05.1-11: the gap and the ledge were sized for the ballistic bonus discharge; 05.1-12 re-derives them from the straight reach.
+## Until then "with a core" is a full 3-step Loader and "without a core" is an empty clock (the press is refused, D-48): the player
+## never leaves the platform.
 func _live_gap(tree: SceneTree, zone: Node3D, check: Callable, with_core: bool) -> void:
 	var gap: Node3D = zone.get_node("Loader_Gap") as Node3D
 	var far_edge: float = float(gap.get_meta(&"far_edge_x"))
@@ -135,10 +137,9 @@ func _live_gap(tree: SceneTree, zone: Node3D, check: Callable, with_core: bool) 
 		check.call(pos.x < far_edge and absf(pos.y) < 0.3, "(%s) the player stands on the far island (x %.2f, far edge %.2f, y %.2f)" % [label, pos.x, far_edge, pos.y])
 		check.call(Engine.time_scale == 1.0, "(%s) Engine.time_scale is 1.0" % label)
 	else:
-		var respawn: Marker3D = zone.get_node("Respawn_Loader") as Marker3D
-		var reset: int = await Fixtures.wait_until(tree, func() -> bool: return _player.global_position.distance_to(respawn.global_position) < RESPAWN_TOLERANCE, 300)
-		check.call(reset >= 0, "(%s) the pit puts the player back at the respawn marker (at %s)" % [label, _player.global_position])
-		check.call(_player.arm_energy.value == 3, "(%s) the respawn gives exactly 3 steps (energy %d)" % [label, _player.arm_energy.value])
+		await Fixtures.wait_physics(tree, 120)
+		var marker: Marker3D = gap.get_node("Launch") as Marker3D
+		check.call(_player.global_position.distance_to(marker.global_position) < 1.0 and _player.global_position.x > far_edge, "(%s) the refused press leaves the player on the near platform (at %s)" % [label, _player.global_position])
 		check.call(Engine.time_scale == 1.0, "(%s) Engine.time_scale is 1.0" % label)
 	_release_inputs()
 	Fixtures.restore_time()
@@ -149,11 +150,13 @@ func _live_ledge(tree: SceneTree, zone: Node3D, check: Callable, with_core: bool
 	var height: float = float(station.get_meta(&"ledge_height"))
 	var label: String = "ledge with a core" if with_core else "ledge without a core"
 	await _fire(tree, station, station.get_meta(&"launch_direction") as Vector3, 3 if with_core else 0)
-	var on_ledge: Callable = func() -> bool: return _player.is_on_floor() and absf(_player.global_position.y - height) < 0.3
-	var reached: int = await Fixtures.wait_until(tree, on_ledge, 180)
+	var peak: float = 0.0
+	for i: int in 180:
+		await tree.physics_frame
+		peak = maxf(peak, _player.global_position.y)
 	if with_core:
-		check.call(reached >= 0, "(%s) the player stands on the ledge within 3 s (at %s, ledge %.1f)" % [label, _player.global_position, height])
+		check.call(peak > height, "(%s) the straight 3-step discharge rises above the ledge (peak %.1f, ledge %.1f)" % [label, peak, height])
 	else:
-		check.call(reached < 0, "(%s) the player does not stand on the ledge (at %s)" % [label, _player.global_position])
+		check.call(peak < 0.5, "(%s) an empty clock does not lift the player (peak %.1f)" % [label, peak])
 	_release_inputs()
 	Fixtures.restore_time()
