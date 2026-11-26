@@ -22,6 +22,8 @@ var _rearm_timer: float = 0.0
 @onready var _volume: Area3D = $Volume
 @onready var _body: StaticBody3D = get_node_or_null(^"Body") as StaticBody3D
 @onready var _amplification: Amplification = get_node_or_null(^"Amplification") as Amplification
+## Plan 05.1-17: a pad with a Receiver child (the switched speed pad) kicks only while the receiver is on.
+@onready var _receiver: Receiver = get_node_or_null(^"Receiver") as Receiver
 
 
 func _ready() -> void:
@@ -61,6 +63,8 @@ func _physics_process(delta: float) -> void:
 		if _rearm_timer <= 0.0:
 			_armed = true
 	if config.profile != ImpulseConfig.Profile.PAD or not _armed:
+		return
+	if _receiver != null and not _receiver.is_on():
 		return
 	for body: Node3D in _volume.get_overlapping_bodies():
 		var player: PlayerController = body as PlayerController

@@ -4,7 +4,11 @@ extends KitBlock
 ## SWEEP is the clock-hand platform, a hand pivoted at one end that sweeps back and forth about the block's local X axis; TILT is the
 ## tilting platform, a plate pivoted in its centre that rocks about local X. Both swing as limit * sin(phase), clamped 10 degrees
 ## below the player's floor angle, so a rider never inverts and never slides off by physics. ALWAYS_ON runs from _ready (D-07),
-## SWITCHED runs while a child Receiver is on (plan 05.1-14).
+## SWITCHED runs while a child Receiver is on (plan 05.1-17).
+## HINGE (plan 05.1-17, the drawbridge) is the third profile: a deck hinged at its +Z-pointing end that folds from raised
+## (-hinge_angle_deg about local X, the +Z tip up) to flat while the Receiver is on and back when it is off, eased over hinge_time. It
+## has no sin phase and no floor-angle clamp; the 0..1 fold progress lives in _speed_factor and drives _angle, _omega and
+## _carry_omega, so the carry contract below holds unchanged.
 ##
 ## Carry contract (folded unchanged from the old rotating platform, D-09): the Body is an AnimatableBody3D in the group
 ## carrying_platform with sync_to_physics off, a direct child of this node. PlayerController carries the rider by reference frame
@@ -54,6 +58,7 @@ func _ready() -> void:
 	_body.add_to_group(&"carrying_platform")
 	_build_shape()
 	_resolve_limit()
+	_angle = _rest_angle()
 	_apply()
 	process_physics_priority = TICK_AFTER_PLAYER
 
@@ -73,7 +78,7 @@ func _physics_process(delta: float) -> void:
 
 ## The deck's reach in m from the pivot: the hand length (SWEEP) or half the plate (TILT).
 static func deck_reach(motion: TimedMotionConfig) -> float:
-	if motion.profile == TimedMotionConfig.Profile.SWEEP:
+	if motion.profile == TimedMotionConfig.Profile.SWEEP or motion.profile == TimedMotionConfig.Profile.HINGE:
 		return motion.hand_length
 	return motion.plate_size * 0.5
 
@@ -82,11 +87,16 @@ static func deck_reach(motion: TimedMotionConfig) -> float:
 static func limit_deg(motion: TimedMotionConfig) -> float:
 	if motion.profile == TimedMotionConfig.Profile.SWEEP:
 		return motion.sweep_limit_deg
+	if motion.profile == TimedMotionConfig.Profile.HINGE:
+		return motion.hinge_angle_deg
 	return motion.tilt_limit_deg
 
 
 ## How far in m the deck reaches below the pivot over a full sweep (reach * sin(limit) + thickness, a safe upper bound).
 static func deck_drop(motion: TimedMotionConfig) -> float:
+	if motion.profile == TimedMotionConfig.Profile.HINGE:
+		# The raised deck stands up, the flat deck lies with its top at the hinge: only the thickness reaches below.
+		return motion.plate_thickness
 	return deck_reach(motion) * sin(deg_to_rad(limit_deg(motion))) + motion.plate_thickness
 
 
@@ -137,11 +147,12 @@ func reset() -> void:
 	_phase = 0.0
 	_omega = 0.0
 	_carry_omega = 0.0
+	_angle = _rest_angle()
 	_apply()
 	_body.reset_physics_interpolation()
 
 
-## The speed target: 1 while running. ALWAYS_ON always runs (D-07); SWITCHED runs while a child Receiver (plan 05.1-14) is on.
+## The speed target: 1 while running. ALWAYS_ON always runs (D-07); SWITCHED runs while a child Receiver (plan 05.1-17) is on.
 func _target() -> float:
 	if config.timing == TimedMotionConfig.Timing.ALWAYS_ON:
 		return 1.0
@@ -153,9 +164,24 @@ func _target() -> float:
 
 ## The state after one more tick of `delta`: x = speed factor, y = phase, z = angle. Pure, nothing is stored.
 func _next_state(delta: float) -> Vector3:
+	if config.profile == TimedMotionConfig.Profile.HINGE:
+		var progress: float = move_toward(_speed_factor, _target(), delta / maxf(config.hinge_time, 0.05))
+		return Vector3(progress, _phase, _hinge_angle(progress))
 	var factor: float = move_toward(_speed_factor, _target(), delta / maxf(config.ramp_time, 0.01))
 	var phase: float = wrapf(_phase + _phase_rate() * factor * delta, -PI, PI)
 	return Vector3(factor, phase, _limit_rad * sin(phase))
+
+
+## The HINGE angle for a fold progress 0 (raised) .. 1 (flat), eased with smoothstep. Negative: +Z up under Basis(RIGHT, angle).
+func _hinge_angle(progress: float) -> float:
+	return -deg_to_rad(config.hinge_angle_deg) * (1.0 - smoothstep(0.0, 1.0, progress))
+
+
+## The angle at rest: the raised deck for HINGE, 0 for the swings.
+func _rest_angle() -> float:
+	if config.profile == TimedMotionConfig.Profile.HINGE:
+		return _hinge_angle(0.0)
+	return 0.0
 
 
 func _phase_rate() -> float:
@@ -178,7 +204,7 @@ func _build_shape() -> void:
 	var thickness: float = config.plate_thickness
 	var size: Vector3 = Vector3(config.plate_size, thickness, config.plate_size)
 	_rest_offset = Vector3.ZERO
-	if config.profile == TimedMotionConfig.Profile.SWEEP:
+	if config.profile == TimedMotionConfig.Profile.SWEEP or config.profile == TimedMotionConfig.Profile.HINGE:
 		size = Vector3(config.hand_width, thickness, config.hand_length)
 		_rest_offset = Vector3(0.0, 0.0, config.hand_length * 0.5)
 	var box: BoxShape3D = BoxShape3D.new()

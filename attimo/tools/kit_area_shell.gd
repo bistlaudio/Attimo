@@ -44,6 +44,17 @@ const ROLE_SIGN_HEIGHT: float = 5.2
 const EXPECT_FONT_SIZE: int = 40
 const EXPECT_DROP: float = 0.7
 const EXPECT_PREFIX: String = "Erwartet:"
+## Signal stations (plan 05.1-17): the gate -> timer -> drawbridge course and the gate -> timer -> switched speed pad course.
+const GATE_SCENE: String = "res://scenes/kit/energy/charge_gate.tscn"
+const TIMER_SCENE: String = "res://scenes/mechanisms/logic_timer.tscn"
+const DRAWBRIDGE_SCENE: String = "res://scenes/kit/steampunk/drawbridge.tscn"
+const SWITCHED_PAD_SCENE: String = "res://scenes/kit/steampunk/speed_pad_switched.tscn"
+## Ledge tops of the bridge course in m: a half step (0.5) leads up to the ledges (1.5, a plain held jump reaches 2.0).
+const LEDGE_TOP: float = 1.5
+const STEP_TOP: float = 0.5
+## Seconds the drawbridge stays down after the gate switched, and the switched pad stays live.
+const BRIDGE_HOLD: float = 10.0
+const PAD_HOLD: float = 5.0
 ## Role group name suffix -> sign text.
 const ROLE_TITLES: Dictionary = {
 	"Platforms": "Plattformen",
@@ -94,6 +105,62 @@ func station(role_group: Node3D, builder: RefCounted, object_name: String, at: V
 	builder.call(&"_label", node, "Label_%s" % object_name, title, sign_offset)
 	builder.call(&"_label", node, "Label_%s_Expect" % object_name, expect, sign_offset - Vector3(0.0, EXPECT_DROP, 0.0), EXPECT_FONT_SIZE)
 	return node
+
+
+## The gate -> timer -> drawbridge course in the station's local frame, the bridge running east (+x): a near ledge (x -8..0) with the charge
+## gate in the middle, the hinge at its edge (x 0), an 8 m deck and a far ledge (x 8..16), a half step to the near ledge on its north side.
+## The timer (invisible, BRIDGE_HOLD s) keeps the bridge down while the player crosses; the receiver's source is wired here. The station
+## origin is the hinge column; the pit under the deck is the area floor, 1.5 m down.
+func bridge_course(station_node: Node3D, builder: RefCounted, tag: String) -> void:
+	for x: float in [-6.0, -2.0]:
+		for z: float in [-2.0, 2.0]:
+			_ledge(station_node, builder, "%sNear_%d_%d" % [tag, int(x), int(z)], x, z, LEDGE_TOP)
+	for x: float in [10.0, 14.0]:
+		for z: float in [-2.0, 2.0]:
+			_ledge(station_node, builder, "%sFar_%d_%d" % [tag, int(x), int(z)], x, z, LEDGE_TOP)
+	_ledge(station_node, builder, "%sStep" % tag, -6.0, -6.0, STEP_TOP)
+	var east: Basis = builder.call(&"_yaw", 90.0) as Basis
+	var gate: Node3D = builder.call(&"_instance", station_node, GATE_SCENE, "Gate", Vector3(-4.0, LEDGE_TOP, 0.0), east) as Node3D
+	var timer: Node3D = builder.call(&"_instance", station_node, TIMER_SCENE, "Timer", Vector3(-4.0, LEDGE_TOP, 0.0)) as Node3D
+	timer.visible = false
+	timer.set(&"source", gate)
+	timer.set(&"hold_time", BRIDGE_HOLD)
+	var bridge: Node3D = builder.call(&"_instance", station_node, DRAWBRIDGE_SCENE, "Drawbridge", Vector3(0.0, LEDGE_TOP, 0.0), east) as Node3D
+	wire_receiver(bridge, builder, timer)
+
+
+## The gate -> timer -> switched speed pad course: the pad at the station origin (forward -z), the gate 7 m south of it, the timer
+## keeps the pad live for PAD_HOLD s after the gate switched.
+func pad_course(station_node: Node3D, builder: RefCounted) -> void:
+	var gate: Node3D = builder.call(&"_instance", station_node, GATE_SCENE, "Gate", Vector3(0.0, 0.0, 7.0)) as Node3D
+	var timer: Node3D = builder.call(&"_instance", station_node, TIMER_SCENE, "Timer", Vector3(0.0, 0.0, 7.0)) as Node3D
+	timer.visible = false
+	timer.set(&"source", gate)
+	timer.set(&"hold_time", PAD_HOLD)
+	var pad: Node3D = builder.call(&"_instance", station_node, SWITCHED_PAD_SCENE, "Pad", Vector3.ZERO) as Node3D
+	wire_receiver(pad, builder, timer)
+
+
+## Points the Receiver inside the instance `block` at `source`. The block becomes an editable instance, so the saved scene keeps the
+## wiring as an override of the instanced child; a missing Receiver fails the build.
+func wire_receiver(block: Node3D, builder: RefCounted, source: Node3D) -> void:
+	var receiver: Node = block.get_node_or_null(^"Receiver")
+	if receiver == null:
+		builder.set(&"failure", "%s has no Receiver to wire" % block.name)
+		return
+	var root: Node = builder.get(&"_root") as Node
+	# Editable children: only then does pack() save the child as an override of the instance (the Receiver keeps the instance root as its
+	# owner; giving it the gym as owner saved a second, new Receiver next to the instanced one).
+	root.set_editable_instance(block, true)
+	receiver.set(&"source", source)
+
+
+## A stack of floor tiles from `top` down to the floor (one tile every metre), centred at (x, z) of the station.
+func _ledge(station_node: Node3D, builder: RefCounted, tag: String, x: float, z: float, top: float) -> void:
+	var layer: int = 0
+	while top - float(layer) > 0.0:
+		builder.call(&"_floor_tile", station_node, "%s_%d" % [tag, layer], x, top - float(layer), z)
+		layer += 1
 
 
 ## An energy capsule with a respawn beside a target station (every target station keeps one, D-19), at the global point `at`.

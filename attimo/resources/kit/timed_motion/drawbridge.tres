@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TimedMotionConfig" format=3]
+
+[ext_resource type="Script" path="res://scripts/kit/configs/timed_motion_config.gd" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+profile = 2
+timing = 1
+angular_speed = 1.0
+ramp_time = 0.3
+sweep_limit_deg = 35.0
+tilt_limit_deg = 30.0
+hinge_angle_deg = 90.0
+hinge_time = 1.2
+hand_length = 8.0
+hand_width = 3.0
+plate_size = 8.0
+plate_thickness = 0.5

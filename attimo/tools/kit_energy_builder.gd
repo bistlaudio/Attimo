@@ -4,7 +4,7 @@ extends RefCounted
 ## layout (D-30). Contract: build_into(zone, builder); the shell comes from tools/kit_area_shell.gd. Generated, never hand-edited.
 ## Energy = turquoise, costs or is amplified (decision). Platforms are neutral, so the area has no Role_Platforms.
 ##
-## Plan view: the Energy source stations (capsule, broken machine) stand under Role_Mechanisms; the other stations (each a Station_<object> with an "Erwartet:" sign, a capsule beside every
+## Plan view: the Charge gate station (plan 05.1-17) stands at S(2, 0) under Role_Mechanisms; the Energy source stations (capsule, broken machine) stand under Role_Mechanisms; the other stations (each a Station_<object> with an "Erwartet:" sign, a capsule beside every
 ## target station) arrive with their blocks in plans 08-19:
 ##   north  Role_Environment (columns 0..1)  Role_Obstacles (columns 3..4)
 ##   south  Role_Boosters (columns 0..1)     Role_Mechanisms (columns 2..4)
@@ -32,6 +32,7 @@ func build_into(zone: Node3D, builder: RefCounted) -> void:
 	var groups: Dictionary = _shell.build_shell(zone, builder, "Energie: kostet oder verstärkt", KitAreaShell.ENERGY_X.x, KitAreaShell.ENERGY_X.y, ROLES, TINT, signs)
 	if groups.has("Mechanisms"):
 		_build_energy_sources(groups["Mechanisms"] as Node3D, builder)
+		_build_charge_gate(groups["Mechanisms"] as Node3D, builder)
 	if groups.has("Obstacles"):
 		_build_loader_field(groups["Obstacles"] as Node3D, builder)
 	if groups.has("Boosters"):
@@ -75,6 +76,15 @@ func _build_gravity_zone(role: Node3D, builder: RefCounted) -> void:
 	var station: Node3D = _shell.station(role, builder, "GravityZone", at, "Schwerezone", "Erwartet: Je voller die Uhr, desto länger schwebst du; verbraucht nichts", Vector3(0.0, 5.2, 0.0))
 	builder.call(&"_instance", station, GRAVITY_ZONE_SCENE, "Zone", Vector3.ZERO)
 	_shell.capsule_beside(station, builder, at + Vector3(0.0, 0.0, 5.5))
+
+
+## Charge gate (plan 05.1-17, D-21, D-47), Station_ChargeGate under Role_Mechanisms at S(2, 0), the bridge running east over a pit: the gate
+## only checks the steps (never spends them) and, through an invisible 10 s timer, folds a drawbridge down. A capsule stands beside it.
+func _build_charge_gate(role: Node3D, builder: RefCounted) -> void:
+	var at: Vector3 = _slot("S", 2, 0)
+	var station: Node3D = _shell.station(role, builder, "ChargeGate", at, "Ladetor", "Erwartet: Prüft nur, verbraucht nichts: mit mindestens 6 Stufen im Bogen klappt die Brücke 10 s lang herunter", Vector3(-4.0, 8.6, 0.0))
+	_shell.bridge_course(station, builder, "Gate")
+	_shell.capsule_beside(station, builder, at + Vector3(-6.0, 0.0, 6.5))
 
 
 ## Slot (column, row) on `side` of this area.

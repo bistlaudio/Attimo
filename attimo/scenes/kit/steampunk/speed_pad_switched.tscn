@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/kit/steampunk/speed_pad.tscn" id="1_pad"]
+[ext_resource type="Script" path="res://scripts/kit/components/receiver.gd" id="2_receiver"]
+
+[node name="SpeedPadSwitchedLook" instance=ExtResource("1_pad")]
+
+[node name="Receiver" type="Node" parent="." index="6"]
+script = ExtResource("2_receiver")

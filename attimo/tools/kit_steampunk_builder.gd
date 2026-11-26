@@ -8,7 +8,9 @@ extends RefCounted
 ##   south, Role_Boosters    WallJump twin (3..4, 0)  WallRun (3, 1)  WallRunSteam (4, 1)  SteamCannon (5, 1)  Slingshot (6, 0, out of the cannon line)
 ##   north, Role_Environment Updraft (0, 1)  Geyser (1, 1)  SteamStream (2, 1)   (plan 05.1-15, force volumes, +1 step per use)
 ##   south, Role_Boosters    BoostRing (0, 1)  SpeedPad (1, 1)  BouncePad (2, 1)   (plan 05.1-16, impulse, +1 step per use)
-##   north                   Role_Obstacles, Role_Mechanisms: empty until their blocks land (plans 16-19)
+##   north, Role_Mechanisms  Drawbridge (6, 1, bridge running east, x -8..16 around the hinge)  SwitchedSpeedPad (4, 0)   (plan 05.1-17,
+##                           charge gate -> invisible timer -> receiver)
+##   north                   Role_Obstacles: empty until its blocks land (plans 18-19)
 ## Each station keeps the offsets, heights and sign spots it had in the old mechanism rooms (plans 01-04), relative to its slot point.
 
 const KitAreaShell := preload("res://tools/kit_area_shell.gd")
@@ -66,6 +68,8 @@ func build_into(zone: Node3D, builder: RefCounted) -> void:
 	_build_platforms(groups["Platforms"] as Node3D, builder)
 	_build_boosters(groups["Boosters"] as Node3D, builder)
 	_build_environment(groups["Environment"] as Node3D, builder)
+	if groups.has("Mechanisms"):
+		_build_mechanisms(groups["Mechanisms"] as Node3D, builder)
 
 
 ## Slot (column, row) on `side` of this area.
@@ -178,3 +182,19 @@ func _build_environment(role: Node3D, builder: RefCounted) -> void:
 	builder.call(&"_instance", geyser, GEYSER_SCENE, "Geyser", Vector3.ZERO)
 	var stream: Node3D = _station(role, builder, "SteamStream", _slot("N", 2, 1), "Dampfstrom", "Erwartet: Schiebt dich seitlich mit; +1 Stufe", Vector3(-4.0, 3.2, 0.0))
 	builder.call(&"_instance", stream, STEAM_STREAM_SCENE, "SteamStream", Vector3.ZERO)
+
+
+# --- Role_Mechanisms -----------------------------------------------------------------------------------------------------------------
+
+
+## Signal stations (plan 05.1-17, D-13, D-18, GAME-DESIGN 6.5 / 6.9). A charge gate (it only checks the steps, never spends them) drives
+## an invisible timer, the timer drives the receiver of a drawbridge or a speed pad. A capsule stands beside each to fill the clock.
+func _build_mechanisms(role: Node3D, builder: RefCounted) -> void:
+	var bridge_at: Vector3 = _slot("N", 6, 1)
+	var bridge: Node3D = _station(role, builder, "Drawbridge", bridge_at, "Zugbrücke", "Erwartet: Mit genug Stufen (6) im Torbogen klappt die Brücke herunter und bleibt 10 s unten; das Tor verbraucht nichts", Vector3(-4.0, 8.6, 0.0))
+	_shell.bridge_course(bridge, builder, "Bridge")
+	_shell.capsule_beside(bridge, builder, bridge_at + Vector3(-6.0, 0.0, 6.5))
+	var pad_at: Vector3 = _slot("N", 4, 0)
+	var pad: Node3D = _station(role, builder, "SwitchedSpeedPad", pad_at, "Geschaltetes Speed-Pad", "Erwartet: Durch den Torbogen mit genug Stufen (6), dann 5 s Zeit für den Schub über das Pad; ohne Schaltung kein Schub", Vector3(0.0, 5.6, 3.5))
+	_shell.pad_course(pad, builder)
+	_shell.capsule_beside(pad, builder, pad_at + Vector3(-6.0, 0.0, 7.0))
