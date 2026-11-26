@@ -27,8 +27,9 @@ func run(tree: SceneTree, check: Callable) -> void:
 			names.append(file)
 	names.sort()
 	# 23 since plan 05.1-06 deleted the lift, crank and pressure plate scenes (26 before); 21 since plan 05.1-10 moved the energy
-	# capsule and the broken machine to scenes/kit/energy; 18 since plan 05.1-13 deleted the lever, valve and gear gate scenes.
-	check.call(names.size() >= 18, "at least 18 mechanism and trigger scenes (%d)" % names.size())
+	# capsule and the broken machine to scenes/kit/energy; 18 since plan 05.1-13 deleted the lever, valve and gear gate scenes; 15 since plan 05.1-15 turned the steam nozzle, geyser
+	# and wind tunnel into force volume presets (scenes/kit).
+	check.call(names.size() >= 15, "at least 15 mechanism and trigger scenes (%d)" % names.size())
 	for file: String in names:
 		var stem: String = file.get_basename()
 		var packed: PackedScene = load(DIR + file) as PackedScene
