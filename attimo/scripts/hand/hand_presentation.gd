@@ -1,7 +1,7 @@
 class_name HandPresentation
 extends Node
 ## Presentation of the prosthetic hand's energy (D-07b, D-04, D-08, D-10). Reads the HandController and the EventBus,
-## never drives the hand. The palm of hand.r glows (brighter while charging), flashes on every shot (the shot itself is a flying ball, never a beam, D-17) and pulses while near
+## never drives the hand. The palm of hand.r glows at a base level and pulses while near
 ## contact holds; the forearm light glows on near contact. Everything hangs on the Mannequin skeleton through BoneAttachment3D. No particles, no animation player.
 
 ## Turquoise of the hand energy (the same language as the glow stages, D-07b).
@@ -10,17 +10,11 @@ const HAND_BONE: StringName = &"hand.r"
 const FOREARM_BONE: StringName = &"lowerarm.r"
 const PALM_RADIUS: float = 0.06
 const BASE_ENERGY: float = 0.4
-const CHARGE_ENERGY: float = 2.0
-const FLASH_ENERGY: float = 5.0
-const FLASH_TIME: float = 0.12
 const NEAR_PULSE_HZ: float = 6.0
 const NEAR_ENERGY: float = 2.0
 const NEAR_SWING: float = 1.0
 const LIGHT_RANGE: float = 1.2
 const LIGHT_SCALE: float = 0.4
-## Full-charge tell (D-17): one palm flash and one placeholder beep (Phase 12/14 polish them).
-const FULL_BEEP_HZ: float = 880.0
-const FULL_BEEP_SECONDS: float = 0.1
 
 @export var player: PlayerController
 @export var mannequin: Node3D
@@ -30,9 +24,7 @@ var _palm: MeshInstance3D
 var _palm_material: StandardMaterial3D
 var _palm_light: OmniLight3D
 var _arm_light: OmniLight3D
-var _flash: float = 0.0
 var _time: float = 0.0
-var _tone: PlaceholderTone
 
 
 func _ready() -> void:
@@ -63,21 +55,12 @@ func _ready() -> void:
 	var arm_attachment: BoneAttachment3D = BoneAttach.attach(skeleton, forearm_name)
 	_arm_light = _make_light(&"ArmLight")
 	arm_attachment.add_child(_arm_light)
-	_tone = PlaceholderTone.new()
-	_tone.name = &"FullChargeTone"
-	add_child(_tone)
-	EventBus.shot_fired.connect(_on_shot_fired)
-	EventBus.shot_fully_charged.connect(_on_shot_fully_charged)
 
 
 func _process(delta: float) -> void:
 	_time += delta
-	_flash = maxf(_flash - FLASH_ENERGY * delta / FLASH_TIME, 0.0)
 	var energy: float = BASE_ENERGY
 	var near: bool = _hand != null and _hand.near_target != null
-	if _hand != null and _hand.charging:
-		energy += CHARGE_ENERGY * _hand.charge_ratio
-	energy += _flash
 	var arm_energy: float = 0.0
 	if near:
 		var pulse: float = NEAR_ENERGY + NEAR_SWING * sin(_time * TAU * NEAR_PULSE_HZ)
@@ -86,18 +69,6 @@ func _process(delta: float) -> void:
 	_palm_material.emission_energy_multiplier = energy
 	_palm_light.light_energy = energy * LIGHT_SCALE
 	_arm_light.light_energy = arm_energy * LIGHT_SCALE
-
-
-## Palm flash on a fired shot (D-04, presentation only).
-func _on_shot_fired(_origin: Vector3, _direction: Vector3, _energy: float) -> void:
-	_flash = FLASH_ENERGY
-
-
-## The shot reached the full charge: one flash and one beep, the single tell that it is heavy enough (D-17).
-func _on_shot_fully_charged(_position: Vector3) -> void:
-	_flash = FLASH_ENERGY
-	if _tone != null:
-		_tone.beep(FULL_BEEP_HZ, FULL_BEEP_SECONDS)
 
 
 func _make_light(light_name: StringName) -> OmniLight3D:

@@ -1,8 +1,8 @@
 class_name HandModule
 extends Node
 ## Base class of hand modules. Modules own behaviour only: no mesh, the arm never changes (D-24).
-## The HandController routes the use button to the active module through the callbacks below: on_use_pressed once on the press
-## (not during the shot cooldown), on_use_held every physics tick while the button stays down, on_use_released once on the release.
+## The HandController routes the use button to the active module through the callbacks below: on_use_pressed once on the press,
+## on_use_held every physics tick while the button stays down, on_use_released once on the release.
 ## A module that owns an energy effect talks to ArmEnergy only through gain / try_spend / drain / refuse, never by writing the value.
 
 var ctx: HandContext = null
@@ -47,7 +47,3 @@ func holds_arm_out() -> bool:
 func arm_point() -> Vector3:
 	return Vector3(INF, INF, INF)
 
-
-## True when the aim assist (Targeting) should run for this module.
-func uses_targeting() -> bool:
-	return false

@@ -35,7 +35,7 @@ func _on_contact(active: bool, _point: Vector3) -> void:
 
 
 func _on_triggered(_node: Node, kind: int) -> void:
-	if kind == int(PulseHit.Kind.NEAR):
+	if kind == Interactable.KIND_NEAR:
 		_triggered_near += 1
 
 

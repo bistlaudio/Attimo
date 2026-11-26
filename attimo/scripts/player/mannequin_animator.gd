@@ -5,8 +5,8 @@ extends Node
 ## The tree root is a BlendTree (tools/build_mannequin_tree.gd): StateMachine -> TimeScale -> Land OneShot -> Aim
 ## (upper-body layer) -> output. The state machine has one dash node per Dodge clip; dash_node_for() picks it (the aimed nodes are dormant).
 ## The upper-body layer is the arm (quick 261118-qi3, driven by HandController.arm_out since phase 05, D-27): when the hand reports
-## the arm stretched out (near contact, a shot, the Loader hold) the AimMachine starts at Enter on the same physics frame, Hold
-## loops while the arm is out, a shot_fired fires the Shoot OneShot, the arm coming back travels to Exit and the layer fades
+## the arm stretched out (near contact, the Extractor, the Loader hold) the AimMachine starts at Enter on the same physics frame, Hold
+## loops while the arm is out, the arm coming back travels to Exit and the layer fades
 ## out after the Exit clip. There is no aim hold any more; the layer stays until the Phase 6 hand poses replace it.
 ## Idle breaks (quick 261118-qi3): standing still in Idle for a rolled delay (MovementConfig idle_break_delay_min/max)
 ## fires the IdleBreak OneShot with a clip picked by a VariantPicker (never the same one twice in a row). Any gameplay
@@ -31,7 +31,6 @@ const P_LAND_PICK: StringName = &"parameters/LandPick/transition_request"
 const P_LAND_PICK_STATE: StringName = &"parameters/LandPick/current_state"
 const P_AIM: StringName = &"parameters/Aim/blend_amount"
 const P_AIM_PLAYBACK: StringName = &"parameters/AimMachine/playback"
-const P_SHOOT_REQUEST: StringName = &"parameters/Shoot/request"
 const P_IDLE_BREAK_REQUEST: StringName = &"parameters/IdleBreak/request"
 const P_IDLE_BREAK_ACTIVE: StringName = &"parameters/IdleBreak/active"
 const P_IDLE_BREAK_PICK: StringName = &"parameters/IdleBreakPick/transition_request"
@@ -180,7 +179,6 @@ func _ready() -> void:
 	_hand = player.get_node_or_null(^"HandController") as HandController
 	state_machine.state_changed.connect(_on_state_changed)
 	EventBus.landed.connect(_on_landed)
-	EventBus.shot_fired.connect(_on_shot_fired)
 	var tree_root: AnimationNodeBlendTree = animation_tree.tree_root as AnimationNodeBlendTree
 	if tree_root != null and tree_root.has_node(&"StateMachine"):
 		var machine: AnimationNodeStateMachine = tree_root.get_node(&"StateMachine") as AnimationNodeStateMachine
@@ -224,8 +222,8 @@ func _aim_exit_length(clip_player: AnimationPlayer) -> float:
 	return 0.0
 
 
-## Counts the air-dash hold down and hands over to the Fall loop when it runs out. The aim edge and the hand shot run
-## first so they never depend on the hold.
+## Counts the air-dash hold down and hands over to the Fall loop when it runs out. The aim edge runs
+## first so it never depends on the hold.
 func _physics_process(delta: float) -> void:
 	_update_aim_edge(delta)
 	_update_idle_break(delta)
@@ -242,7 +240,7 @@ func _physics_process(delta: float) -> void:
 		_travel_to(&"Fall")
 
 
-## The arm going out (HandController.arm_out: near contact, a shot, the Loader hold) starts the spell hand at Enter on the
+## The arm going out (HandController.arm_out: near contact, the Extractor, the Loader hold) starts the spell hand at Enter on the
 ## physics frame it turns true, the arm coming back travels to Exit and starts the exit countdown that keeps the layer up until
 ## the lowering has played.
 func _update_aim_edge(delta: float) -> void:
@@ -260,20 +258,10 @@ func _update_aim_edge(delta: float) -> void:
 	_was_arm_out = arm_out
 
 
-## The shot of the hand left (EventBus.shot_fired, on release after the charge): fire the Shoot OneShot.
-func _on_shot_fired(_origin: Vector3, _direction: Vector3, _energy: float) -> void:
-	play_hand_shot()
-
-
-## True while the arm layer is up: the hand reports the arm stretched out (near contact, a shot, the Loader hold; D-27). Only the
+## True while the arm layer is up: the hand reports the arm stretched out (near contact, the Extractor, the Loader hold; D-27). Only the
 ## Aim layer weight and the solver target use it.
 func _arm_up() -> bool:
 	return _hand != null and _hand.arm_out
-
-
-## Fires the Shoot OneShot of the spell hand.
-func play_hand_shot() -> void:
-	animation_tree.set(P_SHOOT_REQUEST, AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
 
 
 ## The hold length in seconds (MovementConfig.air_dash_hold_time, live-tunable).
@@ -298,7 +286,7 @@ func _process(delta: float) -> void:
 	_feed_aim_modifier()
 
 
-## Fades the arm solver with the arm weight and points it at HandController.arm_out_point (the near target, the last shot point or
+## Fades the arm solver with the arm weight and points it at HandController.arm_out_point (the near target, the module point or
 ## the crosshair point during the Loader hold). The solver aims from the shoulder, so the hand lies on the shoulder-to-point line
 ## and the camera-to-character parallax is corrected. Without a hand the fallback is the crosshair target point of the rig, and
 ## without a rig the camera origin plus forward times converge_distance.

@@ -1,28 +1,26 @@
 class_name Interactable
 extends Node
-## The HAND-02 contract component: what a hand module may trigger. It declares the accepted modules, whether it accepts
-## the shot, near contact or both, and the minimum pulse size. accepts_module and can_accept are the only deciders;
-## modules only call try_trigger. Add it as a child of the thing and point hit_body at its collision body.
+## The HAND-02 contract component: what near contact (E) may trigger (D-45, D-46: the shot is gone, so there is no shot stage and no
+## pulse payload). accepts_near is the only decider; the HandController calls near_begin / near_hold / near_end. Add it as a child of
+## the thing and point hit_body at its collision body.
 
 const GLOW_IDLE_MATERIAL: StandardMaterial3D = preload("res://resources/mechanisms/glow_idle.tres")
-const GLOW_SHOT_READY_MATERIAL: StandardMaterial3D = preload("res://resources/mechanisms/glow_shot_ready.tres")
 const GLOW_TARGET_MATERIAL: StandardMaterial3D = preload("res://resources/mechanisms/glow_target.tres")
-## Emission energy of the brightest stage before Targeting adds its pulse.
+## Emission energy of the brightest stage.
 const GLOW_TARGET_ENERGY: float = 3.0
 
-## Glow stages of the shared turquoise materials (D-11, D-28): faint always, stronger while the shot module is equipped and the arm can
-## shoot (SHOT_READY, driven by EventBus.shot_ready_changed), brightest when targeted.
-enum GlowStage { IDLE, SHOT_READY, TARGET }
+## The kind value interactable_triggered carries for a near contact (kept from the removed shot kinds).
+const KIND_NEAR: int = 1
 
-signal triggered(hit: PulseHit)
+## Glow stages of the shared turquoise materials (D-11): faint always, brightest when marked.
+enum GlowStage { IDLE, TARGET }
+
 signal near_started()
 signal near_held(delta: float)
 signal near_ended()
 
-@export var accepted_modules: Array[StringName] = [&"remote_trigger"]
-@export var accepts_shot: bool = true
+## True when near contact (hold E beside it) may use this Interactable.
 @export var accepts_near: bool = false
-@export var min_pulse: PulseHit.Size = PulseHit.Size.SMALL
 ## The body the hand rays hit. It is moved onto the Interactable layer with mask 0 in _ready.
 @export var hit_body: CollisionObject3D
 ## Where the crosshair and the glow aim at; the hit body position when unset.
@@ -38,11 +36,6 @@ var glow_stage: int = GlowStage.IDLE
 func _ready() -> void:
 	add_to_group(&"interactable")
 	set_glow_stage(GlowStage.IDLE)
-	EventBus.shot_ready_changed.connect(_on_shot_ready_changed)
-	# An Interactable that enters after the shot module was equipped starts at the stage the others already show.
-	var hand: HandController = get_tree().get_first_node_in_group(&"hand_controller") as HandController
-	if hand != null and hand.shot_ready:
-		set_glow_stage(GlowStage.SHOT_READY)
 	if hit_body != null:
 		hit_body.collision_layer = PhysicsLayers.INTERACTABLE
 		hit_body.collision_mask = 0
@@ -54,8 +47,6 @@ func set_glow_stage(stage: int) -> void:
 	glow_stage = stage
 	var material: StandardMaterial3D = GLOW_IDLE_MATERIAL
 	match stage:
-		GlowStage.SHOT_READY:
-			material = GLOW_SHOT_READY_MATERIAL
 		GlowStage.TARGET:
 			material = GLOW_TARGET_MATERIAL
 	for mesh: MeshInstance3D in glow_meshes:
@@ -63,41 +54,11 @@ func set_glow_stage(stage: int) -> void:
 			mesh.material_override = material
 
 
-func _on_shot_ready_changed(ready: bool) -> void:
-	if glow_stage == GlowStage.TARGET:
-		return
-	set_glow_stage(GlowStage.SHOT_READY if ready else GlowStage.IDLE)
-
-
-func accepts_module(id: StringName) -> bool:
-	return accepted_modules.has(id)
-
-
-func can_accept(kind: PulseHit.Kind, size: PulseHit.Size) -> bool:
-	match kind:
-		PulseHit.Kind.SHOT:
-			return accepts_shot and size >= min_pulse
-		PulseHit.Kind.NEAR:
-			return accepts_near
-	return false
-
-
-## Runs the hit synchronously. False when the contract rejects it.
-func try_trigger(hit: PulseHit) -> bool:
-	if hit == null or not can_accept(hit.kind, hit.size):
-		return false
-	if hit.kind == PulseHit.Kind.SHOT and not accepts_module(hit.module_id):
-		return false
-	triggered.emit(hit)
-	EventBus.interactable_triggered.emit(get_parent(), int(hit.kind))
-	return true
-
-
 func near_begin() -> bool:
 	if not accepts_near:
 		return false
 	near_started.emit()
-	EventBus.interactable_triggered.emit(get_parent(), int(PulseHit.Kind.NEAR))
+	EventBus.interactable_triggered.emit(get_parent(), KIND_NEAR)
 	return true
 
 

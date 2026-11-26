@@ -1,7 +1,7 @@
 class_name Valve
 extends SignalSource
-## Handrad-Ventil (MECH-01, D-15): a heavy switch that only the big pulse moves (D-03). Every accepted hit toggles it
-## (D-17) and the wheel turns half a revolution. The wheel turn is presentation only.
+## Handrad-Ventil (MECH-01, D-15): a heavy switch worked by near contact (hold E beside it; the shot is gone, D-45). Every contact toggles it
+## and the wheel turns half a revolution. The wheel turn is presentation only.
 
 ## Per-instance option: once on, the valve stays on.
 @export var stays_on: bool = false
@@ -16,7 +16,7 @@ var _half_turns: int = 0
 
 func _ready() -> void:
 	super._ready()
-	_interactable.triggered.connect(_on_triggered)
+	_interactable.near_started.connect(_toggle)
 
 
 func _physics_process(delta: float) -> void:
@@ -30,7 +30,7 @@ func reset() -> void:
 	_wheel.rotation.z = 0.0
 
 
-func _on_triggered(_hit: PulseHit) -> void:
+func _toggle() -> void:
 	if stays_on and is_active:
 		return
 	_half_turns += 1

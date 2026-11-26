@@ -135,6 +135,7 @@ shape = SubResource("BoxShape3D_hit")
 
 [node name="Interactable" type="Node" parent="." node_paths=PackedStringArray("hit_body", "aim_point", "glow_meshes")]
 script = ExtResource("2_interactable")
+accepts_near = true
 hit_body = NodePath("../HitBody")
 aim_point = NodePath("../AimPoint")
 glow_meshes = [NodePath("../Lantern/GlowLens")]

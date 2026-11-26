@@ -1,9 +1,9 @@
 class_name EnergyCore
 extends SignalSource
-## Energiekern in a lantern (MECH-01, D-15): switches on at a shot and off by itself after core_duration. A new hit
+## Energiekern in a lantern (MECH-01, D-15): switches on at a near contact (the shot is gone, D-45; 05.1-18 reworks it into the pay-in Trigger) and off by itself after core_duration. A new contact
 ## restarts the time. A ring of pips around the lantern shows the time left (a visible built-in timer).
 
-## Seconds the core stays on after a hit.
+## Seconds the core stays on after a contact.
 @export var core_duration: float = 6.0
 
 ## Seconds left until the core switches off.
@@ -15,7 +15,7 @@ var remaining: float = 0.0
 
 func _ready() -> void:
 	super._ready()
-	_interactable.triggered.connect(_on_triggered)
+	_interactable.near_started.connect(_on_near_started)
 	_show_pips()
 
 
@@ -34,7 +34,7 @@ func reset() -> void:
 	_show_pips()
 
 
-func _on_triggered(_hit: PulseHit) -> void:
+func _on_near_started() -> void:
 	remaining = core_duration
 	set_active(true)
 	_show_pips()
