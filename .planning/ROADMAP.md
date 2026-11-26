@@ -308,7 +308,7 @@ Plans:
 - [x] 05.1-17-PLAN.md — Trigger block (SignalSource rename), Receiver, charge gate, drawbridge (HINGE), switched speed pad, timer station
 - [x] 05.1-18-PLAN.md — EnergyCost component: energy core pay-in (3/6/9) and attraction-field fast escape; AND / OR stations
 - [x] 05.1-19-PLAN.md — Timed motion platforms: paternoster, rail cart, piston steps
-- [ ] 05.1-20-PLAN.md — DamagePush + player_hit: pendulum, piston wall, steam hammer
+- [x] 05.1-20-PLAN.md — DamagePush + player_hit: pendulum, piston wall, steam hammer
 - [ ] 05.1-21-PLAN.md — Reaction to load nature objects: crumbling platform, collapse, sinking debris, tipping trunk, falling debris, snap bloom
 - [ ] 05.1-22-PLAN.md — Mixed course, cut-file gate, Kit values in MOVEMENT-METRICS, design-doc sync, human walkthrough
 **UI hint**: yes
@@ -503,7 +503,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 04.1 → 5 → 05.1 →
 | 3. Animated Mannequin & Aim Mode | 10/10 | Complete    | 2026-11-20 |
 | 4. Fernauslöser & Mechanism Kit | 5/5 | Complete   | 2026-11-23 |
 | 5. Energy Arm & Loader | 5/5 | Complete   | 2026-11-24 |
-| 05.1. Kit Rework | 19/22 | In Progress|  |
+| 05.1. Kit Rework | 20/22 | In Progress|  |
 | 6. Extractor, Enemies & Recovery | 0/TBD | Not started | - |
 | 7. Level Blockout & Game Flow | 0/TBD | Not started | - |
 | 8. Boss & Ending | 0/TBD | Not started | - |
