@@ -1,6 +1,7 @@
 extends RefCounted
 ## Plan 05-03 (ENRG-05, D-13): the energy HUD is a CanvasLayer 9 (below the crosshair 10 and the debug overlays), its Control ignores
-## the mouse, and its chambers mirror ArmEnergy.core_fill after one frame. It only reads.
+## the mouse. Plan 05.1-09 (D-35, D-39): the clock face rests the hour hand on whole steps, shows the second hand below 12, and an
+## energy_refused shakes and flashes it red for a short time. It only reads.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 const HUD_SCENE: String = "res://scenes/ui/energy_hud.tscn"
@@ -23,14 +24,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	check.call(hud.layer == 9, "the HUD is on layer 9 (got %d)" % hud.layer)
 	var panel: Control = hud.get_node("Panel") as Control
 	check.call(panel.mouse_filter == Control.MOUSE_FILTER_IGNORE, "the HUD Control ignores the mouse")
-	for energy: int in [0, 4, 12]:
-		Fixtures.set_energy(player, energy)
-		await tree.process_frame
-		await tree.process_frame
-		var ok: bool = true
-		for i: int in 4:
-			ok = ok and is_equal_approx(hud.chamber_fill(i), player.arm_energy.core_fill(i))
-		check.call(ok, "(c1) the chambers equal core_fill at %d (got %.2f %.2f %.2f %.2f)" % [energy, hud.chamber_fill(0), hud.chamber_fill(1), hud.chamber_fill(2), hud.chamber_fill(3)])
+	await _scenario_clock(tree, check, hud, player)
 	await _scenario_readouts(tree, check, hud, player)
 	hud.queue_free()
 	player.queue_free()
@@ -75,4 +69,47 @@ func _scenario_readouts(tree: SceneTree, check: Callable, hud: EnergyHud, player
 	check.call(hud.charging_shown, "(r5) the charge indicator follows arm_energy.charging")
 	player.arm_energy.charging = false
 	player.set_physics_process(true)
-	check.call(hud.health_slot_rect().position.x > hud.chambers_rect().end.x, "(r6) a slot for health is left to the right of the chambers")
+	check.call(hud.health_slot_rect().position.x > hud.clock_rect().end.x, "(r6) a slot for health is left to the right of the clock")
+
+
+## Real seconds: the HUD animates on TimeFx.unscaled, so the test waits on a real timer.
+func _real_wait(tree: SceneTree, seconds: float) -> void:
+	await tree.create_timer(seconds, true, false, true).timeout
+	await tree.process_frame
+
+
+# The clock face (D-35) and the refusal cue (D-39).
+func _scenario_clock(tree: SceneTree, check: Callable, hud: EnergyHud, player: PlayerController) -> void:
+	check.call(not hud.has_method(&"chambers_rect"), "(c0) the chambers are gone")
+	var angles_ok: bool = true
+	for steps: int in 13:
+		angles_ok = angles_ok and is_equal_approx(hud.hand_angle_for(steps), -PI * 0.5 + TAU * float(steps) / 12.0)
+	check.call(angles_ok, "(c1) hand_angle_for(steps) is -PI/2 + TAU * steps / 12 for 0..12")
+	for energy: int in [0, 4, 12]:
+		Fixtures.set_energy(player, energy)
+		await _real_wait(tree, 0.3)
+		check.call(is_equal_approx(hud.displayed_angle(), hud.hand_angle_for(energy)) and hud.hand_at_rest(), "(c2) the hand rests on step %d within 0.3 s (angle %.3f)" % [energy, hud.displayed_angle()])
+	check.call(not hud.second_hand_visible(), "(c3) the second hand is hidden at 12")
+	Fixtures.set_energy(player, 5)
+	await _real_wait(tree, 0.3)
+	check.call(hud.second_hand_visible(), "(c3) the second hand shows below 12")
+	check.call(absf(hud.second_hand_angle() - (-PI * 0.5 + TAU * player.arm_energy.tick_progress())) < TAU * 0.02, "(c3) the second hand follows tick_progress (within a frame of progress)")
+	Fixtures.set_energy(player, 8)
+	await _real_wait(tree, 0.3)
+	Fixtures.set_energy(player, 5)
+	await tree.process_frame
+	await tree.process_frame
+	check.call(not hud.hand_at_rest() or is_equal_approx(hud.displayed_angle(), hud.hand_angle_for(5)), "(c4) a spend animates the hand")
+	await _real_wait(tree, 0.3)
+	check.call(is_equal_approx(hud.displayed_angle(), hud.hand_angle_for(5)), "(c4) the hand settles on the new whole step (%.3f)" % hud.displayed_angle())
+	check.call(hud.refusal_time_left() == 0.0 and hud.shake_offset() == Vector2.ZERO, "(c5) no cue at rest")
+	EventBus.energy_refused.emit(&"dash", 1)
+	var shaken: bool = false
+	for i: int in 6:
+		await tree.process_frame
+		shaken = shaken or hud.shake_offset() != Vector2.ZERO
+	check.call(hud.refusal_time_left() > 0.0, "(c5) a refusal starts the cue (left %.2f)" % hud.refusal_time_left())
+	check.call(shaken, "(c5) the clock shakes (a non-zero offset)")
+	check.call(hud.current_fill_color().r > hud.fill_color.r, "(c5) the fill colour is lerped toward red")
+	await _real_wait(tree, 0.5)
+	check.call(hud.refusal_time_left() == 0.0 and hud.shake_offset() == Vector2.ZERO and hud.current_fill_color().is_equal_approx(hud.fill_color), "(c5) the cue is back at rest within 0.5 s")

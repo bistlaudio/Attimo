@@ -38,6 +38,10 @@ const EMIT_OFFSET: Vector3 = Vector3(0.0, 0.19, 0.05)
 var burst_particles: CPUParticles3D
 var charge_particles: CPUParticles3D
 
+## Pitch and length of the soft tick that plays on an income step (placeholder audio).
+const TICK_BEEP_HZ: float = 880.0
+const TICK_BEEP_SECONDS: float = 0.03
+
 var _arm: ArmEnergy
 var _spend_tone: PlaceholderTone
 var _charge_tone: PlaceholderTone
@@ -100,6 +104,8 @@ func _process(delta: float) -> void:
 				_spend_beep_cooldown = SPEND_BEEP_COOLDOWN
 		elif change > 0:
 			_charge_left = FX_LINGER
+			# One soft tick per income step (the clock hand ticks forward, D-35), not per frame.
+			_spend_tone.beep(TICK_BEEP_HZ, TICK_BEEP_SECONDS)
 	_prev_value = now
 	if charge_particles != null:
 		charge_particles.emitting = _charge_left > 0.0
