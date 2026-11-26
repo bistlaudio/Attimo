@@ -15,6 +15,11 @@ const NEAR_ENERGY: float = 2.0
 const NEAR_SWING: float = 1.0
 const LIGHT_RANGE: float = 1.2
 const LIGHT_SCALE: float = 0.4
+## The Extractor beam (D-44): a thin turquoise mesh cylinder from the palm to the source, no particles.
+const BEAM_RADIUS: float = 0.03
+const BEAM_ENERGY: float = 2.5
+## Shorter than this (or not finite) the beam is hidden instead of getting a degenerate transform (T-05.1-30).
+const BEAM_MIN_LENGTH: float = 0.05
 
 @export var player: PlayerController
 @export var mannequin: Node3D
@@ -24,6 +29,7 @@ var _palm: MeshInstance3D
 var _palm_material: StandardMaterial3D
 var _palm_light: OmniLight3D
 var _arm_light: OmniLight3D
+var _beam: MeshInstance3D
 var _time: float = 0.0
 
 
@@ -55,6 +61,8 @@ func _ready() -> void:
 	var arm_attachment: BoneAttachment3D = BoneAttach.attach(skeleton, forearm_name)
 	_arm_light = _make_light(&"ArmLight")
 	arm_attachment.add_child(_arm_light)
+	_beam = _make_beam()
+	add_child(_beam)
 
 
 func _process(delta: float) -> void:
@@ -69,6 +77,52 @@ func _process(delta: float) -> void:
 	_palm_material.emission_energy_multiplier = energy
 	_palm_light.light_energy = energy * LIGHT_SCALE
 	_arm_light.light_energy = arm_energy * LIGHT_SCALE
+	_update_beam()
+
+
+## Shows the beam from the palm to the source while the active module holds the arm out and has a point (the Extractor drain);
+## the cylinder (height 1) is stretched along y to the distance. Hidden on release, when the source is empty and when the arm is full.
+func _update_beam() -> void:
+	var module: HandModule = _hand.active_module if _hand != null else null
+	if module == null or not module.holds_arm_out():
+		_beam.visible = false
+		return
+	var target: Vector3 = module.arm_point()
+	var start: Vector3 = _palm.global_position
+	var offset: Vector3 = target - start
+	if not target.is_finite() or not start.is_finite() or not offset.is_finite() or offset.length() < BEAM_MIN_LENGTH:
+		_beam.visible = false
+		return
+	var length: float = offset.length()
+	var axis: Vector3 = offset / length
+	var helper: Vector3 = Vector3.UP if absf(axis.dot(Vector3.UP)) < 0.99 else Vector3.RIGHT
+	var x_axis: Vector3 = helper.cross(axis).normalized()
+	var z_axis: Vector3 = x_axis.cross(axis)
+	_beam.global_transform = Transform3D(Basis(x_axis, axis * length, z_axis), start + offset * 0.5)
+	_beam.visible = true
+
+
+func _make_beam() -> MeshInstance3D:
+	var cylinder: CylinderMesh = CylinderMesh.new()
+	cylinder.top_radius = BEAM_RADIUS
+	cylinder.bottom_radius = BEAM_RADIUS
+	cylinder.height = 1.0
+	cylinder.radial_segments = 8
+	cylinder.rings = 1
+	var material: StandardMaterial3D = StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = ENERGY_COLOR
+	material.emission_enabled = true
+	material.emission = ENERGY_COLOR
+	material.emission_energy_multiplier = BEAM_ENERGY
+	var beam: MeshInstance3D = MeshInstance3D.new()
+	beam.name = &"ExtractorBeam"
+	beam.mesh = cylinder
+	beam.material_override = material
+	beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	beam.top_level = true
+	beam.visible = false
+	return beam
 
 
 func _make_light(light_name: StringName) -> OmniLight3D:

@@ -1,31 +1,35 @@
 class_name EnergySource
-extends Node3D
+extends KitBlock
 ## Energy source (kit block "energy source", GAME-DESIGN 6.8): a glowing capsule or a broken machine that the Extractor drains
 ## into the arm. It is the only income object next to the passive charge and the charge button (ENRG-02).
 ##
+## One KitBlock script with one EnergySourceConfig (D-10, D-12): the instance works on its own copy. The capsule and the broken
+## machine are two presets and two inherited looks under scenes/kit/energy (layer ENERGY, energy_relation FREE).
+##
 ## Interface (guardrail 4):
-##   exports  amount (whole steps it holds, D-42: capsule 3, broken machine 5), step_interval (seconds between two steps of a drain),
-##            respawn_time (seconds until it refills, 0 = never), glow_meshes (meshes switched between glow_energy and glow_off),
-##            core (the point the Extractor aims at)
+##   exports  config (EnergySourceConfig: amount in whole steps, D-42 capsule 3, broken machine 5; step_interval, respawn_time),
+##            glow_meshes (meshes switched between glow_energy and glow_off), core (the point the Extractor aims at)
+##   runtime  amount, step_interval, respawn_time are read from the config copy in _ready and may be changed per instance (builders
+##            set respawn_time)
 ##   calls    take_step() -> int (1 while steps are left, else 0), is_available(), target_point(), reset()
 ##   signals  EventBus.energy_source_emptied(position, amount) once when the last step is taken
-##   groups   energy_source (the Extractor's candidates) and mechanism (FallReset.reset)
+##   groups   energy_source (the Extractor's candidates); mechanism and kit_block come from KitBlock (FallReset.reset)
 ## It never touches the player or ArmEnergy: the Extractor takes from here and calls ArmEnergy.gain itself (T-05-14).
 ## Contract test: tests/smoke/test_extractor.gd.
 
 const GLOW_ON: StandardMaterial3D = preload("res://resources/mechanisms/glow_energy.tres")
 const GLOW_OFF: StandardMaterial3D = preload("res://resources/mechanisms/glow_off.tres")
-## Whole steps this source holds when full.
-@export_range(1, 12, 1) var amount: int = 3
-## Seconds between two steps while the Extractor drains it (the capsule is quick, the machine slower).
-@export_range(0.05, 5.0, 0.05) var step_interval: float = 0.15
-## Seconds after the last drop until it refills; 0 never refills (D-08).
-@export_range(0.0, 120.0, 0.5) var respawn_time: float = 0.0
+## The block's config; the instance works on its own copy (D-12).
+@export var config: EnergySourceConfig
 ## Meshes whose material the empty and full look switches.
 @export var glow_meshes: Array[MeshInstance3D] = []
 ## The point the Extractor aims at (this node when unset).
 @export var core: Node3D
 
+## Values of this instance, read from its config copy in _ready.
+var amount: int = 3
+var step_interval: float = 0.15
+var respawn_time: float = 0.0
 ## Runtime state on the node (guardrail 2): what is left, whether it is empty, the refill countdown.
 var remaining: int = -1
 var empty: bool = false
@@ -33,8 +37,13 @@ var _refill_left: float = 0.0
 
 
 func _ready() -> void:
+	if config == null:
+		config = EnergySourceConfig.new()
+	config = own_config(config) as EnergySourceConfig
+	amount = config.amount
+	step_interval = config.step_interval
+	respawn_time = config.respawn_time
 	add_to_group(&"energy_source")
-	add_to_group(&"mechanism")
 	_apply_look()
 
 
@@ -69,6 +78,7 @@ func target_point() -> Vector3:
 
 ## Full again at once (FallReset and room resets).
 func reset() -> void:
+	super.reset()
 	_fill()
 
 

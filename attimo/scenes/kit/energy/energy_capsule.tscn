@@ -1,0 +1,35 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/kit/energy_source_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://resources/kit/energy_source/energy_capsule.tres" id="2_config"]
+[ext_resource type="PackedScene" path="res://assets/prototype_bits/Primitive_Pillar.gltf" id="3_pillar"]
+[ext_resource type="PackedScene" path="res://scenes/mechanisms/glow_element.tscn" id="4_glowel"]
+[ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="5_glow"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_base"]
+size = Vector3(0.5, 0.5, 0.5)
+
+[node name="EnergyCapsule" node_paths=PackedStringArray("glow_meshes") instance=ExtResource("1_base")]
+layer = 1
+energy_relation = 0
+config = ExtResource("2_config")
+glow_meshes = [NodePath("Lens")]
+
+[node name="Core" parent="." index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+
+[node name="Base" type="StaticBody3D" parent="." index="1"]
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Base"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
+shape = SubResource("BoxShape3D_base")
+
+[node name="Mesh" parent="Base" instance=ExtResource("3_pillar")]
+transform = Transform3D(0.3, 0, 0, 0, 0.12, 0, 0, 0, 0.3, 0, 0, 0)
+
+[node name="Lens" parent="." index="2" instance=ExtResource("4_glowel")]
+transform = Transform3D(1.6, 0, 0, 0, 1.6, 0, 0, 0, 1.6, 0, 0.85, 0)
+style = 0
+material_override = ExtResource("5_glow")

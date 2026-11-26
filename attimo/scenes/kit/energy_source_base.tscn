@@ -1,0 +1,13 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/kit/blocks/energy_source.gd" id="1_script"]
+[ext_resource type="Resource" path="res://resources/kit/energy_source/energy_capsule.tres" id="2_config"]
+
+[node name="EnergySource" type="Node3D" node_paths=PackedStringArray("core")]
+script = ExtResource("1_script")
+layer = 1
+energy_relation = 0
+config = ExtResource("2_config")
+core = NodePath("Core")
+
+[node name="Core" type="Marker3D" parent="."]
