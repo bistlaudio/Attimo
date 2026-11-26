@@ -1,7 +1,7 @@
 extends RefCounted
 ## Plan 05-05 (FEEL-10, ENRG-02, ENRG-03, D-22..D-24): Zone_Energy, the energy test area west of the Loader room. Static contract (zone,
 ## doorway, stations, signs, fall reset), the walk route hall -> Loader room -> doorway -> Zone_Energy (rays plus a live walk), live charge
-## track and capsule checks, drain plates, the injected-move stations, capsules next to every shot, and the hip-fire sign wording.
+## track and capsule checks, drain plates, the injected-move stations, capsules next to the former shot stations (kept until 05.1-13), and the sign wording.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
@@ -17,7 +17,7 @@ const STATIONS: Array[String] = [
 ]
 ## Injected-move stations: a drain plate (the base version) and a capsule (the injected version) next to each.
 const INJECTED: Array[String] = ["Energy_AirDash", "Energy_DashHop", "Energy_WallRun"]
-## Shot stations of Zone_Energy.
+## The former shot stations of Zone_Energy (the shot is gone, D-45; 05.1-13 swaps them for Loader-field obstacles).
 const SHOT_STATIONS: Array[String] = ["Shot_TapVsFull", "Shot_Moving"]
 const CAPSULE_REACH: float = 8.0
 ## Words no sign may contain (D-20): the aiming mode and the old big/small pulse by hold time.
@@ -53,7 +53,6 @@ func run(tree: SceneTree, check: Callable) -> void:
 		await _live_drain(tree, check)
 		await _live_air_dash(tree, check, 0.0)
 		await _live_air_dash(tree, check, 100.0)
-		await _live_tap_vs_full(tree, check)
 	_release_inputs()
 	Fixtures.restore_time()
 	_gym.queue_free()
@@ -278,7 +277,7 @@ func _check_capsules_near_shots(check: Callable) -> void:
 		check.call(capsule != null and capsule.respawn_time > 0.0 and capsule.global_position.distance_to(launch.global_position) <= CAPSULE_REACH, "%s has a respawning capsule within %.0f m" % [tag, CAPSULE_REACH])
 
 
-## D-20: no sign names the aiming mode or the old pulse sizes by hold time; the shot signs speak of tapping and charging.
+## D-20: no sign names the aiming mode or the old pulse sizes by hold time; no sign names the shot (D-45).
 func _check_signs(check: Callable) -> void:
 	var stale: PackedStringArray = PackedStringArray()
 	var labels: int = 0
@@ -290,7 +289,7 @@ func _check_signs(check: Callable) -> void:
 				stale.append("%s: %s" % [node.name, text])
 	check.call(stale.is_empty(), "no sign names aiming or the old pulse sizes (%s)" % [stale])
 	var shot: Label3D = _zone.get_node("Shot_TapVsFull/Label_Shot_TapVsFull") as Label3D
-	check.call(shot.text.contains("tippen") and shot.text.contains("laden"), "the shot station sign speaks of tapping and charging (%s)" % shot.text)
+	check.call(not shot.text.contains("Schuss") and not shot.text.contains("tippen"), "D-45: the former shot station sign names no shot (%s)" % shot.text)
 	var expects: int = 0
 	for node: Node in _gym.find_children("Label_*_Expect", "Label3D", true, false):
 		if (node as Label3D).text.begins_with("Erwartet:"):
@@ -348,43 +347,6 @@ func _live_air_dash(tree: SceneTree, check: Callable, energy: float) -> void:
 		check.call(saw_dash, "with energy the air dash press starts the Dash state")
 		check.call(landed >= 0 and _player.global_position.x < far_x, "with energy the air dash crosses the pit (x %.2f, far edge %.2f)" % [_player.global_position.x, far_x])
 	_release_inputs()
-
-
-## A tap shot (range 15 m) does not reach the far lever, a full charge does and also turns the valve.
-func _live_tap_vs_full(tree: SceneTree, check: Callable) -> void:
-	var station: Node3D = _zone.get_node("Shot_TapVsFull") as Node3D
-	var start: Vector3 = (station.get_node("Start") as Marker3D).global_position
-	var lever: SignalSource = station.get_node("LeverFar") as SignalSource
-	var valve: SignalSource = station.get_node("Valve") as SignalSource
-	var lever_distance: float = lever.global_position.distance_to(start)
-	check.call(lever_distance > float(station.get_meta(&"tap_range")) and lever_distance < float(station.get_meta(&"full_range")), "the far lever (%.1f m) is beyond a tap shot and within a full charge" % lever_distance)
-	_player.call(&"respawn", start)
-	Fixtures.set_energy(_player, 100.0)
-	await Fixtures.wait_physics(tree, 20)
-	await Fixtures.tap_action(tree, &"module_1", 2)
-	await _aim_at(tree, lever.global_position + Vector3(0.0, 0.5, 0.0))
-	await Fixtures.tap_action(tree, &"use_hand", 3)
-	await Fixtures.wait_physics(tree, 90)
-	check.call(not lever.is_active, "a tap shot does not reach the far lever")
-	Fixtures.set_energy(_player, 100.0)
-	await Fixtures.hold_action(tree, &"use_hand", 1.2)
-	await Fixtures.wait_physics(tree, 90)
-	check.call(lever.is_active, "a full-charge shot reaches the far lever")
-	await _aim_at(tree, valve.global_position + Vector3(0.0, 1.0, 0.0))
-	Fixtures.set_energy(_player, 100.0)
-	await Fixtures.hold_action(tree, &"use_hand", 1.2)
-	await Fixtures.wait_physics(tree, 90)
-	check.call(valve.is_active, "a full-charge shot turns the valve")
-	_release_inputs()
-
-
-## Turns the camera rig to look at `point` from the player (yaw from the horizontal offset, pitch from the height).
-func _aim_at(tree: SceneTree, point: Vector3) -> void:
-	var offset: Vector3 = point - _player.global_position
-	_rig.yaw = atan2(-offset.x, -offset.z)
-	_rig.rotation.y = _rig.yaw
-	_rig.pitch = 0.0
-	await Fixtures.wait_physics(tree, 20)
 
 
 func _release_inputs() -> void:

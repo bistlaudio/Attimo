@@ -562,9 +562,6 @@ func _measure_energy() -> Dictionary:
 	await Fixtures.wait_physics(_tree, ceili(CHARGE_SECONDS * float(TPS)))
 	out["charge"] = player.arm_energy.value / CHARGE_SECONDS
 	Input.action_release(&"charge")
-	var hand: HandController = player.get_node("HandController") as HandController
-	out["shot_tap"] = hand.hand_shot_cost_min
-	out["shot_full"] = hand.hand_shot_cost_max
 	await _end(player)
 
 	out["capsule"] = _drain_source(CAPSULE_SCENE)
@@ -633,6 +630,8 @@ func _append_energy_rows(lines: PackedStringArray, config: MovementConfig, energ
 	var jump_3: Dictionary = energy["moto_jump_3"]
 	lines.append("## Energy")
 	lines.append("")
+	lines.append("> **Superseded 2026-11-25 (05.1 playtest discuss, GAME-DESIGN.md section 3):** energy becomes a clock of 12 whole steps; the 0-100 values below are the Phase 5 state and are rewritten in steps when 05.1 builds the energy clock. Do not size new stations from them.")
+	lines.append("")
 	lines.append("The arm energy (ENRG-01 to ENRG-05, FEEL-10): what charges it and what each move costs. Passive rows run ArmEnergy.tick at an exact horizontal speed for one second; the charge button is held 2 s in Idle; capsule and machine are drained tick by tick through EnergySource.extract; the cost rows are the config values; the Moto rows run the real Player with a full arm. The gym area Zone_Energy sizes its stations from these numbers.")
 	lines.append("")
 	lines.append("| Verb | Value | Note |")
@@ -646,8 +645,6 @@ func _append_energy_rows(lines: PackedStringArray, config: MovementConfig, energ
 	lines.append(_row(["Dash hop stage 2-3 cost", "%.1f each" % config.long_jump_cost, "stage 1 is free, without energy the hop stays stage 1; depends on long_jump_cost"]))
 	lines.append(_row(["Wall run cost", "%.1f energy/s" % config.wall_run_cost_per_second, "after the free %.2f s, until wall_run_time %.2f s; depends on wall_run_cost_per_second, wall_run_free_time" % [config.wall_run_free_time, config.wall_run_time]]))
 	lines.append(_row(["Loader bonus cost", "%.1f" % config.loader_bonus_cost, "one full core; depends on loader_bonus_cost"]))
-	lines.append(_row(["Shot tap", "%.1f" % float(energy["shot_tap"]), "a tap shot; depends on HandController hand_shot_cost_min"]))
-	lines.append(_row(["Shot full charge", "%.1f" % float(energy["shot_full"]), "a full-charge shot opens heavy mechanisms; depends on HandController hand_shot_cost_max"]))
 	lines.append(_row(["Moto Perpetuo run", "%.2f m/s" % float(energy["moto_run"]), "with a full arm (moto_threshold %.0f); depends on run_speed, moto_run_bonus %.2f" % [config.moto_threshold, config.moto_run_bonus]]))
 	lines.append(_row(["Moto Perpetuo Jump 3", "%.2f m apex" % float(jump_3["apex"]), "buffed Jump 3 with a full arm (plain Jump 3: %.1f m); depends on moto_jump_height %.1f, moto_jump_gravity_scale %.2f" % [config.jump_3_height, config.moto_jump_height, config.moto_jump_gravity_scale]]))
 	lines.append("")

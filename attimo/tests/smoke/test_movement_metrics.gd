@@ -16,7 +16,7 @@ const ROW_LABELS: Array[String] = [
 	"Step 0.15 m", "Step 0.20 m",
 	"Loader redirect (standing)", "Loader redirect (run)", "Loader bonus (run)", "Loader bonus (dash)", "Loader super jump (bonus, up)", "Loader hold cap", "Loader slow motion",
 	"Passive charge 10 m/s", "Passive charge 14 m/s", "Passive charge 18 m/s", "Charge button", "Energy capsule", "Broken machine",
-	"Air dash cost", "Dash hop stage 2-3 cost", "Wall run cost", "Loader bonus cost", "Shot tap", "Shot full charge", "Moto Perpetuo run", "Moto Perpetuo Jump 3",
+	"Air dash cost", "Dash hop stage 2-3 cost", "Wall run cost", "Loader bonus cost", "Moto Perpetuo run", "Moto Perpetuo Jump 3",
 	"Latency jump 60 TPS", "Latency jump 120 TPS", "Latency dash 60 TPS", "Latency dash 120 TPS",
 ]
 

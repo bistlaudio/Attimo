@@ -1,7 +1,7 @@
 extends RefCounted
 ## MOVE-09 / D-27 (phase 05): the clip side of the arm. The upper-body Aim layer (the UAL spell hand: Enter, Hold, Exit and a Shoot
 ## OneShot; the KayKit Ranged_1H_Aiming is the fallback of a dropped clip) and the AimPoseModifier are driven by
-## HandController.arm_out (near contact, a shot, the Loader hold), never by a held button. The legs keep their locomotion clip,
+## HandController.arm_out (near contact, the Extractor, the Loader hold), never by a held button. The legs keep their locomotion clip,
 ## the clip playback speed follows the movement, and the directional Dodge nodes are dormant tree nodes. Tree parameters are read
 ## through the MannequinAnimator constants, never a path literal.
 
@@ -17,7 +17,6 @@ const HOLD_POSE_TOLERANCE_DEG: float = 3.0
 const SPELL_CLIPS: Dictionary[StringName, StringName] = {
 	&"Enter": &"UAL_Spell_Simple_Enter", &"Hold": &"UAL_Spell_Simple_Idle_Loop", &"Exit": &"UAL_Spell_Simple_Exit", &"ShootClip": &"UAL_Spell_Simple_Shoot",
 }
-const P_SHOOT_ACTIVE: StringName = &"parameters/Shoot/active"
 const HAND_BONE: StringName = &"upperarm.l"
 const SETTLE_FRAMES: int = 30
 const LEVER_SCENE: String = "res://scenes/mechanisms/lever.tscn"
@@ -142,7 +141,7 @@ func _scenario_near_contact(tree: SceneTree, check: Callable) -> void:
 	await _end(tree)
 
 
-# The spell hand: Enter on the frame the arm goes out, Hold, a Shoot OneShot on a shot, Exit when the arm comes back.
+# The spell hand: Enter on the frame the arm goes out, Hold, Exit when the arm comes back (the Shoot OneShot stays unused, D-45).
 func _scenario_spell_hand(tree: SceneTree, check: Callable) -> void:
 	await _begin(tree, true)
 	var machine: AnimationNodeStateMachinePlayback = _anim_tree.get(MannequinAnimator.P_AIM_PLAYBACK) as AnimationNodeStateMachinePlayback
@@ -185,17 +184,8 @@ func _scenario_spell_hand(tree: SceneTree, check: Callable) -> void:
 			check.call(error_deg < HOLD_POSE_TOLERANCE_DEG, "(h4) %s shows the Hold pose at %.2f s (%.2f deg from the clip)" % [HAND_BONE, position, error_deg])
 	_anim_tree.callback_mode_process = previous_mode
 
-	# The shot is the pulse on release (EventBus.pulse_fired), not the press: the tap releases after 2 physics frames, the
-	# release tick fires the pulse and the animator fires Shoot on that same tick. The hip fire needs no aim.
-	await Fixtures.tap_action(tree, &"use_hand")
-	await Fixtures.wait_physics(tree, 2)
-	await Fixtures.wait_process(tree, 2)
-	check.call(bool(_anim_tree.get(P_SHOOT_ACTIVE)), "(h5) a tap of use_hand fires the Shoot OneShot on release")
-	var shot_done: int = await Fixtures.wait_until(tree, func() -> bool: return not bool(_anim_tree.get(P_SHOOT_ACTIVE)), 90)
-	check.call(shot_done >= 0, "(h5) the Shoot OneShot ends on its own (%d frames)" % shot_done)
-
 	Input.action_release(&"interact")
-	var exit_started: int = await Fixtures.wait_until(tree, func() -> bool: return machine.get_current_node() == &"Exit", 8 + ceili(_hand.hand_shot_arm_time * float(SHIPPED_TPS)))
+	var exit_started: int = await Fixtures.wait_until(tree, func() -> bool: return machine.get_current_node() == &"Exit", 8)
 	check.call(exit_started >= 0, "(h6) the arm coming back travels to Exit (node %s)" % machine.get_current_node())
 	var exit_length: float = _clip_length(&"Exit")
 	var faded: int = await Fixtures.wait_until(tree, func() -> bool: return is_zero_approx(float(_anim_tree.get(MannequinAnimator.P_AIM))), 120)

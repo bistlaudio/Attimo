@@ -33,13 +33,6 @@ func _free_all(tree: SceneTree, nodes: Array[Node]) -> void:
 	await tree.process_frame
 
 
-func _hit() -> PulseHit:
-	var hit: PulseHit = PulseHit.new()
-	hit.module_id = &"remote_trigger"
-	hit.size = PulseHit.Size.SMALL
-	return hit
-
-
 func _lever(tree: SceneTree, position: Vector3) -> Lever:
 	return Fixtures.spawn_scene(tree.root, LEVER_SCENE, position) as Lever
 
@@ -62,14 +55,14 @@ func _scenario_lever(tree: SceneTree, check: Callable) -> void:
 	stay.stays_on = true
 	await Fixtures.wait_physics(tree, 2)
 	check.call(not lever.is_active, "the lever starts off")
-	_interactable(lever).try_trigger(_hit())
-	check.call(lever.is_active, "the first accepted hit turns it on")
-	_interactable(lever).try_trigger(_hit())
+	_interactable(lever).near_begin()
+	check.call(lever.is_active, "the first near contact turns it on")
+	_interactable(lever).near_begin()
 	check.call(not lever.is_active, "the second turns it off")
-	_interactable(lever).try_trigger(_hit())
+	_interactable(lever).near_begin()
 	check.call(lever.is_active, "the third turns it on again")
-	_interactable(stay).try_trigger(_hit())
-	_interactable(stay).try_trigger(_hit())
+	_interactable(stay).near_begin()
+	_interactable(stay).near_begin()
 	check.call(stay.is_active, "a stays_on lever stays on after a second hit")
 	var changes: Array = []
 	lever.active_changed.connect(func(active: bool) -> void: changes.append(active))

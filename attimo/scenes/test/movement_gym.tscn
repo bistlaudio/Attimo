@@ -11413,21 +11413,19 @@ core = NodePath("Core")
 
 [node name="Shot_TapVsFull" type="Node3D" parent="Zone_Energy"]
 metadata/at = Vector3(-171, 0, 16)
-metadata/tap_range = 15.0
-metadata/full_range = 25.0
 
 [node name="Label_Shot_TapVsFull" type="Label3D" parent="Zone_Energy/Shot_TapVsFull"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -171, 3.2, 16)
 pixel_size = 0.01
 billboard = 1
-text = "Schuss: tippen oder laden"
+text = "Umbau zum Loader-Feld"
 font_size = 64
 
 [node name="Label_Shot_TapVsFull_Expect" type="Label3D" parent="Zone_Energy/Shot_TapVsFull"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -171, 2.5, 16)
 pixel_size = 0.01
 billboard = 1
-text = "Erwartet: Tippen reicht 15 m, voll geladen 25 m und dreht das Ventil"
+text = "Erwartet: Umbau zum Loader-Feld folgt; Kapsel daneben gibt +Energie"
 font_size = 40
 
 [node name="Start" type="Marker3D" parent="Zone_Energy/Shot_TapVsFull"]
@@ -11460,14 +11458,14 @@ metadata/at = Vector3(-171, 0, -14)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -171, 3.2, -14)
 pixel_size = 0.01
 billboard = 1
-text = "Treffen im Lauf"
+text = "Umbau zum Loader-Feld"
 font_size = 64
 
 [node name="Label_Shot_Moving_Expect" type="Label3D" parent="Zone_Energy/Shot_Moving"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -171, 2.5, -14)
 pixel_size = 0.01
 billboard = 1
-text = "Erwartet: Das Ziel rastet ein, der Schuss biegt sich hinein"
+text = "Erwartet: Umbau zum Loader-Feld folgt; Kapsel daneben gibt +Energie"
 font_size = 40
 
 [node name="Start" type="Marker3D" parent="Zone_Energy/Shot_Moving"]

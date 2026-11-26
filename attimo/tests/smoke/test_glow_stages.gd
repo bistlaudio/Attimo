@@ -1,33 +1,30 @@
 extends RefCounted
-## CAM-04 / D-11, D-12, D-28: three shared glow stages on every Interactable. Idle with no shot module, shot ready while the shot
-## module (remote_trigger) is equipped (EventBus.shot_ready_changed from the HandController), target when it is the assist target.
-## Only Interactables use the three glow resources.
+## CAM-04 / D-11, D-46: two shared glow stages on every Interactable (the shot ready stage left with the shot, D-45): idle, and target when
+## set_glow_stage(TARGET) marks it. Only Interactables use the two glow resources.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
 const LEVER_SCENE: String = "res://scenes/mechanisms/lever.tscn"
 const GYM_SCENE: String = "res://scenes/test/movement_gym.tscn"
 const GLOW_IDLE: String = "res://resources/mechanisms/glow_idle.tres"
-const GLOW_SHOT_READY: String = "res://resources/mechanisms/glow_shot_ready.tres"
 const GLOW_TARGET: String = "res://resources/mechanisms/glow_target.tres"
 const SHIPPED_TPS: int = 60
 
 var _nodes: Array[Node] = []
 var _player: PlayerController
-var _rig: CameraRig
 
 
 func run(tree: SceneTree, check: Callable) -> void:
 	# The runner calls us from _initialize, before the root is inside the tree.
 	await tree.process_frame
 	Engine.physics_ticks_per_second = SHIPPED_TPS
-	for path: String in [GLOW_IDLE, GLOW_SHOT_READY, GLOW_TARGET]:
+	for path: String in [GLOW_IDLE, GLOW_TARGET]:
 		check.call(ResourceLoader.exists(path), "%s exists" % path)
 	check.call(not ResourceLoader.exists("res://resources/mechanisms/glow_aim.tres"), "the old glow_aim.tres is gone")
-	if not ResourceLoader.exists(GLOW_IDLE) or not ResourceLoader.exists(GLOW_SHOT_READY) or not ResourceLoader.exists(GLOW_TARGET):
+	check.call(not ResourceLoader.exists("res://resources/mechanisms/glow_shot_ready.tres"), "D-46: glow_shot_ready.tres is gone")
+	if not ResourceLoader.exists(GLOW_IDLE) or not ResourceLoader.exists(GLOW_TARGET):
 		return
 	await _scenario_stages(tree, check)
-	await _scenario_energy_gate(tree, check)
 	await _scenario_gym(tree, check)
 
 
@@ -35,34 +32,10 @@ func _lens(lever: Node) -> MeshInstance3D:
 	return lever.get_node("Handle/GlowLens") as MeshInstance3D
 
 
-func _line_point(distance: float) -> Vector3:
-	var camera: Camera3D = _rig.camera
-	var forward: Vector3 = -camera.global_basis.z.normalized()
-	var start: Vector3 = CameraRig.aim_ray_start(camera.global_position, forward, _rig.global_position)
-	var best: Vector3 = start
-	var best_error: float = INF
-	var t: float = 0.0
-	while t < 80.0:
-		var point: Vector3 = start + forward * t
-		var error: float = absf(point.distance_to(_player.global_position) - distance)
-		if error < best_error:
-			best_error = error
-			best = point
-		t += 0.02
-	return best
-
-
-func _move_lever(lever: Node3D, point: Vector3) -> void:
-	var interactable: Interactable = lever.get_node("Interactable") as Interactable
-	lever.global_position = point - (interactable.hit_body.global_position - lever.global_position)
-
-
 func _scenario_stages(tree: SceneTree, check: Callable) -> void:
 	var idle: Material = load(GLOW_IDLE) as Material
-	var ready: Material = load(GLOW_SHOT_READY) as Material
 	var target: Material = load(GLOW_TARGET) as Material
 	_nodes.append(Fixtures.spawn_floor(tree.root, Vector3(200.0, 1.0, 200.0)))
-	# The levers come first: with no hand in the world they glow idle.
 	var lever: Node3D = Fixtures.spawn_scene(tree.root, LEVER_SCENE, Vector3(40.0, 0.0, 40.0))
 	var second: Node3D = Fixtures.spawn_scene(tree.root, LEVER_SCENE, Vector3(-40.0, 0.0, 40.0))
 	_nodes.append(lever)
@@ -70,31 +43,19 @@ func _scenario_stages(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.wait_physics(tree, 2)
 	check.call(_lens(lever).material_override == idle, "(1) the lens glows with glow_idle with no hand in the world")
 	check.call(_lens(lever).material_override == _lens(second).material_override, "(1) two levers share the same material instance")
-	# The player carries the shot module from the start: shot_ready_changed(true) raises every lever to glow_shot_ready.
+	# A player with a hand changes nothing: there is no shot ready stage any more.
 	_player = Fixtures.spawn_player(tree.root, Vector3.ZERO)
 	_nodes.append(_player)
-	_rig = Fixtures.spawn_camera_rig(tree.root, _player)
-	_nodes.append(_rig)
-	_rig.pitch = 0.0
-	var hand: HandController = _player.get_node("HandController") as HandController
 	await Fixtures.wait_physics(tree, 6)
 	await Fixtures.wait_process(tree, 3)
-	check.call(hand.shot_ready and hand.active_def.id == &"remote_trigger", "(2) the shot module is equipped and shot_ready is true")
-	check.call(_lens(lever).material_override == ready and _lens(second).material_override == ready, "(2) every lever glows with glow_shot_ready while the shot module is equipped")
-	_move_lever(lever, _line_point(8.0))
-	await Fixtures.wait_physics(tree, 8)
-	check.call(_lens(lever).material_override == target, "(3) the targeted lever glows with glow_target")
-	check.call(_lens(second).material_override == ready, "(3) the other lever stays at glow_shot_ready")
-	_move_lever(lever, Vector3(40.0, 0.0, 40.0))
-	await Fixtures.wait_physics(tree, 20)
-	check.call(_lens(lever).material_override == ready, "(4) a lost target falls back to glow_shot_ready")
-	check.call(hand.equip(&"dummy"), "(5) the dummy module equips")
-	await Fixtures.wait_physics(tree, 6)
-	check.call(not hand.shot_ready, "(5) shot_ready is false with the dummy module")
-	check.call(_lens(lever).material_override == idle and _lens(second).material_override == idle, "(5) every lever is back at glow_idle without the shot module")
-	check.call(hand.equip(&"remote_trigger"), "(6) the shot module equips again")
-	await Fixtures.wait_physics(tree, 6)
-	check.call(_lens(lever).material_override == ready and _lens(second).material_override == ready, "(6) the levers glow shot ready again")
+	check.call(_lens(lever).material_override == idle and _lens(second).material_override == idle, "(2) with a player in the world every lever still glows idle")
+	var first: Interactable = lever.get_node("Interactable") as Interactable
+	first.set_glow_stage(Interactable.GlowStage.TARGET)
+	check.call(_lens(lever).material_override == target and first.glow_stage == Interactable.GlowStage.TARGET, "(3) the TARGET stage switches the lens to glow_target")
+	check.call(_lens(second).material_override == idle, "(3) the other lever stays at glow_idle")
+	first.set_glow_stage(Interactable.GlowStage.IDLE)
+	check.call(_lens(lever).material_override == idle, "(4) the IDLE stage restores glow_idle")
+	check.call(Interactable.GlowStage.keys() == ["IDLE", "TARGET"], "(5) the glow stages are IDLE and TARGET only (%s)" % str(Interactable.GlowStage.keys()))
 	for node: Node in _nodes:
 		if is_instance_valid(node):
 			node.queue_free()
@@ -103,7 +64,7 @@ func _scenario_stages(tree: SceneTree, check: Callable) -> void:
 
 
 func _scenario_gym(tree: SceneTree, check: Callable) -> void:
-	var glows: Array[Material] = [load(GLOW_IDLE) as Material, load(GLOW_SHOT_READY) as Material, load(GLOW_TARGET) as Material]
+	var glows: Array[Material] = [load(GLOW_IDLE) as Material, load(GLOW_TARGET) as Material]
 	var gym: Node = (load(GYM_SCENE) as PackedScene).instantiate()
 	tree.root.add_child(gym)
 	await Fixtures.wait_physics(tree, 3)
@@ -126,53 +87,5 @@ func _scenario_gym(tree: SceneTree, check: Callable) -> void:
 	check.call(glowing >= 1, "(7) the gym has glowing interactables (%d)" % glowing)
 	check.call(stray.is_empty(), "(7) every glow mesh belongs to an Interactable (stray: %s)" % ", ".join(stray))
 	gym.queue_free()
-	await tree.process_frame
-	await tree.process_frame
-
-
-# D-28: SHOT_READY is on only while the shot module is equipped AND the arm can pay hand_shot_cost_min; the locked target brightens to
-# TARGET under the same condition, otherwise it stays IDLE while Targeting still reports the lock. The Extractor turns every glow off.
-func _scenario_energy_gate(tree: SceneTree, check: Callable) -> void:
-	var idle: Material = load(GLOW_IDLE) as Material
-	var ready: Material = load(GLOW_SHOT_READY) as Material
-	var target: Material = load(GLOW_TARGET) as Material
-	_nodes.clear()
-	_nodes.append(Fixtures.spawn_floor(tree.root, Vector3(200.0, 1.0, 200.0)))
-	var lever: Node3D = Fixtures.spawn_scene(tree.root, LEVER_SCENE, Vector3(40.0, 0.0, 40.0))
-	var second: Node3D = Fixtures.spawn_scene(tree.root, LEVER_SCENE, Vector3(-40.0, 0.0, 40.0))
-	_nodes.append(lever)
-	_nodes.append(second)
-	_player = Fixtures.spawn_player(tree.root, Vector3.ZERO)
-	_nodes.append(_player)
-	_rig = Fixtures.spawn_camera_rig(tree.root, _player)
-	_nodes.append(_rig)
-	_rig.pitch = 0.0
-	var hand: HandController = _player.get_node("HandController") as HandController
-	var flips: Array = []
-	var on_ready: Callable = func(is_ready: bool) -> void: flips.append(is_ready)
-	tree.root.get_node("EventBus").connect(&"shot_ready_changed", on_ready)
-	await Fixtures.wait_physics(tree, 8)
-	await Fixtures.wait_process(tree, 3)
-	_move_lever(lever, _line_point(8.0))
-	await Fixtures.wait_physics(tree, 10)
-	check.call(hand.shot_ready and _lens(lever).material_override == target and _lens(second).material_override == ready, "(8) with 25 energy the locked lever is TARGET and the other SHOT_READY")
-	flips.clear()
-	Fixtures.set_energy(_player, 9.0)
-	await Fixtures.wait_physics(tree, 6)
-	check.call(not hand.shot_ready and flips == [false], "(8) draining to 9 sends one shot_ready_changed(false) (%s)" % str(flips))
-	check.call(_lens(lever).material_override == idle and _lens(second).material_override == idle, "(8) every glow, including the locked lever, falls to IDLE")
-	check.call(hand.targeting.target != null and hand.targeting.state == Targeting.State.VALID, "(8) Targeting still reports the lock while the glow is IDLE")
-	flips.clear()
-	Fixtures.set_energy(_player, 10.0)
-	await Fixtures.wait_physics(tree, 6)
-	check.call(hand.shot_ready and flips == [true], "(8) gaining back to 10 sends one shot_ready_changed(true) (%s)" % str(flips))
-	check.call(_lens(lever).material_override == target and _lens(second).material_override == ready, "(8) SHOT_READY and TARGET are back")
-	check.call(hand.equip(&"extractor"), "(8) the Extractor equips")
-	await Fixtures.wait_physics(tree, 6)
-	check.call(_lens(lever).material_override == idle and _lens(second).material_override == idle, "(8) with the Extractor equipped every glow is IDLE")
-	tree.root.get_node("EventBus").disconnect(&"shot_ready_changed", on_ready)
-	for node: Node in _nodes:
-		if is_instance_valid(node):
-			node.queue_free()
 	await tree.process_frame
 	await tree.process_frame

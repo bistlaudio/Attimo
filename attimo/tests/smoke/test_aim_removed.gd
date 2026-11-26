@@ -27,7 +27,8 @@ func run(_tree: SceneTree, check: Callable) -> void:
 	for info: Dictionary in bus_script.get_script_signal_list():
 		signal_names.append(str(info["name"]))
 	check.call(not signal_names.has("aim_changed"), "the EventBus declares no aim_changed signal")
-	check.call(signal_names.has("shot_ready_changed"), "the EventBus declares shot_ready_changed, the fact that replaced the aim glow")
+	for gone: String in ["shot_ready_changed", "shot_fired", "shot_fully_charged", "pulse_fired"]:
+		check.call(not signal_names.has(gone), "D-45: the EventBus declares no %s signal" % gone)
 
 	check.call(not _script_has_property(PLAYER_SCRIPT, "aiming"), "PlayerController has no property aiming")
 	check.call(not _script_has_property(CROSSHAIR_SCRIPT, "hud_visible"), "Crosshair has no property hud_visible")

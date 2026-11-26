@@ -11,7 +11,7 @@ extends RefCounted
 ##   Energy_Machine    (-143, 12)          broken machine, 8 s respawn
 ##   Energy_ChargeSpot (-155, 12)          marked plate for the charge button (R)
 ##   Energy_Drain      (-121, 8)           a lone drain plate beside the zone entry (off the walk lane)
-##   Shot_TapVsFull    start (-171, 16)    lever 20 m away (tap range + 5 m), valve 20.4 m away that needs a full charge, gear gate behind it
+##   Shot_TapVsFull    start (-171, 16)    lever 20 m away, valve 20.4 m away, gear gate behind it (the former shot station, kept until 05.1-13)
 ##   Energy_AirDash    start (-209, 12)    8 m pit (z 6..18, x -219..-211): more than a run jump, within run jump + air dash; plate and capsule
 ##   Energy_BoostLine  z -12, x -131..-227 boost rings every 16 m (always on); Shot_Moving start (-171, -14), lever (-179, -18)
 ##   Energy_DashHop    start (-129, -22)   flat lane with marks at the stage 1, 2 and 3 reach; plate and capsule
@@ -28,7 +28,6 @@ const LEVER_SCENE: String = "res://scenes/mechanisms/lever.tscn"
 const VALVE_SCENE: String = "res://scenes/mechanisms/valve.tscn"
 const GATE_SCENE: String = "res://scenes/mechanisms/gear_gate.tscn"
 const ZONE_FLOOR_SCENE: String = "res://scenes/mechanisms/zone_floor.tscn"
-const HAND_SCRIPT: String = "res://scripts/hand/hand_controller.gd"
 
 const TILE: float = 4.0
 ## Tile centres: x -117 - 4 k (k 0..30, edges -115..-239), z 4 j (j -6..6, edges -26..26).
@@ -56,14 +55,13 @@ const BOOST_HEIGHT: float = 1.2
 const AIR_PIT: Rect2 = Rect2(-219.0, 6.0, 8.0, 12.0)
 ## Wall run pit under the 12 m pad (the pad stands on its north edge, z -22).
 const WALL_PIT: Rect2 = Rect2(-215.0, -22.0, 16.0, 8.0)
-## Shot tap vs full: the lever stands this far beyond a tap shot's range (the full charge reaches further).
-const TAP_EXTRA: float = 5.0
+## The former tap-shot reach in m (the shot is gone, D-45). The lever, valve and gate of Shot_TapVsFull keep their laid-out positions
+## (D-30) until 05.1-13 swaps them for Loader-field obstacles; the lever stands LEVER_DISTANCE m from the start.
+const LEVER_DISTANCE: float = 20.0
 
 var _config: MovementConfig
 ## Pits cut out of the floor: Rect2(x_min, z_min, width, depth) in world metres on tile edges.
 var _pits: Array[Rect2] = []
-var _small_range: float = 15.0
-var _big_range: float = 25.0
 
 
 func build_into(zone: Node3D, builder: RefCounted) -> void:
@@ -158,10 +156,6 @@ func _capsule(parent: Node3D, builder: RefCounted, node_name: String, at: Vector
 
 
 func _build_stations(zone: Node3D, builder: RefCounted) -> void:
-	var hand: Node = (load(HAND_SCRIPT) as GDScript).new() as Node
-	_small_range = float(hand.get("hand_small_range"))
-	_big_range = float(hand.get("hand_big_range"))
-	hand.free()
 	_build_track(zone, builder)
 	_build_capsule_station(zone, builder)
 	_build_machine_station(zone, builder)
@@ -302,15 +296,13 @@ func _build_wall_run(zone: Node3D, builder: RefCounted) -> void:
 	_capsule(station, builder, "Capsule", Vector3(-193.0, 0.0, -15.0), CAPSULE_RESPAWN)
 
 
-## Tap vs full charge: the lever stands beyond a tap shot's range, the valve (full charge only) is still within the full range.
+## Former tap-vs-full shot station: only the layout stays (lever, valve, gate and a capsule); 05.1-13 replaces it with Loader-field obstacles.
 func _build_shot_tap_vs_full(zone: Node3D, builder: RefCounted) -> void:
 	var start: Vector3 = Vector3(-171.0, 0.0, 16.0)
-	var lever_distance: float = _small_range + TAP_EXTRA
-	var text: String = "Schuss: tippen oder laden"
-	var expect: String = "Erwartet: Tippen reicht %s m, voll geladen %s m und dreht das Ventil" % [_fmt(_small_range), _fmt(_big_range)]
+	var lever_distance: float = LEVER_DISTANCE
+	var text: String = "Umbau zum Loader-Feld"
+	var expect: String = "Erwartet: Umbau zum Loader-Feld folgt; Kapsel daneben gibt +Energie"
 	var station: Node3D = _station(zone, builder, "Shot_TapVsFull", start, text, expect)
-	station.set_meta(&"tap_range", _small_range)
-	station.set_meta(&"full_range", _big_range)
 	_marker(station, builder, "Start", start)
 	_capsule(station, builder, "Capsule", start + Vector3(0.0, 0.0, 5.0), CAPSULE_RESPAWN)
 	var lever_at: Vector3 = start + Vector3(-lever_distance, 0.0, -4.0)
@@ -321,10 +313,10 @@ func _build_shot_tap_vs_full(zone: Node3D, builder: RefCounted) -> void:
 	gate.set("source", valve)
 
 
-## A lever beside the boost line to hit while moving fast (the snap and bend of the shot).
+## Former moving-target shot station: a lever beside the boost line, kept until 05.1-13.
 func _build_shot_moving(zone: Node3D, builder: RefCounted) -> void:
 	var start: Vector3 = Vector3(-171.0, 0.0, -14.0)
-	var station: Node3D = _station(zone, builder, "Shot_Moving", start, "Treffen im Lauf", "Erwartet: Das Ziel rastet ein, der Schuss biegt sich hinein")
+	var station: Node3D = _station(zone, builder, "Shot_Moving", start, "Umbau zum Loader-Feld", "Erwartet: Umbau zum Loader-Feld folgt; Kapsel daneben gibt +Energie")
 	_marker(station, builder, "Start", start)
 	_capsule(station, builder, "Capsule", start + Vector3(0.0, 0.0, 4.0), CAPSULE_RESPAWN)
 	builder.call(&"_instance", station, LEVER_SCENE, "Lever", Vector3(-179.0, 0.0, -18.0) - station.position)

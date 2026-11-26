@@ -214,20 +214,20 @@ func _scenario_slider_save(tree: SceneTree, check: Callable) -> void:
 	await _free_all(tree, nodes)
 
 
-# (9) the Hand section: hand_* range floats of the HandController, live, never saved.
+# (9) the Hand section: hand_* floats of the HandController (near and Extractor ranges), live, never saved.
 func _scenario_hand_rows(tree: SceneTree, check: Callable) -> void:
 	var nodes: Array[Node] = await _spawn(tree)
 	var player: PlayerController = nodes[1] as PlayerController
 	var panel: TuningPanel = nodes[3] as TuningPanel
 	var hand: HandController = player.get_node("HandController") as HandController
-	check.call(panel.hand_row_count() >= 8, "(9) the Hand section has at least 8 rows (%d)" % panel.hand_row_count())
+	check.call(panel.hand_row_count() >= 3, "(9) the Hand section has at least 3 rows (%d)" % panel.hand_row_count())
 	var has_header: bool = false
 	for label: Node in panel.find_children("*", "Label", true, false):
 		if (label as Label).text.contains("Hand"):
 			has_header = true
 	check.call(has_header, "(9) the panel shows a 'Hand' header")
-	panel.set_hand_value(&"hand_shot_charge_time", 0.9)
-	check.call(is_equal_approx(hand.hand_shot_charge_time, 0.9), "(9) set_hand_value changes hand_shot_charge_time (got %.2f)" % hand.hand_shot_charge_time)
+	panel.set_hand_value(&"hand_extract_range", 5.0)
+	check.call(is_equal_approx(hand.hand_extract_range, 5.0), "(9) set_hand_value changes hand_extract_range (got %.2f)" % hand.hand_extract_range)
 	panel.set_hand_value(&"not_a_property", 1.0)
 	check.call(panel.row_count() == _expected_rows(), "(9) the movement rows are unchanged by the Hand section")
 	panel.set_sensitivity(1.2)
