@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ImpulseConfig" format=3]
+
+[ext_resource type="Script" path="res://scripts/kit/configs/impulse_config.gd" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+profile = 2
+size = Vector3(3.0, 0.3, 3.0)
+direction = Vector3(0, 1, 0)
+speed = 11.0
+add = 0.0
+rearm_time = 0.3
+restitution = 1.0
+max_speed = 30.0
+income_steps = 0
+income_cooldown = 3.0

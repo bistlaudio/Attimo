@@ -2,11 +2,11 @@ class_name ForceVolumeConfig
 extends Resource
 ## Config of the Force volume block (Phase 05.1, KIT-01, D-10, D-11): a box volume that acts on the player through PlayerController request
 ## APIs only. Two enums instead of flags: Profile says what the volume does (DIRECTIONAL pushes or launches along `direction`, DRAG slows the
-## run; RADIAL and GRAVITY are appended by later plans), Timing says when (CONTINUOUS is always on, PULSED cycles off / on). Presets live in
+## run, GRAVITY scales the gravity down; RADIAL is appended by a later plan), Timing says when (CONTINUOUS is always on, PULSED cycles off / on). Presets live in
 ## resources/kit/force_volume/. Timers and divisors have strictly positive minimums (T-05.1-45). A loaded preset is never written at
 ## runtime: the block duplicates it in _ready (D-12).
 
-enum Profile { DIRECTIONAL, DRAG }
+enum Profile { DIRECTIONAL, DRAG, GRAVITY }
 enum Timing { CONTINUOUS, PULSED }
 
 @export_group("Shape")
@@ -35,6 +35,11 @@ enum Timing { CONTINUOUS, PULSED }
 @export_group("Drag")
 ## DRAG: share of the run speed and acceleration that is left inside the volume (0.2 .. 1.0).
 @export_range(0.2, 1.0, 0.01) var move_scale: float = 0.5
+
+@export_group("Gravity")
+## GRAVITY: gravity factor inside the volume (1.0 = normal; lower floats longer). An Amplification child divides it by its factor, so more
+## arm steps float longer. Never below 0.1 here, the player clamps the request to 0.05 as well.
+@export_range(0.1, 1.0, 0.05) var gravity_scale: float = 0.35
 
 @export_group("Income")
 ## Steps given to the arm per use (D-43): on entering a CONTINUOUS volume or on a PULSED burst that launches; 0 turns it off.

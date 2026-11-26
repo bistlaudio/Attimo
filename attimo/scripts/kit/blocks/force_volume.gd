@@ -27,6 +27,7 @@ var _strip_base: Dictionary = {}
 @onready var _volume: Area3D = $Volume
 @onready var _column: Node3D = get_node_or_null(^"Column") as Node3D
 @onready var _strips: Node3D = get_node_or_null(^"Strips") as Node3D
+@onready var _amplification: Amplification = get_node_or_null(^"Amplification") as Amplification
 
 
 func _ready() -> void:
@@ -64,6 +65,11 @@ func _physics_process(delta: float) -> void:
 		ForceVolumeConfig.Profile.DRAG:
 			for player: PlayerController in players:
 				player.request_move_scale(config.move_scale)
+		ForceVolumeConfig.Profile.GRAVITY:
+			# D-24: the gravity zone floats longer with more arm steps; the factor is read only and is at least 1.0.
+			for player: PlayerController in players:
+				var amp: float = maxf(_amplification.factor(player), 1.0) if _amplification != null else 1.0
+				player.request_gravity_scale(config.gravity_scale / amp)
 	_apply_look()
 
 

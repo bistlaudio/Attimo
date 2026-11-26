@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/kit/impulse_base.tscn" id="1_base"]
+[ext_resource type="Resource" path="res://resources/kit/impulse/speed_pad.tres" id="2_config"]
+[ext_resource type="PackedScene" path="res://scenes/mechanisms/glow_element.tscn" id="9_glowel"]
+[ext_resource type="Material" path="res://resources/mechanisms/glow_energy.tres" id="10_glow"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_brass"]
+albedo_color = Color(0.62, 0.5, 0.27, 1)
+metallic = 0.3
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="Mesh_plate"]
+size = Vector3(3, 0.08, 4)
+
+[sub_resource type="CylinderMesh" id="Mesh_nozzle"]
+top_radius = 0.12
+bottom_radius = 0.2
+height = 0.7
+radial_segments = 8
+
+[node name="SpeedPadLook" instance=ExtResource("1_base")]
+layer = 0
+energy_relation = 3
+config = ExtResource("2_config")
+
+[node name="Plate" type="MeshInstance3D" parent="." index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
+mesh = SubResource("Mesh_plate")
+surface_material_override/0 = SubResource("Mat_brass")
+
+[node name="NozzleLeft" type="MeshInstance3D" parent="." index="2"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, -0.8, 0.2, -1.2)
+mesh = SubResource("Mesh_nozzle")
+surface_material_override/0 = SubResource("Mat_brass")
+
+[node name="NozzleRight" type="MeshInstance3D" parent="." index="3"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0.8, 0.2, -1.2)
+mesh = SubResource("Mesh_nozzle")
+surface_material_override/0 = SubResource("Mat_brass")
+
+[node name="IncomeAccent" parent="." index="4" instance=ExtResource("9_glowel")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 1.5)
+material_override = ExtResource("10_glow")
+size = 0.4
