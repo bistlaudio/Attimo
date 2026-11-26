@@ -75,12 +75,21 @@ func _check_loader_ring(tree: SceneTree, check: Callable) -> void:
 	check.call(second < first, "the ring angle decreases, so it turns counter-clockwise (%.3f -> %.3f)" % [first, second])
 	check.call(ring.loader_ring_speed_deg > 0.0, "the ring speed is positive; the ring turns counter-clockwise")
 	check.call(ring.loader_ring_tint == ring.lock_color, "a full core draws the ring in the turquoise lock colour")
-	check.call(ring.loader_ring_hold > 0.0 and ring.loader_ring_hold <= 1.0, "the inner ring fills with the hold time (%.2f)" % ring.loader_ring_hold)
-	check.call(_ring_style(ring) == &"double", "(05.1-05) the arm Loader keeps the double ring style (got '%s')" % _ring_style(ring))
+	check.call(_ring_style(ring) == &"segmented", "(D-51) the arm Loader draws the segmented ring style (got '%s')" % _ring_style(ring))
+	check.call(ring.get(&"LOADER_SEGMENTS") == 3, "(D-51) the ring has LOADER_SEGMENTS == 3")
+	check.call(ring.has_method(&"lit_segments") and int(ring.call(&"lit_segments")) == 1, "(D-51) one segment is lit after the press (steps_loaded 1, got %s)" % [ring.call(&"lit_segments") if ring.has_method(&"lit_segments") else "no method"])
+	check.call(ring.has_method(&"crosshair_scale") and is_equal_approx(float(ring.call(&"crosshair_scale")), 0.6), "(D-55) crosshair_scale is 0.6 during the arm hold")
+	var idle_ring: float = ring.ring_radius + ring.get(&"LOADER_OUTER_GAP") if ring.get(&"LOADER_OUTER_GAP") != null else 99.0
+	var segment_radius: Variant = ring.call(&"loader_ring_radius") if ring.has_method(&"loader_ring_radius") else null
+	check.call(segment_radius != null and float(segment_radius) <= 0.6 * idle_ring + 0.01, "(D-51) the segment ring radius %s is at most 0.6 x the old outer ring %.1f" % [segment_radius, 0.6 * idle_ring])
+	await tree.create_timer(0.7, true, false, true).timeout
+	await Fixtures.wait_process(tree, 3)
+	check.call(ring.has_method(&"lit_segments") and int(ring.call(&"lit_segments")) == 3, "(D-51) three segments are lit after 0.7 s real time (got %s)" % [ring.call(&"lit_segments") if ring.has_method(&"lit_segments") else "no method"])
 	Input.action_release(&"loader")
 	await Fixtures.wait_until(tree, func() -> bool: return not player.loader_active(), 8)
 	await Fixtures.wait_process(tree, 3)
 	check.call(not ring.loader_ring_visible, "the ring is hidden again after the release")
+	check.call(ring.has_method(&"crosshair_scale") and is_equal_approx(float(ring.call(&"crosshair_scale")), 1.0), "(D-55) crosshair_scale is 1.0 outside a hold")
 	# Without a step the press does not start the Loader, so no ring shows (D-48, the grey empty-arm tint is gone).
 	Fixtures.restore_time()
 	await Fixtures.wait_physics(tree, 80)
@@ -134,6 +143,11 @@ func _check_cage_gauge(tree: SceneTree, check: Callable) -> void:
 	check.call(needle != null and state != null and state.stored_ratio() > 0.0 and absf(float(needle) - state.stored_ratio()) < 0.001, "(g2) the gauge needle stands at the stored ratio (needle %s, stored %.3f)" % [needle, state.stored_ratio() if state != null else -1.0])
 	check.call(ring.loader_ring_tint.is_equal_approx(brass), "(g3) the gauge is brass with a full core (got %s)" % ring.loader_ring_tint)
 	check.call(ring.loader_ring_tint != ring.lock_color, "(g3) the gauge is not the turquoise lock colour")
+	check.call(ring.has_method(&"crosshair_scale") and is_equal_approx(float(ring.call(&"crosshair_scale")), 0.6), "(D-55) crosshair_scale is 0.6 inside the cage")
+	var gauge_radius: Variant = ring.call(&"loader_ring_radius") if ring.has_method(&"loader_ring_radius") else null
+	check.call(gauge_radius != null and float(gauge_radius) <= 0.6 * (ring.ring_radius + 14.0) + 0.01, "(D-54) the gauge is drawn at the smaller scale (radius %s)" % [gauge_radius])
+	var crosshair_source: String = FileAccess.get_file_as_string("res://scripts/ui/crosshair.gd")
+	check.call(not crosshair_source.contains("GAUGE_TICKS"), "(D-54) the gauge draws no brass dashes (no GAUGE_TICKS)")
 	await Fixtures.tap_action(tree, &"loader", 1)
 	await Fixtures.wait_until(tree, func() -> bool: return not player.loader_active(), 6)
 	await Fixtures.wait_process(tree, 3)

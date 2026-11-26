@@ -3,7 +3,7 @@ extends RefCounted
 ## discharge_speed(v, push, n, push_step, k, cap) = min(v + push + n * (push_step + k * v), cap); overflow(...) is what the cap cuts
 ## off; flight_distance(n, overflow, bases, gain) = bases[n] + overflow * gain. A non-finite input never speeds Rino up.
 ## discharge_velocity(direction, speed) scales the unit direction; a zero or non-finite direction gives ZERO. The old ballistic
-## helpers (step, trajectory, flat_reach) stay for the Zone_Loader builder until 05.1-12.
+## helpers are deleted (05.1-12); launch_reach and launch_apex size the Zone_Loader room.
 
 const MATH_PATH: String = "res://scripts/player/loader_math.gd"
 const CONFIG_PATH: String = "res://resources/player/movement_default.tres"
@@ -60,34 +60,27 @@ func run(tree: SceneTree, check: Callable) -> void:
 	check.call(nan_direction == Vector3.ZERO, "a non-finite direction gives ZERO (got %s)" % nan_direction)
 	var inf_speed: Vector3 = math_script.call(&"discharge_velocity", Vector3.FORWARD, INF) as Vector3
 	check.call(inf_speed == Vector3.ZERO, "a non-finite speed gives ZERO (got %s)" % inf_speed)
-	await _check_trajectory(tree, check)
+	_check_removed(math_script, check)
+	_check_launch(check)
 
 
-# Plan 05-02 (kept for the Zone_Loader builder until 05.1-12): step() mirrors PlayerController._integrate, trajectory() is bounded and finite-safe.
-func _check_trajectory(_tree: SceneTree, check: Callable) -> void:
+## D-49 / 05.1-12: the old ballistic helpers and the legacy bridge are gone.
+func _check_removed(math_script: GDScript, check: Callable) -> void:
+	var names: Array[String] = []
+	for method: Dictionary in math_script.get_script_method_list():
+		names.append(str(method["name"]))
+	for gone: String in ["trajectory", "flat_reach", "apex_height", "step", "legacy_speed"]:
+		check.call(not names.has(gone), "LoaderMath has no %s any more" % gone)
+
+
+## launch_reach and launch_apex: the landing reach and the apex of a straight line plus the ballistic tail (Zone_Loader sizing).
+func _check_launch(check: Callable) -> void:
 	var config: MovementConfig = load(CONFIG_PATH) as MovementConfig
-	var dt: float = 1.0 / 60.0
-	# One rising step: half gravity (rise) before and after, the position moves with the mid-step velocity.
-	var rising: PackedVector3Array = LoaderMath.step(Vector3.ZERO, Vector3(3.0, 10.0, 0.0), config, dt)
-	var mid: float = 10.0 - config.rise_gravity * dt * 0.5
-	check.call(is_equal_approx(rising[0].y, mid * dt) and is_equal_approx(rising[0].x, 3.0 * dt), "step moves with the half-step velocity (got %s)" % rising[0])
-	check.call(is_equal_approx(rising[1].y, 10.0 - config.rise_gravity * dt) and is_equal_approx(rising[1].x, 3.0), "step ends with a full gravity step and a constant horizontal speed (got %s)" % rising[1])
-	# Falling uses fall gravity; the terminal speed clamps.
-	var falling: PackedVector3Array = LoaderMath.step(Vector3.ZERO, Vector3(0.0, -1.0, 0.0), config, dt)
-	check.call(is_equal_approx(falling[1].y, -1.0 - config.fall_gravity() * dt), "step uses the fall gravity below zero vertical speed (got %.3f)" % falling[1].y)
-	var clamped: PackedVector3Array = LoaderMath.step(Vector3.ZERO, Vector3(0.0, -config.terminal_speed, 0.0), config, dt)
-	check.call(is_equal_approx(clamped[1].y, -config.terminal_speed), "step clamps at the terminal speed (got %.3f)" % clamped[1].y)
-
-	var points: PackedVector3Array = LoaderMath.trajectory(Vector3(0.0, 5.0, 0.0), Vector3(8.0, 4.0, 0.0), config, 0.025, 60, null, 0)
-	check.call(points.size() == 60, "trajectory returns exactly max_points points without a space (got %d)" % points.size())
-	var constant: bool = true
-	for index: int in range(1, points.size()):
-		constant = constant and is_equal_approx(points[index].x - points[index - 1].x, 8.0 * 0.025)
-	check.call(constant, "the horizontal velocity of the path is constant")
-	check.call(LoaderMath.trajectory(Vector3(NAN, 0.0, 0.0), Vector3.ONE, config, 0.025, 60, null, 0).is_empty(), "a non-finite origin gives an empty path")
-	check.call(LoaderMath.trajectory(Vector3.ZERO, Vector3(INF, 0.0, 0.0), config, 0.025, 60, null, 0).is_empty(), "a non-finite velocity gives an empty path")
-	check.call(LoaderMath.trajectory(Vector3.ZERO, Vector3.ONE, config, 0.025, 0, null, 0).is_empty(), "max_points 0 gives an empty path")
-	check.call(LoaderMath.trajectory(Vector3.ZERO, Vector3.ONE, config, 0.025, 9999, null, 0).size() == 9999, "the bound is the caller's max_points")
-	var reach: float = LoaderMath.flat_reach(Vector3(10.0, 6.0, 0.0), config)
-	check.call(reach > 3.0 and reach < 3.6, "flat_reach of a (10, 6) discharge is about 3.3 m (got %.2f)" % reach)
-	check.call(LoaderMath.flat_reach(Vector3(NAN, 1.0, 0.0), config) == 0.0, "flat_reach of a non-finite velocity is 0")
+	var up: Vector3 = Vector3.UP
+	var apex: float = LoaderMath.launch_apex(10.0, up, 14.0, config.rise_gravity)
+	check.call(absf(apex - (14.0 + 100.0 / (2.0 * config.rise_gravity))) < 0.01, "launch_apex straight up is the line plus v^2 / 2g (got %.2f)" % apex)
+	check.call(LoaderMath.launch_reach(10.0, up, 14.0, config.rise_gravity, config.fall_gravity()) < 0.01, "launch_reach straight up lands where it started")
+	var direction: Vector3 = Vector3(-cos(deg_to_rad(30.0)), sin(deg_to_rad(30.0)), 0.0)
+	var reach: float = LoaderMath.launch_reach(6.0, direction, 6.0, config.rise_gravity, config.fall_gravity())
+	check.call(reach > 6.0 * cos(deg_to_rad(30.0)) and reach < 9.0, "launch_reach of 6 m/s at 30 degrees is the line plus a short tail (got %.2f)" % reach)
+	check.call(LoaderMath.launch_reach(NAN, direction, 6.0, 34.0, 44.0) == 0.0 and LoaderMath.launch_apex(10.0, Vector3(NAN, 1.0, 0.0), 6.0, 34.0) == 0.0, "non-finite inputs give 0")

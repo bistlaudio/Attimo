@@ -48,6 +48,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_direction(tree, check)
 	await _scenario_wiring(tree, check)
 	await _scenario_frame_order(tree, check)
+	await _scenario_pole(tree, check)
 
 
 func _begin(tree: SceneTree) -> void:
@@ -177,3 +178,19 @@ func _scenario_frame_order(tree: SceneTree, check: Callable) -> void:
 	check.call(worst_camera < POINT_TOLERANCE, "(t6) a reader ahead of the rig in tree order sees the current camera position (off by %.5f m)" % worst_camera)
 	check.call(worst_point < POINT_TOLERANCE, "(t6) a reader ahead of the rig in tree order sees the current aim point (off by %.5f m)" % worst_point)
 	await _end(tree, [early, late])
+
+
+# (t7) D-52: at the 89 degree limit the aim target and the Loader direction stay finite and within 1 degree of straight up.
+func _scenario_pole(tree: SceneTree, check: Callable) -> void:
+	await _begin(tree)
+	_rig.pitch = _rig.pitch_max
+	await Fixtures.wait_process(tree, SETTLE_FRAMES)
+	var point: Vector3 = _rig.aim_target_point()
+	check.call(point.is_finite(), "(t7) the aim target is finite at the pitch limit (%s)" % point)
+	var direction: Vector3 = _player.loader_direction()
+	check.call(direction.is_finite() and direction.length() > 0.99, "(t7) the Loader direction is finite at the pitch limit (%s)" % direction)
+	var angle: float = rad_to_deg(direction.angle_to(Vector3.UP))
+	check.call(angle < 1.0 + 0.0001 + 0.0, "(t7) the Loader direction is within 1 degree of straight up (%.2f deg)" % angle)
+	var aim_angle: float = rad_to_deg((point - _rig.camera.global_position).angle_to(Vector3.UP))
+	check.call(aim_angle < 1.0 + 0.0001 + 0.0 or point.distance_to(_rig.camera.global_position) < 0.001, "(t7) the aim target lies within 1 degree of straight up (%.2f deg)" % aim_angle)
+	await _end(tree)

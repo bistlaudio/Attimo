@@ -3,7 +3,7 @@ extends RefCounted
 ## world in over the hold and out again within 0.3 s of REAL time after the release (saturation exactly back at its original value,
 ## adjustment off), also when it is freed mid-hold (T-05-05). The camera pulls back along the additive &"loader" source and returns,
 ## and auto-follow and recenter stay out of the hold. The release applies the discharge velocity first and then a short hitstop
-## (TimeFx.pulse) that ends by itself. Plan 05-02 task 3 adds the pitch raise (D-29).
+## (TimeFx.pulse) that ends by itself. The Loader pitch raise is gone (D-52).
 
 const Fixtures := preload("res://tests/fixtures.gd")
 
@@ -34,7 +34,6 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_free_mid_hold(tree, check)
 	await _scenario_camera(tree, check)
 	await _scenario_hitstop(tree, check)
-	await _scenario_pitch(tree, check)
 	await _scenario_cage_tint(tree, check)
 	await _scenario_cannon_quiet(tree, check)
 
@@ -159,35 +158,6 @@ func _scenario_hitstop(tree: SceneTree, check: Callable) -> void:
 	check.call(Engine.time_scale == config.loader_hitstop_scale, "(h3) the hitstop scale %.2f holds right after the release (got %.3f)" % [config.loader_hitstop_scale, Engine.time_scale])
 	await _wait_real(tree, config.loader_hitstop_time + 3.0 / SHIPPED_TPS)
 	check.call(Engine.time_scale == 1.0, "(h4) the time scale is 1.0 after loader_hitstop_time + 3 ticks (got %.3f)" % Engine.time_scale)
-	await _end(tree)
-
-
-# D-29: during the hold the pitch-up limit rises to loader_pitch_max_deg, after the release it eases back to pitch_max without a jump.
-func _scenario_pitch(tree: SceneTree, check: Callable) -> void:
-	await _begin(tree, false)
-	var config: MovementConfig = _player.config
-	var limit: float = deg_to_rad(config.loader_pitch_max_deg)
-	_rig.pitch = _rig.pitch_max
-	check.call(limit > _rig.pitch_max, "(p0) the Loader pitch limit %.0f deg is above the normal %.0f deg" % [config.loader_pitch_max_deg, rad_to_deg(_rig.pitch_max)])
-	await _hold(tree, 24)
-	await _wait_real(tree, 0.3)
-	_rig.pitch = limit
-	await tree.process_frame
-	await tree.process_frame
-	check.call(absf(_rig.pitch - limit) < 0.001, "(p1) the rig accepts pitch up to %.0f deg during the hold (got %.1f deg)" % [config.loader_pitch_max_deg, rad_to_deg(_rig.pitch)])
-	Input.action_release(&"loader")
-	await Fixtures.wait_until(tree, func() -> bool: return not _player.loader_active(), 6)
-	var worst_step: float = 0.0
-	var last: float = _rig.pitch
-	var elapsed: float = 0.0
-	var start: int = Time.get_ticks_msec()
-	while Time.get_ticks_msec() - start < 400 and _rig.pitch > _rig.pitch_max + 0.0001:
-		await tree.process_frame
-		worst_step = maxf(worst_step, absf(_rig.pitch - last))
-		last = _rig.pitch
-	elapsed = float(Time.get_ticks_msec() - start) / 1000.0
-	check.call(_rig.pitch <= _rig.pitch_max + 0.0001, "(p2) the pitch eases back to pitch_max within 0.4 s (%.1f deg after %.2f s)" % [rad_to_deg(_rig.pitch), elapsed])
-	check.call(rad_to_deg(worst_step) <= 10.0, "(p3) no frame moves the pitch by more than 10 deg (worst %.1f deg)" % rad_to_deg(worst_step))
 	await _end(tree)
 
 

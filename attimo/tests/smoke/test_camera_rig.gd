@@ -59,6 +59,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_structure(tree, check)
 	await _scenario_channels(tree, check)
 	await _scenario_pitch_clamp(tree, check)
+	await _scenario_pole(tree, check)
 	await _scenario_jitter(tree, check, 10)
 	await _scenario_jitter(tree, check, 60)
 	await _scenario_jump_height(tree, check)
@@ -148,8 +149,31 @@ func _scenario_pitch_clamp(tree: SceneTree, check: Callable) -> void:
 	var rig: CameraRig = nodes[2] as CameraRig
 	Fixtures.send_mouse_motion(Vector2(0.0, -100000.0))
 	check.call(rig.pitch == rig.pitch_max, "(c) a huge upward motion leaves pitch at pitch_max (%.3f)" % rig.pitch)
+	check.call(absf(rig.pitch_max - deg_to_rad(89.0)) < 0.01, "(c) D-52: pitch_max is about 89 degrees with no Loader hold (%.3f rad)" % rig.pitch_max)
+	check.call(absf(rig.pitch_min - (-1.2)) < 0.0001, "(c) the downward limit is unchanged (%.3f)" % rig.pitch_min)
 	Fixtures.send_mouse_motion(Vector2(0.0, 100000.0))
 	check.call(rig.pitch == rig.pitch_min, "(c) a huge downward motion leaves pitch at pitch_min (%.3f)" % rig.pitch)
+	await _free_all(tree, nodes)
+
+
+# (c2) D-52: at the 89 degree limit the camera never flips over the top and never ends inside the player capsule.
+func _scenario_pole(tree: SceneTree, check: Callable) -> void:
+	var nodes: Array[Node] = await _spawn(tree)
+	var player: PlayerController = nodes[1] as PlayerController
+	var rig: CameraRig = nodes[2] as CameraRig
+	Fixtures.send_mouse_motion(Vector2(0.0, -100000.0))
+	for i: int in 3:
+		Fixtures.send_mouse_motion(Vector2(40.0, -4000.0))
+	await Fixtures.wait_process(tree, 30)
+	check.call(absf(rig.pitch - rig.pitch_max) < 0.0001, "(c2) mouse input past the limit stays at the limit (%.3f)" % rig.pitch)
+	var backward: Vector3 = Vector3(sin(rig.yaw), 0.0, cos(rig.yaw))
+	var forward: Vector3 = -rig.camera.global_basis.z.normalized()
+	check.call(forward.dot(backward) <= 0.0001, "(c2) the camera forward never gets a positive dot with the backward yaw direction (%.4f)" % forward.dot(backward))
+	check.call(forward.y > 0.99, "(c2) the camera looks almost straight up (forward.y %.4f)" % forward.y)
+	var offset: Vector3 = rig.camera.global_position - player.global_position
+	var horizontal: float = Vector2(offset.x, offset.z).length()
+	var inside: bool = horizontal < 0.5 and offset.y > -0.05 and offset.y < 2.05
+	check.call(not inside, "(c2) the camera is not inside the player capsule (horizontal %.2f m, height %.2f m)" % [horizontal, offset.y])
 	await _free_all(tree, nodes)
 
 
