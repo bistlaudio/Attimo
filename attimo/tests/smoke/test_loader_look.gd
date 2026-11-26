@@ -13,7 +13,6 @@ const FADE_OUT_SECONDS: float = 0.3
 ## Plan 05.1-05 (D-01, D-05, D-26): the cage tints the vignette brass, the cannon's FIXED hold shows no look at all.
 const CAGE_SCENE: String = "res://scenes/kit/steampunk/slingshot_core.tscn"
 const CANNON_SCENE: String = "res://scenes/kit/steampunk/steam_cannon.tscn"
-const PREVIEW_SCRIPT: String = "res://scripts/player/loader_preview.gd"
 const TURQUOISE: Color = Color(0.25, 0.9, 0.85, 1.0)
 
 var _bus: Node
@@ -42,11 +41,11 @@ func run(tree: SceneTree, check: Callable) -> void:
 
 func _begin(tree: SceneTree, with_look: bool = true) -> void:
 	_released = []
-	_on_released = func(_position: Vector3, _direction: Vector3, speed: float, bonus: bool) -> void:
+	_on_released = func(_position: Vector3, _direction: Vector3, speed: float, steps: int) -> void:
 		_released.append({
 			"velocity": Vector3(_player.move_velocity.x, _player.vertical_speed, _player.move_velocity.z),
 			"speed": speed,
-			"bonus": bonus,
+			"steps": steps,
 			"time_scale": Engine.time_scale,
 		})
 	_bus.connect(&"loader_released", _on_released)
@@ -154,7 +153,7 @@ func _scenario_hitstop(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.wait_until(tree, func() -> bool: return not _released.is_empty(), 6)
 	check.call(_released.size() == 1, "(h1) the release fired once (got %d)" % _released.size())
 	if _released.size() == 1:
-		var expected: Vector3 = LoaderMath.discharge_velocity(Vector3(0.0, 0.6, -0.8), LoaderMath.discharge_speed(0.0, config.loader_min_push, config.loader_bonus_speed, config.loader_max_speed))
+		var expected: Vector3 = LoaderMath.discharge_velocity(Vector3(0.0, 0.6, -0.8), LoaderMath.discharge_speed(0.0, config.loader_push, 1, config.loader_push_step, config.loader_speed_k, config.loader_max_speed))
 		var velocity: Vector3 = _released[0]["velocity"] as Vector3
 		check.call(velocity.distance_to(expected) < 0.05, "(h2) the discharge velocity is already applied on the release tick (%s vs %s)" % [velocity, expected])
 	check.call(Engine.time_scale == config.loader_hitstop_scale, "(h3) the hitstop scale %.2f holds right after the release (got %.3f)" % [config.loader_hitstop_scale, Engine.time_scale])
@@ -222,10 +221,9 @@ func _vignette_tint() -> Color:
 	return material.get_shader_parameter(&"tint") as Color
 
 
-## LoaderPreview.BRASS_COLOR by reflection, or an impossible colour while it does not exist.
+## LoaderLook.BRASS_COLOR (the preview that used to own it is gone, D-51).
 func _brass() -> Color:
-	var script: GDScript = load(PREVIEW_SCRIPT) as GDScript
-	return script.get_script_constant_map().get("BRASS_COLOR", Color(-1.0, -1.0, -1.0, -1.0)) as Color
+	return LoaderLook.BRASS_COLOR
 
 
 # Plan 05.1-05 (D-01, D-26): a cage hold keeps the "geladen" look but tints the vignette brass, even with a full core; the fade-out

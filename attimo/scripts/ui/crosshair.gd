@@ -7,7 +7,7 @@ extends CanvasLayer
 ## without one. It advances in real time (TimeFx.unscaled).
 ## Phase 05.1 (D-01, D-05, D-26): the Loader ring reads LoaderState.source(). ARM keeps the double ring above. A CAGE hold (slingshot)
 ## draws a brass PRESSURE GAUGE instead: a still dial with tick marks and a needle at the stored speed (stored_ratio, the outer ring's
-## value), plus a thin inner arc for the hold time; brass (LoaderPreview.BRASS_COLOR) whatever the core, because the cage spends no
+## value), plus a thin inner arc for the hold time; brass (LoaderLook.BRASS_COLOR) whatever the core, because the cage spends no
 ## energy and turquoise means energy. A FIXED hold (steam cannon, 0.2 s, no input) shows no ring at all. loader_ring_style() tells the
 ## shapes apart for the tests (double / gauge).
 ## The NearPrompt child is a cream "E" keycap over HandController.prompt_target (the nearest grabbable lever in
@@ -29,8 +29,6 @@ extends CanvasLayer
 @export var color: Color = Color(0.96, 0.93, 0.85, 0.9)
 ## Turquoise of the Loader ring with a full core.
 @export var lock_color: Color = Color(0.25, 0.9, 0.85, 1.0)
-## Loader ring colour while the arm cannot pay the bonus (grey: the arm is empty). With a full core it uses lock_color.
-@export var loader_empty_color: Color = Color(0.55, 0.57, 0.6, 1.0)
 ## Degrees per second the Loader double ring turns counter-clockwise (real time).
 @export var loader_ring_speed_deg: float = 90.0
 ## Dark outline colour under every line, so the HUD reads on bright sky.
@@ -109,10 +107,10 @@ func _update_loader_ring(delta: float) -> void:
 	if loader_ring_gauge:
 		# D-01 / D-26: a still brass gauge, never turquoise and never the grey empty-arm colour.
 		loader_gauge_needle = loader_ring_stored
-		loader_ring_tint = LoaderPreview.BRASS_COLOR
+		loader_ring_tint = LoaderLook.BRASS_COLOR
 	else:
 		loader_ring_angle -= deg_to_rad(loader_ring_speed_deg) * TimeFx.unscaled(delta)
-		loader_ring_tint = lock_color if state.bonus_ready() else loader_empty_color
+		loader_ring_tint = lock_color
 	_reticle.queue_redraw()
 
 

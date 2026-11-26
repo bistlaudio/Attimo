@@ -93,6 +93,8 @@ func _main() -> void:
 
 	_check_invariants(config, jumps, longs, latency)
 	_check_loader_invariants(config, loader)
+	var three: Dictionary = loader["three_standing"]
+	energy["loader_step_cost"] = int(three["paid"]) / maxi(int(three["steps"]), 1)
 	_check_energy_invariants(config, energy)
 	_write_doc(config, ground, jumps, dashes, longs, floors, latency, loader, energy)
 
@@ -552,7 +554,10 @@ func _measure_latency(tps: int, accumulate: bool) -> Dictionary:
 
 # --- loader (plan 05-02, FEEL-10) ------------------------------------------------------------------------
 
+## Hold lengths in physics ticks (1 tick = 1/60 s of REAL time under the Loader slow motion): 10 ticks pay 1 step, 40 ticks pay 3 steps
+## (the steps come at 0.3 s = 18 ticks and 0.6 s = 36 ticks).
 const LOADER_HOLD_TICKS: int = 10
+const LOADER_HOLD_TICKS_3: int = 40
 ## The energy clock of the real player (FEEL-10, D-34, D-42): ticks until the next passive step and the next R step through
 ## ArmEnergy.tick, the steps and the time of a capsule and a broken machine through EnergySource.take_step, and the Moto Perpetuo run
 ## speed and Jump 3 apex with a full arm.
@@ -655,72 +660,80 @@ func _append_energy_rows(lines: PackedStringArray, config: MovementConfig, energ
 	lines.append(_row(["Dash hop stage 2-3 cost", "%d step each" % config.long_jump_cost, "stage 1 is free, without the steps the hop silently stays stage 1; depends on long_jump_cost"]))
 	lines.append(_row(["Wall run cost", "%d steps, then %d per %.2f s" % [config.wall_run_entry_cost, config.wall_run_tick_cost, config.wall_run_tick_interval], "an unpaid start is refused once per wall contact, an unpaid tick drops into Fall silently; until wall_run_time %.2f s; depends on wall_run_entry_cost, wall_run_tick_cost, wall_run_tick_interval" % config.wall_run_time]))
 	lines.append(_row(["Wall jump cost", "%d step" % config.wall_jump_cost, "an unpaid wall jump is refused and consumes the buffered press; depends on wall_jump_cost"]))
-	lines.append(_row(["Loader bonus cost", "%d steps" % config.loader_bonus_cost, "interim, removed with the bonus path in 05.1-11; depends on loader_bonus_cost"]))
+	lines.append(_row(["Loader step interval", "%.2f s" % config.loader_step_interval, "real time between two Loader steps while the button is held, at most %d steps; depends on loader_step_interval, loader_max_steps" % config.loader_max_steps]))
+	lines.append(_row(["Loader cost per step", "%d step" % int(energy["loader_step_cost"]), "measured: the energy a 3-step hold pays divided by 3, a press at 0 steps is refused; depends on ArmEnergy.try_spend(1) per step"]))
 	lines.append(_row(["Moto Perpetuo on / off", "%d / %d" % [config.moto_threshold, config.moto_threshold - config.moto_exit_margin - 1], "on at moto_threshold %d, off below moto_threshold - moto_exit_margin (%d)" % [config.moto_threshold, config.moto_threshold - config.moto_exit_margin]]))
 	lines.append(_row(["Respawn steps", "%d" % ArmEnergy.CHECKPOINT_STEPS, "start and respawn value (ArmEnergy.CHECKPOINT_STEPS)"]))
 	lines.append(_row(["Moto Perpetuo run", "%.2f m/s" % float(energy["moto_run"]), "with a full arm (moto_threshold %d); depends on run_speed, moto_run_bonus %.2f" % [config.moto_threshold, config.moto_run_bonus]]))
 	lines.append(_row(["Moto Perpetuo Jump 3", "%.2f m apex" % float(jump_3["apex"]), "buffed Jump 3 with a full arm (plain Jump 3: %.1f m); depends on moto_jump_height %.1f, moto_jump_gravity_scale %.2f" % [config.jump_3_height, config.moto_jump_height, config.moto_jump_gravity_scale]]))
 	lines.append("")
 
-## Slack for a tick-sampled Loader speed and apex.
+## Slack for a tick-sampled Loader speed, apex and flight distance.
 const LOADER_SPEED_SLACK: float = 0.3
+const LOADER_DISTANCE_SLACK: float = 0.6
+## A ground throw aims this far above the horizon (a horizontal ground throw would end on the floor at once): 10 degrees up, along -z.
+const LOADER_GROUND_DIRECTION: Vector3 = Vector3(0.0, 0.17364818, -0.98480775)
 
 
-## The Loader numbers of the real player: redirect and bonus speeds, the dash cap, the super jump apex, the hold cap and the slow
-## motion. Driven headless with debug_loader_direction (no camera) and the arm energy set through arm_energy.reset_to.
+## The Loader numbers of the real player: 1 and 3 steps standing and from a run, the dash-hop overflow, 3 steps straight up, the free
+## slingshot flight, the hold cap and the slow motion. Driven headless with debug_loader_direction (no camera) and the arm energy
+## set through arm_energy.reset_to.
 func _measure_loader() -> Dictionary:
 	var out: Dictionary = {}
 	var player: PlayerController = await _begin()
-	player.debug_loader_direction = Vector3(0.0, 0.0, -1.0)
-	Fixtures.set_energy(player, 0)
-	out["redirect_standing"] = await _loader_discharge(player)
+	player.debug_loader_direction = LOADER_GROUND_DIRECTION
+	out["one_standing"] = await _loader_discharge(player, 1)
 	await _end(player)
 
 	player = await _begin()
-	player.debug_loader_direction = Vector3(0.0, 0.0, -1.0)
-	Fixtures.set_energy(player, 0)
+	player.debug_loader_direction = LOADER_GROUND_DIRECTION
+	out["three_standing"] = await _loader_discharge(player, 3)
+	await _end(player)
+
+	player = await _begin()
+	player.debug_loader_direction = LOADER_GROUND_DIRECTION
 	await _run_up(player)
-	out["redirect_run"] = await _loader_discharge(player)
+	out["one_run"] = await _loader_discharge(player, 1)
 	await _end(player)
 
 	player = await _begin()
-	player.debug_loader_direction = Vector3(0.0, 0.0, -1.0)
-	Fixtures.set_energy(player, 3)
+	player.debug_loader_direction = LOADER_GROUND_DIRECTION
 	await _run_up(player)
-	out["bonus_run"] = await _loader_discharge(player)
+	out["three_run"] = await _loader_discharge(player, 3)
 	await _end(player)
 
-	# Right after a ground dash: the Loader stores the dash speed, the bonus is capped at loader_max_speed.
+	# Dash hop (dash + jump on one tick from a run): the Loader stores the hop speed, the cap cuts the speed and the rest becomes distance.
 	player = await _begin()
 	player.debug_loader_direction = Vector3(0.0, 0.0, -1.0)
-	Fixtures.set_energy(player, 4)
 	await _run_up(player)
 	Fixtures.send_action_event(&"dash", true)
+	Fixtures.send_action_event(&"jump", true)
 	Fixtures.send_action_event(&"dash", false)
-	await Fixtures.wait_until(_tree, func() -> bool: return _state_is(player, &"Dash"), 12)
-	out["bonus_dash"] = await _loader_discharge(player)
+	Fixtures.send_action_event(&"jump", false)
+	await Fixtures.wait_until(_tree, func() -> bool: return _state_is(player, &"LongJump"), 12)
+	await Fixtures.wait_physics(_tree, 6)
+	out["three_hop"] = await _loader_discharge(player, 3)
 	await _end(player)
 
-	# Straight up with the bonus: the super jump apex above the take-off point.
+	# Straight up from a run: the rise of the straight flight and the apex above the take-off point.
 	player = await _begin()
 	player.debug_loader_direction = Vector3.UP
-	Fixtures.set_energy(player, 3)
+	await _run_up(player)
 	var start_y: float = player.global_position.y
-	var up: Dictionary = await _loader_discharge(player)
-	var max_y: float = player.global_position.y
-	var frames: int = 0
-	while frames < LIMIT_TICKS and not (player.is_grounded() and frames > 4):
-		await _tree.physics_frame
-		frames += 1
-		max_y = maxf(max_y, player.global_position.y)
-	up["apex"] = max_y - start_y
-	out["super_jump"] = up
+	var up: Dictionary = await _loader_discharge(player, 3)
+	up["apex"] = float(up["peak_y"]) - start_y
+	out["three_up_run"] = up
+	await _end(player)
+
+	# The slingshot cage: a free 2-step flight from a standing entry.
+	player = await _begin()
+	player.debug_loader_direction = LOADER_GROUND_DIRECTION
+	out["slingshot"] = await _slingshot_discharge(player)
 	await _end(player)
 
 	# The hold cap: press and never release; count the Loader updates until it discharges by itself.
 	player = await _begin()
 	player.debug_loader_direction = Vector3(0.0, 0.0, -1.0)
-	Fixtures.set_energy(player, 0)
 	Input.action_press(&"loader")
 	var entered: int = await Fixtures.wait_until(_tree, func() -> bool: return player.loader_active(), 6)
 	var slow: float = Engine.time_scale
@@ -734,25 +747,26 @@ func _measure_loader() -> Dictionary:
 	return out
 
 
-## Presses the loader, holds LOADER_HOLD_TICKS Loader ticks, releases and returns the stored speed, the speed two ticks after the
-## release (the 3D velocity magnitude) and the speed the release fact reports.
-func _loader_discharge(player: PlayerController) -> Dictionary:
-	var released: Array[float] = []
-	var on_released: Callable = func(_position: Vector3, _direction: Vector3, speed: float, _bonus: bool) -> void: released.append(speed)
+## Presses the loader with 12 steps on the clock, holds until `steps` steps are paid, releases and returns the stored speed, the
+## speed the release fact reports, the steps and energy paid, the straight flight distance, the peak height and the reach: the
+## horizontal distance from the release point to the landing (or the 360 tick limit).
+func _loader_discharge(player: PlayerController, steps: int) -> Dictionary:
+	var released: Array[Dictionary] = []
+	var on_released: Callable = func(position: Vector3, _direction: Vector3, speed: float, fact_steps: int) -> void: released.append({"position": position, "speed": speed, "steps": fact_steps})
 	_bus.connect(&"loader_released", on_released)
+	player.arm_energy.reset_to(12)
 	Input.action_press(&"loader")
 	var entered: int = await Fixtures.wait_until(_tree, func() -> bool: return player.loader_active(), 6)
-	var result: Dictionary = {"stored": 0.0, "speed_out": 0.0, "fact_speed": 0.0, "slow": Engine.time_scale, "entered": entered >= 0}
+	var result: Dictionary = {"stored": 0.0, "fact_speed": 0.0, "steps": 0, "paid": 0, "distance": 0.0, "rise": 0.0, "reach": 0.0, "peak_y": player.global_position.y, "slow": Engine.time_scale, "entered": entered >= 0}
 	if entered < 0:
 		_fail("a Loader press did not enter the Loader")
 	else:
 		result["stored"] = player.loader_state().stored_velocity.length()
-		await Fixtures.wait_physics(_tree, LOADER_HOLD_TICKS)
+		await Fixtures.wait_physics(_tree, LOADER_HOLD_TICKS_3 if steps >= 3 else LOADER_HOLD_TICKS)
+		result["paid"] = 12 - player.arm_energy.value
 		Input.action_release(&"loader")
 		await Fixtures.wait_until(_tree, func() -> bool: return not player.loader_active(), 6)
-		await Fixtures.wait_physics(_tree, 2)
-		result["speed_out"] = Vector3(player.move_velocity.x, player.vertical_speed, player.move_velocity.z).length()
-		result["fact_speed"] = released[0] if not released.is_empty() else 0.0
+		await _follow_flight(player, released, result)
 	Input.action_release(&"loader")
 	_bus.disconnect(&"loader_released", on_released)
 	Fixtures.restore_time()
@@ -760,34 +774,100 @@ func _loader_discharge(player: PlayerController) -> Dictionary:
 	return result
 
 
-## The Loader rows follow the config: min push, run speed, bonus, the cap, the apex under rise gravity, the hold cap in ticks.
+## The free slingshot flight: the player is caught into a CAGE hold while standing, a tap releases it.
+func _slingshot_discharge(player: PlayerController) -> Dictionary:
+	var released: Array[Dictionary] = []
+	var on_released: Callable = func(position: Vector3, _direction: Vector3, speed: float, fact_steps: int) -> void: released.append({"position": position, "speed": speed, "steps": fact_steps})
+	_bus.connect(&"loader_released", on_released)
+	player.arm_energy.reset_to(5)
+	player.catch_into_loader(LoaderProfile.cage())
+	var entered: int = await Fixtures.wait_until(_tree, func() -> bool: return player.loader_active(), 6)
+	var result: Dictionary = {"stored": 0.0, "fact_speed": 0.0, "steps": 0, "paid": 0, "distance": 0.0, "rise": 0.0, "reach": 0.0, "peak_y": player.global_position.y, "slow": Engine.time_scale, "entered": entered >= 0}
+	if entered < 0:
+		_fail("the slingshot catch did not enter the Loader")
+	else:
+		result["stored"] = player.loader_state().stored_velocity.length()
+		await Fixtures.wait_physics(_tree, 4)
+		Input.action_press(&"loader")
+		await Fixtures.wait_physics(_tree, 2)
+		Input.action_release(&"loader")
+		await Fixtures.wait_until(_tree, func() -> bool: return not player.loader_active(), 6)
+		result["paid"] = 5 - player.arm_energy.value
+		await _follow_flight(player, released, result)
+	Input.action_release(&"loader")
+	_bus.disconnect(&"loader_released", on_released)
+	Fixtures.restore_time()
+	await Fixtures.wait_physics(_tree, 4)
+	return result
+
+
+## Follows a discharge from its release fact: the straight flight distance, the peak height and the horizontal reach to the landing.
+func _follow_flight(player: PlayerController, released: Array[Dictionary], result: Dictionary) -> void:
+	if released.is_empty():
+		_fail("a Loader release did not fire loader_released")
+		return
+	var start: Vector3 = released[0]["position"] as Vector3
+	result["fact_speed"] = released[0]["speed"]
+	result["steps"] = released[0]["steps"]
+	var frames: int = 0
+	var flight_done: bool = false
+	while frames < LIMIT_TICKS:
+		await _tree.physics_frame
+		frames += 1
+		result["peak_y"] = maxf(float(result["peak_y"]), player.global_position.y)
+		if not flight_done and player.straight_flight_left <= 0.0:
+			flight_done = true
+			result["distance"] = player.global_position.distance_to(start)
+			result["rise"] = player.global_position.y - start.y
+		if flight_done and player.is_grounded() and frames > 4:
+			break
+	if not flight_done:
+		result["distance"] = player.global_position.distance_to(start)
+	var flat: Vector3 = player.global_position - start
+	result["reach"] = Vector2(flat.x, flat.z).length()
+
+
+## The Loader rows follow the config: the formula, the cap, the overflow flight distance, the hold cap in ticks.
 func _check_loader_invariants(config: MovementConfig, loader: Dictionary) -> void:
-	var standing: Dictionary = loader["redirect_standing"]
-	var run: Dictionary = loader["redirect_run"]
-	var bonus_run: Dictionary = loader["bonus_run"]
-	var bonus_dash: Dictionary = loader["bonus_dash"]
-	var up: Dictionary = loader["super_jump"]
-	var cap: Dictionary = loader["hold_cap"]
+	var bases: Array[float] = [config.loader_flight_distance_1, config.loader_flight_distance_2, config.loader_flight_distance_3]
 	var rows: Array[Array] = [
-		["redirect (standing)", standing, LoaderMath.discharge_speed(float(standing["stored"]), config.loader_min_push, 0.0, config.loader_max_speed)],
-		["redirect (run)", run, LoaderMath.discharge_speed(float(run["stored"]), config.loader_min_push, 0.0, config.loader_max_speed)],
-		["bonus (run)", bonus_run, LoaderMath.discharge_speed(float(bonus_run["stored"]), config.loader_min_push, config.loader_bonus_speed, config.loader_max_speed)],
-		["bonus (dash)", bonus_dash, LoaderMath.discharge_speed(float(bonus_dash["stored"]), config.loader_min_push, config.loader_bonus_speed, config.loader_max_speed)],
+		["1 step (standing)", loader["one_standing"], 1, false],
+		["3 steps (standing)", loader["three_standing"], 3, false],
+		["1 step (run)", loader["one_run"], 1, false],
+		["3 steps (run)", loader["three_run"], 3, false],
+		["3 steps (dash hop)", loader["three_hop"], 3, true],
+		["3 steps up (run)", loader["three_up_run"], 3, true],
 	]
 	for row: Array in rows:
 		var data: Dictionary = row[1]
-		var expected: float = row[2]
-		if absf(float(data["speed_out"]) - expected) > LOADER_SPEED_SLACK or absf(float(data["fact_speed"]) - expected) > LOADER_SPEED_SLACK:
-			_fail("Loader %s: speed out %.2f m/s (fact %.2f) is not LoaderMath's %.2f" % [row[0], float(data["speed_out"]), float(data["fact_speed"]), expected])
-	if float(bonus_dash["speed_out"]) > config.loader_max_speed + LOADER_SPEED_SLACK:
-		_fail("Loader bonus (dash) %.2f m/s exceeds loader_max_speed %.1f" % [float(bonus_dash["speed_out"]), config.loader_max_speed])
-	var apex_expected: float = LoaderMath.apex_height(float(up["fact_speed"]), config)
-	if absf(float(up["apex"]) - apex_expected) > LOADER_SPEED_SLACK:
-		_fail("Loader super jump apex %.2f m is not v^2 / 2g = %.2f m" % [float(up["apex"]), apex_expected])
+		var n: int = row[2]
+		var stored: float = float(data["stored"])
+		var expected: float = LoaderMath.discharge_speed(stored, config.loader_push, n, config.loader_push_step, config.loader_speed_k, config.loader_max_speed)
+		if int(data["steps"]) != n or int(data["paid"]) != n:
+			_fail("Loader %s paid %d steps (fact %d), expected %d" % [row[0], int(data["paid"]), int(data["steps"]), n])
+		if absf(float(data["fact_speed"]) - expected) > LOADER_SPEED_SLACK:
+			_fail("Loader %s: speed %.2f m/s is not LoaderMath's %.2f" % [row[0], float(data["fact_speed"]), expected])
+		if bool(row[3]):
+			var expected_distance: float = LoaderMath.straight_reach(stored, n, config.loader_push, config.loader_push_step, config.loader_speed_k, config.loader_max_speed, bases, config.loader_overflow_gain)
+			if absf(float(data["distance"]) - expected_distance) > LOADER_DISTANCE_SLACK:
+				_fail("Loader %s: straight flight %.2f m is not LoaderMath's %.2f m" % [row[0], float(data["distance"]), expected_distance])
+	var hop: Dictionary = loader["three_hop"]
+	if float(hop["fact_speed"]) > config.loader_max_speed + LOADER_SPEED_SLACK:
+		_fail("Loader 3 steps (dash hop) %.2f m/s exceeds loader_max_speed %.1f" % [float(hop["fact_speed"]), config.loader_max_speed])
+	var sling: Dictionary = loader["slingshot"]
+	var cage_speed: float = LoaderMath.discharge_speed(float(sling["stored"]), config.loader_push, LoaderState.CAGE_STEPS, config.loader_push_step, config.loader_speed_k, config.loader_max_speed)
+	if int(sling["paid"]) != 0 or absf(float(sling["fact_speed"]) - cage_speed) > LOADER_SPEED_SLACK:
+		_fail("Slingshot: paid %d steps, speed %.2f m/s is not the free 2-step %.2f" % [int(sling["paid"]), float(sling["fact_speed"]), cage_speed])
+	var cap: Dictionary = loader["hold_cap"]
 	if absi(int(cap["ticks"]) - roundi(config.loader_hold_cap * float(TPS))) > 1:
 		_fail("Loader hold cap %d ticks is not loader_hold_cap %.2f s at %d TPS" % [int(cap["ticks"]), config.loader_hold_cap, TPS])
 	if absf(float(cap["slow"]) - config.loader_slow_factor) > 0.001:
 		_fail("Loader slow motion %.3f is not loader_slow_factor %.2f" % [float(cap["slow"]), config.loader_slow_factor])
+
+
+## One measured Loader row: stored speed, then speed, straight distance and reach.
+func _loader_row(label: String, data: Dictionary, note: String) -> String:
+	return _row([label, "%.2f" % float(data["stored"]), "%.2f m/s, %.2f m straight, %.2f m reach" % [float(data["fact_speed"]), float(data["distance"]), float(data["reach"])], "%s; depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_%d" % [note, int(data["steps"])]])
 
 
 # --- invariants -----------------------------------------------------------------------------------------
@@ -942,21 +1022,23 @@ func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, d
 
 	lines.append("## Loader")
 	lines.append("")
-	lines.append("The right-click Loader (HAND-04): hold to store the momentum in slow motion, release to throw it along the view at max(stored, loader_min_push) plus the bonus (one full core), capped at loader_max_speed. Measured with the real Player, a horizontal discharge along -z (no camera, debug_loader_direction), %d Loader ticks of hold and the arm energy set per row. Speed out is the 3D velocity magnitude two ticks after the release. The gym room Zone_Loader sizes its gap and ledge from these numbers through LoaderMath." % LOADER_HOLD_TICKS)
+	lines.append("The right-click Loader (HAND-04, ENRG-09): a press pays step 1, holding pays one more step every loader_step_interval of real time up to loader_max_steps; the release throws along the view at v + push + n * (push_step + k * v), capped at loader_max_speed, and flies a straight gravity-free line of loader_flight_distance[n] plus the overflow (the speed the cap cut, times loader_overflow_gain) before gravity resumes. Measured with the real Player and 12 steps on the clock, debug_loader_direction (no camera): ground rows aim 10 degrees above the horizon, the hop row and the up row are as named, %d ticks of hold for 1 step and %d for 3. Distance is the straight flight from the release point to its end, reach the horizontal distance to the landing. The slingshot cage is a free 2-step flight along the same line. The gym room Zone_Loader is re-derived from these numbers in 05.1-12." % [LOADER_HOLD_TICKS, LOADER_HOLD_TICKS_3])
 	lines.append("")
 	lines.append("| Verb | Stored speed (m/s) | Result | Note |")
 	lines.append("|---|---|---|---|")
-	var redirect_standing: Dictionary = loader["redirect_standing"]
-	var redirect_run: Dictionary = loader["redirect_run"]
-	var bonus_run: Dictionary = loader["bonus_run"]
-	var bonus_dash: Dictionary = loader["bonus_dash"]
-	var super_jump: Dictionary = loader["super_jump"]
+	for entry: Array in [
+		["Loader 1 step (standing)", "one_standing", "1 step from standing"],
+		["Loader 3 steps (standing)", "three_standing", "3 steps from standing"],
+		["Loader 1 step (run)", "one_run", "1 step from a run at run_speed %.1f" % config.run_speed],
+		["Loader 3 steps (run)", "three_run", "3 steps from a run at run_speed %.1f" % config.run_speed],
+		["Loader 3 steps (dash hop, overflow)", "three_hop", "3 steps in the air during a dash hop: the speed is capped at loader_max_speed %.1f and the overflow adds distance (loader_overflow_gain %.1f)" % [config.loader_max_speed, config.loader_overflow_gain]],
+	]:
+		lines.append(_loader_row(String(entry[0]), loader[String(entry[1])], String(entry[2])))
+	var up: Dictionary = loader["three_up_run"]
+	lines.append(_row(["Loader 3 steps up (run)", "%.2f" % float(up["stored"]), "%.2f m straight rise, %.2f m apex" % [float(up["rise"]), float(up["apex"])], "straight up from a run: speed %.2f m/s, then gravity carries it to the apex; depends on loader_flight_distance_3, loader_overflow_gain, rise_gravity" % float(up["fact_speed"])]))
+	var sling: Dictionary = loader["slingshot"]
+	lines.append(_row(["Slingshot (free 2 steps, standing entry)", "%.2f" % float(sling["stored"]), "%.2f m/s, %.2f m straight, %.2f m reach" % [float(sling["fact_speed"]), float(sling["distance"]), float(sling["reach"])], "free cage throw, no step paid, kit_launch_scale applied before the cap; depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_2"]))
 	var hold_cap: Dictionary = loader["hold_cap"]
-	lines.append(_row(["Loader redirect (standing)", "%.2f" % float(redirect_standing["stored"]), "%.2f m/s" % float(redirect_standing["speed_out"]), "empty arm: speed out is loader_min_push %.1f; depends on loader_min_push, loader_max_speed" % config.loader_min_push]))
-	lines.append(_row(["Loader redirect (run)", "%.2f" % float(redirect_run["stored"]), "%.2f m/s" % float(redirect_run["speed_out"]), "empty arm from a run at run_speed %.1f; depends on loader_min_push, run_speed" % config.run_speed]))
-	lines.append(_row(["Loader bonus (run)", "%.2f" % float(bonus_run["stored"]), "%.2f m/s" % float(bonus_run["speed_out"]), "full core: + loader_bonus_speed %.1f; depends on loader_bonus_speed, loader_bonus_cost, loader_min_push" % config.loader_bonus_speed]))
-	lines.append(_row(["Loader bonus (dash)", "%.2f" % float(bonus_dash["stored"]), "%.2f m/s" % float(bonus_dash["speed_out"]), "pressed during a ground dash (dash_speed %.1f): capped at loader_max_speed %.1f; depends on dash_speed, loader_max_speed" % [config.dash_speed, config.loader_max_speed]]))
-	lines.append(_row(["Loader super jump (bonus, up)", "%.2f" % float(super_jump["stored"]), "%.2f m apex" % float(super_jump["apex"]), "straight up with a full core, apex = v^2 / (2 rise_gravity); depends on loader_min_push, loader_bonus_speed, rise_gravity"]))
 	lines.append(_row(["Loader hold cap", "-", "%d ticks (%.2f s)" % [int(hold_cap["ticks"]), float(hold_cap["ticks"]) / float(TPS)], "the hold discharges by itself in REAL time; depends on loader_hold_cap %.2f" % config.loader_hold_cap]))
 	lines.append(_row(["Loader slow motion", "-", "%.2f" % float(hold_cap["slow"]), "Engine.time_scale during the hold; depends on loader_slow_factor"]))
 	lines.append("")

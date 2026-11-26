@@ -14,9 +14,9 @@ const ROW_LABELS: Array[String] = [
 	"Long jump stage 1", "Long jump stage 2", "Long jump stage 3", "Long jump stage 1 (after stage 3)", "Long jump (last grace tick)",
 	"Coyote time", "Jump buffer", "Landing window", "Dash cooldown", "Dash-jump grace",
 	"Step 0.15 m", "Step 0.20 m",
-	"Loader redirect (standing)", "Loader redirect (run)", "Loader bonus (run)", "Loader bonus (dash)", "Loader super jump (bonus, up)", "Loader hold cap", "Loader slow motion",
+	"Loader 1 step (standing)", "Loader 3 steps (standing)", "Loader 1 step (run)", "Loader 3 steps (run)", "Loader 3 steps (dash hop, overflow)", "Loader 3 steps up (run)", "Slingshot (free 2 steps, standing entry)", "Loader hold cap", "Loader slow motion",
 	"Passive tick", "Charge key R", "Energy capsule", "Broken machine",
-	"Dash cost", "Air dash cost", "Dash hop stage 2-3 cost", "Wall run cost", "Wall jump cost", "Loader bonus cost", "Moto Perpetuo on / off", "Respawn steps", "Moto Perpetuo run", "Moto Perpetuo Jump 3",
+	"Dash cost", "Air dash cost", "Dash hop stage 2-3 cost", "Wall run cost", "Wall jump cost", "Loader step interval", "Loader cost per step", "Moto Perpetuo on / off", "Respawn steps", "Moto Perpetuo run", "Moto Perpetuo Jump 3",
 	"Latency jump 60 TPS", "Latency jump 120 TPS", "Latency dash 60 TPS", "Latency dash 120 TPS",
 ]
 

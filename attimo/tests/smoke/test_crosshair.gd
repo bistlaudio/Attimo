@@ -9,7 +9,6 @@ const MAX_LAYER: int = 99
 ## Plan 05.1-05 (D-01, D-05, D-26): the kit hold sources. The cage shows a brass pressure gauge, the cannon shows nothing.
 const CAGE_SCENE: String = "res://scenes/kit/steampunk/slingshot_core.tscn"
 const CANNON_SCENE: String = "res://scenes/kit/steampunk/steam_cannon.tscn"
-const PREVIEW_SCRIPT: String = "res://scripts/player/loader_preview.gd"
 const BRASS_LOOK: String = "res://resources/mechanisms/look_brass.tres"
 const CAGE_CENTRE: Vector3 = Vector3(0.0, 10.0, 0.0)
 
@@ -82,16 +81,15 @@ func _check_loader_ring(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.wait_until(tree, func() -> bool: return not player.loader_active(), 8)
 	await Fixtures.wait_process(tree, 3)
 	check.call(not ring.loader_ring_visible, "the ring is hidden again after the release")
-	# Without a core the ring is grey.
+	# Without a step the press does not start the Loader, so no ring shows (D-48, the grey empty-arm tint is gone).
 	Fixtures.restore_time()
 	await Fixtures.wait_physics(tree, 80)
 	Fixtures.set_energy(player, 0)
-	player.loader_cooldown_timer = 0.0
 	player.loader_available = true
 	Input.action_press(&"loader")
-	await Fixtures.wait_until(tree, func() -> bool: return player.loader_active(), 12)
+	await Fixtures.wait_physics(tree, 6)
 	await Fixtures.wait_process(tree, 3)
-	check.call(ring.loader_ring_visible and ring.loader_ring_tint == ring.loader_empty_color, "an empty arm draws the ring in the empty colour (visible %s)" % ring.loader_ring_visible)
+	check.call(not player.loader_active() and not ring.loader_ring_visible, "an empty clock starts no Loader and shows no ring (visible %s)" % ring.loader_ring_visible)
 	Input.action_release(&"loader")
 	await Fixtures.wait_physics(tree, 4)
 	Fixtures.restore_time()
@@ -107,10 +105,9 @@ func _ring_style(ring: Crosshair) -> StringName:
 	return ring.call(&"loader_ring_style") as StringName if ring.has_method(&"loader_ring_style") else &""
 
 
-## LoaderPreview.BRASS_COLOR by reflection, or an impossible colour while it does not exist.
+## LoaderLook.BRASS_COLOR (the preview that used to own it is gone, D-51).
 static func brass_color() -> Color:
-	var script: GDScript = load(PREVIEW_SCRIPT) as GDScript
-	return script.get_script_constant_map().get("BRASS_COLOR", Color(-1.0, -1.0, -1.0, -1.0)) as Color
+	return LoaderLook.BRASS_COLOR
 
 
 # Plan 05.1-05 (D-01, D-26): while the cage holds Rino the ring is a brass pressure gauge whose needle stands at the stored speed
@@ -118,7 +115,7 @@ static func brass_color() -> Color:
 func _check_cage_gauge(tree: SceneTree, check: Callable) -> void:
 	var brass: Color = brass_color()
 	var look: StandardMaterial3D = load(BRASS_LOOK) as StandardMaterial3D
-	check.call(brass.is_equal_approx(look.albedo_color), "(g0) LoaderPreview.BRASS_COLOR is the look_brass.tres albedo %s (got %s)" % [look.albedo_color, brass])
+	check.call(brass.is_equal_approx(look.albedo_color), "(g0) LoaderLook.BRASS_COLOR is the look_brass.tres albedo %s (got %s)" % [look.albedo_color, brass])
 	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root, Vector3(300.0, 1.0, 300.0))
 	var cage: Node3D = Fixtures.spawn_scene(tree.root, CAGE_SCENE, CAGE_CENTRE)
 	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(0.0, 10.0, 60.0))
@@ -136,7 +133,7 @@ func _check_cage_gauge(tree: SceneTree, check: Callable) -> void:
 	var needle: Variant = ring.get(&"loader_gauge_needle")
 	check.call(needle != null and state != null and state.stored_ratio() > 0.0 and absf(float(needle) - state.stored_ratio()) < 0.001, "(g2) the gauge needle stands at the stored ratio (needle %s, stored %.3f)" % [needle, state.stored_ratio() if state != null else -1.0])
 	check.call(ring.loader_ring_tint.is_equal_approx(brass), "(g3) the gauge is brass with a full core (got %s)" % ring.loader_ring_tint)
-	check.call(ring.loader_ring_tint != ring.lock_color and ring.loader_ring_tint != ring.loader_empty_color, "(g3) the gauge is neither turquoise nor the grey empty-arm colour")
+	check.call(ring.loader_ring_tint != ring.lock_color, "(g3) the gauge is not the turquoise lock colour")
 	await Fixtures.tap_action(tree, &"loader", 1)
 	await Fixtures.wait_until(tree, func() -> bool: return not player.loader_active(), 6)
 	await Fixtures.wait_process(tree, 3)
@@ -149,7 +146,7 @@ func _check_cage_gauge(tree: SceneTree, check: Callable) -> void:
 	await tree.process_frame
 
 
-# Plan 05.1-05 (D-05): the steam cannon's 0.2 s FIXED hold has no input, so it shows no Loader ring and no trajectory preview.
+# Plan 05.1-05 (D-05): the steam cannon's 0.2 s FIXED hold has no input, so it shows no Loader ring.
 func _check_cannon_quiet(tree: SceneTree, check: Callable) -> void:
 	var floor_body: StaticBody3D = Fixtures.spawn_floor(tree.root, Vector3(300.0, 1.0, 300.0))
 	var cannon: Node3D = (load(CANNON_SCENE) as PackedScene).instantiate() as Node3D
@@ -158,7 +155,7 @@ func _check_cannon_quiet(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = Fixtures.spawn_player(tree.root, Vector3(0.0, 0.0, 40.0))
 	var ring: Crosshair = (load(CROSSHAIR_SCENE) as PackedScene).instantiate() as Crosshair
 	tree.root.add_child(ring)
-	var preview: Node3D = player.get_node("LoaderPreview") as Node3D
+	check.call(player.get_node_or_null("LoaderPreview") == null, "(q0) the trajectory preview node is gone from the player (D-51)")
 	var blast: Node3D = cannon.find_child("SteamBlast", true, false) as Node3D
 	var blast_on_launch: Array[bool] = []
 	var bus: Node = tree.root.get_node("EventBus")
@@ -182,17 +179,14 @@ func _check_cannon_quiet(tree: SceneTree, check: Callable) -> void:
 	blast_on_launch.clear()
 	var frames: int = 0
 	var ring_seen: bool = false
-	var preview_seen: bool = false
 	var guard: int = 0
 	while player.loader_active() and guard < 400:
 		await tree.process_frame
 		guard += 1
 		frames += 1
 		ring_seen = ring_seen or ring.loader_ring_visible
-		preview_seen = preview_seen or preview.visible
 	check.call(frames > 0, "(q2) the cannon hold was sampled over %d process frames" % frames)
 	check.call(not ring_seen, "(q2) the cannon hold shows no Loader ring")
-	check.call(not preview_seen, "(q2) the cannon hold shows no trajectory preview")
 	await tree.process_frame
 	check.call(blast != null and not blast_on_launch.is_empty() and blast_on_launch[0], "(q3) the cannon's SteamBlast shows on its launch (%s)" % [blast_on_launch])
 	check.call(blast_on_launch.size() == 1, "(q3) one launch fact after the catch (%d)" % blast_on_launch.size())

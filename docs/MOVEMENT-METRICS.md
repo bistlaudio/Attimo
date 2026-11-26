@@ -42,15 +42,17 @@ The long jump is the dash hop: a jump during a ground dash or within dash_jump_g
 
 ## Loader
 
-The right-click Loader (HAND-04): hold to store the momentum in slow motion, release to throw it along the view at max(stored, loader_min_push) plus the bonus (one full core), capped at loader_max_speed. Measured with the real Player, a horizontal discharge along -z (no camera, debug_loader_direction), 10 Loader ticks of hold and the arm energy set per row. Speed out is the 3D velocity magnitude two ticks after the release. The gym room Zone_Loader sizes its gap and ledge from these numbers through LoaderMath.
+The right-click Loader (HAND-04, ENRG-09): a press pays step 1, holding pays one more step every loader_step_interval of real time up to loader_max_steps; the release throws along the view at v + push + n * (push_step + k * v), capped at loader_max_speed, and flies a straight gravity-free line of loader_flight_distance[n] plus the overflow (the speed the cap cut, times loader_overflow_gain) before gravity resumes. Measured with the real Player and 12 steps on the clock, debug_loader_direction (no camera): ground rows aim 10 degrees above the horizon, the hop row and the up row are as named, 10 ticks of hold for 1 step and 40 for 3. Distance is the straight flight from the release point to its end, reach the horizontal distance to the landing. The slingshot cage is a free 2-step flight along the same line. The gym room Zone_Loader is re-derived from these numbers in 05.1-12.
 
 | Verb | Stored speed (m/s) | Result | Note |
 |---|---|---|---|
-| Loader redirect (standing) | 0.00 | 11.95 m/s | empty arm: speed out is loader_min_push 12.0; depends on loader_min_push, loader_max_speed |
-| Loader redirect (run) | 8.50 | 11.95 m/s | empty arm from a run at run_speed 8.5; depends on loader_min_push, run_speed |
-| Loader bonus (run) | 8.50 | 19.95 m/s | full core: + loader_bonus_speed 8.0; depends on loader_bonus_speed, loader_bonus_cost, loader_min_push |
-| Loader bonus (dash) | 22.00 | 21.95 m/s | pressed during a ground dash (dash_speed 22.0): capped at loader_max_speed 22.0; depends on dash_speed, loader_max_speed |
-| Loader super jump (bonus, up) | 0.00 | 5.88 m apex | straight up with a full core, apex = v^2 / (2 rise_gravity); depends on loader_min_push, loader_bonus_speed, rise_gravity |
+| Loader 1 step (standing) | 0.00 | 6.00 m/s, 6.04 m straight, 7.52 m reach | 1 step from standing; depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_1 |
+| Loader 3 steps (standing) | 0.00 | 10.00 m/s, 14.06 m straight, 17.78 m reach | 3 steps from standing; depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_3 |
+| Loader 1 step (run) | 9.52 | 16.47 m/s, 6.15 m straight, 11.46 m reach | 1 step from a run at run_speed 8.5; depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_1 |
+| Loader 3 steps (run) | 9.52 | 22.00 m/s, 14.45 m straight, 24.34 m reach | 3 steps from a run at run_speed 8.5; depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_3 |
+| Loader 3 steps (dash hop, overflow) | 14.29 | 22.00 m/s, 20.68 m straight, 24.71 m reach | 3 steps in the air during a dash hop: the speed is capped at loader_max_speed 22.0 and the overflow adds distance (loader_overflow_gain 1.0); depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_3 |
+| Loader 3 steps up (run) | 9.52 | 14.45 m straight rise, 21.56 m apex | straight up from a run: speed 22.00 m/s, then gravity carries it to the apex; depends on loader_flight_distance_3, loader_overflow_gain, rise_gravity |
+| Slingshot (free 2 steps, standing entry) | 0.00 | 8.00 m/s, 10.05 m straight, 12.53 m reach | free cage throw, no step paid, kit_launch_scale applied before the cap; depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_2 |
 | Loader hold cap | - | 72 ticks (1.20 s) | the hold discharges by itself in REAL time; depends on loader_hold_cap 1.20 |
 | Loader slow motion | - | 0.25 | Engine.time_scale during the hold; depends on loader_slow_factor |
 
@@ -69,7 +71,8 @@ The arm energy is a clock of 12 whole steps (D-34, ENRG-06 to ENRG-08, FEEL-10):
 | Dash hop stage 2-3 cost | 1 step each | stage 1 is free, without the steps the hop silently stays stage 1; depends on long_jump_cost |
 | Wall run cost | 2 steps, then 1 per 1.00 s | an unpaid start is refused once per wall contact, an unpaid tick drops into Fall silently; until wall_run_time 1.10 s; depends on wall_run_entry_cost, wall_run_tick_cost, wall_run_tick_interval |
 | Wall jump cost | 1 step | an unpaid wall jump is refused and consumes the buffered press; depends on wall_jump_cost |
-| Loader bonus cost | 3 steps | interim, removed with the bonus path in 05.1-11; depends on loader_bonus_cost |
+| Loader step interval | 0.30 s | real time between two Loader steps while the button is held, at most 3 steps; depends on loader_step_interval, loader_max_steps |
+| Loader cost per step | 1 step | measured: the energy a 3-step hold pays divided by 3, a press at 0 steps is refused; depends on ArmEnergy.try_spend(1) per step |
 | Moto Perpetuo on / off | 6 / 4 | on at moto_threshold 6, off below moto_threshold - moto_exit_margin (5) |
 | Respawn steps | 3 | start and respawn value (ArmEnergy.CHECKPOINT_STEPS) |
 | Moto Perpetuo run | 9.52 m/s | with a full arm (moto_threshold 6); depends on run_speed, moto_run_bonus 0.12 |
@@ -106,10 +109,10 @@ Display, compositor and USB latency are outside the software measurement (D-22).
 
 | Action | Accumulated input on: median (ms) | on: max (ms) | off: median (ms) | off: max (ms) | Verdict |
 |---|---|---|---|---|---|
-| Latency jump 60 TPS | 14.49 | 22.07 | 13.53 | 20.38 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency jump 120 TPS | 6.50 | 7.13 | 7.50 | 24.43 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 60 TPS | 13.17 | 20.93 | 12.98 | 19.88 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 120 TPS | 7.48 | 13.56 | 6.78 | 13.21 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 60 TPS | 14.83 | 20.70 | 13.62 | 22.59 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 120 TPS | 8.76 | 15.33 | 6.76 | 13.81 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 60 TPS | 14.01 | 20.95 | 17.56 | 20.80 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 120 TPS | 6.01 | 14.26 | 6.73 | 14.06 | Target met (median <= 66 ms, max <= 100 ms) |
 
 ## Grid cross-check
 
@@ -169,8 +172,16 @@ Every MovementConfig float and int of res://resources/player/movement_default.tr
 | `loader_skid_time` | 0.100 |
 | `loader_min_push` | 12.000 |
 | `loader_bonus_speed` | 8.000 |
+| `loader_step_interval` | 0.300 |
+| `loader_max_steps` | 3.000 |
+| `loader_push` | 4.000 |
+| `loader_push_step` | 2.000 |
+| `loader_speed_k` | 0.100 |
+| `loader_flight_distance_1` | 6.000 |
+| `loader_flight_distance_2` | 10.000 |
+| `loader_flight_distance_3` | 14.000 |
+| `loader_overflow_gain` | 1.000 |
 | `loader_max_speed` | 22.000 |
-| `loader_redirect_cooldown` | 1.000 |
 | `loader_release_control_lock` | 0.150 |
 | `loader_hitstop_time` | 0.050 |
 | `loader_hitstop_scale` | 0.050 |
@@ -186,7 +197,6 @@ Every MovementConfig float and int of res://resources/player/movement_default.tr
 | `wall_jump_cost` | 1.000 |
 | `energy_passive_interval` | 10.000 |
 | `energy_charge_interval` | 5.000 |
-| `loader_bonus_cost` | 3.000 |
 | `moto_threshold` | 6.000 |
 | `moto_exit_margin` | 1.000 |
 | `moto_run_bonus` | 0.120 |

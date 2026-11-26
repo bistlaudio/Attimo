@@ -19,7 +19,10 @@ extends CanvasLayer
 @export_range(0.0, 1.0, 0.01) var desaturation: float = 0.55
 ## Real seconds the cues take to fade in or out; raise it for a softer fade.
 @export_range(0.02, 1.0, 0.01) var ease_time: float = 0.12
-## Vignette tint of an arm hold (energy turquoise). A cage hold uses LoaderPreview.BRASS_COLOR.
+## The steampunk brass of the kit cues (albedo of resources/mechanisms/look_brass.tres; test_crosshair asserts the two match). The
+## crosshair gauge and the vignette of a cage hold use it too.
+const BRASS_COLOR: Color = Color(0.72, 0.55, 0.25, 1.0)
+## Vignette tint of an arm hold (energy turquoise). A cage hold uses BRASS_COLOR.
 @export var arm_tint: Color = Color(0.25, 0.9, 0.85, 1.0)
 ## The environment whose saturation is lowered. Empty: the first WorldEnvironment of the tree.
 @export var world_environment: WorldEnvironment
@@ -55,7 +58,7 @@ func _process(delta: float) -> void:
 	var state: LoaderState = null if player == null else player.loader_state()
 	var holding: bool = player != null and state != null and player.loader_active() and state.source() != LoaderProfile.Source.FIXED
 	if holding:
-		tint = LoaderPreview.BRASS_COLOR if state.source() == LoaderProfile.Source.CAGE else arm_tint
+		tint = BRASS_COLOR if state.source() == LoaderProfile.Source.CAGE else arm_tint
 	var ratio: float = state.hold_ratio() if holding else 0.0
 	level = move_toward(level, 1.0 if holding else 0.0, real / maxf(ease_time, 0.001))
 	if holding:
