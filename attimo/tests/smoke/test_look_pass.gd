@@ -28,8 +28,9 @@ func run(tree: SceneTree, check: Callable) -> void:
 		if file.ends_with(".tscn") and file != "glow_element.tscn":
 			names.append(file)
 	names.sort()
-	# 23 since plan 05.1-06 deleted the lift, crank and pressure plate scenes (26 before).
-	check.call(names.size() >= 23, "at least 23 mechanism and trigger scenes (%d)" % names.size())
+	# 23 since plan 05.1-06 deleted the lift, crank and pressure plate scenes (26 before); 21 since plan 05.1-10 moved the energy
+	# capsule and the broken machine to scenes/kit/energy.
+	check.call(names.size() >= 21, "at least 21 mechanism and trigger scenes (%d)" % names.size())
 	for file: String in names:
 		var stem: String = file.get_basename()
 		var packed: PackedScene = load(DIR + file) as PackedScene

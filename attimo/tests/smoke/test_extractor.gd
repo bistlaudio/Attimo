@@ -10,6 +10,7 @@ const MACHINE_SCENE: String = "res://scenes/kit/energy/broken_machine.tscn"
 const GLOW_ON: String = "res://resources/mechanisms/glow_energy.tres"
 const GLOW_OFF: String = "res://resources/mechanisms/glow_off.tres"
 const SHIPPED_TPS: int = 60
+const BEAM_SETTLE_FRAMES: int = 16
 
 var _nodes: Array[Node] = []
 var _player: PlayerController
@@ -139,14 +140,15 @@ func _scenario_capsule(tree: SceneTree, check: Callable) -> void:
 	var before: int = _player.arm_energy.value
 	check.call(_beam() != null and not _beam().visible, "(1) the ExtractorBeam exists and is hidden before the drain (D-44)")
 	Input.action_press(&"use_hand")
-	await Fixtures.wait_physics(tree, 6)
+	# Long enough for the arm to settle at its raised pose (the palm moves while the layer blends), still inside the 0.45 s drain.
+	await Fixtures.wait_physics(tree, BEAM_SETTLE_FRAMES)
 	await Fixtures.wait_process(tree, 3)
 	var beam: MeshInstance3D = _beam()
 	if beam != null:
 		var error: float = absf(_beam_length(beam) - _palm_point().distance_to(capsule.target_point()))
 		check.call(beam.visible and error < 0.05, "(1) the beam is visible while draining and as long as hand to source (error %.3f m)" % error)
 		check.call(beam.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, "(1) the beam casts no shadow")
-	await Fixtures.wait_physics(tree, ceili(0.6 * SHIPPED_TPS) - 6)
+	await Fixtures.wait_physics(tree, ceili(0.6 * SHIPPED_TPS) - BEAM_SETTLE_FRAMES)
 	Input.action_release(&"use_hand")
 	await Fixtures.wait_physics(tree, 3)
 	await Fixtures.wait_process(tree, 3)

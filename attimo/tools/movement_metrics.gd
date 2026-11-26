@@ -40,8 +40,8 @@ const CAP_SLACK: float = 0.1
 
 const TAKEOFF_KINDS: Array[StringName] = [&"jumped", &"long_jumped"]
 const RELEASE_ACTIONS: Array[StringName] = [&"move_forward", &"move_left", &"jump", &"dash", &"charge"]
-const CAPSULE_SCENE: String = "res://scenes/mechanisms/energy_capsule.tscn"
-const MACHINE_SCENE: String = "res://scenes/mechanisms/broken_machine.tscn"
+const CAPSULE_SCENE: String = "res://scenes/kit/energy/energy_capsule.tscn"
+const MACHINE_SCENE: String = "res://scenes/kit/energy/broken_machine.tscn"
 ## Horizontal speeds the passive charge is measured at (D-05), in m/s.
 ## Longest wait in seconds for a timed energy step (passive tick or R) before the measurement gives up.
 const TICK_WAIT_SECONDS: float = 30.0

@@ -35,7 +35,7 @@ const BEAM_SCENE: String = "res://scenes/proto/primitive_beam.tscn"
 const ZONE_FLOOR_SCENE: String = "res://scenes/mechanisms/zone_floor.tscn"
 ## The zone floor overlay is 24 x 24 m; the instance is scaled to the area rect.
 const ZONE_FLOOR_SIZE: float = 24.0
-const CAPSULE_SCENE: String = "res://scenes/mechanisms/energy_capsule.tscn"
+const CAPSULE_SCENE: String = "res://scenes/kit/energy/energy_capsule.tscn"
 const CAPSULE_RESPAWN: float = 6.0
 const HEADER_FONT_SIZE: int = 128
 const HEADER_HEIGHT: float = 7.5
@@ -99,7 +99,7 @@ func station(role_group: Node3D, builder: RefCounted, object_name: String, at: V
 ## An energy capsule with a respawn beside a target station (every target station keeps one, D-19), at the global point `at`.
 func capsule_beside(station_node: Node3D, builder: RefCounted, at: Vector3, respawn: float = CAPSULE_RESPAWN) -> Node3D:
 	var capsule: Node3D = builder.call(&"_instance", station_node, CAPSULE_SCENE, "Capsule", at - station_node.position) as Node3D
-	capsule.set("respawn_time", respawn)
+	capsule.call("set_respawn", respawn)
 	return capsule
 
 

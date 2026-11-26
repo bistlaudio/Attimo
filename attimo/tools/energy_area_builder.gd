@@ -19,8 +19,8 @@ extends RefCounted
 ## Station sizes that depend on a number are computed from res://resources/player/movement_default.tres (gym rule: sizes from metrics).
 
 const CONFIG_PATH: String = "res://resources/player/movement_default.tres"
-const CAPSULE_SCENE: String = "res://scenes/mechanisms/energy_capsule.tscn"
-const MACHINE_SCENE: String = "res://scenes/mechanisms/broken_machine.tscn"
+const CAPSULE_SCENE: String = "res://scenes/kit/energy/energy_capsule.tscn"
+const MACHINE_SCENE: String = "res://scenes/kit/energy/broken_machine.tscn"
 const PLATE_SCENE: String = "res://scenes/mechanisms/energy_drain_plate.tscn"
 const BOOST_SCENE: String = "res://scenes/mechanisms/boost_ring.tscn"
 const PAD_SCENE: String = "res://scenes/kit/steampunk/wall_pad.tscn"
@@ -147,7 +147,7 @@ func _marker(station: Node3D, builder: RefCounted, node_name: String, global_at:
 ## An energy capsule that refills after `respawn` seconds, a child of `parent` at the global point `at`.
 func _capsule(parent: Node3D, builder: RefCounted, node_name: String, at: Vector3, respawn: float) -> Node3D:
 	var capsule: Node3D = builder.call(&"_instance", parent, CAPSULE_SCENE, node_name, at - parent.position) as Node3D
-	capsule.set("respawn_time", respawn)
+	capsule.call("set_respawn", respawn)
 	return capsule
 
 
@@ -203,7 +203,7 @@ func _build_machine_station(zone: Node3D, builder: RefCounted) -> void:
 	var station: Node3D = _station(zone, builder, "Energy_Machine", at, "Kaputte Maschine", "Erwartet: LMB halten: +5 Stufen in etwa 2 s, dann dunkel")
 	_marker(station, builder, "Start", at + Vector3(3.0, 0.0, 0.0))
 	var machine: Node3D = builder.call(&"_instance", station, MACHINE_SCENE, "Machine", at - station.position) as Node3D
-	machine.set("respawn_time", MACHINE_RESPAWN)
+	machine.call("set_respawn", MACHINE_RESPAWN)
 
 
 func _build_charge_spot(zone: Node3D, builder: RefCounted) -> void:

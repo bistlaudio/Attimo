@@ -66,6 +66,15 @@ func take_step() -> int:
 	return 1
 
 
+## Sets the refill time of this instance (builders, tests). Before the node is ready the shared preset is replaced by a copy carrying
+## the value, so the saved scene keeps it and the .tres is never written (D-12); afterwards only the live value changes.
+func set_respawn(seconds: float) -> void:
+	if config != null and not is_node_ready():
+		config = config.duplicate() as EnergySourceConfig
+		config.respawn_time = seconds
+	respawn_time = seconds
+
+
 ## True while there are steps to take.
 func is_available() -> bool:
 	return not empty and _left() > 0

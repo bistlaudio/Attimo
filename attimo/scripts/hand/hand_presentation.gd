@@ -40,6 +40,8 @@ func _ready() -> void:
 	if skeleton == null or skeleton.find_bone(HAND_BONE) < 0:
 		set_process(false)
 		return
+	# After the animation tree and the arm solver, so the beam starts at this frame's palm.
+	process_priority = 1000
 	var hand_attachment: BoneAttachment3D = BoneAttach.attach(skeleton, HAND_BONE)
 	_palm_material = StandardMaterial3D.new()
 	_palm_material.albedo_color = ENERGY_COLOR.darkened(0.7)
@@ -62,7 +64,7 @@ func _ready() -> void:
 	_arm_light = _make_light(&"ArmLight")
 	arm_attachment.add_child(_arm_light)
 	_beam = _make_beam()
-	add_child(_beam)
+	mannequin.add_child(_beam)
 
 
 func _process(delta: float) -> void:
