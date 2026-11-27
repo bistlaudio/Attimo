@@ -92,6 +92,8 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [ ] **PROG-02**: Every puzzle has a reset path, so the player can never soft-lock
 - [ ] **PROG-03**: Player has 3–5 health points shown diegetically or in a minimal HUD; at 0 the player respawns at the last checkpoint
 - [ ] **PROG-04**: Falling into a kill zone respawns the player at the last checkpoint
+- [ ] **PROG-05**: Enemies and kit hazards (pendulum, piston wall, steam hammer, snap bloom, falling debris) cost health; after a hit the player has invincibility frames (start value about 1 s, Mannequin blinks) and one source can never chain-hit
+- [ ] **PROG-06**: A hit knocks the player back from the source with only a short stagger; health refills at checkpoints and on respawn
 
 ### Level
 
@@ -99,13 +101,6 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [ ] **LEVEL-02**: Level gates paths by ability (lock shown before key), so each module opens previously seen areas
 - [ ] **LEVEL-04**: Level gimmick "charge the level": the player feeds energy into the level and mechanisms activate depending on the charge
 - [ ] **LEVEL-03**: Story is told only through world and look (lab destination visible, ruins, overgrowth), no dialogue or cutscenes
-
-### Boss
-
-- [ ] **BOSS-01**: One object-boss (an object turned evil by the catastrophe) with 2–3 phases
-- [ ] **BOSS-02**: Every boss attack is telegraphed and has a recovery window
-- [ ] **BOSS-03**: Boss is damaged through Loader discharges (and the Extractor) on its weak points plus arena mechanisms, no shot and no separate combat system
-- [ ] **BOSS-04**: Boss health is readable (e.g. glowing cores going out)
 
 ### Feel & Juice
 
@@ -120,7 +115,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 
 ### Polish
 
-- [ ] **POLISH-01**: Polish pass: all mechanics (movement, camera, modules, shooting, enemies, mechanisms, boss) are re-tuned and rounded off together so the whole game feels great
+- [ ] **POLISH-01**: Polish pass: all mechanics (movement, camera, modules, enemies, mechanisms, health) are re-tuned and rounded off together so the whole game feels great
 - [ ] **POLISH-02**: Edge cases and rough spots found while playing the full slice are fixed (stuck spots, unclear moments, timing)
 
 ### Art & Look
@@ -135,12 +130,12 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [ ] **UX-01**: Title screen to start the game
 - [ ] **UX-02**: Pause menu with resume, restart from checkpoint and quit (mouse released while paused)
 - [ ] **UX-03**: Settings menu: mouse sensitivity, invert-Y, volume
-- [ ] **UX-04**: End screen after the boss is defeated
+- [ ] **UX-04**: End screen after reaching the lab at the end of the level
 
 ### Audio (last)
 
-- [ ] **AUDIO-01**: Sound effects for movement, hand modules, mechanisms and boss
-- [ ] **AUDIO-02**: Music for the level and the boss fight
+- [ ] **AUDIO-01**: Sound effects for movement, hand modules, mechanisms, enemies and damage
+- [ ] **AUDIO-02**: Music for the level and the ending
 
 ### Controller (after KB+M is done)
 
@@ -172,8 +167,9 @@ Deferred. Tracked but not in the current roadmap.
 |---------|--------|
 | Visual arm swapping per module | Too much work; arm always looks the same, modules are abilities |
 | Dialogue and cutscenes | Story is told only through world and look |
-| Multiple levels | Vertical slice: one level, one boss |
-| Full combat system (weapons, many enemy types, combat arenas) | No shooting (removed 2026-11-25): Extractor and Loader hits + 1–2 simple enemy types; boss is a puzzle boss using the Loader and mechanisms |
+| Multiple levels | Vertical slice: one level |
+| Boss fight (was BOSS-01..04) | User decision 2026-11-27: no boss; the slice ends when the player reaches the lab, health and invincibility frames moved into Phase 6 |
+| Full combat system (weapons, many enemy types, combat arenas) | No shooting (removed 2026-11-25): Extractor and Loader hits + 1–2 simple enemy types |
 | Skill trees, save slots | Not needed for a slice |
 | Localization | Uni prototype |
 | Playtest study / questionnaires / consent forms | User decision: just the game, juice tuned to one fixed strong level |
@@ -184,7 +180,7 @@ Deferred. Tracked but not in the current roadmap.
 
 ## Traceability
 
-Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B (Produktion) = Phases 9-15.
+Which phases cover which requirements. Group A (Prototyp) = Phases 1-7, Group B (Produktion) = Phases 8-14.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
@@ -193,7 +189,7 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | FOUND-03 | Phase 1 | Complete |
 | FOUND-04 | Phase 1 | Complete |
 | FOUND-05 | Phase 1 | Complete |
-| FOUND-06 | Phase 9 | Pending |
+| FOUND-06 | Phase 8 | Pending |
 | MOVE-01 | Phase 2 | Complete |
 | MOVE-02 | Phase 2 | Complete |
 | MOVE-03 | Phase 2 | Complete |
@@ -242,50 +238,48 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | SHOOT-01 | Phase 6 | Pending |
 | SHOOT-02 | Phase 6 | Pending |
 | SHOOT-03 | Phase 6 | Pending |
-| SHOOT-04 | Phase 12 | Pending |
+| SHOOT-04 | Phase 11 | Pending |
 | PROG-01 | Phase 6 | Pending |
 | PROG-02 | Phase 7 | Pending |
 | PROG-03 | Phase 6 | Pending |
 | PROG-04 | Phase 6 | Pending |
+| PROG-05 | Phase 6 | Pending |
+| PROG-06 | Phase 6 | Pending |
 | LEVEL-01 | Phase 7 | Pending |
 | LEVEL-02 | Phase 7 | Pending |
 | LEVEL-04 | Phase 7 | Pending |
-| LEVEL-03 | Phase 10 | Pending |
-| BOSS-01 | Phase 8 | Pending |
-| BOSS-02 | Phase 8 | Pending |
-| BOSS-03 | Phase 8 | Pending |
-| BOSS-04 | Phase 8 | Pending |
+| LEVEL-03 | Phase 9 | Pending |
 | FEEL-01 | Phase 1 | Complete |
-| FEEL-02 | Phase 11 | Pending |
-| FEEL-03 | Phase 12 | Pending |
-| FEEL-04 | Phase 11 | Pending |
-| FEEL-05 | Phase 11 | Pending |
+| FEEL-02 | Phase 10 | Pending |
+| FEEL-03 | Phase 11 | Pending |
+| FEEL-04 | Phase 10 | Pending |
+| FEEL-05 | Phase 10 | Pending |
 | FEEL-06 | Phase 2 | Complete |
-| FEEL-08 | Phase 11 | Pending |
+| FEEL-08 | Phase 10 | Pending |
 | FEEL-10 | Phase 5 | Complete |
-| POLISH-01 | Phase 12 | Pending |
-| POLISH-02 | Phase 12 | Pending |
-| ART-01 | Phase 9 | Pending |
-| ART-02 | Phase 10 | Pending |
-| ART-03 | Phase 10 | Pending |
+| POLISH-01 | Phase 11 | Pending |
+| POLISH-02 | Phase 11 | Pending |
+| ART-01 | Phase 8 | Pending |
+| ART-02 | Phase 9 | Pending |
+| ART-03 | Phase 9 | Pending |
 | ART-04 | Phase 6 | Pending |
 | UX-01 | Phase 7 | Pending |
 | UX-02 | Phase 7 | Pending |
 | UX-03 | Phase 7 | Pending |
-| UX-04 | Phase 8 | Pending |
-| AUDIO-01 | Phase 14 | Pending |
-| AUDIO-02 | Phase 14 | Pending |
-| CTRL-01 | Phase 13 | Pending |
-| CTRL-02 | Phase 13 | Pending |
-| REL-01 | Phase 15 | Pending |
-| REL-02 | Phase 15 | Pending |
-| REL-03 | Phase 15 | Pending |
+| UX-04 | Phase 7 | Pending |
+| AUDIO-01 | Phase 13 | Pending |
+| AUDIO-02 | Phase 13 | Pending |
+| CTRL-01 | Phase 12 | Pending |
+| CTRL-02 | Phase 12 | Pending |
+| REL-01 | Phase 14 | Pending |
+| REL-02 | Phase 14 | Pending |
+| REL-03 | Phase 14 | Pending |
 
 **Coverage:**
-- v1 requirements: 87 total
-- Mapped to phases: 87
+- v1 requirements: 90 total
+- Mapped to phases: 90
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-11-02*
-*Last updated: 2026-11-25 after the 05.1 playtest-feedback discuss (ENRG-06..10 added for 05.1; EXTR-01, KIT-03, SHOOT-01..03, BOSS-03, ART-04 reworded: energy clock in steps, shot and targets removed). Earlier: 2026-11-24 after Phase 5 plan 05-05 (EXTR-01 marked as partly built in Phase 5: module, capsules and machines; ENRG-05 confirmed in Phase 5). Earlier: 2026-11-23 after the energy-momentum rework (Phase 5 rescoped to Energy Arm & Loader, Phase 05.1 Kit Rework inserted; HAND-04, FEEL-10, ART-04, SHOOT-01, BOSS-03 reworded; ENRG-01..05, EXTR-01, KIT-01..04, LEVEL-04 added; source docs/GAME-DESIGN.md)*
+*Last updated: 2026-11-27 after the roadmap change (Phase 8 Boss & Ending removed: BOSS-01..04 out of scope, UX-04 to Phase 7 as the lab end screen, PROG-05/06 health with invincibility frames and knockback added to Phase 6, Group B renumbered to 8-14). Earlier: 2026-11-25 after the 05.1 playtest-feedback discuss (ENRG-06..10 added for 05.1; EXTR-01, KIT-03, SHOOT-01..03, BOSS-03, ART-04 reworded: energy clock in steps, shot and targets removed). Earlier: 2026-11-24 after Phase 5 plan 05-05 (EXTR-01 marked as partly built in Phase 5: module, capsules and machines; ENRG-05 confirmed in Phase 5). Earlier: 2026-11-23 after the energy-momentum rework (Phase 5 rescoped to Energy Arm & Loader, Phase 05.1 Kit Rework inserted; HAND-04, FEEL-10, ART-04, SHOOT-01, BOSS-03 reworded; ENRG-01..05, EXTR-01, KIT-01..04, LEVEL-04 added; source docs/GAME-DESIGN.md)*

@@ -12,7 +12,7 @@ Ein 3D-Third-Person-Platformer als Uni-Prototyp (vertikaler Slice). Die Hauptfig
 
 - **Engine**: Godot 4 — Szenen und Skripte sind textbasiert und lassen sich direkt bearbeiten und versionieren
 - **Input**: Maus/Tastatur zuerst, Controller später, daher Input-Actions von Anfang an
-- **Umfang**: Vertikaler Slice (ein Level, ein Boss, Uni-Prototyp)
+- **Umfang**: Vertikaler Slice (ein Level, kein Boss, Uni-Prototyp)
 - **Assets**: Low-Poly im KayKit-Stil, importierbar als glTF
 
 <!-- GSD:project-end -->

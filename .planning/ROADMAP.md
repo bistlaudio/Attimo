@@ -2,7 +2,7 @@
 
 ## Overview
 
-The roadmap has two groups. **Group A: Prototyp** (Phases 1-7) builds every mechanic as a vertical, playable slice. It uses only KayKit Prototype Bits for geometry and the KayKit Mannequin_Medium with its Rig_Medium clips as the character. There are no particles and no juice. Group A ends when the whole slice plays from title screen to end screen and all mechanics are right. **Group B: Produktion** (Phases 7-13) then turns the prototype into the real game. First come the style contract and the final Meshy hero. Next the steampunk kit is built and the world is rebuilt with it. Then two juice phases add feedback to every action and finish with a polish pass over the whole slice. Controller support, audio and the Windows release come last, in that order.
+The roadmap has two groups. **Group A: Prototyp** (Phases 1-7) builds every mechanic as a vertical, playable slice. It uses only KayKit Prototype Bits for geometry and the KayKit Mannequin_Medium with its Rig_Medium clips as the character. There are no particles and no juice. Group A ends when the whole slice plays from title screen to end screen and all mechanics are right. **Group B: Produktion** (Phases 8-14) then turns the prototype into the real game. First come the style contract and the final Meshy hero. Next the steampunk kit is built and the world is rebuilt with it. Then two juice phases add feedback to every action and finish with a polish pass over the whole slice. Controller support, audio and the Windows release come last, in that order.
 
 **Rules for every phase:**
 
@@ -13,7 +13,7 @@ The roadmap has two groups. **Group A: Prototyp** (Phases 1-7) builds every mech
 - **Group A only:** All geometry comes from KayKit Prototype Bits. Shapes the kit lacks (gears, valves, conveyors, enemies) are stand-ins built from Prototype Bits pieces. The character is the KayKit Mannequin_Medium on Rig_Medium. No particles, no juice VFX, no camera juice and no Meshy work. Feedback that carries information is part of the mechanic and is allowed: interactable glow, reticle states, HUD, the plain pulse and rope lines.
 - From Phase 1, gameplay emits facts on an event bus. Juice (Phases 10-11) and audio (Phase 13) listen to these facts, so they plug in without changes to gameplay code.
 - There are no juice presets, levels or toggles. Juice is tuned to one fixed, strong level (user decision).
-- Keyboard and mouse come first. All input goes through Input Map actions. Gamepad is tuned only in Phase 13.
+- Keyboard and mouse come first. All input goes through Input Map actions. Gamepad is tuned only in Phase 12.
 - Movement and poses come only from the KayKit `Rig_Medium` clips, using cuts, blends, playback speed and procedural rotation/scale. A verb with no clip composition is not added.
 - Turquoise is used only for interactables and hand feedback. Movement VFX use cream, warm white or amber.
 - The exact design of each hand module and of shooting/enemies is confirmed at the start of its own phase (discuss-phase).
@@ -44,7 +44,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 6: Extractor, Enemies & Recovery** - Enemies beaten by the Extractor and Loader hits (no shot), 1-2 greybox enemy types, health with damage, invincibility frames and knockback next to the energy clock, Extractor and Loader teaching rooms, checkpoints and near-instant respawn
 - [ ] **Phase 7: Level Blockout & Game Flow** - The full Prototype Bits level with ability gating, the "charge the level" gimmick and reset paths, plus title, pause, settings and end screen
 
-### Group B: Produktion (Phases 7-13)
+### Group B: Produktion (Phases 8-14)
 
 - [ ] **Phase 8: Style Contract & Final Hero** - Style contract first, then the final Meshy hero on Rig_Medium replaces the Mannequin
 - [ ] **Phase 9: Steampunk World Building** - Steampunk prop/environment kit, the level rebuilt with it, warm lighting, fog and steam, and storytelling through the world alone
@@ -82,7 +82,7 @@ Plans:
 - [x] 01-06-PLAN.md — F3 event log overlay and the FEEL-01 feedback guard (wave 3)
 - [x] 01-07-PLAN.md — Prototype Bits test scene as main scene, asset-hygiene guard, end-of-phase play-through (wave 4)
 
-**Notes**: Re-verify Godot 4.7.x and addon compatibility. The Mannequin sits under a VisualRoot node with its pivot at the feet. VisualRoot's yaw is the facing. The final hero (Phase 8) replaces the Mannequin under this node. The procedural pirouette and lean (Phase 3) and squash/stretch (Phase 10) are written on the Mannequin child of VisualRoot, not on VisualRoot itself (DEV-01, Phase 3). The fact bus is the only feedback hook built in Group A (FEEL-01). It is laid now so that the juice and audio phases need no edits to gameplay code. The cue catalogue itself (FEEL-08) waits for Phase 11. No Meshy work happens here.
+**Notes**: Re-verify Godot 4.7.x and addon compatibility. The Mannequin sits under a VisualRoot node with its pivot at the feet. VisualRoot's yaw is the facing. The final hero (Phase 8) replaces the Mannequin under this node. The procedural pirouette and lean (Phase 3) and squash/stretch (Phase 10) are written on the Mannequin child of VisualRoot, not on VisualRoot itself (DEV-01, Phase 3). The fact bus is the only feedback hook built in Group A (FEEL-01). It is laid now so that the juice and audio phases need no edits to gameplay code. The cue catalogue itself (FEEL-08) waits for Phase 10. No Meshy work happens here.
 
 ### Phase 2: Movement Core & Follow Camera
 
@@ -190,7 +190,7 @@ Plans:
 - [x] 04-05-PLAN.md — Three puzzle rooms with coverage and scripted solve test, pulse wording in REQUIREMENTS/ROADMAP, end-of-phase feel check (wave 5)
 
 **UI hint**: yes
-**Notes**: The exact Fernauslöser design is confirmed at the start of the phase. Gears, valves, conveyors and gates are stand-ins built from Prototype Bits primitives. Pulse VFX (flash, sparks, impact ring) come in Phase 12.
+**Notes**: The exact Fernauslöser design is confirmed at the start of the phase. Gears, valves, conveyors and gates are stand-ins built from Prototype Bits primitives. Pulse VFX (flash, sparks, impact ring) come in Phase 11.
 
 ### Phase 04.1: Mechanism Kit Extension & HUD Polish (INSERTED)
 
@@ -348,7 +348,7 @@ Plans:
 
 **Plans**: TBD
 **UI hint**: yes
-**Notes**: Rescoped 2026-11-25 (05.1 playtest discuss, `05.1-CONTEXT.md` D-56): the shot is gone, enemies are beaten by the Extractor and Loader hits. Enemy designs are confirmed at the start of the phase. Here a hit shows only through the target's own reaction. Sparks, hit VFX and hit-stop (SHOOT-04) come in Phases 10-12. Added 2026-11-23 (user request): a dash readout belongs in the HUD next to health (dash available, dash-hop long-jump combo stage). Energy is the 12-step clock (`docs/GAME-DESIGN.md` section 3): running and the jump chain are free, every ability costs steps. Design source: `docs/GAME-DESIGN.md` sections 3-5. Added 2026-11-27 (user request, roadmap change): the full health topic lives here, including invincibility frames, knockback and death, because the boss phase was removed; exact health, i-frame and knockback values are set in discuss and measured in the gym.
+**Notes**: Rescoped 2026-11-25 (05.1 playtest discuss, `05.1-CONTEXT.md` D-56): the shot is gone, enemies are beaten by the Extractor and Loader hits. Enemy designs are confirmed at the start of the phase. Here a hit shows only through the target's own reaction. Sparks, hit VFX and hit-stop (SHOOT-04) come in Phases 10-11. Added 2026-11-23 (user request): a dash readout belongs in the HUD next to health (dash available, dash-hop long-jump combo stage). Energy is the 12-step clock (`docs/GAME-DESIGN.md` section 3): running and the jump chain are free, every ability costs steps. Design source: `docs/GAME-DESIGN.md` sections 3-5. Added 2026-11-27 (user request, roadmap change): the full health topic lives here, including invincibility frames, knockback and death, because the boss phase was removed; exact health, i-frame and knockback values are set in discuss and measured in the gym.
 
 ### Phase 7: Level Blockout & Game Flow
 
@@ -369,7 +369,7 @@ Plans:
 
 **Plans**: TBD
 **UI hint**: yes
-**Notes**: Gates use the measured movement and Loader metrics plus a margin, and the kit from Phase 05.1. Do a sequence-break pass. Keep the grid compatible with the steampunk kit planned for Phase 9, so pieces swap in place. The volume value drives the audio buses and becomes audible in Phase 14.
+**Notes**: Gates use the measured movement and Loader metrics plus a margin, and the kit from Phase 05.1. Do a sequence-break pass. Keep the grid compatible with the steampunk kit planned for Phase 9, so pieces swap in place. The volume value drives the audio buses and becomes audible in Phase 13.
 
 ### Phase 8: Style Contract & Final Hero
 
@@ -403,7 +403,7 @@ Plans:
   4. A fresh player can tell where the lab is, and that the world was ruined and is now overgrown, with no text, dialogue or cutscenes.
 
 **Plans**: TBD
-**Notes**: Model the palette atlas on KayKit's `dungeon_texture.png`. Assets are produced or edited through the Blender MCP. Ambient steam here is atmosphere (vents), not action feedback, which comes in Phases 10-12. Run a first frame-rate check on the target laptop after the swap, so heavy assets show up before the polish pass. Full profiling is in Phase 15.
+**Notes**: Model the palette atlas on KayKit's `dungeon_texture.png`. Assets are produced or edited through the Blender MCP. Ambient steam here is atmosphere (vents), not action feedback, which comes in Phases 10-11. Run a first frame-rate check on the target laptop after the swap, so heavy assets show up before the polish pass. Full profiling is in Phase 14.
 
 ### Phase 10: Movement & Camera Juice
 
@@ -488,7 +488,7 @@ Plans:
   3. Debug tools and overlays (event log, tuning panels, latency logger) are stripped or disabled in the release build and cannot be opened by the player.
 
 **Plans**: TBD
-**Notes**: Use export templates that match the pinned Godot 4.7.x. The main performance risks are the particles and juice from Phases 10-11 and the world kit from Phase 10. Pre-warm shaders to avoid first-use hitches.
+**Notes**: Use export templates that match the pinned Godot 4.7.x. The main performance risks are the particles and juice from Phases 10-11 and the world kit from Phase 9. Pre-warm shaders to avoid first-use hitches.
 
 ## Progress
 

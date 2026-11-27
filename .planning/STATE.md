@@ -131,11 +131,12 @@ Recent decisions that affect current work:
 - [Phase 05.1-01]: The cage press latch counts is_action_just_released too, so a same-tick tap fires at once
 - [Phase 05.1-01]: KitBlock joins groups mechanism and kit_block in NOTIFICATION_READY (survives a subclass _ready without super)
 - [Phase 05.1-01]: New gym station kind 'kit' (block + sign, no Driver source) because KitBlock has no source (D-13)
-- [Roadmap]: Two groups, 15 phases (fine granularity), vertical MVP; every phase ends playable. Group A Prototyp (Phases 1-8) runs until all mechanics are right. Group B Produktion (Phases 9-15): style contract + final hero, world building, juice + polish, controller, audio, Windows release.
-- [Roadmap]: Group A uses only KayKit Prototype Bits (greybox) and the KayKit Mannequin_Medium on Rig_Medium with kit clips. No particles, no juice, no Meshy work. Missing shapes (gears, valves, conveyors, enemies, boss) are stand-ins built from Prototype Bits pieces.
-- [Roadmap]: The gameplay fact bus (FEEL-01) is built in Phase 1, so juice (Phases 11-12) and audio (Phase 14) plug in without gameplay code changes. The cue catalogue (FEEL-08) waits for Phase 11.
+- [Roadmap]: Two groups, 15 phases (fine granularity), vertical MVP; every phase ends playable. Group A Prototyp (Phases 1-7) runs until all mechanics are right. Group B Produktion (Phases 8-14): style contract + final hero, world building, juice + polish, controller, audio, Windows release.
+- [Roadmap]: 2026-11-27 user decision: Phase 8 Boss & Ending removed, no boss in the slice. Group A ends with Phase 7 (level reaches the lab, end screen UX-04); health with invincibility frames and knockback (PROG-05/06) is part of Phase 6; Group B renumbered to Phases 8-14.
+- [Roadmap]: Group A uses only KayKit Prototype Bits (greybox) and the KayKit Mannequin_Medium on Rig_Medium with kit clips. No particles, no juice, no Meshy work. Missing shapes (gears, valves, conveyors, enemies) are stand-ins built from Prototype Bits pieces.
+- [Roadmap]: The gameplay fact bus (FEEL-01) is built in Phase 1, so juice (Phases 10-11) and audio (Phase 13) plug in without gameplay code changes. The cue catalogue (FEEL-08) waits for Phase 10.
 - [Roadmap]: Latency (FEEL-06, Phase 2) and pull metrics (FEEL-10, Phase 5) stay with their mechanics. Hand-module poses (ART-04) stay in Phase 5 on the Mannequin: same Rig_Medium as the final hero, so they carry over, and module designs are checked against kit clips early.
-- [Roadmap]: Style contract (FOUND-06) comes first in Group B (Phase 9), before the final hero, because the hero needs the palette, tri budget and arm-core glow decision. The world kit follows in Phase 10.
+- [Roadmap]: Style contract (FOUND-06) comes first in Group B (Phase 8), before the final hero, because the hero needs the palette, tri budget and arm-core glow decision. The world kit follows in Phase 9.
 - [Roadmap]: SHOOT-04 (hit VFX and hit-stop) moved to Phase 12, because it is juice content. Phase 6 shows hits only through the target's own reaction.
 - [Requirements]: No juice presets, levels or toggles (user decision). FEEL-05 and FEEL-08 reworded, FEEL-04 lost "toggleable", the juice toggle was removed from UX-03, FEEL-07 (reduce motion) and FEEL-11 (readable with juice off) moved to Out of Scope.
 - [Requirements]: Added POLISH-01/02 (Phase 12) and REL-01/02/03 (Phase 15, Windows export and performance). v1 = 71.
@@ -198,9 +199,9 @@ None yet.
 ### Blockers/Concerns
 
 - [Phase 5]: The pull/push feel has a thin evidence base, so it needs a focused prototype and momentum test room first.
-- [Phase 9]: Open style decisions: second accent colour, player arm-core glow vs the turquoise rule, final hero triangle budget (~6-9k). The Meshy licence tier is unverified; check it before the final hero is produced.
-- [Phase 11]: Spike needed: `Engine.time_scale` x physics interpolation at 10 TPS before hit-stop is built.
-- [Phase 15]: Performance on the weaker laptop is unmeasured until late. A first frame-rate check is planned after the world swap in Phase 10.
+- [Phase 8]: Open style decisions: second accent colour, player arm-core glow vs the turquoise rule, final hero triangle budget (~6-9k). The Meshy licence tier is unverified; check it before the final hero is produced.
+- [Phase 10]: Spike needed: `Engine.time_scale` x physics interpolation at 10 TPS before hit-stop is built.
+- [Phase 14]: Performance on the weaker laptop is unmeasured until late. A first frame-rate check is planned after the world swap in Phase 9.
 - CAM-01 success criterion 1: 144 Hz camera judder not verified (developer has only a Mac); open human-verification gap, needs a 144 Hz display
 
 ### Quick Tasks Completed

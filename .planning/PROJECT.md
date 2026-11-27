@@ -26,7 +26,7 @@ Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprungkette, Dash und Dash-Hop m
 - [ ] Menüs: Titel, Pause, Einstellungen, Endbild
 - [ ] Animationen nur aus dem KayKit-Kit (Rig_Medium), Movement richtet sich danach
 - [ ] Loop: Rätsel lösen → Bauteil finden → Hand bekommt neue Fähigkeit → neue Wege werden frei
-- [ ] Ein polierter Level (vertikaler Slice) mit Boss am Ende; Bosse sind durch die Katastrophe böse gewordene Gegenstände
+- [ ] Ein polierter Level (vertikaler Slice), der im Labor endet; kein Boss (Entscheidung 2026-11-27)
 - [ ] Look: Steampunk, post-apokalyptisch, warm und hoffnungsvoll, Low-Poly; Stil-Referenz KayKit Dungeon Remastered, aber auf den eigenen Stil angepasst
 - [ ] Erzählung ausschließlich über Welt und Look, keine Dialoge oder Cutscenes
 
@@ -52,7 +52,7 @@ Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprungkette, Dash und Dash-Hop m
 
 - **Engine**: Godot 4 — Szenen und Skripte sind textbasiert und lassen sich direkt bearbeiten und versionieren
 - **Input**: Maus/Tastatur zuerst, Controller später, daher Input-Actions von Anfang an
-- **Umfang**: Vertikaler Slice (ein Level, ein Boss, Uni-Prototyp)
+- **Umfang**: Vertikaler Slice (ein Level, kein Boss, Uni-Prototyp)
 - **Assets**: Low-Poly im KayKit-Stil, importierbar als glTF
 
 ## Key Decisions
@@ -68,7 +68,7 @@ Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprungkette, Dash und Dash-Hop m
 | Charakter wird später in Meshy finalisiert | Aktuelles Modell ist Platzhalter, Feinschliff später | — Pending |
 | KayKit-Animationen (Rig_Medium) auf den Meshy-Charakter | Starre Segmente wie bei KayKit, keine eigenen Animationen; Movement nur, was das Kit hergibt (inkl. Schnitte/Kombinationen) | — Pending |
 | Türkis = interaktiv, zweite Akzentfarbe für Deko | Lesbarkeit von Interagierbarem; Farbe (Vorschlag Bernstein) im Stil-Vertrag Phase 1 | — Pending |
-| 3–5 Lebenspunkte | Klare Fehlerkonsequenz im Bosskampf | — Pending |
+| 3–5 Lebenspunkte mit Unverwundbarkeits-Frames und Rückstoß (Phase 6) | Klare Fehlerkonsequenz bei Gegnern und Gefahren, ohne Kettentreffer | — Pending |
 | Vertical-MVP-Roadmap | Jede Phase liefert etwas Spielbares | — Pending |
 | Zwei Gruppen: A Prototyp (Prototype Bits + KayKit-Mannequin, ohne Partikel/Juice) bis alle Mechaniken stimmen, dann B Produktion (Held, Assets/Welt, Juice + Politur, Controller, Audio, Release) | Mechaniken zuerst sauber, dann Look und Gefühl | — Pending |
 | Keine Juice-Stufen oder -Schalter | Eine feste, kräftige Juice-Stufe; Fokus auf Polish am Ende | — Pending |

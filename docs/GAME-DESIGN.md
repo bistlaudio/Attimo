@@ -5,7 +5,7 @@
 
 ## 0. Identity
 
-- **Game:** Attimo ("the moment"). 3D third-person platformer, uni prototype, vertical slice (one level, one boss).
+- **Game:** Attimo ("the moment"). 3D third-person platformer, uni prototype, vertical slice (one level, no boss; the slice ends when Rino reaches the lab).
 - **Premise:** the protagonist caused the apocalypse when something went wrong in their lab and wants to get back to it, through a destroyed, overgrown world.
 - **Character:** **Rino**, with a steampunk prosthetic arm that stores energy as time: an **energy clock with 12 steps**, shown on the HUD and by four glowing turquoise cores on the arm (3 steps each).
 - **Boost state:** **Moto Perpetuo** (from 6 steps).
@@ -46,6 +46,7 @@ The whole energy system counts in **whole steps**. There are no percentages and 
 - **Arm cores:** the four cores on the arm stay the diegetic read; each core = one quarter of the face = 3 steps.
 - **Moto Perpetuo from 6 steps (half the clock):** +10-15 % run speed, buffed Jump 3; the arm glows brighter, both feet and a point on the back glow too (short flash on entering, fade on leaving, no screen effect).
 - **Respawn / checkpoint:** always respawn with exactly **3 steps** (one core). Fair, no soft-lock, no farming before a checkpoint.
+- **Health (Phase 6, separate from energy):** 3-5 health points next to the clock. Enemies and the kit hazards cost health. After a hit Rino gets **invincibility frames** (start about 1 s, the body blinks, no source can chain-hit) and a **knockback** away from the source with only a short stagger. Health refills at checkpoints and on respawn. Energy and health never convert into each other.
 
 ### Income
 
@@ -206,7 +207,7 @@ Professional pattern: logic separated from look, and cross-cutting abilities as 
 | Component | Does | Examples |
 |---|---|---|
 | Receiver | gets switched by a trigger signal | switched speed pad, drawbridge, parkour pieces |
-| Damage / push | hurts or pushes on contact (until health exists in Phase 6 it only pushes and reports the hit amount) | pendulum, steam hammer, piston wall, snap bloom, falling debris |
+| Damage / push | hurts or pushes on contact (until health exists in Phase 6 it only pushes and reports the hit amount; from Phase 6 it costs health and starts the invincibility frames) | pendulum, steam hammer, piston wall, snap bloom, falling debris |
 | Amplification | reads the arm charge and acts stronger | bounce pad with core, gravity zone |
 | Energy cost | costs whole steps per tick while used | fast escape from the attraction field, paying into an energy core |
 
@@ -262,9 +263,9 @@ Look rule: a look may change freely **within its layer**, but must never break t
 |---|---|
 | 5 Energy Arm & Loader | built the first energy version (0-100, 4 cores), the Loader, the removal of aim mode, the Extractor (capsules and machines), the shot (removed again in 05.1) and the energy HUD |
 | 05.1 Kit Rework | section 6: kit cube, 8 logic blocks + 4 components, the three layers, showroom regroup; plus (2026-11-25) sections 2-5 rebuilt: the energy clock in whole steps, every ability costs, refusal feedback, passive tick and steampunk income, Extractor beam, shot and targets removed, the paid straight-line Loader, camera pitch, slingshot and crosshair changes |
-| 6 Extractor, Enemies & Recovery | enemies beaten by the Extractor (drain) and by Loader hits, enemy income in whole steps, health next to the clock HUD, checkpoints and fast respawn; no shot |
+| 6 Extractor, Enemies & Recovery | enemies beaten by the Extractor (drain) and by Loader hits, enemy income in whole steps, health next to the clock HUD with invincibility frames and knockback, hazards cost health, checkpoints and fast respawn; no shot |
 | 7 Level | the "charge the level" gimmick, built from the kit |
-| 8 Boss | beaten through Loader discharges (and the Extractor) on weak points; no shot |
+| 7 (end of Group A) | the level ends at the lab with the end screen; there is no boss |
 
 ## Change log
 
@@ -286,3 +287,4 @@ Look rule: a look may change freely **within its layer**, but must never break t
 | 2026-11-26 | Plan 05.1-20 (D-09, D-11, D-14, D-15, D-17): the Timed motion block gets the **SWING** profile (pendulum: 60 degrees, 2.4 s) and the **STAMP** profile (piston wall: 3 m along its axis, 0.12 s out, 0.3 s hold, 0.8 s back, 3.62 s cycle with a 0.4 s shudder telegraph; **steam hammer** from above: 3 m, 2.4 s cycle, 0.3 s hold). The **DamagePush** component (pendulum, piston wall, steam hammer) pushes the player on contact (pendulum 10 m/s, piston wall 12 m/s along the motion, hammer 9 m/s sideways, 0.5 s rehit window) and announces `player_hit(amount, position, source_id)` with values only; there is still no health and no death from kit damage (Phase 6 reads the fact). The hammer pushes sideways before the head reaches you, so you are never crushed. The old pendulum and piston wall scripts are deleted. |
 | 2026-11-27 (05.1 end) | Plan 05.1-22 (D-31 amended, D-46, D-47, D-57): 6.8 Timed motion list without its stale door-like entry (D-47: no door-like outputs anywhere); the **mixed course** `Zone_KitCourse` (x 295..395) combines clock hand, slingshot, resin pool, energy core with a drawbridge and a collapse strip in one route, all gaps computed from the metrics doc; the old `Mechanism` base class and its signal `mechanism_changed` are deleted (no kit class extends it); docs/MOVEMENT-METRICS.md gets a generated Kit values section. Sections 2-6 were checked against the built game (clock in steps, Loader, Extractor beam, kit objects, slingshot 2-step rule D-60, steam income D-61) and need no further change. |
 | 2026-11-27 | Playtest feedback (quick 261127-p64): the timed income runs at half speed. The passive clock tick gives +1 every 20 s (was 10 s), and the charge key R gives +1 every 10 s instead of the passive tick (was 5 s). The knobs are `energy_passive_interval` and `energy_charge_interval` in MovementConfig. The HUD second hand turns once per timed step, so it now takes 20 s (10 s with R). Jump 3 of the ground chain no longer spins: the chain Jump 1 -> 2 -> 3 and the height of Jump 3 (also buffed in Moto Perpetuo) stay, and it looks like a plain jump. Long jump stage 3 (dash-hop chain) keeps its pirouette. `ProceduralPose.jump_3_pirouette` switches the Jump 3 spin back on. |
+| 2026-11-27 | Roadmap change (user decision): **no boss**. Phase 8 Boss & Ending is removed, the slice ends when Rino reaches the lab (end screen moves to Phase 7, the new end of Group A), and Group B is renumbered to Phases 8-14. Section 3 gets **health**: 3-5 points, hazards cost health, invincibility frames (~1 s, blink, no chain hits) and knockback, all in Phase 6. |

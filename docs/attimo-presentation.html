@@ -94,7 +94,7 @@ code { font-family: var(--mono); font-size: .9em; color: var(--accent); }
     <div class="eyebrow">Interim presentation · Concept &amp; Design</div>
     <h1>Atti<span class="t">mo</span></h1>
     <p class="lead">Energy is time. Every ability costs a moment from the clock on your arm. And when it counts, you freeze the moment, aim and launch.</p>
-    <div class="chips"><span>3D third-person platformer</span><span>Godot 4.7</span><span>1 level · 1 boss</span><span>Hero: Rino</span></div>
+    <div class="chips"><span>3D third-person platformer</span><span>Godot 4.7</span><span>1 level · no boss</span><span>Hero: Rino</span></div>
   </section>
 
   <section class="slide" data-title="Team">
@@ -229,6 +229,7 @@ code { font-family: var(--mono); font-size: .9em; color: var(--accent); }
         <ul>
           <li>Every ability costs whole steps; paid moves never charge</li>
           <li>Hard cap at 12; respawn always with 3 steps</li>
+          <li>Health apart: 3–5 points, i-frames ~1 s and knockback after a hit</li>
           <li>Passive tick is deliberately slow (+1 / 20 s)</li>
           <li>Nature slows you down (resin pool, leaf storm) and never helps</li>
           <li>Extracting leaves you standing and vulnerable</li>
@@ -247,7 +248,7 @@ code { font-family: var(--mono); font-size: .9em; color: var(--accent); }
         <li>Loader: slow motion, 1–3 steps, straight line</li>
         <li>Extractor with beam</li>
         <li>Mechanism kit in 3 themed layers</li>
-        <li>1–2 enemy types, one level, one boss</li>
+        <li>1–2 enemy types, health with i-frames, one level to the lab</li>
       </ul></div>
       <div><h3 class="b">Nice to have</h3><ul>
         <li>More looks per logic block</li>
@@ -430,9 +431,8 @@ code { font-family: var(--mono); font-size: .9em; color: var(--accent); }
       <tr><th>Phase</th><th>Delivers</th></tr>
       <tr><td class="n">5</td><td>Energy arm &amp; Loader, aim mode removed, Extractor (capsules, machines), energy HUD, energy area in the gym</td></tr>
       <tr><td class="n">05.1</td><td>Kit rework (blocks, components, three layers) + energy clock in steps, shot removed, straight-line Loader</td></tr>
-      <tr><td class="n">6</td><td>Enemies beaten by Extractor and Loader hits, health, checkpoints</td></tr>
-      <tr><td class="n">7</td><td>Level with "charge the level"</td></tr>
-      <tr><td class="n">8</td><td>Boss beaten by Loader discharges</td></tr>
+      <tr><td class="n">6</td><td>Enemies beaten by Extractor and Loader hits, health with invincibility frames and knockback, checkpoints</td></tr>
+      <tr><td class="n">7</td><td>Level with "charge the level", ending at the lab (no boss)</td></tr>
     </table>
   </section>
 

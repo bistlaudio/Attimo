@@ -113,7 +113,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
   <div class="facts">
     <span class="chip">Hero <b>Rino</b></span>
     <span class="chip">Boost state <b>Moto Perpetuo</b></span>
-    <span class="chip">Scope <b>1 level · 1 boss</b></span>
+    <span class="chip">Scope <b>1 level · no boss</b></span>
     <span class="chip">Input <b>KB+M first</b></span>
   </div>
   <nav class="toc" aria-label="Contents">
@@ -274,8 +274,8 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
         <li>Loader (right click): slow motion, 1–3 steps, straight-line flight</li>
         <li>Extractor (left click) with its beam</li>
         <li>Mechanism kit: 8 logic blocks, 3 themed layers</li>
-        <li>1–2 simple enemy types (Extractor and Loader hits), health, checkpoints</li>
-        <li>One level, one boss, title to end screen</li>
+        <li>1–2 simple enemy types (Extractor and Loader hits), health with invincibility frames and knockback, checkpoints</li>
+        <li>One level that ends at the lab, title to end screen (no boss)</li>
         <li>Final hero, steampunk world, juice, audio</li>
         <li>Windows build, KB+M first, controller late</li>
       </ul>
@@ -359,6 +359,7 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
     <li>The four arm cores stay the diegetic read: each core = one quarter = 3 steps.</li>
     <li>Moto Perpetuo from 6: +10–15 % run speed, buffed Jump 3; the arm glows brighter, both feet and a point on the back glow too.</li>
     <li>Respawn and checkpoints: always exactly 3 steps. Fair, no soft-lock, no farming.</li>
+    <li>Health (Phase 6, separate from energy): 3–5 points. Enemies and hazards cost health; after a hit come invincibility frames (about 1 s, the body blinks, no chain hits) and a knockback with a short stagger. Refills at checkpoints.</li>
   </ul>
   <div class="grid2">
     <div class="tbl"><table>
@@ -515,13 +516,12 @@ footer { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--li
     <tr><th>Phase</th><th>Delivers</th></tr>
     <tr><td class="n">5</td><td>Energy Arm &amp; Loader: first energy version (0–100, 4 cores), Moto Perpetuo, Loader, aim mode removed, Extractor (capsules, machines), shot (removed again in 05.1), energy HUD</td></tr>
     <tr><td class="n">05.1</td><td>Kit Rework: kit cube, 8 blocks + 4 components, three layers, showroom regrouped; plus the energy clock in whole steps, paid abilities with refusal feedback, passive tick and steampunk income, Extractor beam, shot and targets removed, straight-line Loader, camera pitch, slingshot and crosshair changes</td></tr>
-    <tr><td class="n">6</td><td>Extractor, Enemies &amp; Recovery: enemies beaten by the Extractor and Loader hits, enemy income in steps, health next to the clock, checkpoints and fast respawn</td></tr>
-    <tr><td class="n">7</td><td>Level blockout with the "charge the level" gimmick</td></tr>
-    <tr><td class="n">8</td><td>Boss beaten through Loader discharges on weak points</td></tr>
+    <tr><td class="n">6</td><td>Extractor, Enemies &amp; Recovery: enemies beaten by the Extractor and Loader hits, enemy income in steps, health next to the clock with invincibility frames and knockback, checkpoints and fast respawn</td></tr>
+    <tr><td class="n">7</td><td>Level blockout with the "charge the level" gimmick, ending at the lab with the end screen (end of Group A, no boss)</td></tr>
   </table></div>
 </section>
 
-<footer>Attimo · generated from <code>docs/GAME-DESIGN.md</code> on 2026-11-25. When the design doc changes, update this page too.</footer>
+<footer>Attimo · generated from <code>docs/GAME-DESIGN.md</code> on 2026-11-27. When the design doc changes, update this page too.</footer>
 </div>
 </body>
 </html>
