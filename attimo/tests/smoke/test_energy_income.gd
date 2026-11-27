@@ -1,7 +1,7 @@
 extends RefCounted
-## Phase 05.1 plan 08 (ENRG-08, D-41, D-42): the timed income of the step clock. A passive +1 every energy_passive_interval (10 s),
+## Phase 05.1 plan 08 (ENRG-08, D-41, D-42): the timed income of the step clock. A passive +1 every energy_passive_interval (20 s),
 ## always: standing, running, in the Loader. The charge key R held while standing still in Idle gives +1 every energy_charge_interval
-## (5 s) INSTEAD of the passive tick (one accumulator, never stacking). Speed earns nothing: a dash or a hop never adds a step.
+## (10 s) INSTEAD of the passive tick (one accumulator, never stacking). Speed earns nothing: a dash or a hop never adds a step.
 
 const Fixtures := preload("res://tests/fixtures.gd")
 const SHIPPED_TPS: int = 60
@@ -36,7 +36,7 @@ func _ticks(arm: ArmEnergy, seconds: float, state_name: StringName, still: bool)
 func _scenario_passive(check: Callable, player: PlayerController) -> void:
 	var arm: ArmEnergy = player.arm_energy
 	var interval: float = player.config.energy_passive_interval
-	check.call(is_equal_approx(interval, 10.0) and is_equal_approx(player.config.energy_charge_interval, 5.0), "(p0) the shipped intervals are 10 s and 5 s")
+	check.call(is_equal_approx(interval, 20.0) and is_equal_approx(player.config.energy_charge_interval, 10.0), "(p0) the shipped intervals are 20 s and 10 s")
 	var gained: Array[Dictionary] = []
 	var on_gained: Callable = func(amount: int, source: StringName) -> void: gained.append({"amount": amount, "source": source})
 	EventBus.energy_gained.connect(on_gained)
@@ -83,7 +83,7 @@ func _scenario_charge_key(check: Callable, player: PlayerController) -> void:
 	check.call(arm.value == 12, "(k4) a full arm stays at 12")
 
 
-# One accumulator: R replaces the passive tick, it never adds on top inside the same 10 s.
+# One accumulator: R replaces the passive tick, it never adds on top inside the same passive interval.
 func _scenario_never_stacks(check: Callable, player: PlayerController) -> void:
 	var arm: ArmEnergy = player.arm_energy
 	var config: MovementConfig = player.config
@@ -91,7 +91,7 @@ func _scenario_never_stacks(check: Callable, player: PlayerController) -> void:
 	Input.action_press(&"charge")
 	_ticks(arm, config.energy_passive_interval, &"Idle", true)
 	Input.action_release(&"charge")
-	check.call(arm.value == 2, "(s1) 10 s of R gives exactly +2 (5 s each), not +3 with the passive tick on top (got %d)" % arm.value)
+	check.call(arm.value == 2, "(s1) one passive interval of R gives exactly +2 (one per charge interval), not +3 with the passive tick on top (got %d)" % arm.value)
 
 
 func _scenario_loader_and_full(check: Callable, player: PlayerController) -> void:

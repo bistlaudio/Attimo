@@ -197,7 +197,7 @@ func _build_machine_station(zone: Node3D, builder: RefCounted) -> void:
 
 func _build_charge_spot(zone: Node3D, builder: RefCounted) -> void:
 	var at: Vector3 = Vector3(-155.0, 0.0, 12.0)
-	var station: Node3D = _station(zone, builder, "Energy_ChargeSpot", at, "Ladepunkt (R halten)", "Erwartet: Still stehen und R halten gibt +1 Stufe alle 5 s, Bewegen bricht ab")
+	var station: Node3D = _station(zone, builder, "Energy_ChargeSpot", at, "Ladepunkt (R halten)", "Erwartet: Still stehen und R halten gibt +1 Stufe alle 10 s, Bewegen bricht ab")
 	_marker(station, builder, "Start", at)
 	# A flat 4 x 4 m overlay marks the spot (a tinted zone floor, no collision).
 	var mark: MeshInstance3D = builder.call(&"_instance", station, ZONE_FLOOR_SCENE, "SpotMark", at + Vector3(0.0, 0.01, 0.0) - station.position, Basis.IDENTITY.scaled(Vector3(4.0 / 24.0, 1.0, 4.0 / 24.0))) as MeshInstance3D

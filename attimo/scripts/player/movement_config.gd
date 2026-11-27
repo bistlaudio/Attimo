@@ -147,10 +147,10 @@ extends Resource
 @export_range(0.1, 3.0, 0.05) var wall_run_tick_interval: float = 1.0
 ## Steps a wall jump costs (D-37); without them it does not fire and the buffered press is refused and consumed. Raise it to make wall jumps rarer.
 @export_range(0, 12, 1) var wall_jump_cost: int = 1
-## Seconds for the passive +1 step (D-42); it always runs, also standing and in the Loader. Raise it for a slower free refill.
-@export_range(0.5, 60.0, 0.5) var energy_passive_interval: float = 10.0
-## Seconds for +1 step while the charge key (R) is held standing still in Idle (D-42); it replaces the passive tick, never stacks. Raise it for a slower charge.
-@export_range(0.5, 60.0, 0.5) var energy_charge_interval: float = 5.0
+## Seconds for the passive +1 step (D-42); it always runs, also standing and in the Loader. Raise it for a slower free refill (20 s since quick 261127-p64).
+@export_range(0.5, 60.0, 0.5) var energy_passive_interval: float = 20.0
+## Seconds for +1 step while the charge key (R) is held standing still in Idle (D-42); it replaces the passive tick, never stacks. Raise it for a slower charge (10 s since quick 261127-p64).
+@export_range(0.5, 60.0, 0.5) var energy_charge_interval: float = 10.0
 
 @export_group("Moto Perpetuo")
 ## Steps from which Moto Perpetuo turns on (D-36, two cores); raise it to demand a fuller arm.
