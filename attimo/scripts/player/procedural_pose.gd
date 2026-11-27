@@ -1,8 +1,8 @@
 class_name ProceduralPose
 extends Node
 ## Code-driven body motion the animation kit has no clip for (MOVE-09): the forward lean of a ground dash (D-01), that eases back
-## to upright when the dash hands over to a long jump, the twitch of a refused dash press (quick 261120-dik), and the single pirouette of Jump 3 and of long jump
-## stage 3 (D-05, D-07). An air dash adds no lean (D-02), and neither does a ground dash shown as the
+## to upright when the dash hands over to a long jump, the twitch of a refused dash press (quick 261120-dik), and the single pirouette of long jump
+## stage 3 (D-05, D-07; Jump 3 only with jump_3_pirouette on). An air dash adds no lean (D-02), and neither does a ground dash shown as the
 ## retargeted Running_Slide (DEV-04), whose own pose would clash with a body pitch about the hip pivot (the extended lead
 ## foot would sink into the floor). The held long-jump stretch lean of D-04 was dropped after the
 ## Phase 3 gym check: at 60 degrees the body lay almost horizontal in the air (quick task 261118-okz). It is presentation only: it reads the FSM and the player, writes
@@ -19,7 +19,7 @@ extends Node
 ## lean_in_time when it grows and per lean_out_time when it shrinks. It always eases from where it is, so Dash into
 ## LongJump (the dash hop) eases the lean back to upright with no pop and the long jump itself stays upright.
 ##
-## Pirouette: a spin of one full turn about the vertical axis. A closed-loop rate (the remaining angle over the
+## Pirouette (long jump stage 3, and Jump 3 only while jump_3_pirouette is on): a spin of one full turn about the vertical axis. A closed-loop rate (the remaining angle over the
 ## predicted time to touchdown minus pirouette_lead_time) finishes it just before landing, also after a released
 ## (cut) jump. DEV-03 (approved by the developer on 2026-11-15, an amendment of D-05 and D-07, aim part removed in phase 05):
 ## a Loader press, an air dash or the landing during a running pirouette puts the spin into finish mode: the remaining angle
@@ -41,6 +41,8 @@ const MIN_LEAN_REFERENCE_DEG: float = 1.0
 @export var spin_about_body_axis: bool = true
 ## True: the pirouette turns clockwise seen from above (Claude's discretion, D-07).
 @export var pirouette_clockwise: bool = true
+## True: Jump 3 of the ground chain spins too (Phase 3 D-05/D-07). Off since quick 261127-p64 (developer playtest 2026-11-27): Jump 3 keeps its height and its place in the chain but looks like a plain jump. Long jump stage 3 always spins.
+@export var jump_3_pirouette: bool = false
 ## Longest time in seconds a full pirouette may take; 0 is off (the spin spreads over the whole flight, the developer
 ## kept that speed on 2026-11-18). Above 0 the spin turns at least TAU per
 ## this time, so on a long airtime it finishes early instead of stretching over the whole flight.
@@ -75,9 +77,9 @@ func _ready() -> void:
 	_machine.state_changed.connect(_on_state_changed)
 
 
-## Starts the pirouette of Jump 3 and of long jump stage 3. The stage was set by the state's enter, which runs before the signal.
+## Starts the pirouette of long jump stage 3, and of Jump 3 while jump_3_pirouette is on. The stage was set by the state's enter, which runs before the signal.
 func _on_state_changed(_from_state: StringName, to_state: StringName) -> void:
-	var pirouette_jump: bool = (to_state == &"Jump" and player.chain_stage == 3) or (to_state == &"LongJump" and player.long_jump_stage == 3)
+	var pirouette_jump: bool = (jump_3_pirouette and to_state == &"Jump" and player.chain_stage == 3) or (to_state == &"LongJump" and player.long_jump_stage == 3)
 	if pirouette_jump:
 		spinning = true
 		spin_angle = 0.0

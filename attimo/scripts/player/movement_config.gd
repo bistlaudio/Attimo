@@ -37,7 +37,7 @@ extends Resource
 @export_range(0.5, 6.0, 0.05) var jump_height: float = 2.0
 ## Full-hold height of Jump 2 of the ground chain in m; raise it for a bigger second hop.
 @export_range(0.5, 6.0, 0.05) var jump_2_height: float = 2.6
-## Full-hold height of Jump 3 (the pirouette jump, the highest ground jump) in m; raise it for a taller Jump 3.
+## Full-hold height of Jump 3 (the highest ground jump) in m; raise it for a taller Jump 3.
 @export_range(0.5, 6.0, 0.05) var jump_3_height: float = 4.0
 ## Tap height in m (release cuts the rise to this height); raise it for jumps that cut less.
 @export_range(0.1, 3.0, 0.05) var jump_min_height: float = 0.8
@@ -159,7 +159,7 @@ extends Resource
 @export_range(0, 4, 1) var moto_exit_margin: int = 1
 ## Extra share of the ground run speed in Moto Perpetuo (GAME-DESIGN +10 to 15 percent); raise it for a faster Moto run.
 @export_range(0.0, 0.3, 0.01) var moto_run_bonus: float = 0.12
-## Height in m of Jump 3 in Moto Perpetuo, kept above jump_3_height; raise it for a higher buffed pirouette jump.
+## Height in m of Jump 3 in Moto Perpetuo, kept above jump_3_height; raise it for a higher buffed Jump 3.
 @export_range(4.0, 8.0, 0.1) var moto_jump_height: float = 5.0
 ## Gravity factor of the buffed Jump 3 (1 = normal); the take-off speed follows from this and moto_jump_height, so apex height and apex time (Pittman) stay a pair. Raise it for a snappier, shorter jump.
 @export_range(1.0, 2.5, 0.05) var moto_jump_gravity_scale: float = 1.45
@@ -202,7 +202,7 @@ extends Resource
 @export_range(0.01, 0.5, 0.01) var lean_in_time: float = 0.05
 ## Seconds the lean takes to ease out from the dash lean to upright, also when a dash hands over to a long jump; raise it for a slower recovery.
 @export_range(0.01, 0.5, 0.01) var lean_out_time: float = 0.12
-## Seconds before the predicted touchdown at which the Jump 3 pirouette is finished; raise it for an earlier finish.
+## Seconds before the predicted touchdown at which a pirouette (long jump stage 3, and Jump 3 while ProceduralPose.jump_3_pirouette is on) is finished; raise it for an earlier finish.
 @export_range(0.0, 0.3, 0.01) var pirouette_lead_time: float = 0.08
 ## Seconds the remaining spin takes when a Loader press, an air dash or the landing cuts a pirouette short (DEV-03); raise it for a softer finish.
 @export_range(0.01, 0.5, 0.01) var pirouette_finish_time: float = 0.1

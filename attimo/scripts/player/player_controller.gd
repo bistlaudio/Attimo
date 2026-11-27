@@ -28,7 +28,7 @@ var air_control_lock_timer: float = 0.0
 var air_dash_available: bool = true
 ## Direction of the last dash started, flattened and normalized.
 var last_dash_direction: Vector3 = Vector3.ZERO
-## Ground-jump chain stage: 0 none, 1 after Jump 1, 2 after Jump 2, 3 after Jump 3, the pirouette jump (D-05). Changes emit chain_stage_changed.
+## Ground-jump chain stage: 0 none, 1 after Jump 1, 2 after Jump 2, 3 after Jump 3, the highest (D-05). Changes emit chain_stage_changed.
 var chain_stage: int = 0
 ## Long-jump stack stage: 0 none, 1..3 the stage of the last long jump (dash hop) while the stack lives (D-05).
 var long_jump_stage: int = 0

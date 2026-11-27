@@ -416,7 +416,7 @@ Plans:
 **Success Criteria** (what must be TRUE):
 
   1. Feedback cues live as data, one per action, each with an empty SFX slot. They react to the gameplay facts from Phase 1, with no changes to gameplay code.
-  2. Jump, landing (scaled by fall speed), the Jump 3 pirouette, dash and long jump each show visible feedback in cream or amber, never turquoise. The feedback is squash/stretch, dust, a steam ring or a lean, as fits the move.
+  2. Jump, landing (scaled by fall speed), Jump 3, the long jump stage 3 pirouette, dash and long jump each show visible feedback in cream or amber, never turquoise. The feedback is squash/stretch, dust, a steam ring or a lean, as fits the move.
   3. Dashes, long jumps and hard landings produce FOV kicks and bounded camera shake without roll, and these hold up in the level's tight rooms. Damage taken and hits on enemies and the boss trigger a short hit-stop that freezes the world without stutter.
   4. Juice runs at one fixed, strong level, tuned per cue. There are no juice presets, sliders or toggles. No feedback delays control or changes movement timing.
   5. No effect causes a hitch or jitter, even the first time it fires, at 10 TPS and at 144 Hz.

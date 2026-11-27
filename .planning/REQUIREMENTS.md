@@ -22,7 +22,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [x] **MOVE-02**: Player runs at one tunable run speed (no separate sprint); extra speed comes from the dash and the dash-hop long jump
 - [x] **MOVE-03**: Player can jump with variable height (release early = lower jump), with heavier fall gravity
 - [x] **MOVE-04**: Coyote time and jump buffering make jumps forgiving
-- [x] **MOVE-05**: Ground jumps chain Jump 1 -> Jump 2 -> Jump 3 (the highest, a pirouette) inside a landing window; there is no air jump, glide, dive or ground-pound
+- [x] **MOVE-05**: Ground jumps chain Jump 1 -> Jump 2 -> Jump 3 (the highest; no spin since quick 261127-p64) inside a landing window; there is no air jump, glide, dive or ground-pound
 - [x] **MOVE-06**: Player can dash on the ground
 - [x] **MOVE-07**: Player can dash once in the air (resets on landing), and a dash can flow into a jump (dash + jump = long jump; clean repeats on landing stack its speed over three stages)
 - [x] **MOVE-08**: Player keeps momentum from moving platforms and conveyors, and handles slopes and steps without sticking or launching
@@ -110,7 +110,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 ### Feel & Juice
 
 - [x] **FEEL-01**: Feedback hooks: gameplay events are broadcast so juice can be layered on without touching gameplay code
-- [ ] **FEEL-02**: Every movement action has visual/kinetic feedback (landing, jump, Jump 3 pirouette, dash, long jump)
+- [ ] **FEEL-02**: Every movement action has visual/kinetic feedback (landing, jump, Jump 3, the long jump stage 3 pirouette, dash, long jump)
 - [ ] **FEEL-03**: Every hand action and mechanism activation has visual feedback (pulse, impact, pull, push, activation)
 - [ ] **FEEL-04**: Camera feedback (trauma-based shake, FOV kick) and hit-stop on impacts
 - [ ] **FEEL-05**: Juice is tuned to one fixed, strong level (no presets or toggles)
