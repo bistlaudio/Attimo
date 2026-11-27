@@ -47,7 +47,7 @@ Requirements for the vertical slice. Each maps to a roadmap phase.
 - [x] **HAND-03**: Module 1 "Fernauslöser": player aims and fires a turquoise pulse (tap = small, hold = big) that triggers mechanisms at range
 - [x] **HAND-04**: Right-click Loader: holding freezes and stores momentum in slow motion with a free camera, charge ring and trajectory preview; releasing discharges in the view direction (bonus costs one core, empty arm only redirects). Replaces aim mode and Pull/Push (docs/GAME-DESIGN.md section 4)
 - [ ] **HAND-05**: Picking up a module is a clear moment (pickup feedback, HUD icon) and unlocks the module permanently
-- [x] **EXTR-01**: Extractor (hold, cone in front of the hand, the only left-click action) drains energy capsules (+3 steps), broken machines (+5 steps) and enemies for energy, with a visible beam from the hand to the source (capsules and machines built in Phase 5, beam and steps in 05.1, enemies in Phase 6)
+- [ ] **EXTR-01**: Extractor (hold, cone in front of the hand, the only left-click action) drains energy capsules (+3 steps), broken machines (+5 steps) and enemies for energy, with a visible beam from the hand to the source (capsules and machines built in Phase 5, beam and steps in 05.1, enemies in Phase 6)
 - [ ] **HAND-06**: Each module has a teaching room: safe first use, then a test, then a twist
 - [x] **HAND-07**: Every interactable's glow element is a steampunk primitive element (brass bezel or gear ring around a faceted turquoise core) shaped to fit its mechanic, built from shared primitives and materials; the glow stages still switch on the core
 
@@ -218,7 +218,7 @@ Which phases cover which requirements. Group A (Prototyp) = Phases 1-8, Group B 
 | HAND-04 | Phase 5 | Complete |
 | HAND-05 | Phase 6 | Pending |
 | HAND-06 | Phase 6 | Pending |
-| EXTR-01 | Phase 05.1 (beam and whole-step income from capsules and machines) + Phase 6 (enemies) | Partial (05.1 part planned in 05.1-08 / 05.1-10; enemy part pending in Phase 6) |
+| EXTR-01 | Phase 05.1 (beam and whole-step income from capsules and machines) + Phase 6 (enemies) | Partial (05.1 part built in 05.1-08 / 05.1-10, closed in 05.1-22 pending UAT; enemy part pending in Phase 6) |
 | ENRG-01 | Phase 5 | Complete |
 | ENRG-02 | Phase 5 | Complete |
 | ENRG-03 | Phase 5 | Complete |
