@@ -141,7 +141,7 @@ code { font-family: var(--mono); font-size: .9em; color: var(--accent); }
 
         <rect x="530" y="190" width="176" height="60" rx="10" fill="#1a2026" stroke="#3fd6c6" stroke-width="1.5"/>
         <text x="618" y="215" fill="#e7e3da" font-weight="600" font-size="16">Clock fills</text>
-        <text x="618" y="235" fill="#9aa39f" font-size="12">whole steps · +1 tick / 10 s</text>
+        <text x="618" y="235" fill="#9aa39f" font-size="12">whole steps · +1 tick / 20 s</text>
 
         <rect x="250" y="362" width="220" height="60" rx="10" fill="#1a2026" stroke="#3fd6c6" stroke-width="1.5"/>
         <text x="360" y="387" fill="#e7e3da" font-weight="600" font-size="16">Spend steps</text>
@@ -171,8 +171,8 @@ code { font-family: var(--mono); font-size: .9em; color: var(--accent); }
         <rect x="10" y="10" width="220" height="234" rx="10" fill="#1a2026" stroke="#2f3a43"/>
         <text x="26" y="38" fill="#9aa39f" font-family="JetBrains Mono, Consolas, monospace" font-size="12" letter-spacing="1.5">INCOME (steps)</text>
         <g font-size="13" fill="#e7e3da">
-          <text x="26" y="66">Clock tick <tspan fill="#9aa39f">+1 / 10 s</tspan></text>
-          <text x="26" y="92">Charge key R <tspan fill="#9aa39f">+1 / 5 s</tspan></text>
+          <text x="26" y="66">Clock tick <tspan fill="#9aa39f">+1 / 20 s</tspan></text>
+          <text x="26" y="92">Charge key R <tspan fill="#9aa39f">+1 / 10 s</tspan></text>
           <text x="26" y="118">Capsule <tspan fill="#9aa39f">+3</tspan></text>
           <text x="26" y="144">Broken machine <tspan fill="#9aa39f">+5</tspan></text>
           <text x="26" y="170">Steampunk booster <tspan fill="#9aa39f">+1</tspan></text>
@@ -229,7 +229,7 @@ code { font-family: var(--mono); font-size: .9em; color: var(--accent); }
         <ul>
           <li>Every ability costs whole steps; paid moves never charge</li>
           <li>Hard cap at 12; respawn always with 3 steps</li>
-          <li>Passive tick is deliberately slow (+1 / 10 s)</li>
+          <li>Passive tick is deliberately slow (+1 / 20 s)</li>
           <li>Nature slows you down (resin pool, leaf storm) and never helps</li>
           <li>Extracting leaves you standing and vulnerable</li>
         </ul>
@@ -294,8 +294,8 @@ code { font-family: var(--mono); font-size: .9em; color: var(--accent); }
     <div class="cores"><svg viewBox="-50 -50 100 100" width="90" height="90" aria-hidden="true"><circle r="44" fill="#12161a" stroke="#d1a35a" stroke-width="3"/><circle r="22" fill="none" stroke="#3fd6c6" stroke-width="44" stroke-dasharray="57.6 80.6" transform="rotate(-90)" opacity="0.55"/><line x1="0" y1="0" x2="0" y2="-32" stroke="#e7e3da" stroke-width="3.5" stroke-linecap="round" transform="rotate(150)"/><circle r="4" fill="#d1a35a"/></svg><span class="lbl">4 arm cores × 3 steps · Moto Perpetuo from 6 · respawn with 3 · no fractions</span></div>
     <div class="cols2 tight">
       <table><tr><th>Income</th><th>Steps</th></tr>
-        <tr><td>Clock ticks by itself</td><td class="n">+1 / 10 s</td></tr>
-        <tr><td>Charge key R</td><td class="n">+1 / 5 s</td></tr>
+        <tr><td>Clock ticks by itself</td><td class="n">+1 / 20 s</td></tr>
+        <tr><td>Charge key R</td><td class="n">+1 / 10 s</td></tr>
         <tr><td>Capsule / broken machine</td><td class="n">+3 / +5</td></tr>
         <tr><td>Steampunk booster use</td><td class="n">+1</td></tr>
         <tr><td>Paid moves</td><td class="n">never</td></tr></table>
