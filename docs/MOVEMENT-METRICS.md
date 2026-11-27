@@ -19,7 +19,7 @@ Every number comes from the real Player driven headless with scripted per-tick i
 | Full jump (standing) | 2.00 | 0.00 | 0.63 | 0.33 | 0.00 | held to the apex |
 | Full jump (run) | 2.00 | 5.52 | 0.63 | 0.33 | 8.50 | held to the apex, at run speed |
 | Jump 2 (chain) | 2.60 | 6.37 | 0.73 | 0.37 | 8.50 | pressed on the landing tick of Jump 1 (Jump 1 for comparison: 2.00 m, 5.52 m) |
-| Jump 3 (pirouette) | 4.00 | 7.79 | 0.90 | 0.47 | 8.50 | pressed on the landing tick of Jump 2, the highest ground jump; a fourth jump inside the window is Jump 1 again |
+| Jump 3 (chain) | 4.00 | 7.79 | 0.90 | 0.47 | 8.50 | pressed on the landing tick of Jump 2, the highest ground jump; a fourth jump inside the window is Jump 1 again |
 
 ## Air options and dash
 
@@ -51,8 +51,8 @@ The right-click Loader (HAND-04, ENRG-09): a press pays step 1, holding pays one
 | Loader 1 step (run) | 9.52 | 16.47 m/s, 6.15 m straight, 11.46 m reach | 1 step from a run at run_speed 8.5; depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_1 |
 | Loader 3 steps (run) | 9.52 | 22.00 m/s, 14.45 m straight, 24.34 m reach | 3 steps from a run at run_speed 8.5; depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_3 |
 | Loader 3 steps (dash hop, overflow) | 14.29 | 22.00 m/s, 20.68 m straight, 24.71 m reach | 3 steps in the air during a dash hop: the speed is capped at loader_max_speed 22.0 and the overflow adds distance (loader_overflow_gain 1.0); depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_3 |
-| Loader 3 steps up (run) | 9.52 | 14.45 m straight rise, 21.56 m apex | straight up from a run: speed 22.00 m/s, then gravity carries it to the apex; depends on loader_flight_distance_3, loader_overflow_gain, rise_gravity |
-| Slingshot (free 2 steps, standing entry) | 0.00 | 8.00 m/s, 10.05 m straight, 12.52 m reach | free cage throw, no step paid, kit_launch_scale applied before the cap; depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_2 |
+| Loader 3 steps up (run) | 9.52 | 14.43 m straight rise, 21.55 m apex | straight up from a run: speed 22.00 m/s, then gravity carries it to the apex; depends on loader_flight_distance_3, loader_overflow_gain, rise_gravity |
+| Slingshot (free 2 steps, standing entry) | 0.00 | 8.00 m/s, 10.05 m straight, 12.53 m reach | free cage throw, no step paid, kit_launch_scale applied before the cap; depends on loader_push, loader_push_step, loader_speed_k, loader_flight_distance_2 |
 | Loader hold cap | - | 72 ticks (1.20 s) | the hold discharges by itself in REAL time; depends on loader_hold_cap 1.20 |
 | Loader slow motion | - | 0.25 | Engine.time_scale during the hold; depends on loader_slow_factor |
 | Camera pitch up | - | 89.0 degrees | the camera looks up to this angle everywhere, never over the pole (D-52); depends on CameraRig.pitch_max |
@@ -63,8 +63,8 @@ The arm energy is a clock of 12 whole steps (D-34, ENRG-06 to ENRG-08, FEEL-10):
 
 | Verb | Value | Note |
 |---|---|---|
-| Passive tick | +1 step per 10.00 s | always, standing, running and in the Loader; depends on energy_passive_interval 10.0 |
-| Charge key R | +1 step per 5.00 s | held in Idle without move input, replaces the passive tick (never stacks); depends on energy_charge_interval 5.0 |
+| Passive tick | +1 step per 20.00 s | always, standing, running and in the Loader; depends on energy_passive_interval 20.0 |
+| Charge key R | +1 step per 10.00 s | held in Idle without move input, replaces the passive tick (never stacks); depends on energy_charge_interval 10.0 |
 | Energy capsule | +3 steps in 0.45 s | Extractor drain of energy_capsule.tscn, one step per 0.15 s; depends on EnergySource amount and step_interval |
 | Broken machine | +5 steps in 2.00 s | Extractor drain of broken_machine.tscn, one step per 0.40 s; depends on EnergySource amount and step_interval |
 | Dash cost | 1 step | an unpaid dash does not fire and is refused; depends on dash_cost |
@@ -110,10 +110,10 @@ Display, compositor and USB latency are outside the software measurement (D-22).
 
 | Action | Accumulated input on: median (ms) | on: max (ms) | off: median (ms) | off: max (ms) | Verdict |
 |---|---|---|---|---|---|
-| Latency jump 60 TPS | 13.64 | 20.13 | 12.11 | 18.76 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency jump 120 TPS | 8.29 | 14.41 | 7.83 | 14.03 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 60 TPS | 12.42 | 19.41 | 13.43 | 20.22 | Target met (median <= 66 ms, max <= 100 ms) |
-| Latency dash 120 TPS | 6.58 | 11.46 | 5.92 | 13.62 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 60 TPS | 13.21 | 20.30 | 13.55 | 20.27 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency jump 120 TPS | 6.84 | 13.40 | 6.52 | 13.38 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 60 TPS | 19.85 | 20.07 | 19.84 | 20.19 | Target met (median <= 66 ms, max <= 100 ms) |
+| Latency dash 120 TPS | 6.50 | 13.14 | 6.31 | 13.48 | Target met (median <= 66 ms, max <= 100 ms) |
 
 ## Grid cross-check
 
@@ -123,7 +123,7 @@ How the numbers map onto the 1 m grid and the 4 m kit pieces. The widest gap ass
 |---|---|---|---|---|
 | Run jump | 5.52 | 5 | 1.38 | 2.0 |
 | Jump 2 chain jump | 6.37 | 6 | 1.59 | 2.6 |
-| Jump 3 pirouette | 7.79 | 7 | 1.95 | 4.0 |
+| Jump 3 chain jump | 7.79 | 7 | 1.95 | 4.0 |
 | Long jump stage 1 gap | 9.10 | 9 | 2.28 | 2.0 |
 | Long jump stage 2 gap | 11.73 | 11 | 2.93 | 2.5 |
 | Long jump stage 3 gap | 15.60 | 15 | 3.90 | 3.6 |
@@ -193,8 +193,8 @@ Every MovementConfig float and int of res://resources/player/movement_default.tr
 | `wall_run_tick_cost` | 1.000 |
 | `wall_run_tick_interval` | 1.000 |
 | `wall_jump_cost` | 1.000 |
-| `energy_passive_interval` | 10.000 |
-| `energy_charge_interval` | 5.000 |
+| `energy_passive_interval` | 20.000 |
+| `energy_charge_interval` | 10.000 |
 | `moto_threshold` | 6.000 |
 | `moto_exit_margin` | 1.000 |
 | `moto_run_bonus` | 0.120 |
