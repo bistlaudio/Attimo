@@ -1,6 +1,6 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/kit/blocks/trigger.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/kit/trigger_base.tscn" id="1_base"]
 [ext_resource type="Resource" path="res://resources/kit/trigger/energy_core.tres" id="2_config"]
 [ext_resource type="Script" path="res://scripts/mechanisms/interactable.gd" id="3_interactable"]
 [ext_resource type="Script" path="res://scripts/kit/components/energy_cost.gd" id="4_cost"]
@@ -26,11 +26,14 @@ material = SubResource("Mat_frame")
 size = Vector3(0.06, 0.8, 0.06)
 material = SubResource("Mat_frame")
 
-[node name="EnergyCoreLook" type="Node3D"]
-script = ExtResource("1_script")
+[node name="EnergyCoreLook" instance=ExtResource("1_base")]
 layer = 1
 energy_relation = 1
 config = ExtResource("2_config")
+
+[node name="Volume" parent="."]
+monitoring = false
+monitorable = false
 
 [node name="Base" type="StaticBody3D" parent="."]
 collision_layer = 1
@@ -76,22 +79,22 @@ style = 3
 size = 1.8
 material_override = ExtResource("7_idle")
 
-[node name="Rings" type="Node3D" parent="Lantern"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
+[node name="Rings" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.95, 0)
 
-[node name="Ring0" parent="Lantern/Rings" instance=ExtResource("6_glowel")]
+[node name="Ring0" parent="Rings" instance=ExtResource("6_glowel")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0, 0)
 style = 0
 size = 0.7
 material_override = ExtResource("8_ring_off")
 
-[node name="Ring1" parent="Lantern/Rings" instance=ExtResource("6_glowel")]
+[node name="Ring1" parent="Rings" instance=ExtResource("6_glowel")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 0)
 style = 0
 size = 0.7
 material_override = ExtResource("8_ring_off")
 
-[node name="Ring2" parent="Lantern/Rings" instance=ExtResource("6_glowel")]
+[node name="Ring2" parent="Rings" instance=ExtResource("6_glowel")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0, 0)
 style = 0
 size = 0.7

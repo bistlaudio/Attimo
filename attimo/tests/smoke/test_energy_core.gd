@@ -13,6 +13,7 @@ const CORE_PRESET: String = "res://resources/kit/trigger/energy_core.tres"
 const COST_SCRIPT: String = "res://scripts/kit/components/energy_cost.gd"
 const THRESHOLD_SCRIPT: String = "res://scripts/kit/logic/logic_threshold.gd"
 const SHIPPED_TPS: int = 60
+const RING_LIT: Material = preload("res://resources/mechanisms/glow_energy.tres")
 ## The core stands 1.2 m ahead of the player: its aim point stays inside hand_near_range (2.2 m).
 const CORE_AT: Vector3 = Vector3(0.0, 0.0, 1.2)
 const PROFILE_ENERGY_CORE: int = 1
@@ -164,6 +165,19 @@ func _player(tree: SceneTree, at: Vector3) -> PlayerController:
 	return player
 
 
+## How many ring marks of the core show the lit energy material.
+func _lit_rings(core: Node) -> int:
+	var lit: int = 0
+	var rings: Node = core.get_node_or_null(^"Rings")
+	if rings == null:
+		return -1
+	for child: Node in rings.get_children():
+		var mark: GeometryInstance3D = child as GeometryInstance3D
+		if mark != null and mark.material_override == RING_LIT:
+			lit += 1
+	return lit
+
+
 func _restore(player: PlayerController) -> void:
 	player.config.energy_passive_interval = _saved_interval
 
@@ -196,6 +210,7 @@ func _scenario_pay_in(tree: SceneTree, check: Callable) -> void:
 	check.call(int(core.get("paid")) == 3, "core: holding E for 1.25 s pays 3 steps (%d)" % int(core.get("paid")))
 	check.call(int(core.get("level")) == 1 and bool(core.get("is_active")), "core: 3 paid steps are level 1 and active (%d)" % int(core.get("level")))
 	check.call(_levels == [1], "core: level_changed(1) fired once (%s)" % [_levels])
+	check.call(_lit_rings(core) == 1, "core: level 1 lights exactly 1 of the 3 rings (%d lit)" % _lit_rings(core))
 	check.call(player.arm_energy.value == 6, "core: the 3 steps came off the clock (%d, expected 6)" % player.arm_energy.value)
 	check.call(not bool(second.get("is_active")), "threshold node min_level 2: still off at level 1")
 	await Fixtures.wait_physics(tree, 60)
@@ -207,6 +222,7 @@ func _scenario_pay_in(tree: SceneTree, check: Callable) -> void:
 	check.call(int(core.get("paid")) == 6 and int(core.get("level")) == 2, "core: 6 paid steps are level 2 (paid %d, level %d)" % [int(core.get("paid")), int(core.get("level"))])
 	check.call(bool(second.get("is_active")), "threshold node min_level 2: on at level 2")
 	check.call(_levels == [1, 2], "core: level_changed fired 1 then 2 (%s)" % [_levels])
+	check.call(_lit_rings(core) == 2, "core: level 2 lights 2 rings (%d lit)" % _lit_rings(core))
 	Fixtures.set_energy(player, 9)
 	await _hold(tree, 1.3)
 	check.call(int(core.get("paid")) == 9 and int(core.get("level")) == 3, "core: 9 paid steps are level 3 (paid %d, level %d)" % [int(core.get("paid")), int(core.get("level"))])

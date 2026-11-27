@@ -134,6 +134,26 @@ func run(tree: SceneTree, check: Callable) -> void:
 		_check_kit_block(check)
 	for block: String in BLOCKS:
 		await _check_block(tree, check, block, BLOCKS[block] as Dictionary)
+	_check_layer_scenes_inherit(check)
+
+
+## KIT-01: every kit object scene in the three layer folders is an inherited scene of a block base (`scenes/kit/*_base.tscn`, directly or through its plain variant), so the
+## block's node layout comes from one place and a look never re-authors it.
+func _check_layer_scenes_inherit(check: Callable) -> void:
+	for layer: String in ["steampunk", "energy", "nature"]:
+		var dir_path: String = "res://scenes/kit/%s" % layer
+		for file: String in DirAccess.get_files_at(dir_path):
+			if not file.ends_with(".tscn"):
+				continue
+			var path: String = "%s/%s" % [dir_path, file]
+			var packed: PackedScene = load(path) as PackedScene
+			var base_path: String = ""
+			var base: PackedScene = packed.get_state().get_node_instance(0) if packed != null else null
+			# A variant (e.g. wall_pad_steam) inherits its plain object, which inherits the base: follow the chain to its root.
+			while base != null:
+				base_path = base.resource_path
+				base = base.get_state().get_node_instance(0)
+			check.call(base_path.begins_with("res://scenes/kit/") and base_path.ends_with("_base.tscn"), "%s inherits a block base scene (got '%s')" % [path, base_path])
 
 
 func _check_kit_block(check: Callable) -> void:
