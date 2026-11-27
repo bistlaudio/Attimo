@@ -1,17 +1,20 @@
 ---
-gsd_state_version: 1.0
+gsd_state_version: "1.0"
 milestone: v0.11.0.4
-milestone_name: milestone
+current_phase: "05.1"
+current_phase_name: kit-rework-inserted
 status: phase_complete
 stopped_at: Phase 05.1 complete (verification 9/9 after gap fix 1c47713; human UAT pending in 05.1-HUMAN-UAT.md)
-last_updated: "2026-11-27T06:22:45.851Z"
+last_updated: "2026-11-27T17:44:56.819Z"
 last_activity: 2026-11-27
+state_head: 148ff17f7c1a6cb9ada352882ca0232d2bb223a8
 progress:
   total_phases: 17
   completed_phases: 7
   total_plans: 68
   completed_plans: 68
   percent: 41
+milestone_name: milestone
 ---
 
 # Project State
@@ -28,9 +31,9 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 Phase: 05.1 (kit-rework-inserted) — complete
 Plan: 22 of 22
 Status: Phase complete on branch E5.1 (verification human_needed, 9/9 criteria; 17 human UAT items pending in 05.1-HUMAN-UAT.md, team tests on the pushed branch; not merged to dev/main)
-Last activity: 2026-11-27
+Last activity: 2026-11-27 - Completed quick task 261127-p64: energy income 20 s / 10 s, no Jump 3 pirouette
 
-Progress: [██████████] 100%
+Progress: [████░░░░░░] 41%
 
 ## Performance Metrics
 
@@ -212,6 +215,7 @@ None yet.
 | 261120-dik | Dash lockouts, blocked-dash feedback, no dash in aim, softer dash blends | 2026-11-20 | 6ea364e | [261120-dik-dash-lockouts-and-blocked-dash-feedback-](./quick/261120-dik-dash-lockouts-and-blocked-dash-feedback-/) |
 | 261120-ef9 | Remove dash lockouts for pirouette, landing, takeoff; keep aim block and soft blends | 2026-11-20 | 3b53279 | [261120-ef9-remove-dash-lockouts-for-pirouette-landi](./quick/261120-ef9-remove-dash-lockouts-for-pirouette-landi/) |
 | 261123-l8y | Camera auto-follow on by default (also keyboard and mouse): camera swings behind the character while strafing A/D | 2026-11-23 | 5c550d6 | [261123-l8y-camera-auto-yaw-camerarig-gently-rotates](./quick/261123-l8y-camera-auto-yaw-camerarig-gently-rotates/) |
+| 261127-p64 | Energy clock income twice as slow (20 s / 10 s) and no Jump 3 pirouette (toggle jump_3_pirouette) | 2026-11-27 | 148ff17 | [261127-p64-energy-clock-income-twice-as-slow-and-no](./quick/261127-p64-energy-clock-income-twice-as-slow-and-no/) |
 
 ### Roadmap Evolution
 
