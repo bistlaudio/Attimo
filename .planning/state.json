@@ -26,7 +26,7 @@
     {
       "number": "5",
       "name": "Energy Arm & Loader",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "number": "05.1",
@@ -35,7 +35,7 @@
     },
     {
       "number": "6",
-      "name": "Extractor, Shot, Enemies & Recovery",
+      "name": "Extractor, Enemies & Recovery",
       "status": "pending"
     },
     {
@@ -45,49 +45,44 @@
     },
     {
       "number": "8",
-      "name": "Boss & Ending",
-      "status": "pending"
-    },
-    {
-      "number": "9",
       "name": "Style Contract & Final Hero",
       "status": "pending"
     },
     {
-      "number": "10",
+      "number": "9",
       "name": "Steampunk World Building",
       "status": "pending"
     },
     {
-      "number": "11",
+      "number": "10",
       "name": "Movement & Camera Juice",
       "status": "pending"
     },
     {
-      "number": "12",
+      "number": "11",
       "name": "Hand & Combat Juice + Polish",
       "status": "pending"
     },
     {
-      "number": "13",
+      "number": "12",
       "name": "Controller Support",
       "status": "pending"
     },
     {
-      "number": "14",
+      "number": "13",
       "name": "Audio",
       "status": "pending"
     },
     {
-      "number": "15",
+      "number": "14",
       "name": "Windows Release & Performance",
       "status": "pending"
     }
   ],
   "next": {
-    "command": "/gsd-progress --next",
-    "label": "Advance to the next step",
-    "reason": "Phase 6 of 17 · executing"
+    "command": "/gsd:progress",
+    "label": "Show progress",
+    "reason": "Unsure of state — showing progress"
   },
-  "updated_at": "2026-11-24T14:22:20.672Z"
+  "updated_at": "2026-11-27T19:31:02.726Z"
 }

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The roadmap has two groups. **Group A: Prototyp** (Phases 1-8) builds every mechanic as a vertical, playable slice. It uses only KayKit Prototype Bits for geometry and the KayKit Mannequin_Medium with its Rig_Medium clips as the character. There are no particles and no juice. Group A ends when the whole slice plays from title screen to end screen and all mechanics are right. **Group B: Produktion** (Phases 9-15) then turns the prototype into the real game. First come the style contract and the final Meshy hero. Next the steampunk kit is built and the world is rebuilt with it. Then two juice phases add feedback to every action and finish with a polish pass over the whole slice. Controller support, audio and the Windows release come last, in that order.
+The roadmap has two groups. **Group A: Prototyp** (Phases 1-7) builds every mechanic as a vertical, playable slice. It uses only KayKit Prototype Bits for geometry and the KayKit Mannequin_Medium with its Rig_Medium clips as the character. There are no particles and no juice. Group A ends when the whole slice plays from title screen to end screen and all mechanics are right. **Group B: Produktion** (Phases 7-13) then turns the prototype into the real game. First come the style contract and the final Meshy hero. Next the steampunk kit is built and the world is rebuilt with it. Then two juice phases add feedback to every action and finish with a polish pass over the whole slice. Controller support, audio and the Windows release come last, in that order.
 
 **Rules for every phase:**
 
@@ -10,8 +10,8 @@ The roadmap has two groups. **Group A: Prototyp** (Phases 1-8) builds every mech
 - **Gym rule (user decision 2026-11-23):** every gameplay phase ends with the movement gym reworked and extended. New mechanics get their own station or room, outdated stations are removed or rebuilt, and the gym layout is regrouped when the content no longer fits. The gym always shows the current state of the game.
 - **Design docs rule (user decision 2026-11-23):** at the end of every phase, if the phase changed the design, update `docs/GAME-DESIGN.md` (with a change-log line), the site `docs/game-design.html` and the deck `docs/attimo-presentation.html`.
 - **Lecture principles:** discuss and plan answer the checklist in `docs/reference/LECTURE-PRINCIPLES.md` (project skill `attimo-design-principles`).
-- **Group A only:** All geometry comes from KayKit Prototype Bits. Shapes the kit lacks (gears, valves, conveyors, enemies, the boss) are stand-ins built from Prototype Bits pieces. The character is the KayKit Mannequin_Medium on Rig_Medium. No particles, no juice VFX, no camera juice and no Meshy work. Feedback that carries information is part of the mechanic and is allowed: interactable glow, reticle states, HUD, the plain pulse and rope lines.
-- From Phase 1, gameplay emits facts on an event bus. Juice (Phases 11-12) and audio (Phase 14) listen to these facts, so they plug in without changes to gameplay code.
+- **Group A only:** All geometry comes from KayKit Prototype Bits. Shapes the kit lacks (gears, valves, conveyors, enemies) are stand-ins built from Prototype Bits pieces. The character is the KayKit Mannequin_Medium on Rig_Medium. No particles, no juice VFX, no camera juice and no Meshy work. Feedback that carries information is part of the mechanic and is allowed: interactable glow, reticle states, HUD, the plain pulse and rope lines.
+- From Phase 1, gameplay emits facts on an event bus. Juice (Phases 10-11) and audio (Phase 13) listen to these facts, so they plug in without changes to gameplay code.
 - There are no juice presets, levels or toggles. Juice is tuned to one fixed, strong level (user decision).
 - Keyboard and mouse come first. All input goes through Input Map actions. Gamepad is tuned only in Phase 13.
 - Movement and poses come only from the KayKit `Rig_Medium` clips, using cuts, blends, playback speed and procedural rotation/scale. A verb with no clip composition is not added.
@@ -20,8 +20,8 @@ The roadmap has two groups. **Group A: Prototyp** (Phases 1-8) builds every mech
 
 | Group | Phases | Look | Ends when |
 |-------|--------|------|-----------|
-| A: Prototyp | 1-8 | Prototype Bits + Mannequin_Medium, no particles, no juice | The full slice plays from title to end screen and all mechanics are signed off |
-| B: Produktion | 9-15 | Final hero, steampunk world, juice, sound | Polished Windows build runs smoothly on a weaker laptop |
+| A: Prototyp | 1-7 | Prototype Bits + Mannequin_Medium, no particles, no juice | The full slice plays from title to end screen and all mechanics are signed off |
+| B: Produktion | 8-14 | Final hero, steampunk world, juice, sound | Polished Windows build runs smoothly on a weaker laptop |
 
 ## Phases
 
@@ -32,7 +32,7 @@ The roadmap has two groups. **Group A: Prototyp** (Phases 1-8) builds every mech
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-### Group A: Prototyp (Phases 1-8)
+### Group A: Prototyp (Phases 1-7)
 
 - [x] **Phase 1: Foundation & Prototype Character** - Pinned Godot project, conventions, repo hygiene, Mannequin_Medium animating in a Prototype Bits test scene, and the gameplay fact bus (completed 2026-11-04)
 - [x] **Phase 2: Movement Core & Follow Camera** - Run, variable jump with a Jump 1-2-3 chain, ground and air dash, the dash-hop long jump, platforms, and a jitter-free mouse-look camera, signed off without juice (completed 2026-11-06)
@@ -41,19 +41,18 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5: Energy Arm & Loader** - Energy resource in 4 arm cores with Moto Perpetuo, passive and capsule income, energy costs for injected moves, the right-click Loader with charge ring and trajectory preview, aim mode removed (completed 2026-11-24)
 - [x] **Phase 05.1: Kit Rework** (INSERTED) - Mechanism kit rebuilt as 8 logic blocks + 4 components + looks in steampunk, energy and nature layers, showroom regrouped; plus (playtest 2026-11-25) the energy clock in 12 whole steps, every ability paid, the shot and targets removed and the straight-line Loader (completed 2026-11-27: 22/22 plans, verification 9/9, human UAT pending in 05.1-HUMAN-UAT.md)
 - [ ] **Phase 05.2: Kit Regroup and Staged Loader** (INSERTED) - Staged Loader (3 fixed stages, slight gravity, auto release, speed lines), energy only switches energy objects and costs visibly, core outputs drawbridge / light bridge / light path, charge gate glider, kit cuts and the gym regrouped into 11 rooms
-- [ ] **Phase 6: Extractor, Enemies & Recovery** - Enemies beaten by the Extractor and Loader hits (no shot), 1-2 greybox enemy types, health next to the energy clock, Extractor and Loader teaching rooms, checkpoints and near-instant respawn
-- [ ] **Phase 7: Level Blockout & Game Flow** - The full Prototype Bits level with ability gating, the "charge the level" gimmick and reset paths, plus title, pause and settings menus
-- [ ] **Phase 8: Boss & Ending** - A greybox object-boss with 2-3 telegraphed phases, beaten through hand modules and arena mechanisms, followed by the end screen
+- [ ] **Phase 6: Extractor, Enemies & Recovery** - Enemies beaten by the Extractor and Loader hits (no shot), 1-2 greybox enemy types, health with damage, invincibility frames and knockback next to the energy clock, Extractor and Loader teaching rooms, checkpoints and near-instant respawn
+- [ ] **Phase 7: Level Blockout & Game Flow** - The full Prototype Bits level with ability gating, the "charge the level" gimmick and reset paths, plus title, pause, settings and end screen
 
-### Group B: Produktion (Phases 9-15)
+### Group B: Produktion (Phases 7-13)
 
-- [ ] **Phase 9: Style Contract & Final Hero** - Style contract first, then the final Meshy hero on Rig_Medium replaces the Mannequin
-- [ ] **Phase 10: Steampunk World Building** - Steampunk prop/environment kit, the level, arena and boss rebuilt with it, warm lighting, fog and steam, and storytelling through the world alone
-- [ ] **Phase 11: Movement & Camera Juice** - Data-driven cue catalogue, squash/stretch, dust and steam on every move, FOV kicks, camera shake and hit-stop at one fixed, strong level
-- [ ] **Phase 12: Hand & Combat Juice + Polish** - Feedback for Loader, Extractor, energy clock, mechanisms and hits, then a polish pass that retunes all mechanics together and fixes rough spots
-- [ ] **Phase 13: Controller Support** - Gamepad bindings for everything, plus stick look and aim assist tuned for controller
-- [ ] **Phase 14: Audio** - Sound effects through the catalogue SFX slots, level and boss music, and a hit-stop/shake retune with sound
-- [ ] **Phase 15: Windows Release & Performance** - Standalone Windows build, profiling on a weaker laptop at 60 fps, and debug tools stripped
+- [ ] **Phase 8: Style Contract & Final Hero** - Style contract first, then the final Meshy hero on Rig_Medium replaces the Mannequin
+- [ ] **Phase 9: Steampunk World Building** - Steampunk prop/environment kit, the level rebuilt with it, warm lighting, fog and steam, and storytelling through the world alone
+- [ ] **Phase 10: Movement & Camera Juice** - Data-driven cue catalogue, squash/stretch, dust and steam on every move, FOV kicks, camera shake and hit-stop at one fixed, strong level
+- [ ] **Phase 11: Hand & Combat Juice + Polish** - Feedback for Loader, Extractor, energy clock, mechanisms and hits, then a polish pass that retunes all mechanics together and fixes rough spots
+- [ ] **Phase 12: Controller Support** - Gamepad bindings for everything, plus stick look and aim assist tuned for controller
+- [ ] **Phase 13: Audio** - Sound effects through the catalogue SFX slots, level music, and a hit-stop/shake retune with sound
+- [ ] **Phase 14: Windows Release & Performance** - Standalone Windows build, profiling on a weaker laptop at 60 fps, and debug tools stripped
 
 ## Phase Details
 
@@ -83,7 +82,7 @@ Plans:
 - [x] 01-06-PLAN.md — F3 event log overlay and the FEEL-01 feedback guard (wave 3)
 - [x] 01-07-PLAN.md — Prototype Bits test scene as main scene, asset-hygiene guard, end-of-phase play-through (wave 4)
 
-**Notes**: Re-verify Godot 4.7.x and addon compatibility. The Mannequin sits under a VisualRoot node with its pivot at the feet. VisualRoot's yaw is the facing. The final hero (Phase 9) replaces the Mannequin under this node. The procedural pirouette and lean (Phase 3) and squash/stretch (Phase 11) are written on the Mannequin child of VisualRoot, not on VisualRoot itself (DEV-01, Phase 3). The fact bus is the only feedback hook built in Group A (FEEL-01). It is laid now so that the juice and audio phases need no edits to gameplay code. The cue catalogue itself (FEEL-08) waits for Phase 11. No Meshy work happens here.
+**Notes**: Re-verify Godot 4.7.x and addon compatibility. The Mannequin sits under a VisualRoot node with its pivot at the feet. VisualRoot's yaw is the facing. The final hero (Phase 8) replaces the Mannequin under this node. The procedural pirouette and lean (Phase 3) and squash/stretch (Phase 10) are written on the Mannequin child of VisualRoot, not on VisualRoot itself (DEV-01, Phase 3). The fact bus is the only feedback hook built in Group A (FEEL-01). It is laid now so that the juice and audio phases need no edits to gameplay code. The cue catalogue itself (FEEL-08) waits for Phase 11. No Meshy work happens here.
 
 ### Phase 2: Movement Core & Follow Camera
 
@@ -119,7 +118,7 @@ Plans:
 - [x] 02-13-PLAN.md — Generated docs/MOVEMENT-METRICS.md with asserted latency table and drift guard (wave 5)
 - [x] 02-14-PLAN.md — Movement gym as main scene and the end-of-phase sign-off without juice, incl. mandatory 144 Hz check (wave 6)
 
-**Notes**: The camera is a hand-built CameraRig (SpringArm3D), decided in discuss (D-18); Phantom Camera is not used. The camera rig must allow an additive FOV/offset stack, which Phase 11 needs. Measure latency at 60 and at 120 TPS. Here the Mannequin plays the Phase 1 base clips; the full state mapping comes in Phase 3.
+**Notes**: The camera is a hand-built CameraRig (SpringArm3D), decided in discuss (D-18); Phantom Camera is not used. The camera rig must allow an additive FOV/offset stack, which Phase 10 needs. Measure latency at 60 and at 120 TPS. Here the Mannequin plays the Phase 1 base clips; the full state mapping comes in Phase 3.
 
 ### Phase 3: Animated Mannequin & Aim Mode
 
@@ -336,64 +335,48 @@ Plans:
 **Goal:** As a player, I want to beat enemies with the Extractor and Loader hits for energy and recover quickly after dying, so that danger feeds the energy loop without frustration.
 **Mode:** mvp
 **Depends on**: Phase 05.1
-**Requirements**: SHOOT-01, SHOOT-02, SHOOT-03, EXTR-01, HAND-05, HAND-06, ART-04, PROG-01, PROG-03, PROG-04
+**Requirements**: SHOOT-01, SHOOT-02, SHOOT-03, EXTR-01, HAND-05, HAND-06, ART-04, PROG-01, PROG-03, PROG-04, PROG-05, PROG-06
 **Success Criteria** (what must be TRUE):
 
   1. The Extractor (hold, cone in front of the hand, with its beam) also drains enemies at close range for whole steps while the player is vulnerable, next to the capsules and broken machines it already drains. There is no shot (removed in 05.1).
   2. A Loader discharge into an enemy damages it (a Loader hit), so movement and combat connect; Prototype Bits barrels, crates and pipes react visibly to Loader hits. The enemy income is set in whole steps.
   3. 1-2 simple greybox enemy types (small machines turned evil, built from Prototype Bits) patrol, notice the player and attack, and are beaten by the Extractor and Loader hits.
-  4. The player has 3-5 health points; health joins the energy clock HUD (diegetic cores on the arm plus a minimal readout). Taking damage is obvious from a kit Hit clip. At 0 health the player respawns at the last checkpoint with 3 steps.
-  5. Reaching a checkpoint visibly changes its state and saves progress. After a death or a fall into a kill zone, the player is back in control within about 1 second. The Extractor and the Loader each have a teaching room (safe use, test, twist) and a readable pose from kit clips; module pickup (HAND-05) applies only if a new module is added, the module switch stays dormant otherwise.
-  6. The movement gym is extended with an enemy area: training enemies to drain and to hit with the Loader, and a short course that mixes extracting, Loader hits and movement.
+  4. The player has 3-5 health points; health joins the energy clock HUD (diegetic cores on the arm plus a minimal readout). Enemies and the kit hazards (pendulum, piston wall, steam hammer, snap bloom, falling debris, which so far only push and report `player_hit`) now cost health. Taking damage is obvious from a kit Hit clip. At 0 health the player respawns at the last checkpoint with 3 steps and full health.
+  5. After a hit the player gets invincibility frames (start value about 1 s): the Mannequin blinks, no further hit lands, and one source can never chain-hit. The hit pushes the player away from the source (knockback) without taking control for longer than a short stagger, so a hit never throws the player off a ledge without a chance to react. Health is refilled at checkpoints (and by optional health pickups, decided in discuss).
+  6. Reaching a checkpoint visibly changes its state and saves progress. After a death or a fall into a kill zone, the player is back in control within about 1 second. The Extractor and the Loader each have a teaching room (safe use, test, twist) and a readable pose from kit clips; module pickup (HAND-05) applies only if a new module is added, the module switch stays dormant otherwise.
+  7. The movement gym is extended with an enemy area: training enemies to drain and to hit with the Loader, a hazard lane that shows damage, invincibility frames and knockback, and a short course that mixes extracting, Loader hits and movement.
 
 **Plans**: TBD
 **UI hint**: yes
-**Notes**: Rescoped 2026-11-25 (05.1 playtest discuss, `05.1-CONTEXT.md` D-56): the shot is gone, enemies are beaten by the Extractor and Loader hits. Enemy designs are confirmed at the start of the phase. Here a hit shows only through the target's own reaction. Sparks, hit VFX and hit-stop (SHOOT-04) come in Phases 11-12. Added 2026-11-23 (user request): a dash readout belongs in the HUD next to health (dash available, dash-hop long-jump combo stage). Energy is the 12-step clock (`docs/GAME-DESIGN.md` section 3): running and the jump chain are free, every ability costs steps. Design source: `docs/GAME-DESIGN.md` sections 3-5.
+**Notes**: Rescoped 2026-11-25 (05.1 playtest discuss, `05.1-CONTEXT.md` D-56): the shot is gone, enemies are beaten by the Extractor and Loader hits. Enemy designs are confirmed at the start of the phase. Here a hit shows only through the target's own reaction. Sparks, hit VFX and hit-stop (SHOOT-04) come in Phases 10-12. Added 2026-11-23 (user request): a dash readout belongs in the HUD next to health (dash available, dash-hop long-jump combo stage). Energy is the 12-step clock (`docs/GAME-DESIGN.md` section 3): running and the jump chain are free, every ability costs steps. Design source: `docs/GAME-DESIGN.md` sections 3-5. Added 2026-11-27 (user request, roadmap change): the full health topic lives here, including invincibility frames, knockback and death, because the boss phase was removed; exact health, i-frame and knockback values are set in discuss and measured in the gym.
 
 ### Phase 7: Level Blockout & Game Flow
 
 **Group:** A (Prototyp)
-**Goal:** As a player, I want to start from a title screen and play the full prototype level, so that I can experience the whole route.
+**Goal:** As a player, I want to start from a title screen, play the full prototype level and reach the lab at its end, so that I can experience the whole slice from start to ending.
 **Mode:** mvp
 **Depends on**: Phase 6
-**Requirements**: LEVEL-01, LEVEL-02, LEVEL-04, PROG-02, UX-01, UX-02, UX-03
+**Requirements**: LEVEL-01, LEVEL-02, LEVEL-04, PROG-02, UX-01, UX-02, UX-03, UX-04
 **Success Criteria** (what must be TRUE):
 
-  1. From the title screen, the player starts the game and plays the Prototype Bits level from start to the boss arena gate. The level is built on the grid of the kit pieces.
+  1. From the title screen, the player starts the game and plays the Prototype Bits level from start to the lab at its end. The level is built on the grid of the kit pieces.
   2. Each module opens areas the player has already seen locked (lock before key), and both teaching rooms sit on the level route.
   3. Every puzzle can be reset, and no sequence of player actions leaves the player soft-locked.
   4. The pause menu offers resume, restart from checkpoint and quit. The mouse is released while paused and recaptured on resume.
   5. The settings menu changes mouse sensitivity and invert-Y with immediate effect, offers a VSync on/off option and stores the volume. All values persist after a restart.
   6. The level gimmick "charge the level" works: the player feeds energy into the level and mechanisms activate depending on the charge.
+  7. Reaching the lab at the end of the level leads to an end screen. The whole slice plays from title to ending in the prototype look, and all mechanics are signed off. There is no boss (user decision 2026-11-27). This closes Group A.
 
 **Plans**: TBD
 **UI hint**: yes
-**Notes**: Gates use the measured movement and Loader metrics plus a margin, and the kit from Phase 05.1. Do a sequence-break pass. Keep the grid compatible with the steampunk kit planned for Phase 10, so pieces swap in place. The volume value drives the audio buses and becomes audible in Phase 14.
+**Notes**: Gates use the measured movement and Loader metrics plus a margin, and the kit from Phase 05.1. Do a sequence-break pass. Keep the grid compatible with the steampunk kit planned for Phase 9, so pieces swap in place. The volume value drives the audio buses and becomes audible in Phase 14.
 
-### Phase 8: Boss & Ending
-
-**Group:** A (Prototyp)
-**Goal:** As a player, I want to defeat an object-boss with Loader discharges, so that the slice has a climax and an ending.
-**Mode:** mvp
-**Depends on**: Phase 7
-**Requirements**: BOSS-01, BOSS-02, BOSS-03, BOSS-04, UX-04
-**Success Criteria** (what must be TRUE):
-
-  1. At the end of the level, the player fights one greybox object-boss, an object turned evil by the catastrophe, through 2-3 distinct phases.
-  2. Every boss attack is announced by a readable telegraph (pose, motion or colour change, no particles) and followed by a recovery window the player can use.
-  3. The boss takes damage only through Loader discharges (and the Extractor) on its weak points, plus arena mechanisms. There is no shot and no separate combat system.
-  4. Boss health can be read at a glance from its glowing cores going out.
-  5. Defeating the boss leads to an end screen. The whole slice plays from title to ending in the prototype look, and all mechanics are signed off. This closes Group A.
-
-**Plans**: TBD
-**UI hint**: yes
-
-### Phase 9: Style Contract & Final Hero
+### Phase 8: Style Contract & Final Hero
 
 **Group:** B (Produktion)
 **Goal:** As a player, I want to play as the final steampunk hero, so that the character matches the game's look.
 **Mode:** mvp
-**Depends on**: Phase 8
+**Depends on**: Phase 7
 **Requirements**: FOUND-06, ART-01
 **Success Criteria** (what must be TRUE):
 
@@ -405,65 +388,65 @@ Plans:
 **Plans**: TBD
 **Notes**: Check the Meshy licence tier before the hero is produced. Use Route A from KAYKIT.md: rig the hero onto Rig_Medium in Blender and keep the Rig_Medium bone names. The style contract comes first in Group B because the hero already needs the palette, the tri budget and the arm-core glow decision. The hero is then the first asset through the export checklist, which proves the pipeline on one asset before the world kit is built in volume.
 
-### Phase 10: Steampunk World Building
+### Phase 9: Steampunk World Building
 
 **Group:** B (Produktion)
 **Goal:** As a player, I want to explore a warm, ruined steampunk world instead of greybox, so that the story reads through the look alone.
 **Mode:** mvp
-**Depends on**: Phase 9
+**Depends on**: Phase 8
 **Requirements**: ART-02, ART-03, LEVEL-03
 **Success Criteria** (what must be TRUE):
 
-  1. The level, the boss arena and the boss are rebuilt with a steampunk prop and environment kit textured from the palette atlas. The kit stays within poly budgets, matches the clean KayKit style and sits on the same grid as the Prototype Bits blockout.
-  2. After the swap, every gate, puzzle, reset path and the boss fight work as in the prototype. No new geometry blocks a route or opens a shortcut.
+  1. The level is rebuilt with a steampunk prop and environment kit textured from the palette atlas. The kit stays within poly budgets, matches the clean KayKit style and sits on the same grid as the Prototype Bits blockout.
+  2. After the swap, every gate, puzzle and reset path work as in the prototype. No new geometry blocks a route or opens a shortcut.
   3. Warm directional light, fog and ambient steam set the mood, and turquoise glow marks only interactables.
   4. A fresh player can tell where the lab is, and that the world was ruined and is now overgrown, with no text, dialogue or cutscenes.
 
 **Plans**: TBD
-**Notes**: Model the palette atlas on KayKit's `dungeon_texture.png`. Assets are produced or edited through the Blender MCP. Ambient steam here is atmosphere (vents), not action feedback, which comes in Phases 11-12. Run a first frame-rate check on the target laptop after the swap, so heavy assets show up before the polish pass. Full profiling is in Phase 15.
+**Notes**: Model the palette atlas on KayKit's `dungeon_texture.png`. Assets are produced or edited through the Blender MCP. Ambient steam here is atmosphere (vents), not action feedback, which comes in Phases 10-12. Run a first frame-rate check on the target laptop after the swap, so heavy assets show up before the polish pass. Full profiling is in Phase 15.
 
-### Phase 11: Movement & Camera Juice
+### Phase 10: Movement & Camera Juice
 
 **Group:** B (Produktion)
 **Goal:** As a player, I want every move to give punchy feedback, so that movement feels alive and fast.
 **Mode:** mvp
-**Depends on**: Phase 10
+**Depends on**: Phase 9
 **Requirements**: FEEL-02, FEEL-04, FEEL-05, FEEL-08
 **Success Criteria** (what must be TRUE):
 
   1. Feedback cues live as data, one per action, each with an empty SFX slot. They react to the gameplay facts from Phase 1, with no changes to gameplay code.
   2. Jump, landing (scaled by fall speed), Jump 3, the long jump stage 3 pirouette, dash and long jump each show visible feedback in cream or amber, never turquoise. The feedback is squash/stretch, dust, a steam ring or a lean, as fits the move.
-  3. Dashes, long jumps and hard landings produce FOV kicks and bounded camera shake without roll, and these hold up in the level's tight rooms. Damage taken and hits on enemies and the boss trigger a short hit-stop that freezes the world without stutter.
+  3. Dashes, long jumps and hard landings produce FOV kicks and bounded camera shake without roll, and these hold up in the level's tight rooms. Damage taken and hits on enemies trigger a short hit-stop that freezes the world without stutter.
   4. Juice runs at one fixed, strong level, tuned per cue. There are no juice presets, sliders or toggles. No feedback delays control or changes movement timing.
   5. No effect causes a hitch or jitter, even the first time it fires, at 10 TPS and at 144 Hz.
 
 **Plans**: TBD
 **Notes**: Run a 30-minute spike on `Engine.time_scale` x physics interpolation at 10 TPS before building hit-stop. Squash/stretch is composed into the transform of the Mannequin child of VisualRoot, the node ProceduralPose writes since Phase 3 (DEV-01); VisualRoot's yaw stays the facing. Starting values are in GAME-FEEL.md Section 4. Ignore the presets and per-channel toggles described there (user decision). Pool and pre-warm particles. Research sources: Jan Willem Nijman, "The Art of Screenshake" (2013); Jonasson & Purho, "Juice it or lose it" (2012); Swink, *Game Feel* (polish chapters).
 
-### Phase 12: Hand & Combat Juice + Polish
+### Phase 11: Hand & Combat Juice + Polish
 
 **Group:** B (Produktion)
 **Goal:** As a player, I want every hand action and hit to give clear feedback and the whole slice to feel round, so that the game feels great from start to end.
 **Mode:** mvp
-**Depends on**: Phase 11
+**Depends on**: Phase 10
 **Requirements**: FEEL-03, SHOOT-04, POLISH-01, POLISH-02
 **Success Criteria** (what must be TRUE):
 
   1. Loader, Extractor, energy gain and spend, and mechanism activation each show distinct visual feedback: Loader step charge and discharge burst, extract beam, clock and core fill and drain, and the mechanism activation pulse. Module pickup is a clear moment, with a brief freeze and the HUD icon popping in.
-  2. Every hit on an object or enemy gives clear feedback: a hit reaction on the next frame, sparks and a short hit-stop. Big moments (module pickup, boss hit, death) feel stronger than small ones (jump, landing).
-  3. Movement, camera, both modules, shooting, enemies, mechanisms and the boss are retuned together over full playthroughs. The movement and Loader metrics tables are updated to the final values.
+  2. Every hit on an object or enemy gives clear feedback: a hit reaction on the next frame, sparks and a short hit-stop. Big moments (module pickup, reaching the lab, death) feel stronger than small ones (jump, landing).
+  3. Movement, camera, both modules, shooting, enemies, mechanisms and the health and i-frame values are retuned together over full playthroughs. The movement and Loader metrics tables are updated to the final values.
   4. Rough spots found while playing the full slice (stuck spots, unclear moments, timing problems) are logged and fixed. A final playthrough from title to end screen finds none left open.
 
 **Plans**: TBD
 **UI hint**: yes
-**Notes**: There is no playtest study or questionnaire (user decision). The polish pass walks the catalogue row by row, fills gaps and freezes the final values. It also checks that the gates still match the retuned metrics. Research sources: same juice talks as Phase 11 plus Swink, *Game Feel*.
+**Notes**: There is no playtest study or questionnaire (user decision). The polish pass walks the catalogue row by row, fills gaps and freezes the final values. It also checks that the gates still match the retuned metrics. Research sources: same juice talks as Phase 10 plus Swink, *Game Feel*.
 
-### Phase 13: Controller Support
+### Phase 12: Controller Support
 
 **Group:** B (Produktion)
 **Goal:** As a player, I want to play the whole slice with a gamepad, so that I can choose my input device.
 **Mode:** mvp
-**Depends on**: Phase 12
+**Depends on**: Phase 11
 **Requirements**: CTRL-01, CTRL-02
 **Success Criteria** (what must be TRUE):
 
@@ -475,42 +458,42 @@ Plans:
 **Plans**: TBD
 **UI hint**: yes
 
-### Phase 14: Audio
+### Phase 13: Audio
 
 **Group:** B (Produktion)
-**Goal:** As a player, I want sound and music on every action and moment, so that impacts and the boss fight land fully.
+**Goal:** As a player, I want sound and music on every action and moment, so that impacts and the ending land fully.
 **Mode:** mvp
-**Depends on**: Phase 13
+**Depends on**: Phase 12
 **Requirements**: AUDIO-01, AUDIO-02
 **Success Criteria** (what must be TRUE):
 
-  1. Movement, hand modules, mechanisms and the boss have sound effects. They are plugged into the catalogue's empty SFX slots with no changes to gameplay code.
-  2. The level has music, and the boss fight switches to its own music.
+  1. Movement, hand modules, mechanisms, enemies and damage have sound effects. They are plugged into the catalogue's empty SFX slots with no changes to gameplay code.
+  2. The level has music, and the ending has its own music cue.
   3. The volume setting audibly changes the sound and music levels.
   4. With sound in, hit-stop and shake are retuned so impacts do not feel overdone.
 
 **Plans**: TBD
 
-### Phase 15: Windows Release & Performance
+### Phase 14: Windows Release & Performance
 
 **Group:** B (Produktion)
 **Goal:** As a player, I want to run the game on Windows without Godot, so that I can play it smoothly on a normal laptop.
 **Mode:** mvp
-**Depends on**: Phase 14
+**Depends on**: Phase 13
 **Requirements**: REL-01, REL-02, REL-03
 **Success Criteria** (what must be TRUE):
 
   1. A standalone Windows build (.exe) starts on a machine without the Godot editor and plays the full slice from title to end screen. Settings and checkpoints save as in the editor build.
-  2. The slice is profiled on a weaker machine (for example the uni laptop) and runs smoothly there, at about 60 fps in the level and in the boss fight. The profiling results and fixes are recorded.
+  2. The slice is profiled on a weaker machine (for example the uni laptop) and runs smoothly there, at about 60 fps in the level, including its busiest room. The profiling results and fixes are recorded.
   3. Debug tools and overlays (event log, tuning panels, latency logger) are stripped or disabled in the release build and cannot be opened by the player.
 
 **Plans**: TBD
-**Notes**: Use export templates that match the pinned Godot 4.7.x. The main performance risks are the particles and juice from Phases 11-12 and the world kit from Phase 10. Pre-warm shaders to avoid first-use hitches.
+**Notes**: Use export templates that match the pinned Godot 4.7.x. The main performance risks are the particles and juice from Phases 10-11 and the world kit from Phase 10. Pre-warm shaders to avoid first-use hitches.
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 04.1 → 5 → 05.1 → 6 → 7 → 8 (end of Group A) → 9 → 10 → 11 → 12 → 13 → 14 → 15
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 04.1 → 5 → 05.1 → 05.2 → 6 → 7 (end of Group A) → 8 → 9 → 10 → 11 → 12 → 13 → 14
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -522,7 +505,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 04.1 → 5 → 05.1 →
 | 05.1. Kit Rework | 22/22 | Complete (UAT pending) | 2026-11-27 |
 | 6. Extractor, Enemies & Recovery | 0/TBD | Not started | - |
 | 7. Level Blockout & Game Flow | 0/TBD | Not started | - |
-| 8. Boss & Ending | 0/TBD | Not started | - |
 | 9. Style Contract & Final Hero | 0/TBD | Not started | - |
 | 10. Steampunk World Building | 0/TBD | Not started | - |
 | 11. Movement & Camera Juice | 0/TBD | Not started | - |
