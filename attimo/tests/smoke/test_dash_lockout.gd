@@ -1,6 +1,6 @@
 extends RefCounted
 ## Quick 261120-dik, reduced by quick 261120-ef9, aim removed in phase 05: there is no dash lockout today (plan 05-03 adds the
-## energy reason), so dash_locked_reason() is &"" in every scenario. A press during the Jump 3 / long jump stage 3 pirouette, on
+## energy reason), so dash_locked_reason() is &"" in every scenario. A press during the Jump 3 (the scenario switches its spin on) / long jump stage 3 pirouette, on
 ## the landing tick or right after a take-off starts a dash. The blocked-dash infrastructure stays alive for the energy reason:
 ## _block_dash emits EventBus.dash_blocked once per physics frame and kicks the ProceduralPose twitch (no velocity, no dash clip,
 ## no cooldown). The dash crossfades (dash_in_blend, dash_in_blend_air, dash_out_blend) are written to the animation edges by
@@ -114,6 +114,8 @@ func _scenario_landing(tree: SceneTree, check: Callable) -> void:
 func _scenario_pirouette(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree, Vector3(0.0, 0.0, 50.0))
 	var pose: ProceduralPose = player.get_node("ProceduralPose") as ProceduralPose
+	# The pirouette code is shared with long jump stage 3; the toggle gives a reproducible spin on Jump 3.
+	pose.jump_3_pirouette = true
 	Input.action_press(&"move_forward")
 	await Fixtures.wait_until(tree, func() -> bool: return absf(player.horizontal_speed() - player.config.run_speed) < 0.05, 120)
 	for i: int in 2:

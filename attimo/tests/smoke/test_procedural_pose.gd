@@ -4,8 +4,8 @@ extends RefCounted
 ## (dash_lean_deg) and the
 ## lean eases back to upright when the dash hands over to a long jump (no
 ## stretch lean); the ground dash can be the retargeted Running_Slide (DEV-04) and the body then stays exactly upright;
-## an air dash does not lean either; Jump 3 and long jump stage 3
-## spin once and finish before touchdown; a Loader press during a pirouette finishes it cleanly, and so does an air dash
+## an air dash does not lean either; long jump stage 3
+## spins once and finishes before touchdown (Jump 3 spins only with jump_3_pirouette on, off since quick 261127-p64; the DEV-03 scenarios switch it on for their own player); a Loader press during a pirouette finishes it cleanly, and so does an air dash
 ## (DEV-03 without the aim part; the pirouette is no dash lockout, quick 261120-ef9). Every expectation derives from player.config. Actions are
 ## released and the tick rate stays at 60 before nodes are freed.
 
@@ -36,6 +36,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_hop_upright(tree, check)
 	await _scenario_air_dash_upright(tree, check)
 	await _scenario_jump_chain_spin(tree, check)
+	await _scenario_jump_3_toggle_on(tree, check)
 	await _scenario_cut_jump_3(tree, check)
 	await _scenario_long_jump_stages(tree, check)
 	await _scenario_air_dash_finish(tree, check)
@@ -335,10 +336,11 @@ func _fly_out(tree: SceneTree, player: PlayerController) -> void:
 	Fixtures.send_action_event(&"jump", false)
 
 
-# D-05 / D-07: Jump 1 and 2 do not spin; a held Jump 3 spins once from its entry tick and is complete by touchdown.
+# D-05 / D-07 amended by quick 261127-p64: Jump 1, 2 and 3 do not spin by default.
 func _scenario_jump_chain_spin(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
 	var pose: ProceduralPose = _pose(player)
+	check.call(not pose.jump_3_pirouette, "(j0) a fresh player has jump_3_pirouette off")
 	await _run_up(tree, player)
 	var first: Dictionary = await _jump(tree, player)
 	var second: Dictionary = await _jump(tree, player)
@@ -346,13 +348,29 @@ func _scenario_jump_chain_spin(tree: SceneTree, check: Callable) -> void:
 	check.call(not _any_spinning(second.rows) and not second.entry_spinning, "(j1) Jump 2 never spins")
 	var third: Dictionary = await _jump(tree, player)
 	var rows: Array[Dictionary] = third.rows
-	check.call(third.stage == 3 and third.entry_spinning, "(j2) Jump 3 starts spinning on its entry tick (stage %d)" % third.stage)
-	check.call(_max_of(rows, "spin") > SPIN_SEEN_MIN, "(j2) the spin angle gets past %.1f rad (max %.2f)" % [SPIN_SEEN_MIN, _max_of(rows, "spin")])
-	var done: bool = not pose.spinning and pose.spin_angle == 0.0
-	check.call(done or await _completes_by_touchdown(tree, player), "(j2) the spin is complete at touchdown or within pirouette_finish_time plus 2 ticks")
-	check.call(_spin_never_snaps_back(rows, 0), "(j2) the spin angle only grows while it runs")
+	check.call(third.stage == 3 and not third.entry_spinning and not _any_spinning(rows) and _max_of(rows, "spin") == 0.0, "(j2) Jump 3 is stage 3 and never spins with the shipped settings (quick 261127-p64)")
 	check.call(_all_finite(rows), "(j2) every written Mannequin basis is finite")
 	check.call(is_zero_approx(player.visual_root.rotation.x) and is_zero_approx(player.visual_root.rotation.z), "(j2) VisualRoot is never tilted by the spin (DEV-01)")
+	await _end(player)
+
+
+# jump_3_pirouette on: a held Jump 3 spins once from its entry tick and is complete by touchdown (the former j2 checks).
+func _scenario_jump_3_toggle_on(tree: SceneTree, check: Callable) -> void:
+	var player: PlayerController = await _begin(tree)
+	var pose: ProceduralPose = _pose(player)
+	pose.jump_3_pirouette = true
+	await _run_up(tree, player)
+	await _jump(tree, player)
+	await _jump(tree, player)
+	var third: Dictionary = await _jump(tree, player)
+	var rows: Array[Dictionary] = third.rows
+	check.call(third.stage == 3 and third.entry_spinning, "(t1) Jump 3 starts spinning on its entry tick (stage %d)" % third.stage)
+	check.call(_max_of(rows, "spin") > SPIN_SEEN_MIN, "(t1) the spin angle gets past %.1f rad (max %.2f)" % [SPIN_SEEN_MIN, _max_of(rows, "spin")])
+	var done: bool = not pose.spinning and pose.spin_angle == 0.0
+	check.call(done or await _completes_by_touchdown(tree, player), "(t1) the spin is complete at touchdown or within pirouette_finish_time plus 2 ticks")
+	check.call(_spin_never_snaps_back(rows, 0), "(t1) the spin angle only grows while it runs")
+	check.call(_all_finite(rows), "(t1) every written Mannequin basis is finite")
+	check.call(is_zero_approx(player.visual_root.rotation.x) and is_zero_approx(player.visual_root.rotation.z), "(t1) VisualRoot is never tilted by the spin (DEV-01)")
 	await _end(player)
 
 
@@ -360,6 +378,8 @@ func _scenario_jump_chain_spin(tree: SceneTree, check: Callable) -> void:
 func _scenario_cut_jump_3(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
 	var pose: ProceduralPose = _pose(player)
+	# The DEV-03 finish code is shared with long jump stage 3; the toggle gives a reproducible spin on Jump 3.
+	pose.jump_3_pirouette = true
 	await _run_up(tree, player)
 	await _jump(tree, player)
 	await _jump(tree, player)
@@ -412,6 +432,8 @@ func _compare_nesting(_tick: int, _rows: Array[Dictionary], pose: ProceduralPose
 # DEV-03: an air dash during a running pirouette finishes the remaining spin within pirouette_finish_time.
 func _scenario_air_dash_finish(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
+	# The DEV-03 finish code is shared with long jump stage 3; the toggle gives a reproducible spin on Jump 3.
+	_pose(player).jump_3_pirouette = true
 	await _run_up(tree, player)
 	await _jump(tree, player)
 	await _jump(tree, player)
@@ -443,6 +465,8 @@ func _press_dash_mid_flight(tick: int, _rows: Array[Dictionary]) -> void:
 # time: the hold runs the world at loader_slow_factor, so the budget in ticks is longer by that factor).
 func _scenario_loader_press_finish(tree: SceneTree, check: Callable) -> void:
 	var player: PlayerController = await _begin(tree)
+	# The DEV-03 finish code is shared with long jump stage 3; the toggle gives a reproducible spin on Jump 3.
+	_pose(player).jump_3_pirouette = true
 	await _run_up(tree, player)
 	await _jump(tree, player)
 	await _jump(tree, player)
