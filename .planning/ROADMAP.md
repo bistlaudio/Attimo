@@ -40,6 +40,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Fernauslöser & Mechanism Kit** - Hand module framework, turquoise highlight with aim assist, Module 1 remote-trigger pulse, and the greybox D-15/D-16 mechanism kit (levers, valves, energy cores, cranks, gear gates, rotating and lift platforms, conveyors, steam nozzles, pendulums) with AND, OR and timer logic (completed 2026-11-23)
 - [x] **Phase 5: Energy Arm & Loader** - Energy resource in 4 arm cores with Moto Perpetuo, passive and capsule income, energy costs for injected moves, the right-click Loader with charge ring and trajectory preview, aim mode removed (completed 2026-11-24)
 - [x] **Phase 05.1: Kit Rework** (INSERTED) - Mechanism kit rebuilt as 8 logic blocks + 4 components + looks in steampunk, energy and nature layers, showroom regrouped; plus (playtest 2026-11-25) the energy clock in 12 whole steps, every ability paid, the shot and targets removed and the straight-line Loader (completed 2026-11-27: 22/22 plans, verification 9/9, human UAT pending in 05.1-HUMAN-UAT.md)
+- [ ] **Phase 05.2: Kit Regroup and Staged Loader** (INSERTED) - Staged Loader (3 fixed stages, slight gravity, auto release, speed lines), energy only switches energy objects and costs visibly, core outputs drawbridge / light bridge / light path, charge gate glider, kit cuts and the gym regrouped into 11 rooms
 - [ ] **Phase 6: Extractor, Enemies & Recovery** - Enemies beaten by the Extractor and Loader hits (no shot), 1-2 greybox enemy types, health next to the energy clock, Extractor and Loader teaching rooms, checkpoints and near-instant respawn
 - [ ] **Phase 7: Level Blockout & Game Flow** - The full Prototype Bits level with ability gating, the "charge the level" gimmick and reset paths, plus title, pause and settings menus
 - [ ] **Phase 8: Boss & Ending** - A greybox object-boss with 2-3 telegraphed phases, beaten through hand modules and arena mechanisms, followed by the end screen
@@ -311,8 +312,23 @@ Plans:
 - [x] 05.1-20-PLAN.md — DamagePush + player_hit: pendulum, piston wall, steam hammer
 - [x] 05.1-21-PLAN.md — Reaction to load nature objects: crumbling platform, collapse, sinking debris, tipping trunk, falling debris, snap bloom
 - [x] 05.1-22-PLAN.md — Mixed course, cut-file gate, Kit values in MOVEMENT-METRICS, design-doc sync, human walkthrough
+
 **UI hint**: yes
 **Notes**: Design source of truth: `docs/GAME-DESIGN.md` sections 2-6 (since 2026-11-25 also the energy clock, governing rule, Loader and Extractor sections) and `05.1-CONTEXT.md` D-34..D-58. Known fixes: the steam wall jump must feel like the normal wall jump (currently it flings Rino away), the wall run on it runs with the head to the wall, clock-hand platform floor bugs. Final looks are designed in Group B; greybox looks per layer are enough here.
+
+### Phase 05.2: Kit Regroup and Staged Loader (INSERTED)
+
+**Group:** A (Prototyp)
+**Goal:** As a player, I want a faster, shorter Loader with three clearly separated stages, energy that only ever drives turquoise objects and costs visibly, and a gym regrouped into clean rooms, so that the energy decisions read at a glance and the kit feels tight after the 2026-11-27 playtest.
+**Mode:** mvp
+**Depends on:** Phase 05.1
+**Requirements**: TBD (from 05.2-CONTEXT.md)
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 05.2 to break down)
+
+**Notes**: Source: playtest feedback 2026-11-27, decisions in `05.2-CONTEXT.md`. Deferred: removing the Jump 1-2-3 chain (keep only the dash hop).
 
 ### Phase 6: Extractor, Enemies & Recovery
 

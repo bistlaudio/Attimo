@@ -1,19 +1,19 @@
 ---
 gsd_state_version: "1.0"
 milestone: v0.11.0.4
-current_phase: "05.1"
-current_phase_name: kit-rework-inserted
-status: phase_complete
+current_phase: "05.2"
+current_phase_name: not planned
+status: "Phase 05.2 inserted from the 2026-11-27 playtest feedback; decisions captured, next: plan"
 stopped_at: Phase 05.1 complete (verification 9/9 after gap fix 1c47713; human UAT pending in 05.1-HUMAN-UAT.md)
-last_updated: "2026-11-27T17:44:56.819Z"
+last_updated: "2026-11-27T19:27:09.600Z"
 last_activity: 2026-11-27
-state_head: 148ff17f7c1a6cb9ada352882ca0232d2bb223a8
+last_activity_desc: "Completed quick task 261127-p64: energy income 20 s / 10 s, no Jump 3 pirouette"
+state_head: 7212b398fbcd4b06f435c9cb0568a36359b2a78f
 progress:
-  total_phases: 17
+  total_phases: 18
   completed_phases: 7
   total_plans: 68
   completed_plans: 68
-  percent: 41
 milestone_name: milestone
 ---
 
@@ -28,9 +28,9 @@ See: .planning/PROJECT.md (updated 2026-11-02)
 
 ## Current Position
 
-Phase: 05.1 (kit-rework-inserted) — complete
+Phase: 05.2 (kit-regroup-and-staged-loader) — not planned
 Plan: 22 of 22
-Status: Phase complete on branch E5.1 (verification human_needed, 9/9 criteria; 17 human UAT items pending in 05.1-HUMAN-UAT.md, team tests on the pushed branch; not merged to dev/main)
+Status: Phase 05.2 inserted from the 2026-11-27 playtest feedback; decisions captured, next: plan
 Last activity: 2026-11-27 - Completed quick task 261127-p64: energy income 20 s / 10 s, no Jump 3 pirouette
 
 Progress: [████░░░░░░] 41%
@@ -225,6 +225,7 @@ None yet.
 - Phase 6 edited: adapted to the energy-momentum design (docs/GAME-DESIGN.md)
 - Phase 7 edited: adapted to the energy-momentum design (docs/GAME-DESIGN.md)
 - Phase 8 edited: adapted to the energy-momentum design (docs/GAME-DESIGN.md)
+- Phase 05.2 inserted after Phase 5: Kit Regroup and Staged Loader: playtest feedback 2026-11-27 (staged Loader, energy-only switching, gym regroup to 11 rooms, cuts) (URGENT)
 
 ## Deferred Items
 
