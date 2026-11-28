@@ -39,7 +39,9 @@ func run(_tree: SceneTree, check: Callable) -> void:
 
 ## Every editor-visible float and int of the tuned resource must appear as a snapshot row with its current value.
 func _check_snapshot(doc: String, check: Callable) -> void:
-	var config: MovementConfig = load(CONFIG_PATH) as MovementConfig
+	# Read the file fresh: Fixtures.spawn_player neutralises kit_launch_scale to 1.0 on the shared cached resource, so the cached copy
+	# depends on which smoke test ran before this one.
+	var config: MovementConfig = ResourceLoader.load(CONFIG_PATH, "", ResourceLoader.CACHE_MODE_IGNORE) as MovementConfig
 	check.call(config != null, "%s loads as a MovementConfig" % CONFIG_PATH)
 	if config == null:
 		return
