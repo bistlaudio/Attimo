@@ -19,7 +19,6 @@ const AREAS: Dictionary = {
 	"Zone_KitSteampunk": Rect2(43.0, -32.0, 108.0, 64.0),
 	"Zone_KitEnergy": Rect2(155.0, -32.0, 72.0, 64.0),
 	"Zone_KitNature": Rect2(231.0, -32.0, 60.0, 64.0),
-	"Zone_KitCourse": Rect2(295.0, -32.0, 100.0, 64.0),
 }
 ## Folder under res://scenes/kit/ -> the area that shows its objects.
 const LAYER_AREAS: Dictionary = {
@@ -32,7 +31,6 @@ const AREA_ROLES: Dictionary = {
 	"Zone_KitSteampunk": ["Role_Platforms", "Role_Environment", "Role_Obstacles", "Role_Boosters", "Role_Mechanisms"],
 	"Zone_KitEnergy": ["Role_Environment", "Role_Obstacles", "Role_Boosters", "Role_Mechanisms"],
 	"Zone_KitNature": ["Role_Platforms", "Role_Environment", "Role_Obstacles"],
-	"Zone_KitCourse": ["Role_Course"],
 }
 ## Scenes that left the kit (D-09). Compared as full paths: scenes/kit/steampunk/ reuses some file names (slingshot_core, wall_pad).
 const CUT_SCENES: Array[String] = [
@@ -70,6 +68,14 @@ const CUT_SCRIPTS: Array[String] = [
 	"piston_wall", "crumbling_platform", "signal_source", "energy_core", "mechanism",
 ]
 const MECHANISM_SCRIPTS: String = "res://scripts/mechanisms/"
+## Files that were cut and must not exist on disk any more (D-81, gate as in 05.1-22). Full res:// paths; every later deletion of the phase
+## appends its files here. Zone_KitCourse (plan 05.2-02) went first: the mixed course, its builder and its test.
+const CUT_FILES: Array[String] = [
+	"res://tools/kit_course_builder.gd",
+	"res://tools/kit_course_builder.gd.uid",
+	"res://tests/smoke/test_kit_course.gd",
+	"res://tests/smoke/test_kit_course.gd.uid",
+]
 
 
 func run(tree: SceneTree, check: Callable) -> void:
@@ -94,6 +100,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	_check_nature_stations(gym, check)
 	_check_cut_scenes(gym, check)
 	_check_cut_scripts(check)
+	_check_cut_files(check)
 	_check_nature_reset(gym, check)
 	gym.queue_free()
 	await gym.tree_exited
@@ -104,6 +111,7 @@ func _check_zones(gym: Node, check: Callable) -> void:
 	for area: String in AREAS:
 		check.call(gym.get_node_or_null(area) != null, "the gym has %s" % area)
 	check.call(gym.get_node_or_null("Zone_MechanismRooms") == null, "Zone_MechanismRooms is gone (D-29)")
+	check.call(gym.get_node_or_null("Zone_KitCourse") == null, "Zone_KitCourse is gone (D-81)")
 	check.call(gym.get_node_or_null("Zone_Loader") != null, "Zone_Loader stays (D-30)")
 	check.call(gym.get_node_or_null("Zone_Energy") != null, "Zone_Energy stays (D-30)")
 
@@ -228,7 +236,14 @@ func _check_cut_scripts(check: Callable) -> void:
 		check.call(not FileAccess.file_exists(path) and not ResourceLoader.exists(path), "the cut script %s is gone" % path)
 
 
-## Plan 05.1-22: the nature area's fall reset ends at its own east edge; the course has its own reset (x 291.. on).
+## D-81: no cut file remains on disk. The .uid files are plain text next to the script, so FileAccess sees them (ResourceLoader would not).
+func _check_cut_files(check: Callable) -> void:
+	for path: String in CUT_FILES:
+		check.call(not FileAccess.file_exists(path), "the cut file %s is gone" % path)
+
+
+## Plan 05.2-02 (D-81): the nature area is the last area; its east wall is closed (no corridor cell open) and its fall reset ends at its own
+## east edge, so a fall anywhere in the area is caught.
 func _check_nature_reset(gym: Node, check: Callable) -> void:
 	var zone: Node = gym.get_node_or_null("Zone_KitNature")
 	var reset: Node3D = zone.get_node_or_null("FallReset_Zone_KitNature") as Node3D if zone != null else null
@@ -240,12 +255,15 @@ func _check_nature_reset(gym: Node, check: Callable) -> void:
 	check.call(box != null, "the nature fall reset is a box")
 	if box != null:
 		var east: float = reset.global_position.x + box.size.x * 0.5
-		check.call(east <= 295.0 + 0.001, "the nature fall reset no longer reaches into the course (east edge %.1f)" % east)
-		var course: Node3D = gym.get_node_or_null("Zone_KitCourse/FallReset_Zone_KitCourse") as Node3D
-		if course != null:
-			var course_box: BoxShape3D = (course.get_node("CollisionShape3D") as CollisionShape3D).shape as BoxShape3D
-			var course_west: float = course.global_position.x - course_box.size.x * 0.5
-			check.call(course_west >= east - 0.001, "the nature and course fall resets do not overlap (%.1f vs %.1f)" % [east, course_west])
+		var nature_east: float = (AREAS["Zone_KitNature"] as Rect2).end.x
+		check.call(is_equal_approx(east, nature_east), "the nature fall reset ends at the area's east edge (%.1f vs %.1f)" % [east, nature_east])
+		var west: float = reset.global_position.x - box.size.x * 0.5
+		check.call(west <= (AREAS["Zone_KitNature"] as Rect2).position.x, "the nature fall reset reaches the area's west edge (%.1f)" % west)
+	var east_walls: int = 0
+	for node: Node in zone.get_children():
+		if str(node.name).begins_with("AreaWallEast_"):
+			east_walls += 1
+	check.call(east_walls == 16, "the nature east wall is closed, one wall per 4 m row of the 64 m depth (%d)" % east_walls)
 
 
 func _check_cut_scenes(gym: Node, check: Callable) -> void:
