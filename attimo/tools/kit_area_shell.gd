@@ -1,6 +1,6 @@
 extends RefCounted
 ## Shared shell of the kit layer areas (Phase 05.1, D-28, D-29): the gym's showroom behind the hall's east door. Used by the layer
-## workers tools/kit_steampunk_builder.gd, kit_energy_builder.gd, kit_nature_builder.gd and kit_course_builder.gd (the mixed course), each of
+## workers tools/kit_steampunk_builder.gd, kit_energy_builder.gd and kit_nature_builder.gd, each of
 ## them a worker of tools/movement_gym_builder.gd with the contract build_into(zone, builder); the builder's helpers are reached with
 ## builder.call(&"_instance", ...) and so on. Generated, never hand-edited.
 ##
@@ -8,7 +8,7 @@ extends RefCounted
 ##   hall east wall x 42.5, its z -2..2 cell is a plain doorway (no gate); a 1 m threshold beam closes the x 42..43 seam.
 ##   corridor z -4..4 runs east through every area; between two areas a 4 m connector (one tile column, corridor tiles only).
 ##   Zone_KitSteampunk x 43..151 | connector x 151..155 | Zone_KitEnergy x 155..227 | connector x 227..231 | Zone_KitNature x 231..291
-##   Zone_KitCourse x 295..395 (plan 22) follows; the nature area's east wall keeps its corridor cells open for the connector x 291..295.
+##   the nature area is the last one: its east wall is closed (build_shell east_open = false), no connector follows.
 ## Slots: SLOT_PITCH 12 m, two rows per side: north rows z -28..-4 (row 0 = far, z -22; row 1 = by the corridor, z -10), south rows
 ## z 4..28 (row 0 = by the corridor, z 10; row 1 = far, z 22); column c of an area starts SLOT_MARGIN east of the area's west edge.
 ## Every station is a Station_<object> group under its Role_<Name> group, placed at its station point, with a title sign and an
@@ -24,7 +24,6 @@ const ROW_DEPTH: float = 24.0
 const STEAMPUNK_X: Vector2 = Vector2(43.0, 151.0)
 const ENERGY_X: Vector2 = Vector2(155.0, 227.0)
 const NATURE_X: Vector2 = Vector2(231.0, 291.0)
-const COURSE_X: Vector2 = Vector2(295.0, 395.0)
 ## The hall's east wall line and the east edge of the hall's fall reset (FallResetHall spans x -80..80): an area reset starts east of
 ## it so the two volumes never overlap.
 const HALL_WALL_X: float = 42.5

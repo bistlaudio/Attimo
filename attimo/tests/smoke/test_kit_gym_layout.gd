@@ -69,7 +69,7 @@ const CUT_SCRIPTS: Array[String] = [
 ]
 const MECHANISM_SCRIPTS: String = "res://scripts/mechanisms/"
 ## Files that were cut and must not exist on disk any more (D-81, gate as in 05.1-22). Full res:// paths; every later deletion of the phase
-## appends its files here. Zone_KitCourse (plan 05.2-02) went first: the mixed course, its builder and its test.
+## appends its files here. The mixed course (plan 05.2-02) went first: its builder and its test.
 const CUT_FILES: Array[String] = [
 	"res://tools/kit_course_builder.gd",
 	"res://tools/kit_course_builder.gd.uid",
@@ -111,7 +111,11 @@ func _check_zones(gym: Node, check: Callable) -> void:
 	for area: String in AREAS:
 		check.call(gym.get_node_or_null(area) != null, "the gym has %s" % area)
 	check.call(gym.get_node_or_null("Zone_MechanismRooms") == null, "Zone_MechanismRooms is gone (D-29)")
-	check.call(gym.get_node_or_null("Zone_KitCourse") == null, "Zone_KitCourse is gone (D-81)")
+	var kit_zones: PackedStringArray = PackedStringArray()
+	for child: Node in gym.get_children():
+		if str(child.name).begins_with("Zone_Kit") and not AREAS.has(str(child.name)):
+			kit_zones.append(str(child.name))
+	check.call(kit_zones.is_empty(), "the gym has no kit zone besides the three layer areas (D-81: %s)" % ", ".join(kit_zones))
 	check.call(gym.get_node_or_null("Zone_Loader") != null, "Zone_Loader stays (D-30)")
 	check.call(gym.get_node_or_null("Zone_Energy") != null, "Zone_Energy stays (D-30)")
 

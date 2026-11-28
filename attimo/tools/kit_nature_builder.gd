@@ -8,8 +8,8 @@ extends RefCounted
 ## Role_Platforms (south), Station_Collapse, Station_FallingDebris and Station_SnapBloom under Role_Obstacles (north, columns 2..3)): the stations (each a Station_<object> with an "Erwartet:" sign) arrive with their blocks in plans 15-19:
 ##   south  Role_Platforms (columns 0..3)
 ##   north  Role_Environment (columns 0..1: LeafStorm (0, 1), ResinPool (1, 1))  Role_Obstacles (columns 2..3)
-## The east wall keeps its corridor cells open (plan 22): the connector x 291..295 leads to the mixed course Zone_KitCourse, which has its own
-## fall reset; this area's reset ends at its own east edge.
+## The east wall is closed (plan 05.2-02, D-81: the mixed course is cut, no connector leaves the area); the area's fall reset ends at its
+## own east edge.
 
 const KitAreaShell := preload("res://tools/kit_area_shell.gd")
 
@@ -48,7 +48,7 @@ func build_into(zone: Node3D, builder: RefCounted) -> void:
 		"Environment": _slot("N", 0, 1) + Vector3(6.0, 0.0, 5.0),
 		"Obstacles": _slot("N", 2, 1) + Vector3(6.0, 0.0, 5.0),
 	}
-	var groups: Dictionary = _shell.build_shell(zone, builder, "Natur: Welt und Gefahr", KitAreaShell.NATURE_X.x, KitAreaShell.NATURE_X.y, ROLES, TINT, signs)
+	var groups: Dictionary = _shell.build_shell(zone, builder, "Natur: Welt und Gefahr", KitAreaShell.NATURE_X.x, KitAreaShell.NATURE_X.y, ROLES, TINT, signs, false)
 	if groups.has("Environment"):
 		_build_environment(groups["Environment"] as Node3D, builder)
 	if groups.has("Platforms"):
