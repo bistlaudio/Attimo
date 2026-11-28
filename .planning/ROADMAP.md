@@ -322,10 +322,10 @@ Plans:
 **Mode:** mvp
 **Depends on:** Phase 05.1
 **Requirements**: LOAD-STAGE, LOAD-REACH, LOAD-FX, LOAD-CAGE, LOAD-ROOM, ENRG-RULE, ENRG-CORE, ENRG-FEEDBACK, ENRG-OUT, KIT-RETUNE, KIT-CUT, GYM-11, HUD-CENTRE (derived from 05.2-CONTEXT.md D-63..D-91; registered in REQUIREMENTS.md by plan 29)
-**Plans:** 29 plans (strictly sequential waves 1-29: shared builder / test / gym files and one shared Godot import cache; each plan at most 10 files_modified, deletions listed under files_deleted, full suite green after every plan)
+**Plans:** 1/29 plans executed (strictly sequential waves 1-29: shared builder / test / gym files and one shared Godot import cache; each plan at most 10 files_modified, deletions listed under files_deleted, full suite green after every plan)
 
 Plans:
-- [ ] 05.2-01-PLAN.md — Loader stage table: F2 stage fields, LoaderMath stage functions, D-65 reach on paper, loader_stage_reached fact
+- [x] 05.2-01-PLAN.md — Loader stage table: F2 stage fields, LoaderMath stage functions, D-65 reach on paper, loader_stage_reached fact
 - [ ] 05.2-02-PLAN.md — Loader tests independent of the hold length; Zone_KitCourse cut; CUT_FILES gate
 - [ ] 05.2-03-PLAN.md — Staged Loader switch: 0.25 s stages, auto release, max(own, stage) speed, 0.3x shot phase, new flight status, Zone_Loader re-derived
 - [ ] 05.2-04-PLAN.md — Loader measured against D-65 (tuning if needed), staged metrics rows, Loader formula deleted

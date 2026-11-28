@@ -2,18 +2,18 @@
 gsd_state_version: "1.0"
 milestone: v0.11.0.4
 current_phase: "05.2"
-current_phase_name: not planned
-status: "Phase 05.2 inserted from the 2026-11-27 playtest feedback; decisions captured, next: plan"
-stopped_at: Phase 05.1 complete (verification 9/9 after gap fix 1c47713; human UAT pending in 05.1-HUMAN-UAT.md)
-last_updated: "2026-11-27T19:27:09.600Z"
-last_activity: 2026-11-27
-last_activity_desc: "Completed quick task 261127-p64: energy income 20 s / 10 s, no Jump 3 pirouette"
-state_head: 7212b398fbcd4b06f435c9cb0568a36359b2a78f
+current_phase_name: kit-regroup-and-staged-loader
+status: executing
+stopped_at: Completed 05.2-01-PLAN.md
+last_updated: "2026-11-28T01:39:49.170Z"
+last_activity: 2026-11-28
+last_activity_desc: Phase 05.2 execution started
+state_head: 6e98bfc08d4137f6d925fc63f3d76b24a48af2c3
 progress:
-  total_phases: 18
+  total_phases: 17
   completed_phases: 7
-  total_plans: 68
-  completed_plans: 68
+  total_plans: 97
+  completed_plans: 69
 milestone_name: milestone
 ---
 
@@ -24,14 +24,14 @@ milestone_name: milestone
 See: .planning/PROJECT.md (updated 2026-11-02)
 
 **Core value:** Flüssiges, schnelles Bewegungsgefühl: Laufen, Sprint, Sprung und Dash fühlen sich smooth an, und die Hand verbindet sich nahtlos damit.
-**Current focus:** Phase 05.1 — kit-rework-inserted
+**Current focus:** Phase 05.2 — kit-regroup-and-staged-loader
 
 ## Current Position
 
-Phase: 05.2 (kit-regroup-and-staged-loader) — not planned
-Plan: 22 of 22
-Status: Phase 05.2 inserted from the 2026-11-27 playtest feedback; decisions captured, next: plan
-Last activity: 2026-11-27 - Completed quick task 261127-p64: energy income 20 s / 10 s, no Jump 3 pirouette
+Phase: 05.2 (kit-regroup-and-staged-loader) — EXECUTING
+Plan: 2 of 29
+Status: Ready to execute
+Last activity: 2026-11-28 — Phase 05.2 execution started
 
 Progress: [████░░░░░░] 41%
 
@@ -107,6 +107,7 @@ Progress: [████░░░░░░] 41%
 | Phase 05.1 P19 | 60min | 3 tasks | 30 files |
 | Phase 05.1 P20 | 60min | 3 tasks | 30 files |
 | Phase 05.1 P21 | n/a | 3 tasks | 30 files |
+| Phase 05.2 P01 | 43 min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -191,6 +192,8 @@ Recent decisions that affect current work:
 - [Phase 05.1]: 05.1-18: EnergyCost pays at interval end for the core and at episode start for the attraction field escape; fast escape = away speed above 9.5 m/s or a dash, long jump or flight away; attraction pull target 6.0 below run speed (T-05.1-54)
 - [Phase 05.1]: 05.1-19: PATH loops on equal first and last point, else ping-pongs; STEPS decks reach out of a wall body; all three platforms always on
 - [Phase 05.1]: 05.1-20: DamagePush pushes along the hit volume's motion (fallback away from centre) and emits player_hit(int, Vector3, StringName); STAMP is a one-deck translating profile
+- [Phase 05.2]: 05.2-01: stage table 16.5/20/22 m/s with 0.40/0.50/0.70 s shot phases at 0.3x gravity gives 8.12 / 11.82 / 15.53 m at 10 degrees in LoaderMath.shot_reach (D-65 on paper)
+- [Phase 05.2]: 05.2-01: metrics snapshot generator and test read movement_default.tres with CACHE_MODE_IGNORE because Fixtures neutralises kit_launch_scale on the cached resource
 
 ### Pending Todos
 
@@ -238,6 +241,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-26T22:39:33.324Z
-Stopped at: Completed 05.1-21-PLAN.md
+Last session: 2026-11-28T01:39:48.387Z
+Stopped at: Completed 05.2-01-PLAN.md
 Resume file: None

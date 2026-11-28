@@ -44,45 +44,45 @@
       "status": "pending"
     },
     {
-      "number": "8",
+      "number": "9",
       "name": "Style Contract & Final Hero",
       "status": "pending"
     },
     {
-      "number": "9",
+      "number": "10",
       "name": "Steampunk World Building",
       "status": "pending"
     },
     {
-      "number": "10",
+      "number": "11",
       "name": "Movement & Camera Juice",
       "status": "pending"
     },
     {
-      "number": "11",
+      "number": "12",
       "name": "Hand & Combat Juice + Polish",
       "status": "pending"
     },
     {
-      "number": "12",
+      "number": "13",
       "name": "Controller Support",
       "status": "pending"
     },
     {
-      "number": "13",
+      "number": "14",
       "name": "Audio",
       "status": "pending"
     },
     {
-      "number": "14",
+      "number": "15",
       "name": "Windows Release & Performance",
       "status": "pending"
     }
   ],
   "next": {
-    "command": "/gsd:progress",
-    "label": "Show progress",
-    "reason": "Unsure of state — showing progress"
+    "command": "/gsd:progress --next",
+    "label": "Advance to the next step",
+    "reason": "Phase 05.2 of 17 · executing"
   },
-  "updated_at": "2026-11-27T19:31:02.726Z"
+  "updated_at": "2026-11-28T01:39:37.838Z"
 }
