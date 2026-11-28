@@ -170,6 +170,16 @@ static func tap_action(tree: SceneTree, action: StringName, frames: int = 2) -> 
 	Input.action_release(action)
 
 
+## Awaits process frames until Engine.time_scale is back at 1.0, or `timeout_seconds` of REAL time have passed. The release hitstop of the
+## Loader is a real-time timer (TimeFx.pulse), so a fixed count of physics ticks races with it when ticks bunch up under machine load; waiting
+## on the condition does not. Returns whether the time scale is 1.0.
+static func wait_time_scale_restored(tree: SceneTree, timeout_seconds: float = 2.0) -> bool:
+	var deadline: int = Time.get_ticks_msec() + int(timeout_seconds * 1000.0)
+	while Engine.time_scale != 1.0 and Time.get_ticks_msec() < deadline:
+		await tree.process_frame
+	return Engine.time_scale == 1.0
+
+
 ## Awaits physics frames until `condition` returns true. Returns the frames waited, or -1 on timeout.
 static func wait_until(tree: SceneTree, condition: Callable, max_physics_frames: int) -> int:
 	var waited: int = 0

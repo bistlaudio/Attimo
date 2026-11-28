@@ -116,7 +116,8 @@ func _begin(tree: SceneTree) -> PlayerController:
 func _end(tree: SceneTree, check: Callable, name: String) -> void:
 	for action: StringName in [&"loader", &"move_forward", &"jump", &"dash"]:
 		Input.action_release(action)
-	await Fixtures.wait_physics(tree, 8)
+	# The release hitstop is a real-time timer; wait on the condition, not on a tick count.
+	await Fixtures.wait_time_scale_restored(tree)
 	check.call(Engine.time_scale == 1.0, "(%s) Engine.time_scale is back at 1.0 (got %.3f)" % [name, Engine.time_scale])
 	Fixtures.restore_time()
 	_bus.disconnect(&"loader_released", _on_released)

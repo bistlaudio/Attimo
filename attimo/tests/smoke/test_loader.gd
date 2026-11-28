@@ -62,6 +62,7 @@ func run(tree: SceneTree, check: Callable) -> void:
 	await _scenario_jump_buffer(tree, check)
 	await _scenario_teleport(tree, check)
 	await _scenario_free(tree, check)
+	print("DBG run done")
 
 
 ## Fresh recorders, a floor, a player on its own config instance, a camera rig and one full core of energy.
@@ -102,8 +103,8 @@ func _end(tree: SceneTree, check: Callable, name: String) -> void:
 	for action: StringName in [&"loader", &"move_forward", &"jump", &"dash"]:
 		Fixtures.send_action_event(action, false)
 		Input.action_release(action)
-	# The release hitstop (loader_hitstop_time of real time, plan 05-02) ends by itself within a few ticks.
-	await Fixtures.wait_physics(tree, 8)
+	# The release hitstop (loader_hitstop_time of real time, plan 05-02) ends by itself; wait on that condition, not on a tick count.
+	await Fixtures.wait_time_scale_restored(tree)
 	check.call(Engine.time_scale == 1.0, "(%s) Engine.time_scale is back at 1.0 (got %.3f)" % [name, Engine.time_scale])
 	Fixtures.restore_time()
 	_bus.disconnect(&"loader_started", _on_started)
@@ -121,6 +122,7 @@ func _end(tree: SceneTree, check: Callable, name: String) -> void:
 		await _player.tree_exited
 	_floor.queue_free()
 	await tree.process_frame
+	print("DBG end done ", name)
 
 
 func _is_loader(player: PlayerController) -> bool:
