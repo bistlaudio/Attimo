@@ -1,6 +1,6 @@
 class_name LoaderMath
 extends RefCounted
-## The pure Loader discharge math (HAND-04, ENRG-09, D-49, D-50). Static functions only, no node access: the release (LoaderState)
+## The pure Loader discharge math (HAND-04, ENRG-09, D-49, D-50; staged table D-63..D-65 since Phase 05.2). Static functions only, no node access: the release (LoaderState)
 ## and the metrics tool call the same functions. The slingshot cage (Catch & launch, Phase 05.1) throws through the same LoaderState
 ## discharge as a free 2-step flight, so it uses them too. launch_reach and launch_apex size the Zone_Loader room from the straight line
 ## plus the ballistic tail after it (D-59).
@@ -9,6 +9,81 @@ extends RefCounted
 ## Clamps one formula input: a non-finite value counts as 0, a negative one as 0.
 static func _pos(value: float) -> float:
 	return maxf(value, 0.0) if is_finite(value) else 0.0
+
+
+## The ticks per second of the shot simulation: the physics tick of the game (project default 60), so the numbers match PlayerController.
+const SHOT_DT: float = 1.0 / 60.0
+## Hard stop of the shot simulation in ticks (10 s), so a bad input can never loop long.
+const SHOT_MAX_TICKS: int = 600
+
+
+## The stage table lookup of D-63: the entry of `stage` (clamped into 1..speeds.size()) as a speed in m/s. An empty array gives 0,
+## a non-finite or negative entry counts as 0.
+static func stage_speed(stage: int, speeds: Array) -> float:
+	if speeds.is_empty():
+		return 0.0
+	return _pos(float(speeds[clampi(stage, 1, speeds.size()) - 1]))
+
+
+## The shot-phase length of D-64 in seconds for `stage` (clamped into 1..times.size()). An empty array gives 0, a non-finite or negative
+## entry counts as 0.
+static func shot_time(stage: int, times: Array) -> float:
+	if times.is_empty():
+		return 0.0
+	return _pos(float(times[clampi(stage, 1, times.size()) - 1]))
+
+
+## The exit speed of a staged discharge in m/s (D-63): the faster of the own speed and the stage speed, capped. No addition, no k factor,
+## no overflow. A non-finite input counts as 0; a non-finite or non-positive cap gives 0.
+static func exit_speed(own_speed: float, stage_speed_value: float, cap: float) -> float:
+	if not is_finite(cap) or cap <= 0.0:
+		return 0.0
+	return minf(maxf(_pos(own_speed), _pos(stage_speed_value)), cap)
+
+
+## Runs the shot simulation in the exact order of PlayerController._integrate and returns [reach, apex]: gravity is picked from the sign
+## of the vertical speed BEFORE the move (rise_g at vy >= 0, fall_g below), scaled by `shot_scale` while the elapsed time is under
+## `shot_seconds`, half a step before and half after the move. No air control, no terminal clamp, launch from floor height. The reach is
+## the horizontal distance in m at the tick the height is back at the launch height (or after SHOT_MAX_TICKS), the apex the highest
+## height in m above the launch point. Both 0 for a non-finite or zero direction, a non-finite speed or a non-positive gravity.
+static func _simulate_shot(speed: float, direction: Vector3, shot_seconds: float, shot_scale: float, rise_g: float, fall_g: float, dt: float) -> Array[float]:
+	if not direction.is_finite() or direction.length_squared() < 0.000001 or not is_finite(speed):
+		return [0.0, 0.0]
+	if not is_finite(rise_g) or rise_g <= 0.0 or not is_finite(fall_g) or fall_g <= 0.0 or not is_finite(dt) or dt <= 0.0:
+		return [0.0, 0.0]
+	var unit: Vector3 = direction.normalized()
+	var across: float = _pos(speed) * Vector2(unit.x, unit.z).length()
+	var vy: float = _pos(speed) * unit.y
+	var gravity_factor: float = _pos(shot_scale)
+	var limit: float = _pos(shot_seconds) - 0.000001
+	var x: float = 0.0
+	var y: float = 0.0
+	var apex: float = 0.0
+	var t: float = 0.0
+	for tick: int in SHOT_MAX_TICKS:
+		var g: float = rise_g if vy >= 0.0 else fall_g
+		if t < limit:
+			g *= gravity_factor
+		vy -= g * dt * 0.5
+		x += across * dt
+		y += vy * dt
+		vy -= g * dt * 0.5
+		t += dt
+		apex = maxf(apex, y)
+		if y <= 0.0 and tick > 1:
+			break
+	return [x, apex]
+
+
+## The horizontal distance in m a staged discharge covers until it is back at the launch height (D-65): `speed` along `direction`, the
+## shot phase of `shot_seconds` s at `shot_scale` x gravity, then normal gravity. The same function sizes the rooms, the metrics and the tests.
+static func shot_reach(speed: float, direction: Vector3, shot_seconds: float, shot_scale: float, rise_g: float, fall_g: float, dt: float = SHOT_DT) -> float:
+	return _simulate_shot(speed, direction, shot_seconds, shot_scale, rise_g, fall_g, dt)[0]
+
+
+## The highest height in m above the launch point of a staged discharge (D-65, D-70), same simulation as shot_reach.
+static func shot_apex(speed: float, direction: Vector3, shot_seconds: float, shot_scale: float, rise_g: float, fall_g: float, dt: float = SHOT_DT) -> float:
+	return _simulate_shot(speed, direction, shot_seconds, shot_scale, rise_g, fall_g, dt)[1]
 
 
 ## The raw discharge speed of D-49 in m/s, before the cap: v + push + n * (push_step + k * v), v = the stored speed at the freeze.

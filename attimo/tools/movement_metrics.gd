@@ -1115,11 +1115,15 @@ func _write_doc(config: MovementConfig, ground: Dictionary, jumps: Dictionary, d
 	lines.append("")
 	lines.append("| Field | Value |")
 	lines.append("|---|---|")
-	for info: Dictionary in config.get_property_list():
+	# Fixtures.spawn_player neutralises kit_launch_scale to 1.0 on the shared cached resource, so the snapshot reads the file fresh.
+	var snapshot: MovementConfig = ResourceLoader.load(CONFIG_PATH, "", ResourceLoader.CACHE_MODE_IGNORE) as MovementConfig
+	if snapshot == null:
+		snapshot = config
+	for info: Dictionary in snapshot.get_property_list():
 		if (int(info["type"]) != TYPE_FLOAT and int(info["type"]) != TYPE_INT) or (int(info["usage"]) & PROPERTY_USAGE_EDITOR) == 0:
 			continue
 		var field: String = str(info["name"])
-		lines.append("| `%s` | %.3f |" % [field, float(config.get(field))])
+		lines.append("| `%s` | %.3f |" % [field, float(snapshot.get(field))])
 	lines.append("")
 
 	lines.append_array(_kit_values_lines())

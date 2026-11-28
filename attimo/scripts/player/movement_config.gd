@@ -117,6 +117,22 @@ extends Resource
 @export_range(0.0, 3.0, 0.1) var loader_overflow_gain: float = 1.0
 ## Fastest discharge in m/s; 22 is the tunnelling and camera envelope (long_jump_speed_3), do not raise it without re-running those tests.
 @export_range(8.0, 24.0, 0.5) var loader_max_speed: float = 22.0
+## Stage 1 exit speed in m/s (D-63, D-84): the Loader leaves at max(own speed, stage speed), capped by loader_max_speed; raise it for a stronger stage 1.
+@export_range(5.0, 24.0, 0.5) var loader_stage_speed_1: float = 16.5
+## Stage 2 exit speed in m/s (D-63, D-84, also the slingshot cage): raise it for a stronger stage 2.
+@export_range(5.0, 24.0, 0.5) var loader_stage_speed_2: float = 20.0
+## Stage 3 exit speed in m/s (D-63, D-84): the cap stage, keep it at or under loader_max_speed (22, the tunnelling envelope).
+@export_range(5.0, 24.0, 0.5) var loader_stage_speed_3: float = 22.0
+## Real seconds one Loader stage takes to fill (D-66, D-85); strictly positive because it divides the charge progress. Raise it for a slower charge.
+@export_range(0.1, 1.0, 0.01) var loader_stage_time: float = 0.25
+## Gravity scale during the shot phase right after the release (D-64); 1.0 = normal gravity, lower it for a flatter, longer shot.
+@export_range(0.0, 1.0, 0.05) var loader_shot_gravity_scale: float = 0.3
+## Seconds of the 0.3x-gravity shot phase after a stage 1 release (D-64, D-84); raise it for a longer stage 1 reach.
+@export_range(0.0, 2.0, 0.05) var loader_shot_time_1: float = 0.4
+## Seconds of the shot phase after a stage 2 release (D-64, D-84); raise it for a longer stage 2 reach.
+@export_range(0.0, 2.0, 0.05) var loader_shot_time_2: float = 0.5
+## Seconds of the shot phase after a stage 3 release (D-64, D-84); raise it for a longer stage 3 reach.
+@export_range(0.0, 2.0, 0.05) var loader_shot_time_3: float = 0.7
 ## Seconds air control is off after the discharge so steering does not eat the throw (D-03); raise it for a harder throw.
 @export_range(0.0, 0.5, 0.01) var loader_release_control_lock: float = 0.15
 ## "Geladen" cue (D-04): real seconds of the short hitstop right after the release, so the discharge lands sharp; raise it for a heavier release.
