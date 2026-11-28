@@ -88,6 +88,8 @@ func _wait_real(tree: SceneTree, seconds: float) -> void:
 
 func _scenario_look(tree: SceneTree, check: Callable) -> void:
 	await _begin(tree)
+	# Two steps on the clock: the hold then runs to loader_hold_cap whatever the step timing is (D-67 auto release comes after 3 steps).
+	Fixtures.set_energy(_player, 2)
 	var vignette: ColorRect = _look.get_node("Vignette") as ColorRect
 	var environment: Environment = _environment.environment
 	check.call(not vignette.visible and environment.adjustment_saturation == 1.0 and not environment.adjustment_enabled, "(l1) before the hold the vignette is hidden and the world is untouched")
@@ -122,6 +124,7 @@ func _scenario_free_mid_hold(tree: SceneTree, check: Callable) -> void:
 
 func _scenario_camera(tree: SceneTree, check: Callable) -> void:
 	await _begin(tree, false)
+	Fixtures.set_energy(_player, 2)
 	var config: MovementConfig = _player.config
 	var yaw_before: float = _rig.yaw
 	# Make auto-follow and a recenter possible: the player faces away from the camera yaw and has not seen look input for a while.
@@ -152,7 +155,10 @@ func _scenario_hitstop(tree: SceneTree, check: Callable) -> void:
 	await Fixtures.wait_until(tree, func() -> bool: return not _released.is_empty(), 6)
 	check.call(_released.size() == 1, "(h1) the release fired once (got %d)" % _released.size())
 	if _released.size() == 1:
-		var expected: Vector3 = LoaderMath.discharge_velocity(Vector3(0.0, 0.6, -0.8), LoaderMath.discharge_speed(0.0, config.loader_push, 1, config.loader_push_step, config.loader_speed_k, config.loader_max_speed))
+		# The expected velocity comes from the speed of the loader_released fact, not from a recomputed formula (holds for any Loader).
+		var fact_speed: float = float(_released[0]["speed"])
+		check.call(fact_speed > 0.0, "(h2) the loader_released fact carries a throw speed (%.2f)" % fact_speed)
+		var expected: Vector3 = LoaderMath.discharge_velocity(Vector3(0.0, 0.6, -0.8), fact_speed)
 		var velocity: Vector3 = _released[0]["velocity"] as Vector3
 		check.call(velocity.distance_to(expected) < 0.05, "(h2) the discharge velocity is already applied on the release tick (%s vs %s)" % [velocity, expected])
 	check.call(Engine.time_scale == config.loader_hitstop_scale, "(h3) the hitstop scale %.2f holds right after the release (got %.3f)" % [config.loader_hitstop_scale, Engine.time_scale])

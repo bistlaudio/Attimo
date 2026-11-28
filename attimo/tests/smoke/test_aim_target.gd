@@ -136,6 +136,8 @@ func _scenario_wiring(tree: SceneTree, check: Callable) -> void:
 	if modifier == null:
 		await _end(tree, [wall])
 		return
+	# Two steps on the clock: the hold runs to loader_hold_cap whatever the step timing, so the arm is still out at AIM_FRAMES.
+	Fixtures.set_energy(_player, 2)
 	Input.action_press(&"loader")
 	await Fixtures.wait_physics(tree, AIM_FRAMES)
 	await Fixtures.wait_process(tree, SETTLE_FRAMES)

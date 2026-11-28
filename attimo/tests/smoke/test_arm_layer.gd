@@ -199,6 +199,8 @@ func _scenario_spell_hand(tree: SceneTree, check: Callable) -> void:
 func _scenario_loader_hold(tree: SceneTree, check: Callable) -> void:
 	await _begin(tree)
 	check.call(not _hand.arm_out, "(l1) the arm is not out before the Loader")
+	# Two steps on the clock: the hold runs to loader_hold_cap whatever the step timing (D-67 auto release comes after 3 steps).
+	Fixtures.set_energy(_player, 2)
 	Input.action_press(&"loader")
 	var entered: int = await Fixtures.wait_until(tree, func() -> bool: return _player.loader_active(), 4)
 	check.call(entered >= 0, "(l2) the press enters the Loader")

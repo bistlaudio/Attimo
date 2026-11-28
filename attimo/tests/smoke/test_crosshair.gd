@@ -64,7 +64,9 @@ func _check_loader_ring(tree: SceneTree, check: Callable) -> void:
 	tree.root.add_child(ring)
 	await Fixtures.wait_physics(tree, 10)
 	check.call(not ring.loader_ring_visible, "the Loader ring is hidden before a hold")
-	Fixtures.set_energy(player, 3)
+	# Two steps on the clock: the hold runs to loader_hold_cap whatever the step timing; the three-segment case and the auto release are
+	# asserted by test_loader (D-67).
+	Fixtures.set_energy(player, 2)
 	Input.action_press(&"loader")
 	await Fixtures.wait_until(tree, func() -> bool: return player.loader_active(), 6)
 	await Fixtures.wait_process(tree, 3)
@@ -84,7 +86,8 @@ func _check_loader_ring(tree: SceneTree, check: Callable) -> void:
 	check.call(segment_radius != null and float(segment_radius) <= 0.6 * idle_ring + 0.01, "(D-51) the segment ring radius %s is at most 0.6 x the old outer ring %.1f" % [segment_radius, 0.6 * idle_ring])
 	await tree.create_timer(0.7, true, false, true).timeout
 	await Fixtures.wait_process(tree, 3)
-	check.call(ring.has_method(&"lit_segments") and int(ring.call(&"lit_segments")) == 3, "(D-51) three segments are lit after 0.7 s real time (got %s)" % [ring.call(&"lit_segments") if ring.has_method(&"lit_segments") else "no method"])
+	check.call(ring.has_method(&"lit_segments") and int(ring.call(&"lit_segments")) == 2, "(D-51) two of three segments are lit after 0.7 s real time with two steps on the clock (got %s)" % [ring.call(&"lit_segments") if ring.has_method(&"lit_segments") else "no method"])
+	check.call(ring.loader_ring_visible and player.loader_active(), "(D-51) the ring is still visible after 0.7 s, the hold runs to the cap")
 	Input.action_release(&"loader")
 	await Fixtures.wait_until(tree, func() -> bool: return not player.loader_active(), 8)
 	await Fixtures.wait_process(tree, 3)
