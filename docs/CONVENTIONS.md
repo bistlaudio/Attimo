@@ -173,6 +173,7 @@ Exception 2: placeholder hit puffs in `scripts/debug` + `scenes/debug/hit_puff.t
 | `wall_jumped` | `position: Vector3, direction: Vector3` | `WallJump` state on enter; `direction` is the flat kick direction |
 | `loader_started` | `position: Vector3, stored_speed: float, in_air: bool` | `Loader` state on enter (HAND-04, phase 05); `stored_speed` is the stored speed in m/s, `in_air` is true when the hold hangs in the air |
 | `loader_released` | `position: Vector3, direction: Vector3, speed: float, steps: int` | `Loader` state on the discharge (release or the hold cap); `steps` is the number of loaded steps 1..3 (the slingshot cage reports its 2 free steps) |
+| `loader_stage_reached` | `position: Vector3, stage: int` | `Loader` state for every paid stage 1..3 of a hold (D-66, D-87; emitted from phase 05.2 plan 03 on); `stage` is the stage just reached |
 | `energy_changed` | `value: int` | `ArmEnergy` after a spend, a gain or a reset, at most once per physics tick; `value` is the new energy in whole steps, 0 to 12 |
 | `energy_spent` | `amount: int, reason: StringName` | `ArmEnergy.try_spend` after a payment of `amount` steps; `reason` is `dash`, `air_dash`, `dash_hop`, `wall_run`, `wall_jump` or `loader` |
 | `energy_gained` | `amount: int, source: StringName` | `ArmEnergy.tick` for each timed step (`passive`, or `charge` while R is held standing still) and the Extractor at the end of a run (`extractor`, total steps) |
