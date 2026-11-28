@@ -321,11 +321,39 @@ Plans:
 **Goal:** As a player, I want a faster, shorter Loader with three clearly separated stages, energy that only ever drives turquoise objects and costs visibly, and a gym regrouped into clean rooms, so that the energy decisions read at a glance and the kit feels tight after the 2026-11-27 playtest.
 **Mode:** mvp
 **Depends on:** Phase 05.1
-**Requirements**: TBD (from 05.2-CONTEXT.md)
-**Plans:** 0 plans
+**Requirements**: LOAD-STAGE, LOAD-REACH, LOAD-FX, LOAD-CAGE, LOAD-ROOM, ENRG-RULE, ENRG-CORE, ENRG-FEEDBACK, ENRG-OUT, KIT-RETUNE, KIT-CUT, GYM-11, HUD-CENTRE (derived from 05.2-CONTEXT.md D-63..D-91; registered in REQUIREMENTS.md by plan 29)
+**Plans:** 29 plans (strictly sequential waves 1-29: shared builder / test / gym files and one shared Godot import cache; each plan at most 10 files_modified, deletions listed under files_deleted, full suite green after every plan)
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 05.2 to break down)
+- [ ] 05.2-01-PLAN.md — Loader stage table: F2 stage fields, LoaderMath stage functions, D-65 reach on paper, loader_stage_reached fact
+- [ ] 05.2-02-PLAN.md — Loader tests independent of the hold length; Zone_KitCourse cut; CUT_FILES gate
+- [ ] 05.2-03-PLAN.md — Staged Loader switch: 0.25 s stages, auto release, max(own, stage) speed, 0.3x shot phase, new flight status, Zone_Loader re-derived
+- [ ] 05.2-04-PLAN.md — Loader measured against D-65 (tuning if needed), staged metrics rows, Loader formula deleted
+- [ ] 05.2-05-PLAN.md — Loader flight FX: speed lines shader and turquoise trail (D-68 exception)
+- [ ] 05.2-06-PLAN.md — Loader stage beats: segment pop, click and pitch step, camera kick, arm-core flash
+- [ ] 05.2-07-PLAN.md — Slingshot swept catch, ring hole = catch radius, cage = fixed stage 2 through Loader fields
+- [ ] 05.2-08-PLAN.md — energy_spent_at fact and EnergyCost.pay_now
+- [ ] 05.2-09-PLAN.md — Paid bounce pad with core (empty = plain bounce), Amplification deleted
+- [ ] 05.2-10-PLAN.md — Strong-down gravity zone (gravity boost request), free attraction field
+- [ ] 05.2-11-PLAN.md — Charge gate pays 3; HUD spend pips, clock top centre, speedometer removed, charge dot
+- [ ] 05.2-12-PLAN.md — Core pay-in readable (pips, ring pop, chimes), cost badges on paying energy objects
+- [ ] 05.2-13-PLAN.md — Energy drawbridge (core level 1, AND / OR), GATE_HOLD 8 s, truthful energy signs, Zone_Energy wall-run station cut
+- [ ] 05.2-14-PLAN.md — PLATES profile and the light bridge (core level 2)
+- [ ] 05.2-15-PLAN.md — Light path (plate_life, core level 3) with its own respawn
+- [ ] 05.2-16-PLAN.md — Energy glider on the charge gate (route under GATE_HOLD, gap beyond the stage-3 reach)
+- [ ] 05.2-17-PLAN.md — Energy never steers steampunk: steampunk drawbridge and switched speed pad removed (D-71)
+- [ ] 05.2-18-PLAN.md — Cut the four wall pads, their stations and tests
+- [ ] 05.2-19-PLAN.md — Cut the wall run / wall jump states from the player; ANIMATION-MAP and CLAUDE.md sentence
+- [ ] 05.2-20-PLAN.md — Cut the wall config, costs, facts and metrics rows
+- [ ] 05.2-21-PLAN.md — Cut rail cart, leaf storm, resin pool; D-82 keep-list gate
+- [ ] 05.2-22-PLAN.md — Cut snap bloom and the BITE profile
+- [ ] 05.2-23-PLAN.md — Dead code out: DRAG profile, strip look, move-scale request, force-volume enum renumber, wall surface block
+- [ ] 05.2-24-PLAN.md — Retune: compact readable speed pad, weaker boost ring
+- [ ] 05.2-25-PLAN.md — Retune: geyser and steam stream as income-free obstacles, stronger stream
+- [ ] 05.2-26-PLAN.md — Gym rooms 1-6 (movement base, camera, Loader, three steampunk rooms), Zone_MovingPlatforms cut, shared room constants
+- [ ] 05.2-27-PLAN.md — Gym rooms 7-8 (energy sources, energy costs with badges); old Zone_Energy stations cut
+- [ ] 05.2-28-PLAN.md — Gym rooms 9-11 (energy unlock, energy obstacles, earth); final metrics and gym regeneration
+- [ ] 05.2-29-PLAN.md — Docs sync (GAME-DESIGN, site, deck), requirement tags, end-of-phase walkthrough list
 
 **Notes**: Source: playtest feedback 2026-11-27, decisions in `05.2-CONTEXT.md`. Deferred: removing the Jump 1-2-3 chain (keep only the dash hop).
 
