@@ -294,6 +294,11 @@ Do not make direct repo edits outside a GSD workflow unless the user explicitly 
 > This section is managed by `generate-claude-profile` -- do not edit manually.
 <!-- GSD:profile-end -->
 
+## Plan Size (Attimo)
+
+- A phase has at most 10-12 plans in total (user decision 2026-11-28). Group plans by theme instead of splitting them.
+- The plan checker's file-count rule (scope_sanity, 15 files_modified) does not justify going over the cap. For deletion-heavy or mechanical plans, override it with a written rationale in the plan instead of splitting.
+
 ## Git Workflow (Attimo)
 
 - All phase work happens on the `dev` branch. Never commit phase work directly to `main`.
